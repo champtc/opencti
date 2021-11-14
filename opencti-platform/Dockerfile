@@ -1,4 +1,4 @@
-FROM node:16.6.0-alpine3.14 AS base
+FROM node:gallium-alpine AS base
 
 
 FROM base AS graphql-deps-builder

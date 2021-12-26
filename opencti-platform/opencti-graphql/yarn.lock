@@ -4587,14 +4587,14 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.2, graceful-fs@^4.2.4:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.8.tgz#e412b8d33f5e006593cbd3cee6df9f2cebbe802a"
   integrity sha512-qkIilPUYcNhJpd33n0GBXTB1MMPp14TxEsEs0pTrsSVucApsYzW5V+Q8Qxhik6KU3evy+qkAAowTByymK0avdg==
 
-graphql-constraint-directive@2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/graphql-constraint-directive/-/graphql-constraint-directive-2.1.1.tgz#d27cef70c6713e0b49c910ea6e71e11c6d4ca65a"
-  integrity sha512-KybJ4yIqN61ZukJf711UQ3pt4qHBUduXgjG/aO6tfDt2O6Ogdp1WJWzw3tl+WR/OcnAn4gAGLZxQ1KKMPAk6FQ==
+graphql-constraint-directive@2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/graphql-constraint-directive/-/graphql-constraint-directive-2.2.0.tgz#99d316c86e41562d4d805fa6f5834abb5ef082b1"
+  integrity sha512-cP4pjEceEh3F6PLVObDjo73zbHM6SyeYHYstoFWKBKl0pM5K0NoGSXZgtEVSxfpiXNcBm21GmcnJryf4y4JFlw==
   dependencies:
     "@graphql-tools/schema" "^6.0.9"
     "@graphql-tools/utils" "^6.0.9"
-    validator "^10.2.0"
+    validator "^13.6.0"
 
 graphql-extensions@^0.15.0:
   version "0.15.0"
@@ -8611,7 +8611,7 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-validator@13.6.0, validator@^10.2.0:
+validator@13.6.0, validator@^13.6.0:
   version "13.6.0"
   resolved "https://registry.yarnpkg.com/validator/-/validator-13.6.0.tgz#1e71899c14cdc7b2068463cb24c1cc16f6ec7059"
   integrity sha512-gVgKbdbHgtxpRyR8K0O6oFZPhhB5tT1jeEHZR0Znr9Svg03U0+r9DXWMrnRAB+HtCStDQKlaIZm42tVsVjqtjg==

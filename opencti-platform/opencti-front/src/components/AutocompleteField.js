@@ -46,7 +46,7 @@ const AutocompleteField = (props) => {
         size="small"
         selectOnFocus={true}
         autoHighlight={true}
-        getOptionLabel={(option) => (option.label ? option.label : '')}
+        getOptionLabel={(option) => (option.label ? option.label : option)}
         noOptionsText={noOptionsText}
         {...fieldProps}
         renderOption={renderOption}
@@ -69,7 +69,7 @@ const AutocompleteField = (props) => {
         <IconButton
           onClick={() => openCreate()}
           edge="end"
-          style={{ position: 'absolute', top: 5, right: 35 }}
+          style={{ position: 'absolute', top: 5, right: 0 }}
         >
           <Add />
         </IconButton>

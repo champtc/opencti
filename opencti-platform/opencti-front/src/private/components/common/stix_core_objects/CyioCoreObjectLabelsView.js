@@ -281,6 +281,7 @@ const CyioCoreObjectLabelsView = (props) => {
                       component={AutocompleteField}
                       name="new_labels"
                       multiple={true}
+                      freeSolo={true}
                       textfieldprops={{
                         label: t('Labels'),
                         onFocus: searchLabels,
@@ -288,7 +289,7 @@ const CyioCoreObjectLabelsView = (props) => {
                       noOptionsText={t('No available options')}
                       options={stateLabels}
                       onInputChange={searchLabels}
-                      openCreate={isLabelManager ? handleOpenCreate : null}
+                      openCreate={handleOpenCreate}
                       renderOption={(option) => (
                         <React.Fragment>
                           <div

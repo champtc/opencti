@@ -41,6 +41,7 @@ import AssetType from '../form/AssetType';
 import OperationalStatusField from '../form/OperationalStatusField';
 import CommitMessage from '../form/CommitMessage';
 import { adaptFieldValue } from '../../../../utils/String';
+import CyioCoreObjectLabelsView from '../stix_core_objects/CyioCoreObjectLabelsView';
 
 const styles = (theme) => ({
   drawerPaper: {
@@ -94,6 +95,7 @@ class CyioDomainObjectAssetCreationOverviewComponent extends Component {
       assetType,
       enableReferences,
     } = this.props;
+    const objectLabel = { edges: { node: { id: 1, value: 'labels', color: 'red' } } };
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
@@ -345,24 +347,15 @@ class CyioDomainObjectAssetCreationOverviewComponent extends Component {
                 />
               </div>
               <div>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  gutterBottom={true}
-                  style={{ float: 'left', marginTop: 20 }}
-                >
-                  {t('Label')}
-                </Typography>
-                <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                  <Tooltip title={t('Label')}>
-                    <Information fontSize="inherit" color="disabled" />
-                  </Tooltip>
-                </div>
+                <CyioCoreObjectLabelsView
+                  labels={objectLabel}
+                  marginTop={20}
+                />
                 <div className="clearfix" />
                 <ObjectLabelField
                   variant='outlined'
                   name="labels"
-                  style={{ marginTop: 20, width: '100%' }}
+                  style={{ marginTop: 10, width: '100%' }}
                   setFieldValue={setFieldValue}
                   values={values.objectLabel}
                 />

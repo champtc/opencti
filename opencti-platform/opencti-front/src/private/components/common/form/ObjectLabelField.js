@@ -71,6 +71,7 @@ class ObjectLabelField extends Component {
       classes,
       setFieldValue,
       values,
+      openLabelCreation,
       variant,
       helpertext,
     } = this.props;
@@ -90,7 +91,7 @@ class ObjectLabelField extends Component {
           noOptionsText={t('No available options')}
           options={this.state.labels}
           onInputChange={this.searchLabels.bind(this)}
-          openCreate={this.handleOpenLabelCreation.bind(this)}
+          openCreate={openLabelCreation && this.handleOpenLabelCreation.bind(this)}
           renderOption={(option) => (
             <React.Fragment>
               <div className={classes.icon} style={{ color: option.color }}>

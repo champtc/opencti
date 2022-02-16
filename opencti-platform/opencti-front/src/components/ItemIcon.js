@@ -16,11 +16,26 @@ import {
   FeedbackOutlined,
   LanguageOutlined,
   WifiTetheringOutlined,
+  Scanner,
   Visibility,
   PlaceOutlined,
   StorageOutlined,
+  PersonalVideo,
+  SettingsVoice,
+  Kitchen,
+  Whatshot,
+  Work,
+  Phone,
+  Apple,
+  Devices,
+  PhoneLocked,
+  ViewColumn,
+  Wifi,
+  Storage,
+  Router,
 } from '@material-ui/icons';
 import {
+  MicrosoftWindows,
   Biohazard,
   DiamondOutline,
   ChessKnight,
@@ -35,6 +50,10 @@ import {
   ShieldSearch,
   ServerNetwork,
 } from 'mdi-material-ui';
+import networkIcon from '../resources/images/assets/networkIcon.svg';
+import softwareIcon from '../resources/images/assets/softwareIcon.svg';
+import deviceIcon from '../resources/images/assets/deviceIcon.svg';
+import linuxIcon from '../resources/images/assets/linuxIcon.svg';
 
 const iconSelector = (type, variant, fontSize, color) => {
   let style = {};
@@ -65,6 +84,44 @@ const iconSelector = (type, variant, fontSize, color) => {
           role="img"
         />
       );
+    case 'apple':
+      return <Apple style={style} fontSize={fontSize} role="img" />;
+    case 'microsoft':
+      return <MicrosoftWindows style={style} fontSize={fontSize} role="img" />;
+    case 'linux':
+      return <img src={linuxIcon} style={style} alt="linux-icon" />;
+    case 'other':
+      return <img src={deviceIcon} style={style} alt="device-icon" />;
+    case 'physical_device':
+      return <Devices style={style} fontSize={fontSize} role="img" />;
+    case 'router':
+      return <Router style={style} fontSize={fontSize} role="img" />;
+    case 'firewall':
+      return <Whatshot style={style} fontSize={fontSize} role="img" />;
+    case 'network':
+      return <img src={networkIcon} style={style} alt="network-icon" />;
+    case 'software':
+      return <img src={softwareIcon} style={style} alt="software-icon" />;
+    case 'switch':
+      return <Scanner style={style} fontSize={fontSize} role="img" />;
+    case 'storage_array':
+      return <Storage style={style} fontSize={fontSize} role="img" />;
+    case 'appliance':
+      return <Kitchen style={style} fontSize={fontSize} role="img" />;
+    case 'network_device':
+      return <Wifi style={style} fontSize={fontSize} role="img" />;
+    case 'server':
+      return <ViewColumn style={style} fontSize={fontSize} role="img" />;
+    case 'workstation':
+      return <Work style={style} fontSize={fontSize} role="img" />;
+    case 'voip_handset':
+      return <Phone style={style} fontSize={fontSize} role="img" />;
+    case 'pbx':
+      return <PhoneLocked style={style} fontSize={fontSize} role="img" />;
+    case 'computing_device':
+      return <PersonalVideo style={style} fontSize={fontSize} role="img" />;
+    case 'voip_router':
+      return <SettingsVoice style={style} fontSize={fontSize} role="img" />;
     case 'External-Reference':
       return <LanguageOutlined style={style} fontSize={fontSize} role="img" />;
     case 'Label':

@@ -12,7 +12,7 @@ import {
   stixLoadById,
 } from '../database/middleware';
 import { isEmptyField, isNotEmptyField, READ_DATA_INDICES } from '../database/utils';
-import { EVENT_TYPE_CREATE, EVENT_TYPE_DELETE, EVENT_TYPE_MERGE, EVENT_TYPE_UPDATE } from '../database/rabbitmq';
+import { EVENT_TYPE_CREATE, EVENT_TYPE_DELETE, EVENT_TYPE_MERGE, EVENT_TYPE_UPDATE } from '../database/amqp';
 import { elList } from '../database/elasticSearch';
 import { ABSTRACT_STIX_RELATIONSHIP, RULE_PREFIX } from '../schema/general';
 import { ENTITY_TYPE_RULE, ENTITY_TYPE_RULE_MANAGER } from '../schema/internalObject';
@@ -311,9 +311,9 @@ const initRuleManager = () => {
         return true;
       } catch (e) {
         if (e.name === TYPE_LOCK_ERROR) {
-          logApp.debug('[OPENCTI] Rule engine already started by another API');
+          logApp.debug('[CYIO] Rule engine already started by another API');
         } else {
-          logApp.error('[OPENCTI] Rule engine failed to start', { error: e });
+          logApp.error('[CYIO] Rule engine failed to start', { error: e });
         }
         return false;
       } finally {

@@ -1,4 +1,5 @@
-import React from 'react';
+/* eslint-disable */
+import React, { useEffect } from 'react';
 import * as PropTypes from 'prop-types';
 import { Route, Switch } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
@@ -6,11 +7,13 @@ import TopBar from './components/nav/TopBar';
 import LeftBar from './components/nav/LeftBar';
 import Dashboard from './components/Dashboard';
 import Search from './components/Search';
+import RootVSAC from './components/vsac/Root';
 import RootImport from './components/import/Root';
 import RootAnalysis from './components/analysis/Root';
 import RootEvents from './components/events/Root';
 import RootObservations from './components/observations/Root';
 import RootThreats from './components/threats/Root';
+import RootAssets from './components/assets/Root';
 import RootArsenal from './components/arsenal/Root';
 import RootEntities from './components/entities/Root';
 import RootSettings from './components/settings/Root';
@@ -20,17 +23,18 @@ import Profile from './components/Profile';
 import Message from '../components/Message';
 import { NoMatch, BoundaryRoute } from './components/Error';
 import StixCoreObjectOrStixCoreRelationship from './components/StixCoreObjectOrStixCoreRelationship';
+import { getAccount } from '../services/account.service';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    minWidth: 1280,
+    minWidth: '100%',
     height: '100%',
   },
   content: {
     height: '100%',
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
-    padding: '24px 24px 24px 204px',
+    padding: '24px 24px 24px 280px',
     minWidth: 0,
   },
   message: {
@@ -44,6 +48,25 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Index = (me) => {
+
+  useEffect(() => {
+    if(!localStorage.getItem('client_id')){
+      getAccount().then((res) => {
+        const account = res.data;
+        if (account) {
+          const clientId = account.clients?.[0].client_id;
+          localStorage.setItem('client_id', clientId);
+        } else {
+          clearToken();
+        }
+      });
+    }
+  });
+
+  const clearClientId = () => {
+    localStorage.removeItem('client_id');
+  };
+
   const classes = useStyles();
   return (
     <div className={classes.root}>
@@ -71,10 +94,12 @@ const Index = (me) => {
             path="/dashboard/search/:keyword"
             render={(routeProps) => <Search {...routeProps} me={me} />}
           />
+          <BoundaryRoute path="/dashboard/vsac" component={RootVSAC} />
           <BoundaryRoute path="/dashboard/analysis" component={RootAnalysis} />
           <BoundaryRoute path="/dashboard/events" component={RootEvents} />
           <Route path="/dashboard/observations" component={RootObservations} />
           <BoundaryRoute path="/dashboard/threats" component={RootThreats} />
+          <BoundaryRoute path="/dashboard/assets" component={RootAssets} />
           <BoundaryRoute path="/dashboard/arsenal" component={RootArsenal} />
           <BoundaryRoute path="/dashboard/entities" component={RootEntities} />
           <BoundaryRoute path="/dashboard/data" render={RootData} />

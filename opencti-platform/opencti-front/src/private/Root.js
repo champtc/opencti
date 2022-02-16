@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* refactor */
 import React from 'react';
 import graphql from 'babel-plugin-relay/macro';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -7,6 +9,7 @@ import { ConnectedThemeProvider } from '../components/AppThemeProvider';
 import Index from './Index';
 import { UserContext } from '../utils/Security';
 import AuthBoundaryComponent from './components/AuthBoundary';
+import RootPublic from '../public/Root';
 
 const rootPrivateQuery = graphql`
   query RootPrivateQuery {
@@ -18,6 +21,7 @@ const rootPrivateQuery = graphql`
       theme
       user_email
       theme
+      access_token
       capabilities {
         name
       }
@@ -31,13 +35,29 @@ const rootPrivateQuery = graphql`
   }
 `;
 
+const clearToken = () => {
+  localStorage.removeItem('token');
+};
+
 const Root = () => (
   <AuthBoundaryComponent>
     <QueryRenderer
       query={rootPrivateQuery}
       variables={{}}
-      render={({ props }) => {
+      render={(data) => {
+        const { props } = data;
+        // Check in conjunction with query renderer. Rather than throwing an error for failed root query
+        // pass the empty data and do the login render here since query render can't do redirect or
+        // render stuff.
+        if(props === null ){
+          return <RootPublic/>
+        }
+        clearToken();
         if (props) {
+          if (props.me && props.me.access_token) {
+            const token = props.me.access_token;
+            localStorage.setItem('token', token);
+          }
           return (
             <UserContext.Provider
               value={{ me: props.me, settings: props.settings }}

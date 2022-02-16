@@ -142,3 +142,35 @@ div.markdown p {
 .react_time_range__rail__inner {
   background-color: transparent !important;
 }
+
+.custom-file-input{
+  width: 100%;
+  height: 120px;
+
+  text-align: center;
+}
+
+
+.scansListItem{
+  border-bottom: 1px solid rgba(255,255,255,.25);
+}
+.scansListItem:hover{
+  cursor: pointer;
+}
+.NoResults{
+  color: #F9B406;
+}
+.Invalid{
+  color: #CE202C;
+}
+
+.AnalysisLoader{
+  width: 370px;
+  height: 370px;
+  display: flex;
+  justify-content: center; 
+  padding-top:  150px;
+}
+.NoDisplay{
+  display: none;
+}

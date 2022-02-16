@@ -13,6 +13,7 @@ const AutocompleteField = (props) => {
     field: { name },
     onChange,
     onFocus,
+    variant,
     noOptionsText,
     renderOption,
     textfieldprops,
@@ -45,7 +46,7 @@ const AutocompleteField = (props) => {
         size="small"
         selectOnFocus={true}
         autoHighlight={true}
-        getOptionLabel={(option) => (option.label ? option.label : '')}
+        getOptionLabel={(option) => (option.label ? option.label : option)}
         noOptionsText={noOptionsText}
         {...fieldProps}
         renderOption={renderOption}
@@ -54,6 +55,7 @@ const AutocompleteField = (props) => {
             {...params}
             {...textfieldprops}
             name={name}
+            variant={variant}
             fullWidth={true}
             error={!isNil(meta.error)}
             helperText={meta.error || textfieldprops.helperText}

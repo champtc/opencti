@@ -26,7 +26,7 @@ import { askEnrich } from './enrichment';
 import { FunctionalError } from '../config/errors';
 import { createStixPattern } from '../python/pythonBridge';
 import { checkObservableSyntax } from '../utils/syntax';
-import { upload } from '../database/minio';
+import { upload } from '../database/s3';
 import {
   isStixCyberObservable,
   isStixCyberObservableHashedObservable,
@@ -134,7 +134,7 @@ const createIndicatorFromObservable = async (user, input, observable) => {
       await addIndicator(user, indicatorToCreate);
     }
   } catch (err) {
-    logApp.info(`[OPENCTI] Cannot create indicator`, { error: err });
+    logApp.info(`[CYIO] Cannot create indicator`, { error: err });
   }
 };
 

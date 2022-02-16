@@ -1,0 +1,135 @@
+/* eslint-disable */
+/* refactor */
+import React, { Component } from 'react';
+import * as PropTypes from 'prop-types';
+import {
+  Route, Redirect, withRouter, Switch,
+} from 'react-router-dom';
+import graphql from 'babel-plugin-relay/macro';
+import { QueryRenderer as QR } from 'react-relay';
+import QueryRendererDarkLight from '../../../../relay/environmentDarkLight';
+import {
+  QueryRenderer,
+  requestSubscription,
+} from '../../../../relay/environment';
+import TopBar from '../../nav/TopBar';
+import Software from './Software';
+import SoftwareKnowledge from './SoftwareKnowledge';
+import StixDomainObjectHeader from '../../common/stix_domain_objects/StixDomainObjectHeader';
+import FileManager from '../../common/files/FileManager';
+import SoftwarePopover from './SoftwarePopover';
+import Loader from '../../../../components/Loader';
+import StixCoreObjectHistory from '../../common/stix_core_objects/StixCoreObjectHistory';
+import StixCoreObjectOrStixCoreRelationshipContainers from '../../common/containers/StixCoreObjectOrStixCoreRelationshipContainers';
+import StixDomainObjectIndicators from '../../observations/indicators/StixDomainObjectIndicators';
+import StixCoreRelationship from '../../common/stix_core_relationships/StixCoreRelationship';
+import ErrorNotFound from '../../../../components/ErrorNotFound';
+import StixCoreObjectKnowledgeBar from '../../common/stix_core_objects/StixCoreObjectKnowledgeBar';
+
+const subscription = graphql`
+  subscription RootSoftwareSubscription($id: ID!) {
+    stixDomainObject(id: $id) {
+      # ... on Campaign {
+      #   # ...Software_software
+      #   ...SoftwareEditionContainer_software
+      # }
+      ...FileImportViewer_entity
+      ...FileExportViewer_entity
+      ...FileExternalReferencesViewer_entity
+    }
+  }
+`;
+
+const softwareQuery = graphql`
+  query RootSoftwareQuery($id: ID!) {
+    softwareAsset(id: $id) {
+      id
+      name
+      ...Software_software
+    }
+  }
+`;
+
+class RootSoftware extends Component {
+  constructor(props) {
+    super(props);
+    const {
+      match: {
+        params: { softwareId },
+      },
+    } = props;
+    this.sub = requestSubscription({
+      subscription,
+      variables: { id: softwareId },
+    });
+  }
+
+  componentWillUnmount() {
+    this.sub.dispose();
+  }
+
+  render() {
+    const {
+      me,
+      match: {
+        params: { softwareId },
+      },
+    } = this.props;
+    const link = `/dashboard/assets/software/${softwareId}/knowledge`;
+    return (
+      <div>
+        <TopBar me={me || null} />
+        <Route path="/dashboard/assets/software/:softwareId/knowledge">
+          <StixCoreObjectKnowledgeBar
+            stixCoreObjectLink={link}
+            availableSections={[
+              'attribution',
+              'victimology',
+              'incidents',
+              'malwares',
+              'tools',
+              'attack_patterns',
+              'vulnerabilities',
+              'observables',
+              'infrastructures',
+              'sightings',
+            ]}
+          />
+        </Route>
+        {/* <QueryRenderer */}
+        <QR
+          environment={QueryRendererDarkLight}
+          query={softwareQuery}
+          variables={{ id: softwareId }}
+          render={({ error, props }) => {
+            if (props) {
+              if (props.softwareAsset) {
+                return (
+                  <Switch>
+                    <Route
+                      exact
+                      path="/dashboard/assets/software/:softwareId"
+                      render={(routeProps) => (
+                        <Software {...routeProps} software={props.softwareAsset} />
+                      )}
+                    />
+                  </Switch>
+                );
+              }
+              return <ErrorNotFound />;
+            }
+            return <Loader />;
+          }}
+        />
+      </div>
+    );
+  }
+}
+
+RootSoftware.propTypes = {
+  children: PropTypes.node,
+  match: PropTypes.object,
+  me: PropTypes.object,
+};
+
+export default withRouter(RootSoftware);

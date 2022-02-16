@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* refactor */
 import React, { Component } from 'react';
 import {
   compose,
@@ -66,16 +68,23 @@ class ExternalReferencesField extends Component {
 
   render() {
     const {
-      t, name, style, classes, onChange, helpertext,
+      t,
+      name,
+      style,
+      classes,
+      variant,
+      onChange,
+      helpertext,
     } = this.props;
     return (
       <Field
         component={AutocompleteField}
         style={style}
         name={name}
+        variant='outlined'
         multiple={true}
         textfieldprops={{
-          label: t('External references'),
+          label: t('Add External References'),
           helperText: helpertext,
           onFocus: this.searchExternalReferences.bind(this),
         }}

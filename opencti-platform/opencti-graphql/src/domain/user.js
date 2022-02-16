@@ -283,7 +283,6 @@ export const addUser = async (user, newUser) => {
     R.assoc('theme', newUser.theme ? newUser.theme : 'default'),
     R.assoc('language', newUser.language ? newUser.language : 'auto'),
     R.assoc('external', newUser.external ? newUser.external : false),
-    R.assoc('access_token', newUser.access_token ? newUser.access_token : null),
     R.dissoc('roles')
   )(newUser);
   const userCreated = await createEntity(user, userToCreate, ENTITY_TYPE_USER);
@@ -443,7 +442,7 @@ export const userIdDeleteRelation = async (user, userId, toId, relationshipType)
   return userDeleteRelation(user, userData, toId, relationshipType);
 };
 
-export const loginFromProvider = async (userInfo, providerRoles = [], providerGroups = [], accessToken) => {
+export const loginFromProvider = async (userInfo, providerRoles = [], providerGroups = []) => {
   const { email, name: providedName, firstname, lastname } = userInfo;
   if (isEmptyField(email)) {
     throw Error('User email not provided');
@@ -452,21 +451,14 @@ export const loginFromProvider = async (userInfo, providerRoles = [], providerGr
   const user = await elLoadBy(SYSTEM_USER, 'user_email', email, ENTITY_TYPE_USER);
   if (!user) {
     // If user doesnt exists, create it. Providers are trusted
-    const newUser = {
-      name,
-      firstname,
-      lastname,
-      user_email: email.toLowerCase(),
-      external: true,
-      access_token: accessToken,
-    };
+    const newUser = { name, firstname, lastname, user_email: email.toLowerCase(), external: true };
     return addUser(SYSTEM_USER, newUser).then(() => {
       // After user creation, reapply login to manage roles and groups
-      return loginFromProvider(userInfo, providerRoles, providerGroups, accessToken);
+      return loginFromProvider(userInfo, providerRoles, providerGroups);
     });
   }
   // Update the basic information
-  const patch = { name, firstname, lastname, external: true, access_token: accessToken };
+  const patch = { name, firstname, lastname, external: true };
   await patchAttribute(SYSTEM_USER, user.id, ENTITY_TYPE_USER, patch);
   // Update the roles
   // If roles are specified here, that overwrite the default assignation
@@ -496,7 +488,7 @@ export const loginFromProvider = async (userInfo, providerRoles = [], providerGr
     const groupsCreation = R.map((group) => assignGroupToUser(SYSTEM_USER, user.id, group), providerGroups);
     await Promise.all(groupsCreation);
   }
-  return { ...user, access_token: accessToken };
+  return user;
 };
 
 export const login = async (email, password) => {
@@ -510,7 +502,6 @@ export const login = async (email, password) => {
 
 export const logout = async (user, req, res) => {
   await delUserContext(user);
-  await patchAttribute(SYSTEM_USER, user.id, ENTITY_TYPE_USER, { access_token: null });
   res.clearCookie(OPENCTI_SESSION);
   req.session.destroy();
   logAudit.info(user, LOGOUT_ACTION);
@@ -524,7 +515,6 @@ const buildSessionUser = (user) => {
     session_creation: now(),
     internal_id: user.internal_id,
     user_email: user.user_email,
-    access_token: user.access_token,
     name: user.name,
     capabilities: user.capabilities.map((c) => ({ id: c.id, internal_id: c.internal_id, name: c.name })),
     allowed_marking: user.allowed_marking.map((m) => ({
@@ -600,7 +590,7 @@ export const authenticateUserFromRequest = async (req) => {
       }
       return user;
     } catch (err) {
-      logApp.error(`[CYIO] Authentication error ${tokenUUID}`, { error: err });
+      logApp.error(`[OPENCTI] Authentication error ${tokenUUID}`, { error: err });
     }
   }
   return undefined;
@@ -627,7 +617,6 @@ export const initAdmin = async (email, password, tokenValue) => {
       lastname: 'OpenCTI',
       description: 'Principal admin account',
       api_token: tokenValue,
-      access_token: null,
       password,
     };
     await addUser(SYSTEM_USER, userToCreate);

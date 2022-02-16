@@ -5,7 +5,7 @@ import http from 'http';
 // noinspection NodeCoreCodingAssistance
 import { readFileSync } from 'fs';
 import conf, { booleanConf, logApp } from '../config/conf';
-import createApp, { applyWildcard } from './httpPlatform';
+import createApp from './httpPlatform';
 import createApolloServer from '../graphql/graphql';
 import { isStrategyActivated, STRATEGY_CERT } from '../config/providers';
 
@@ -16,9 +16,8 @@ const CERT_KEY_CERT = conf.get('app:https_cert:crt');
 const CA_CERTS = conf.get('app:https_cert:ca');
 const rejectUnauthorized = booleanConf('app:https_cert:reject_unauthorized', true);
 const createHttpServer = async () => {
-  const { app, seeMiddleware } = await createApp();
-  const apolloServer = createApolloServer(app);
-  applyWildcard(app); // Needed in order to register prometheus metrics
+  const apolloServer = createApolloServer();
+  const { app, seeMiddleware } = await createApp(apolloServer);
   let httpServer;
   if (CERT_KEY_PATH && CERT_KEY_CERT) {
     const key = readFileSync(CERT_KEY_PATH);
@@ -47,7 +46,7 @@ const listenServer = async () => {
         });
       });
     } catch (e) {
-      logApp.error(`[CYIO] API start fail`, { error: e });
+      logApp.error(`[OPENCTI] API start fail`, { error: e });
       reject(e);
     }
   });

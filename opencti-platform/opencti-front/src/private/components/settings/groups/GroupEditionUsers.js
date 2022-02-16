@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import graphql from 'babel-plugin-relay/macro';
@@ -101,7 +100,7 @@ class GroupEditionUsersComponent extends Component {
                 map((n) => n.node),
               )(props);
               return (
-                <List dense={true} >
+                <List dense={true} className={classes.root}>
                   {users.map((user) => {
                     const groupUser = find(propEq('id', user.id))(groupUsers);
                     return (

@@ -1,5 +1,3 @@
-/* eslint-disable */
-/* refactor */
 import React, { useState } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter, Link } from 'react-router-dom';
@@ -13,10 +11,6 @@ import {
   ExploreOutlined,
   InsertChartOutlined,
 } from '@material-ui/icons';
-import NoteAddIcon from '@material-ui/icons/NoteAdd';
-import PublishIcon from '@material-ui/icons/Publish';
-import FindInPageIcon from '@material-ui/icons/FindInPage';
-import DashboardIcon from '@material-ui/icons/Dashboard';
 import { UploadOutline } from 'mdi-material-ui';
 import Menu from '@material-ui/core/Menu';
 import Divider from '@material-ui/core/Divider';
@@ -83,21 +77,11 @@ const styles = (theme) => ({
     flexGrow: 1,
   },
   logoContainer: {
-
-    height: 64,
-    width: 255,
-    marginLeft: -24,
-    paddingTop: 15,
-    borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-    backgroundColor: theme.palette.background.nav,
-
+    marginLeft: -10,
   },
   logo: {
     cursor: 'pointer',
-    height: 20,
-    marginTop: 10,
-    marginLeft: 10,
-
+    height: 35,
   },
   menuContainer: {
     float: 'left',
@@ -153,10 +137,7 @@ const TopBar = ({
     commitMutation({
       mutation: logoutMutation,
       variables: {},
-      onCompleted: () => {
-        history.push('/');
-        localStorage.removeItem('token');
-      },
+      onCompleted: () => history.push('/'),
     });
   };
   const handleSearch = (searchKeyword) => {
@@ -376,38 +357,27 @@ const TopBar = ({
                 </IconButton>
               </Tooltip>
             </Security>
-              <Tooltip title={t('Dashboard')}>
+            <Security needs={[KNOWLEDGE_KNASKIMPORT]}>
+              <Tooltip title={t('Data import')}>
                 <IconButton
                   component={Link}
+                  to="/dashboard/import"
+                  variant={
+                    location.pathname === '/dashboard/import'
+                      ? 'contained'
+                      : 'text'
+                  }
+                  color={
+                    location.pathname === '/dashboard/import'
+                      ? 'secondary'
+                      : 'inherit'
+                  }
                   classes={{ root: classes.button }}
                 >
-                <DashboardIcon fontSize="default" />
+                  <UploadOutline fontSize="default" />
                 </IconButton>
               </Tooltip>
-            <Tooltip title={t('Find in Page')}>
-                <IconButton
-                  component={Link}
-                  classes={{ root: classes.button }}
-                >
-                <FindInPageIcon fontSize="default" />
-                </IconButton>
-              </Tooltip>
-            <Tooltip title={t('Upload')}>
-                <IconButton
-                  component={Link}
-                  classes={{ root: classes.button }}
-                >
-                <PublishIcon fontSize="default" />
-                </IconButton>
-              </Tooltip>
-            <Tooltip title={t('Add Note')}>
-                <IconButton
-                  component={Link}
-                  classes={{ root: classes.button }}
-                >
-                <NoteAddIcon fontSize="default" />
-                </IconButton>
-              </Tooltip>
+            </Security>
             <IconButton
               size="medium"
               classes={{ root: classes.button }}

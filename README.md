@@ -1,5 +1,3 @@
-# THIS REPOSITORY IS A DARKLIGHT SPECIFIC FORK
-
 <h1 align="center">
   <a href="https://www.opencti.io"><img src="https://www.opencti.io/wp-content/uploads/2020/04/github-logo.png" alt="OpenCTI"></a>
 </h1>

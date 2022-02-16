@@ -9,7 +9,7 @@ import {
 import Markdown from 'react-markdown';
 import Paper from '@material-ui/core/Paper';
 import { APP_BASE_PATH } from '../../relay/environment';
-import logo from '../../resources/images/DarkLight_CyioLogo-Vertical-blue.png';
+import logo from '../../resources/images/logo_opencti.png';
 import LoginForm from './LoginForm';
 
 const loginHeight = 400;
@@ -28,9 +28,9 @@ const styles = (theme) => ({
   button: {
     margin: theme.spacing(1),
     color: '#ffffff',
-    backgroundColor: '#075AD3',
+    backgroundColor: '#009688',
     '&:hover': {
-      backgroundColor: '#49B8FC',
+      backgroundColor: '#00796b',
     },
   },
   buttonGoogle: {

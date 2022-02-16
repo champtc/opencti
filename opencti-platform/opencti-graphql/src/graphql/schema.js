@@ -1,41 +1,14 @@
-import { mergeResolvers } from '@graphql-tools/merge';
+import { GraphQLDateTime } from 'graphql-iso-date';
+import { mergeResolvers } from 'merge-graphql-schemas';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { constraintDirective } from 'graphql-constraint-directive';
-import {
-  GraphQLDateTime,
-  EmailAddressTypeDefinition,
-  EmailAddressResolver,
-  IPv4Definition,
-  IPv4Resolver,
-  IPv6Definition,
-  IPv6Resolver,
-  LatitudeDefinition,
-  LatitudeResolver,
-  LongitudeDefinition,
-  LongitudeResolver,
-  MACDefinition,
-  MACResolver,
-  PhoneNumberTypeDefinition,
-  PhoneNumberResolver,
-  PortDefinition,
-  PortResolver,
-  PositiveIntTypeDefinition,
-  PositiveIntResolver,
-  PostalCodeTypeDefinition,
-  PostalCodeResolver,
-  URLTypeDefinition,
-  URLResolver,
-  VoidTypeDefinition,
-  VoidResolver,
-} from 'graphql-scalars';
-import {DateTimeScalar} from "./scalars";
 import settingsResolvers from '../resolvers/settings';
 import logResolvers from '../resolvers/log';
 import attributeResolvers from '../resolvers/attribute';
 import workspaceResolvers from '../resolvers/workspace';
 import subTypeResolvers from '../resolvers/subType';
 import labelResolvers from '../resolvers/label';
-import amqpMetricsResolvers from '../resolvers/amqpMetrics';
+import rabbitmqMetricsResolvers from '../resolvers/rabbitmqMetrics';
 import elasticSearchMetricsResolvers from '../resolvers/elasticSearchMetrics';
 import internalObjectResolvers from '../resolvers/internalObject';
 import stixObjectOrStixRelationshipResolvers from '../resolvers/stixObjectOrStixRelationship';
@@ -79,9 +52,10 @@ import observedDataResolvers from '../resolvers/observedData';
 import opinionResolvers from '../resolvers/opinion';
 import indicatorResolvers from '../resolvers/indicator';
 import incidentResolvers from '../resolvers/incident';
-import { authDirectiveV2 } from './authDirective';
+import AuthDirectives, { AUTH_DIRECTIVE } from './authDirective';
 import connectorResolvers from '../resolvers/connector';
 import fileResolvers from '../resolvers/file';
+import typeDefs from '../../config/schema/opencti.graphql';
 import organizationOrIndividualResolvers from '../resolvers/organizationOrIndividual';
 import taxiiResolvers from '../resolvers/taxii';
 import taskResolvers from '../resolvers/task';
@@ -90,37 +64,10 @@ import userSubscriptionResolvers from '../resolvers/userSubscription';
 import statusResolvers from '../resolvers/status';
 import ruleResolvers from '../resolvers/rule';
 import stixResolvers from '../resolvers/stix';
-// Import Cyio resolvers
-import assetCommonResolvers from '../cyio/schema/assets/asset-common/resolvers.js';
-import computingDeviceResolvers from '../cyio/schema/assets/computing-device/resolvers.js';
-import networkResolvers from '../cyio/schema/assets/network/resolvers.js';
-import softwareResolvers from '../cyio/schema/assets/software/resolvers.js';
-import cyioExternalReferenceResolvers from '../cyio/schema/global/resolvers/externalReference.js';
-import cyioLabelResolvers from '../cyio/schema/global/resolvers/label.js';
-import cyioNoteResolvers from '../cyio/schema/global/resolvers/note.js';
-// Cyio Extensions to support merged graphQL schema
-import { loadSchemaSync } from '@graphql-tools/load';
-import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader' ;
-
-const {authDirectiveTransformer } = authDirectiveV2();
 
 const createSchema = () => {
-
   const globalResolvers = {
     DateTime: GraphQLDateTime,
-    Timestamp: DateTimeScalar,
-    EmailAddress: EmailAddressResolver,
-    IPv4: IPv4Resolver,
-    IPv6: IPv6Resolver,
-    Latitude: LatitudeResolver,
-    Longitude: LongitudeResolver,
-    MAC: MACResolver,
-    PhoneNumber: PhoneNumberResolver,
-    Port: PortResolver,
-    PositiveInt: PositiveIntResolver,
-    PostalCode: PostalCodeResolver,
-    URL: URLResolver,
-    Void: VoidResolver,
   };
 
   const resolvers = mergeResolvers([
@@ -131,7 +78,7 @@ const createSchema = () => {
     userSubscriptionResolvers,
     statusResolvers,
     logResolvers,
-    amqpMetricsResolvers,
+    rabbitmqMetricsResolvers,
     elasticSearchMetricsResolvers,
     attributeResolvers,
     workspaceResolvers,
@@ -205,43 +152,17 @@ const createSchema = () => {
     // ALL
     organizationOrIndividualResolvers,
     stixObjectOrStixRelationshipResolvers,
-    // CYIO
-    assetCommonResolvers,
-    computingDeviceResolvers,
-    networkResolvers,
-    softwareResolvers,
-    cyioExternalReferenceResolvers,
-    cyioLabelResolvers,
-    cyioNoteResolvers,
-]);
+  ]);
 
-  // load the OpenCTI and each of the Cyio GraphQL schema files
-  const typeDefs = loadSchemaSync('./**/**/*.graphql', {
-    loaders: [new GraphQLFileLoader()],
-  });
-
-  let schema = makeExecutableSchema({
-    typeDefs: [
-      typeDefs,
-      EmailAddressTypeDefinition,
-      IPv4Definition,
-      IPv6Definition,
-      LatitudeDefinition,
-      LongitudeDefinition,
-      MACDefinition,
-      PhoneNumberTypeDefinition,
-      PortDefinition,
-      PositiveIntTypeDefinition,
-      PostalCodeTypeDefinition,
-      URLTypeDefinition,
-      VoidTypeDefinition,
-    ],
+  return makeExecutableSchema({
+    typeDefs,
     resolvers,
+    schemaDirectives: {
+      [AUTH_DIRECTIVE]: AuthDirectives,
+    },
     schemaTransforms: [constraintDirective()],
     inheritResolversFromInterfaces: true,
   });
-  schema = authDirectiveTransformer(schema);
-  return schema;
 };
 
 export default createSchema;

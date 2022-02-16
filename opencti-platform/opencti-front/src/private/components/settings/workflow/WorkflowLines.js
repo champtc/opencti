@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import * as R from 'ramda';
@@ -147,7 +146,7 @@ class WorkflowLinesComponent extends Component {
         <List
           component="nav"
           aria-labelledby="nested-list-subheader"
-          
+          className={classes.root}
         >
           {translatedOrderedList.map((subType) => {
             const statuses = R.pipe(R.map((n) => n.node))(

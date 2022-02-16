@@ -9,7 +9,6 @@ import { fetchQuery } from '../../../../relay/environment';
 import AutocompleteField from '../../../../components/AutocompleteField';
 import inject18n from '../../../../components/i18n';
 import { labelsSearchQuery } from '../../settings/LabelsQuery';
-import { cyioLabelsQuery } from '../../settings/CyioLabelsQuery';
 import LabelCreation from '../../settings/labels/LabelCreation';
 
 const styles = () => ({
@@ -45,15 +44,15 @@ class ObjectLabelField extends Component {
     this.setState({
       labelInput: event && event.target.value !== 0 ? event.target.value : '',
     });
-    fetchQuery(cyioLabelsQuery, {
+    fetchQuery(labelsSearchQuery, {
       search: event && event.target.value !== 0 ? event.target.value : '',
     })
       .toPromise()
       .then((data) => {
         const labels = pipe(
-          pathOr([], ['cyioLabels', 'edges']),
+          pathOr([], ['labels', 'edges']),
           map((n) => ({
-            label: n.node.name,
+            label: n.node.value,
             value: n.node.id,
             color: n.node.color,
           })),
@@ -66,14 +65,7 @@ class ObjectLabelField extends Component {
 
   render() {
     const {
-      t,
-      name,
-      style,
-      classes,
-      setFieldValue,
-      values,
-      variant,
-      helpertext,
+      t, name, style, classes, setFieldValue, values, helpertext,
     } = this.props;
     return (
       <div>
@@ -81,7 +73,6 @@ class ObjectLabelField extends Component {
           component={AutocompleteField}
           style={style}
           name={name}
-          variant={variant}
           multiple={true}
           textfieldprops={{
             label: t('Labels'),
@@ -91,7 +82,7 @@ class ObjectLabelField extends Component {
           noOptionsText={t('No available options')}
           options={this.state.labels}
           onInputChange={this.searchLabels.bind(this)}
-          // openCreate={this.handleOpenLabelCreation.bind(this)}
+          openCreate={this.handleOpenLabelCreation.bind(this)}
           renderOption={(option) => (
             <React.Fragment>
               <div className={classes.icon} style={{ color: option.color }}>
@@ -102,7 +93,7 @@ class ObjectLabelField extends Component {
           )}
           classes={{ clearIndicator: classes.autoCompleteIndicator }}
         />
-        {/* <LabelCreation
+        <LabelCreation
           contextual={true}
           inputValue={this.state.labelInput}
           open={this.state.labelCreation}
@@ -119,7 +110,7 @@ class ObjectLabelField extends Component {
               ),
             );
           }}
-        /> */}
+        />
       </div>
     );
   }

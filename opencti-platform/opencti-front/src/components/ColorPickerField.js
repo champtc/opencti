@@ -1,21 +1,16 @@
-/* eslint-disable */
-/* Refactor */
 import React from 'react';
-import TextField from '@material-ui/core/TextField';
+import MuiTextField from '@material-ui/core/TextField';
 import { SketchPicker } from 'react-color';
 import IconButton from '@material-ui/core/IconButton';
 import Popover from '@material-ui/core/Popover';
 import InputAdornment from '@material-ui/core/InputAdornment';
-import { useField, Field } from 'formik';
+import { useField } from 'formik';
 import { fieldToTextField } from 'formik-material-ui';
-import Box from '@material-ui/core/Box';
-import CardContent from '@material-ui/core/CardContent';
-import { ColorLens, Add } from '@material-ui/icons';
+import { ColorLens } from '@material-ui/icons';
 
 const ColorPickerField = (props) => {
   const anchorEl = React.createRef();
   const [open, setOpen] = React.useState(false);
-  const [color, setColor] = React.useState('');
   const {
     form: { setFieldValue, setTouched },
     field: { name },
@@ -50,7 +45,6 @@ const ColorPickerField = (props) => {
     [setTouched, onSubmit, name],
   );
   const handleChange = (color) => {
-    setColor(color.hex);
     setTouched(true);
     setFieldValue(name, color && color.hex ? color.hex : '');
     if (typeof onChange === 'function') {
@@ -62,28 +56,8 @@ const ColorPickerField = (props) => {
   };
 
   return (
-    <div style={{ margin: '10px 0' }}>
-      <CardContent
-        {...fieldToTextField(props)}
-        ref={anchorEl}
-        onChange={internalOnChange}
-        onFocus={internalOnFocus}
-        onBlur={internalOnBlur}
-        style={{ display: 'flex', padding: '0px' }}
-      >
-        <Field
-          component={TextField}
-          name="color"
-          label='Color'
-          fullWidth={true}
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
-        <IconButton style={{ position: 'absolute', right: '20px' }} aria-label="open" onClick={() => setOpen(true)}>
-          <ColorLens />
-        </IconButton>
-      </CardContent>
-      {/* <MuiTextField
+    <div>
+      <MuiTextField
         {...fieldToTextField(props)}
         ref={anchorEl}
         onChange={internalOnChange}
@@ -91,33 +65,24 @@ const ColorPickerField = (props) => {
         onBlur={internalOnBlur}
         InputProps={{
           endAdornment: (
-            <InputAdornment>
+            <InputAdornment position="end">
               <IconButton aria-label="open" onClick={() => setOpen(true)}>
-                <Add />
+                <ColorLens />
               </IconButton>
             </InputAdornment>
           ),
-          startAdornment: (
-            <InputAdornment>
-                <IconButton>
-                    <Box
-                    sx={{
-                      width: 30,
-                      height: 30,
-                      bgcolor: 'primary.main',
-                    }}
-                    style={{ borderRadius: '50%' }}/>
-                </IconButton>
-            </InputAdornment>
-          ),
         }}
-      /> */}
+      />
       <Popover
         open={open}
         anchorEl={anchorEl.current}
         onClose={() => setOpen(false)}
         anchorOrigin={{
           vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'top',
           horizontal: 'center',
         }}
       >

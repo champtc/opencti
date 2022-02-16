@@ -192,7 +192,7 @@ type OverviewMetrics {
   queue_totals: QueueTotals
   message_stats: MessagesStats
 }
-type AMQPMetrics {
+type RabbitMQMetrics {
   consumers: String
   queues: [QueueMetrics]
   overview: OverviewMetrics
@@ -650,11 +650,6 @@ type FileConnection {
 
 ############## Task
 enum TaskType {
-  """The task represents a planned milestone."""
-  milestone
-
-  """The task represents a specific assessment action to be performed."""
-  action
   QUERY
   LIST
   RULE
@@ -932,7 +927,6 @@ type User implements BasicObject & InternalObject {
   language: String
   external: Boolean
   dashboard: String
-  access_token: String
   roles: [Role]!
   capabilities: [Capability]!
   groups: GroupConnection
@@ -1044,7 +1038,7 @@ input RegisterConnectorInput {
   auto: Boolean
   only_contextual: Boolean
 }
-type AMQPConnection {
+type RabbitMQConnection {
   host: String!
   use_ssl: Boolean!
   ca: [String]
@@ -1053,7 +1047,7 @@ type AMQPConnection {
   pass: String!
 }
 type ConnectorConfig {
-  connection: AMQPConnection!
+  connection: RabbitMQConnection!
   listen: String!
   listen_exchange: String!
   push: String!
@@ -8317,7 +8311,7 @@ type Query {
   platform_theme: String
   about: AppInfo @auth(for: [SETTINGS])
   logsWorkerConfig: LogsWorkerConfig @auth(for: [MODULES])
-  amqpMetrics(prefix: String): AMQPMetrics @auth(for: [MODULES])
+  rabbitMQMetrics(prefix: String): RabbitMQMetrics @auth(for: [MODULES])
   elasticSearchMetrics: ElasticSearchMetrics @auth(for: [MODULES])
   logs(
     first: Int

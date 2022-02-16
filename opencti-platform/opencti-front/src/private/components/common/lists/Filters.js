@@ -22,24 +22,17 @@ import { fetchQuery } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
 import { identityCreationIdentitiesSearchQuery } from '../identities/IdentityCreation';
 import { labelsSearchQuery } from '../../settings/LabelsQuery';
-import {
-  itAssetFiltersAssetTypeFieldQuery,
-  itAssetFiltersDeviceFieldsQuery,
-  itAssetFiltersNetworkFieldsQuery,
-  itAssetFiltersSoftwareFieldsQuery,
-} from '../../settings/ItAssetFilters';
 import { attributesSearchQuery } from '../../settings/AttributesQuery';
 import { markingDefinitionsLinesSearchQuery } from '../../settings/marking_definitions/MarkingDefinitionsLines';
 import ItemIcon from '../../../../components/ItemIcon';
 import { truncate } from '../../../../utils/String';
 import { stixDomainObjectsLinesSearchQuery } from '../stix_domain_objects/StixDomainObjectsLines';
 import { statusFieldStatusesSearchQuery } from '../form/StatusField';
-import { fetchDarklightQuery } from '../../../../relay/environmentDarkLight';
 
 const styles = (theme) => ({
   filters: {
     float: 'left',
-    margin: '-10px 0 0 -5px',
+    margin: '-8px 0 0 -5px',
   },
   filtersDialog: {
     margin: '0 0 20px 0',
@@ -84,7 +77,6 @@ const directFilters = [
   'toSightingId',
 ];
 const uniqFilters = [
-  'name_m',
   'revoked',
   'x_opencti_detection',
   'x_opencti_base_score_gt',
@@ -131,140 +123,6 @@ class Filters extends Component {
       });
     }
     switch (filterKey) {
-      case 'asset_type_or':
-        fetchDarklightQuery(itAssetFiltersAssetTypeFieldQuery, {
-          type: `${this.props.filterEntityType}AssetTypes`,
-          search: event && event.target.value !== 0 ? event.target.value : '',
-        })
-          .toPromise()
-          .then((data) => {
-            const assetTypeEntities = R.pipe(
-              R.pathOr([], ['__type', 'enumValues']),
-              R.map((n) => ({
-                label: t(n.description),
-                value: n.name,
-                type: n.name,
-              })),
-            )(data);
-            this.setState({
-              entities: {
-                ...this.state.entities,
-                asset_type_or: R.union(
-                  assetTypeEntities,
-                  this.state.entities.asset_type,
-                ),
-              },
-            });
-          });
-        break;
-      case 'name_m':
-        // eslint-disable-next-line no-case-declarations
-        let nameQuery = '';
-        // eslint-disable-next-line no-case-declarations
-        let namePath = [];
-        if (this.props.filterEntityType === 'Device') {
-          nameQuery = itAssetFiltersDeviceFieldsQuery;
-          namePath = ['computingDeviceAssetList', 'edges'];
-        }
-        if (this.props.filterEntityType === 'Network') {
-          nameQuery = itAssetFiltersNetworkFieldsQuery;
-          namePath = ['networkAssetList', 'edges'];
-        }
-        if (this.props.filterEntityType === 'Software') {
-          nameQuery = itAssetFiltersSoftwareFieldsQuery;
-          namePath = ['softwareAssetList', 'edges'];
-        }
-        fetchDarklightQuery(nameQuery, {
-          search: event && event.target.value !== 0 ? event.target.value : '',
-        })
-          .toPromise()
-          .then((data) => {
-            const nameEntities = R.pipe(
-              R.pathOr([], namePath),
-              R.map((n) => ({
-                label: n.node.name,
-                value: n.node.name,
-                type: 'attribute',
-              })),
-            )(data);
-            this.setState({
-              entities: {
-                ...this.state.entities,
-                name_m: R.union(
-                  nameEntities,
-                  this.state.entities.name_m,
-                ),
-              },
-            });
-          });
-        break;
-      case 'vendor_name_or':
-        fetchDarklightQuery(itAssetFiltersSoftwareFieldsQuery, {
-          search: event && event.target.value !== 0 ? event.target.value : '',
-        })
-          .toPromise()
-          .then((data) => {
-            const vendorEntities = R.pipe(
-              R.pathOr([], ['softwareAssetList', 'edges']),
-              R.map((n) => ({
-                label: t(n.node.vendor_name),
-                value: n.node.vendor_name,
-                type: n.node.vendor_name === 'apple' || n.node.vendor_name === 'microsoft' || n.node.vendor_name === 'linux' ? n.node.vendor_name : 'other',
-              })),
-            )(data);
-            this.setState({
-              entities: {
-                ...this.state.entities,
-                vendor_name_or: R.union(
-                  vendorEntities,
-                  this.state.entities.vendor_name_or,
-                ),
-              },
-            });
-          });
-        break;
-      case 'labels_or':
-        // eslint-disable-next-line no-case-declarations
-        let cyioLabelsQuery = '';
-        // eslint-disable-next-line no-case-declarations
-        let cyioLabelsPath = [];
-        if (this.props.filterEntityType === 'Device') {
-          cyioLabelsQuery = itAssetFiltersDeviceFieldsQuery;
-          cyioLabelsPath = ['computingDeviceAssetList', 'edges'];
-        }
-        if (this.props.filterEntityType === 'Network') {
-          cyioLabelsQuery = itAssetFiltersNetworkFieldsQuery;
-          cyioLabelsPath = ['networkAssetList', 'edges'];
-        }
-        if (this.props.filterEntityType === 'Software') {
-          cyioLabelsQuery = itAssetFiltersSoftwareFieldsQuery;
-          cyioLabelsPath = ['softwareAssetList', 'edges'];
-        }
-        fetchDarklightQuery(cyioLabelsQuery, {
-          search: event && event.target.value !== 0 ? event.target.value : '',
-        })
-          .toPromise()
-          .then((data) => {
-            const cyioLabelEntities = R.pipe(
-              R.pathOr([], cyioLabelsPath),
-              R.map((n) => ({
-                label: n.node?.labels && t(R.pluck(0, n.node).labels),
-                value: R.pluck(0, n.node)?.labels,
-                type: 'Label',
-                color: R.pluck(0, n.node)?.labels,
-              })),
-            )(data);
-            this.setState({
-              entities: {
-                ...this.state.entities,
-                labels_or: R.union(
-                  cyioLabelEntities,
-                  this.state.entities.labels_or,
-                ),
-              },
-            });
-          });
-        break;
       case 'toSightingId':
         fetchQuery(identityCreationIdentitiesSearchQuery, {
           types: ['Identity'],
@@ -1031,7 +889,8 @@ class Filters extends Component {
     this.handleCloseFilters();
     const urlParams = { filters: JSON.stringify(this.state.filters) };
     this.props.history.push(
-      `/dashboard/search${this.state.keyword.length > 0 ? `/${this.state.keyword}` : ''
+      `/dashboard/search${
+        this.state.keyword.length > 0 ? `/${this.state.keyword}` : ''
       }?${new URLSearchParams(urlParams).toString()}`,
     );
   }

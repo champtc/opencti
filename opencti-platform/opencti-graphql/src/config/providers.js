@@ -103,8 +103,8 @@ const AUTH_SSO = 'SSO';
 const AUTH_FORM = 'FORM';
 
 const providers = [];
-const providerLoginHandler = (userInfo, roles, groups, done, token) => {
-  loginFromProvider(userInfo, roles, groups, token)
+const providerLoginHandler = (userInfo, roles, groups, done) => {
+  loginFromProvider(userInfo, roles, groups)
     .then((user) => {
       done(null, user);
     })
@@ -272,7 +272,7 @@ for (let i = 0; i < providerKeys.length; i += 1) {
           // endregion
           if (!isRoleBaseAccess || rolesToAssociate.length > 0) {
             const { email, name } = userinfo;
-            providerLoginHandler({ email, name }, rolesToAssociate, groupsToAssociate, done, tokenset.access_token);
+            providerLoginHandler({ email, name }, rolesToAssociate, groupsToAssociate, done);
           } else {
             done({ message: 'Restricted access, ask your administrator' });
           }

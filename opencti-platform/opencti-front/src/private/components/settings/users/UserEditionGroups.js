@@ -1,5 +1,3 @@
-/* eslint-disable */
-/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import graphql from 'babel-plugin-relay/macro';
@@ -103,7 +101,7 @@ class UserEditionGroupsComponent extends Component {
                 map((n) => n.node),
               )(props);
               return (
-                <List >
+                <List className={classes.root}>
                   {groups.map((group) => {
                     const userGroup = find(propEq('id', group.id))(userGroups);
                     return (

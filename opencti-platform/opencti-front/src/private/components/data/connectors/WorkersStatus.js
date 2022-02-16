@@ -72,7 +72,7 @@ class WorkersStatusComponent extends Component {
     const {
       classes, t, n, data,
     } = this.props;
-    const { consumers, overview } = data.amqpMetrics;
+    const { consumers, overview } = data.rabbitMQMetrics;
     const { docs, search, indexing } = data.elasticSearchMetrics;
     const currentReadOperations = search.query_total;
     const currentWriteOperations = indexing.index_total + indexing.delete_total;
@@ -189,22 +189,22 @@ const WorkersStatus = createRefetchContainer(
             total
           }
         }
-        # amqpMetrics {
-        #   consumers
-        #   overview {
-        #     queue_totals {
-        #       messages
-        #       messages_ready
-        #       messages_unacknowledged
-        #     }
-        #     message_stats {
-        #       ack
-        #       ack_details {
-        #         rate
-        #       }
-        #     }
-        #   }
-        # }
+        rabbitMQMetrics {
+          consumers
+          overview {
+            queue_totals {
+              messages
+              messages_ready
+              messages_unacknowledged
+            }
+            message_stats {
+              ack
+              ack_details {
+                rate
+              }
+            }
+          }
+        }
       }
     `,
   },

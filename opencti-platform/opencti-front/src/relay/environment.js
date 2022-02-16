@@ -23,7 +23,6 @@ import {
   RelayNetworkLayer,
 } from 'react-relay-network-modern/node8';
 import uploadMiddleware from './uploadMiddleware';
-import { toastGenericError } from '../utils/bakedToast';
 
 // Dev tools
 export const IN_DEV_MODE = process.env.NODE_ENV === 'development';
@@ -50,17 +49,12 @@ export class ApplicationError extends Error {
 const isEmptyPath = isNil(window.BASE_PATH) || isEmpty(window.BASE_PATH);
 const contextPath = isEmptyPath || window.BASE_PATH === '/' ? '' : window.BASE_PATH;
 export const APP_BASE_PATH = isEmptyPath || contextPath.startsWith('/') ? contextPath : `/${contextPath}`;
+
 // Subscription
 const loc = window.location;
-let { host } = loc;
-if (process.env.REACT_APP_GRAPHQL_HOST !== undefined) {
-  const hostUrl = new URL(process.env.REACT_APP_GRAPHQL_HOST);
-  host = hostUrl.host;
-}
-// eslint-disable-next-line no-console
 const isSecure = loc.protocol === 'https:' ? 's' : '';
 const subscriptionClient = new SubscriptionClient(
-  `ws${isSecure}://${host}${APP_BASE_PATH}/graphql`,
+  `ws${isSecure}://${loc.host}${APP_BASE_PATH}/graphql`,
   {
     reconnect: true,
   },
@@ -76,28 +70,11 @@ const subscribeFn = (request, variables) => {
   return Observable.from(subscribeObservable);
 };
 
-const buildHeaders = () => {
-  const accessToken = localStorage.getItem('token');
-  const headers = {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-  };
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-  const clientId = localStorage.getItem('client_id');
-  if (clientId) {
-    headers['X-Cyio-Client'] = clientId;
-  }
-  return headers;
-};
-
 const network = new RelayNetworkLayer(
   [
     urlMiddleware({
       url: `${APP_BASE_PATH}/graphql`,
       credentials: 'same-origin',
-      headers: buildHeaders(),
     }),
     uploadMiddleware(),
   ],
@@ -127,17 +104,7 @@ export class QueryRenderer extends Component {
           const { error } = data;
           const types = error ? map((e) => e.name, error) : [];
           const unmanagedErrors = difference(types, managedErrorTypes || []);
-          if (!isEmpty(unmanagedErrors)) {
-            // This is to fix the error that constantly comes up when the user is not authenticated
-            // when accessing the site. This is the first query to be run for any page so should be
-            // binary good or fail
-            if (query.operation.name === 'RootPrivateQuery') {
-              render(error);
-            } else {
-              toastGenericError('Query Error');
-              throw new ApplicationError(error);
-            }
-          }
+          if (!isEmpty(unmanagedErrors)) throw new ApplicationError(error);
           return render(data);
         }}
       />

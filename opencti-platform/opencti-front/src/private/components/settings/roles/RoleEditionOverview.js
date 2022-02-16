@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React from 'react';
 import * as PropTypes from 'prop-types';
 import graphql from 'babel-plugin-relay/macro';
@@ -230,7 +229,7 @@ const RoleEditionOverviewComponent = ({
                   return (
                     <List
                       dense={true}
-                      
+                      className={classes.root}
                       subheader={
                         <ListSubheader
                           component="div"

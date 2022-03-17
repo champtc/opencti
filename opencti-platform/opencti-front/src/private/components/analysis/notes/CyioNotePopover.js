@@ -110,6 +110,7 @@ class CyioNotePopover extends Component {
       onCompleted: () => {
         this.setState({ deleting: false });
         this.handleClose();
+        this.props.refreshQuery();
         if (this.props.handleOpenRemove) {
           this.handleCloseDelete();
         } else {

@@ -234,6 +234,7 @@ class CyioCoreObjectExternalReferencesLinesContainer extends Component {
                 {/* <Security needs={[KNOWLEDGE_KNUPDATE]}> */}
                 <CyioExternalReferencePopover
                   externalReference={externalReference}
+                  refreshQuery={this.props.refreshQuery}
                   externalReferenceId={externalReference.id}
                   handleRemove={this.handleOpenDialog.bind(
                     this,

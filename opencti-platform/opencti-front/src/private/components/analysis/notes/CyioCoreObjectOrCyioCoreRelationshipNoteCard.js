@@ -129,6 +129,7 @@ class CyioCoreObjectOrCyioCoreRelationshipNoteCardComponent extends Component {
       },
       onCompleted: () => {
         this.setState({ removing: false });
+        this.props.refreshQuery();
         this.handleCloseDialog();
       },
       // onError: (err) => console.log('NoteRemoveDarkLightMutationError', err),

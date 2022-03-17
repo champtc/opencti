@@ -165,9 +165,9 @@ const UserPreferencesModal = (props) => {
 
       localStorage.setItem('client_id', currentClient_id);
 
-      if(location.pathname === '/dashboard/vsac/scans/exploreresults'){
+      if(location.pathname === '/dashboard/vulnerability assessment/scans/explore results'){
 
-       window.location.replace('/dashboard/vsac/scans');
+       window.location.replace('/dashboard/vulnerability assessment/scans');
       } else {
         window.location.reload(false);
       }

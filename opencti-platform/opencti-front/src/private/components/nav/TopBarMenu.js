@@ -159,7 +159,7 @@ const TopBarMenu = ({
     elevation={1}
     style={{ backgroundColor: theme.palette.header.background }}
   >
-    <Toolbar style={{ display: location.pathname === '/dashboard/risk-assessment/risks' ? 'none' : 'block' }} className={classes.toolbar}>
+    <Toolbar style={{ display: location.pathname === '/dashboard/risk assessment/risks' ? 'none' : 'block' }} className={classes.toolbar}>
         <div className={classes.menuContainer}>
           {(location.pathname === '/dashboard'
             || location.pathname === '/dashboard/import') && <TopMenuDashboard />}
@@ -222,16 +222,16 @@ const TopBarMenu = ({
           {location.pathname.includes('/dashboard/threats/campaigns/') && (
             <TopMenuCampaign />
           )}
-          {(location.pathname === '/dashboard/vsac/scans/exploreresults'
-            || location.pathname.match('/dashboard/vsac/scans/exploreresults')) && (
+          {(location.pathname === '/dashboard/vulnerability assessment/scans/explore results'
+            || location.pathname.match('/dashboard/vulnerability assessment/scans/explore results')) && (
             <TopMenuVsacExploreResults />
           )}
-          {(location.pathname === '/dashboard/vsac/scans/viewcharts'
-            || location.pathname.match('/dashboard/vsac/scans/viewcharts')) && (
+          {(location.pathname === '/dashboard/vulnerability assessment/scans/view charts'
+            || location.pathname.match('/dashboard/vulnerability assessment/scans/view charts')) && (
             <TopMenuVsacViewCharts />
           )}
-          {(location.pathname === '/dashboard/vsac/scans/compare'
-            || location.pathname.match('/dashboard/vsac/scans/compare')) && (
+          {(location.pathname === '/dashboard/vulnerability assessment/scans/compare analysis'
+            || location.pathname.match('/dashboard/vulnerability assessment/scans/compare analysis')) && (
             <TopMenuVsacCompare />
           )}
           {(location.pathname === '/dashboard/assets'
@@ -248,11 +248,11 @@ const TopBarMenu = ({
             <TopMenuSoftware />
           )}
           {console.log('location.pathname', location.pathname)}
-          {/* {(location.pathname === '/dashboard/risk-assessment'
-            || location.pathname.match('/dashboard/risk-assessment/[a-z_]+$')) && (
+          {/* {(location.pathname === '/dashboard/risk assessment'
+            || location.pathname.match('/dashboard/risk assessment/[a-z_]+$')) && (
             <TopMenuRiskAssessment />
           )} */}
-          {location.pathname.includes('/dashboard/risk-assessment/risks/') && (
+          {location.pathname.includes('/dashboard/risk assessment/risks/') && (
             <TopMenuRisk />
           )}
           {(location.pathname === '/dashboard/arsenal'

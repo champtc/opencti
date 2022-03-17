@@ -105,37 +105,37 @@ const TopBarRiskBreadcrumbs = ({
   t, classes, location, history, keyword, theme, risk, remediation,
 }) => {
 
-  const pathParts= location.pathname.split("/").filter(entry => entry !== "");
+  const pathParts = location.pathname.split("/").filter(entry => entry !== "");
 
   pathParts.includes('remediation')
-  ? pathParts.map((value, i) => {
-    if(value === 'risks') {
-      pathParts[i+1] = risk.name;
-    }
-    else if(value === 'remediation') {
-      if(pathParts[i+1] !== undefined){
-        pathParts[i+1] = remediation?.name;
+    ? pathParts.map((value, i) => {
+      if (value === 'risks') {
+        pathParts[i + 1] = risk.name;
       }
-    }
-  })
-  : pathParts.map((value, i) => value === 'risks' ? pathParts[i+1] = risk.name : 'riskItem');
+      else if (value === 'remediation') {
+        if (pathParts[i + 1] !== undefined) {
+          pathParts[i + 1] = remediation?.name;
+        }
+      }
+    })
+    : pathParts.map((value, i) => value === 'risks' ? pathParts[i + 1] = risk.name : 'riskItem');
 
   const [menuOpen, setMenuOpen] = useState({ open: false, anchorEl: null });
   const buildBreadCrumbs = (array) => {
 
-     let url = "/";
-     let crumbArry = [];
+    let url = "/";
+    let crumbArry = [];
 
-      for(let x = 0; x < array.length; x++){
-                 
-        url += array[x] + "/";
-        let obj = { label: array[x], path: url } 
+    for (let x = 0; x < array.length; x++) {
 
-        crumbArry.push(obj);
+      url += array[x] + "/";
+      let obj = { label: array[x], path: url }
 
-      }
+      crumbArry.push(obj);
 
-      return crumbArry;
+    }
+
+    return crumbArry;
 
   }
   const handleOpenMenu = (event) => {
@@ -180,19 +180,25 @@ const TopBarRiskBreadcrumbs = ({
           </Link>
         </div>
         <div className={classes.menuContainer}>
-           <Breadcrumbs aria-label="breadcrumb">
-           {breadCrumbs.map((crumb, i, array) => {     
-              if(i === array.length -1){
-               return (<Typography color="textPrimary" style={{textTransform: 'capitalize'}}>{crumb.label}</Typography>)
-             } else {
-               return (<Link color="inherit" 
-                             to={crumb.path} 
-                             onClick={(e) => { e.preventDefault(); history.push(crumb.path); }}
-                             style={{textTransform: 'capitalize'}}
-                       >
-                             {crumb.label}
-                      </Link>)
-             }
+          <Breadcrumbs aria-label="breadcrumb">
+            {breadCrumbs.map((crumb, i, array) => {
+              const crumbLabel = breadCrumbs.map(value => value.label);
+              if (crumb.label === 'dashboard' && (crumbLabel.includes('risk assessment')
+                || crumbLabel.includes('vulnerability assessment')
+                || crumbLabel.includes('threats'))) {
+                crumb.label = 'Activities'
+              }
+              if (i === array.length - 1) {
+                return (<Typography color="textPrimary" style={{ textTransform: 'capitalize' }}>{crumb.label}</Typography>)
+              } else {
+                return (<Link color="inherit"
+                  to={crumb.path}
+                  onClick={(e) => { e.preventDefault(); history.push(crumb.path); }}
+                  style={{ textTransform: 'capitalize' }}
+                >
+                  {crumb.label}
+                </Link>)
+              }
             })}
           </Breadcrumbs>
         </div>
@@ -271,39 +277,39 @@ const TopBarRiskBreadcrumbs = ({
                 </IconButton>
               </Tooltip>
             </Security>
-              <Tooltip title={t('Dashboard')}>
-                <IconButton
-                  component={Link}
-                  to='/dashboard'
-                  classes={{ root: classes.button }}
-                >
+            <Tooltip title={t('Dashboard')}>
+              <IconButton
+                component={Link}
+                to='/dashboard'
+                classes={{ root: classes.button }}
+              >
                 <DashboardIcon fontSize="default" />
-                </IconButton>
-              </Tooltip>
+              </IconButton>
+            </Tooltip>
             <Tooltip title={t('Find in Page')}>
-                <IconButton
-                  component={Link}
-                  classes={{ root: classes.button }}
-                >
+              <IconButton
+                component={Link}
+                classes={{ root: classes.button }}
+              >
                 <FindInPageIcon fontSize="default" />
-                </IconButton>
-              </Tooltip>
+              </IconButton>
+            </Tooltip>
             <Tooltip title={t('Upload')}>
-                <IconButton
-                  component={Link}
-                  classes={{ root: classes.button }}
-                >
+              <IconButton
+                component={Link}
+                classes={{ root: classes.button }}
+              >
                 <PublishIcon fontSize="default" />
-                </IconButton>
-              </Tooltip>
+              </IconButton>
+            </Tooltip>
             <Tooltip title={t('Add Note')}>
-                <IconButton
-                  component={Link}
-                  classes={{ root: classes.button }}
-                >
+              <IconButton
+                component={Link}
+                classes={{ root: classes.button }}
+              >
                 <NoteAddIcon fontSize="default" />
-                </IconButton>
-              </Tooltip>
+              </IconButton>
+            </Tooltip>
             <IconButton
               size="medium"
               classes={{ root: classes.button }}

@@ -53,7 +53,7 @@ const Remediations = (props) => {
 
   const handleOpenNewCreation = () => {
     props.history.push({
-      pathname: '/dashboard/risk-assessment/risks',
+      pathname: '/dashboard/risk assessment/risks',
       openNewCreation: true,
     });
   };

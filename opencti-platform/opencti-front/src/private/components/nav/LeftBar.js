@@ -211,8 +211,8 @@ const LeftBar = ({
               </MenuItem>
               <MenuItem
                 component={Link}
-                to="/dashboard/vsac"
-                selected={location.pathname.includes('/dashboard/vsac')}
+                to="/dashboard/vulnerability assessment"
+                selected={location.pathname.includes('/dashboard/vulnerability assessment')}
                 dense={false}
                 classes={{ root: classes.menuItemNested }}
               >
@@ -223,8 +223,8 @@ const LeftBar = ({
               </MenuItem>
               <MenuItem
                 component={Link}
-                to="/dashboard/risk-assessment"
-                selected={location.pathname.includes('/dashboard/risk-assessment')}
+                to="/dashboard/risk assessment"
+                selected={location.pathname.includes('/dashboard/risk assessment')}
                 dense={false}
                 classes={{ root: classes.menuItemNested }}
               >

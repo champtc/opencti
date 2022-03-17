@@ -95,13 +95,13 @@ const Index = (me) => {
             path="/dashboard/search/:keyword"
             render={(routeProps) => <Search {...routeProps} me={me} />}
           />
-          <BoundaryRoute path="/dashboard/vsac" component={RootVSAC} />
+          <BoundaryRoute path="/dashboard/vulnerability assessment" component={RootVSAC} />
           <BoundaryRoute path="/dashboard/analysis" component={RootAnalysis} />
           <BoundaryRoute path="/dashboard/events" component={RootEvents} />
           <Route path="/dashboard/observations" component={RootObservations} />
           <BoundaryRoute path="/dashboard/threats" component={RootThreats} />
           <BoundaryRoute path="/dashboard/assets" component={RootAssets} />
-          <BoundaryRoute path="/dashboard/risk-assessment" component={RootRiskAssessment} />
+          <BoundaryRoute path="/dashboard/risk assessment" component={RootRiskAssessment} />
           <BoundaryRoute path="/dashboard/arsenal" component={RootArsenal} />
           <BoundaryRoute path="/dashboard/entities" component={RootEntities} />
           <BoundaryRoute path="/dashboard/data" render={RootData} />

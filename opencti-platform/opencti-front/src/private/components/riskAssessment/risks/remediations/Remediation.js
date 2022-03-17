@@ -51,7 +51,7 @@ class RemediationComponent extends Component {
 
   handleOpenNewCreation() {
     this.props.history.push({
-      pathname: '/dashboard/risk-assessment/risks',
+      pathname: '/dashboard/risk assessment/risks',
       openNewCreation: true,
     });
   }

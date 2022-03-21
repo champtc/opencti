@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import {
@@ -27,6 +29,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import { MoreVertOutlined } from '@material-ui/icons';
 import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
+import { adaptFieldValue } from '../../../../utils/String';
 import DatePickerField from '../../../../components/DatePickerField';
 import TextField from '../../../../components/TextField';
 import SelectField from '../../../../components/SelectField';
@@ -88,16 +91,17 @@ Transition.displayName = 'TransitionSlide';
 
 const RiskTrackingPopoverDeletionMutation = graphql`
   mutation RiskTrackingPopoverDeletionMutation($id: ID!) {
-    externalReferenceEdit(id: $id) {
-      delete
-    }
+    deleteRiskLogEntry(id: $id)
   }
 `;
 
 const RiskTrackingEditionQuery = graphql`
-  query RiskTrackingPopoverEditionQuery($id: String!) {
-    externalReference(id: $id) {
-      ...ExternalReferenceEdition_externalReference
+  mutation RiskTrackingPopoverEditionQuery(
+    $id: ID!,
+    $input: [EditInput]!
+    ) {
+    editRiskLogEntry(id: $id, input: $input) {
+      id
     }
   }
 `;
@@ -141,19 +145,38 @@ class RiskTrackingPopover extends Component {
   }
 
   handleCancelButton() {
-    this.setState({ displayCancel: false });
+    this.setState({ displayCancel: false, displayUpdate: false });
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    this.setState({
-      related_responses: [{
-        related_response: values.related_response,
-      }],
+    const adaptedValues = R.evolve(
+      {
+        event_start: () => parse(values.event_start).format(),
+        event_end: () => parse(values.event_end).format(),
+      },
+      values,
+    );
+    const finalValues = R.pipe(
+      R.toPairs,
+      R.map((n) => ({
+        'key': n[0],
+        'value': adaptFieldValue(n[1]),
+      })),
+    )(adaptedValues);
+    CM(environmentDarkLight, {
+      mutation: RiskTrackingEditionQuery,
+      variables: {
+        id: this.props.node.id,
+        input: finalValues,
+      },
+      setSubmitting,
+      onCompleted: (data) => {
+        setSubmitting(false);
+        resetForm();
+        this.handleCancelButton();
+      },
+      onError: (err) => console.log('RiskTrackingEditionContainerError', err),
     });
-    const finalValues = pipe(
-      dissoc('related_response'),
-      assoc('related_responses', this.state.related_responses),
-    )(values);
   }
 
   submitDelete() {
@@ -161,7 +184,7 @@ class RiskTrackingPopover extends Component {
     CM(environmentDarkLight, {
       mutation: RiskTrackingPopoverDeletionMutation,
       variables: {
-        id: this.props.externalReferenceId,
+        id: this.props.node.id,
       },
       onCompleted: (data) => {
         this.setState({ deleting: false });
@@ -210,22 +233,22 @@ class RiskTrackingPopover extends Component {
 
     const initialValues = R.pipe(
       R.assoc('entry_type', node?.entry_type || []),
-      R.assoc('title', node?.name || ''),
+      R.assoc('name', node?.name || ''),
       R.assoc('description', node?.description || ''),
       R.assoc('event_start', dateFormat(node?.event_start)),
       R.assoc('event_end', dateFormat(node?.event_end)),
       R.assoc('logged_by', riskTrackingLoggedBy?.name || ''),
       R.assoc('status_change', node?.status_change || ''),
-      R.assoc('related_response', riskStatusResponse?.name || []),
+      R.assoc('related_responses', riskStatusResponse?.name || []),
       R.pick([
         'entry_type',
-        'title',
+        'name',
         'description',
         'event_start',
         'event_end',
         'logged_by',
         'status_change',
-        'related_response',
+        'related_responses',
       ]),
     )(node);
     return (
@@ -366,7 +389,7 @@ class RiskTrackingPopover extends Component {
                           component={TextField}
                           variant='outlined'
                           size='small'
-                          name="title"
+                          name="name"
                           fullWidth={true}
                           containerstyle={{ width: '100%' }}
                         />
@@ -547,7 +570,7 @@ class RiskTrackingPopover extends Component {
                         <div className="clearfix" />
                         <RiskStatus
                           variant='outlined'
-                          name="entry_type"
+                          name="status_change"
                           size='small'
                           fullWidth={true}
                           style={{ height: '38.09px', marginBottom: '3px' }}

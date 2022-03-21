@@ -142,33 +142,23 @@ class RiskLogCreation extends Component {
     const adaptedValues = evolve(
       {
         event_end: () => values.event_end === null ? null : parse(values.event_end).format(),
-        event_start: () => values.event_end === null ? null : parse(values.event_end).format(),
+        event_start: () => values.event_start === null ? null : parse(values.event_start).format(),
       },
       values,
     );
-    // const finalValues = pipe(
-    //   dissoc('related_response'),
-    //   assoc('related_responses', this.state.related_responses),
-    // )(values);
+    const finalValues = pipe(
+      dissoc('logged_by'),
+    )(adaptedValues);
     CM(environmentDarkLight, {
       mutation: RiskLogCreationMutation,
       variables: {
-        input: adaptedValues,
+        input: finalValues,
       },
-      // updater: (store) => insertNode(
-      //   store,
-      //   'Pagination_externalReferences',
-      //   this.props.paginationOptions,
-      //   'externalReferenceAdd',
-      // ),
       setSubmitting,
       onCompleted: (response) => {
         setSubmitting(false);
         resetForm();
         this.handleClose();
-        if (this.props.onCreate) {
-          this.props.onCreate(response.externalReferenceAdd, true);
-        }
       },
       onError: (err) => console.log('riskLogCreationValueError', err),
     });
@@ -340,8 +330,8 @@ class RiskLogCreation extends Component {
               entry_type: [],
               name: '',
               description: '',
-              event_start: '',
-              event_end: '',
+              event_start: null,
+              event_end: null,
               logged_by: [],
               status_change: '',
               related_responses: [],
@@ -379,31 +369,6 @@ class RiskLogCreation extends Component {
                           style={{ height: '38.09px', marginBottom: '3px' }}
                           containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
                         />
-                        {/* <Field
-                          component={SelectField}
-                          name="entry_type"
-                          fullWidth={true}
-                          multiple={true}
-                          variant='outlined'
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '100%' }}
-                        >
-                          <MenuItem value='remediated'>
-                            remediated
-                          </MenuItem>
-                          <MenuItem value='mitigation'>
-                            mitigation
-                          </MenuItem>
-                          <MenuItem value='closed'>
-                            closed
-                          </MenuItem>
-                          <MenuItem value='vendor_check_in'>
-                            vendor_check_in
-                          </MenuItem>
-                          <MenuItem value='status_update'>
-                            status_update
-                          </MenuItem>
-                        </Field> */}
                       </div>
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -482,9 +447,6 @@ class RiskLogCreation extends Component {
                           name="event_start"
                           fullWidth={true}
                           size="small"
-                          invalidDateMessage={t(
-                            'The value must be a date (YYYY-MM-DD)',
-                          )}
                           style={{ height: '38.09px' }}
                           containerstyle={{ width: '100%' }}
                           variant='outlined'
@@ -541,6 +503,7 @@ class RiskLogCreation extends Component {
                           component={SelectField}
                           name="related_responses"
                           fullWidth={true}
+                          multiple={true}
                           size="small"
                           variant='outlined'
                           style={{ height: '38.09px' }}
@@ -575,9 +538,6 @@ class RiskLogCreation extends Component {
                           name="event_end"
                           fullWidth={true}
                           size="small"
-                          invalidDateMessage={t(
-                            'The value must be a date (YYYY-MM-DD)',
-                          )}
                           style={{ height: '38.09px' }}
                           variant='outlined'
                           containerstyle={{ width: '100%' }}
@@ -598,34 +558,9 @@ class RiskLogCreation extends Component {
                           </Tooltip>
                         </div>
                         <div className="clearfix" />
-                        {/* <Field
-                          component={SelectField}
-                          name="status_change"
-                          fullWidth={true}
-                          size="small"
-                          variant='outlined'
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '100%' }}
-                        >
-                          <MenuItem value='open'>
-                            open
-                          </MenuItem>
-                          <MenuItem value='investigating'>
-                            investigating
-                          </MenuItem>
-                          <MenuItem value='closed'>
-                            closed
-                          </MenuItem>
-                          <MenuItem value='deviation_requested'>
-                            deviation_requested
-                          </MenuItem>
-                          <MenuItem value='deviation_approved'>
-                            deviation_approved
-                          </MenuItem>
-                        </Field> */}
                         <RiskStatus
                           variant='outlined'
-                          name="entry_type"
+                          name="status_change"
                           size='small'
                           fullWidth={true}
                           style={{ height: '38.09px', marginBottom: '3px' }}

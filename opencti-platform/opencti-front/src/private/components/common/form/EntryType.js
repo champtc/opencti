@@ -79,6 +79,7 @@ class EntryType extends Component {
           label={label}
           fullWidth={true}
           containerstyle={containerstyle}
+          multiple={true}
           variant={variant}
           disabled={disabled || false}
           size={size}
@@ -86,16 +87,9 @@ class EntryType extends Component {
           helperText={helperText}
         >
           {entryTypeList.map((et, key) => (
-            et.label
-            && <Tooltip
-              title={et.label}
-              value={et.value}
-              key={et.label}
-            >
-              <MenuItem value={et.value}>
-                {et.value}
-              </MenuItem>
-            </Tooltip>
+            <MenuItem key={et.label} value={et.value}>
+              {et.value}
+            </MenuItem>
           ))}
         </Field>
       </div>

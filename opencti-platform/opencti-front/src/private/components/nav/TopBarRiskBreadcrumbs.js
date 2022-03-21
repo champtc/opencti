@@ -206,7 +206,7 @@ const TopBarRiskBreadcrumbs = ({
           <div className={classes.barContainer}>
             <Security needs={[KNOWLEDGE]}>
               <div className={classes.searchContainer}>
-                <SearchInput onSubmit={handleSearch} keyword={keyword} />
+                <SearchInput disabled={true} onSubmit={handleSearch} keyword={keyword} />
               </div>
               <Filters
                 variant="dialog"
@@ -223,7 +223,8 @@ const TopBarRiskBreadcrumbs = ({
                   'created_at_end_date',
                 ]}
                 currentFilters={{}}
-                disabled={location.pathname.includes('/dashboard/search')}
+                // disabled={location.pathname.includes('/dashboard/search')}
+                disabled={true}
               />
             </Security>
           </div>
@@ -288,14 +289,16 @@ const TopBarRiskBreadcrumbs = ({
             </Tooltip>
             <Tooltip title={t('Find in Page')}>
               <IconButton
+                disabled={true}
                 component={Link}
                 classes={{ root: classes.button }}
               >
                 <FindInPageIcon fontSize="default" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={t('Upload')}>
+            <Tooltip title={t('Data Import')}>
               <IconButton
+                disabled={true}
                 component={Link}
                 classes={{ root: classes.button }}
               >
@@ -304,6 +307,7 @@ const TopBarRiskBreadcrumbs = ({
             </Tooltip>
             <Tooltip title={t('Add Note')}>
               <IconButton
+                disabled={true}
                 component={Link}
                 classes={{ root: classes.button }}
               >

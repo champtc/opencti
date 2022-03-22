@@ -40,6 +40,7 @@ import { insertNode } from '../../../../utils/Store';
 import { dateFormat, parse } from '../../../../utils/Time';
 import EntryType from '../../common/form/EntryType';
 import RiskStatus from '../../common/form/RiskStatus';
+import LoggedBy from '../../common/form/LoggedBy';
 
 const styles = (theme) => ({
   drawerPaper: {
@@ -467,21 +468,13 @@ class RiskLogCreation extends Component {
                           </Tooltip>
                         </div>
                         <div className="clearfix" />
-                        <Field
-                          component={SelectField}
-                          name="logged_by"
-                          fullWidth={true}
+                        <LoggedBy
                           variant='outlined'
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '50%' }}
-                        />
-                        <Field
-                          component={SelectField}
                           name="logged_by"
+                          size='small'
                           fullWidth={true}
-                          variant='outlined'
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '50%' }}
+                          style={{ height: '38.09px', marginBottom: '3px' }}
+                          containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
                         />
                       </div>
                       <div style={{ marginBottom: '15px' }}>

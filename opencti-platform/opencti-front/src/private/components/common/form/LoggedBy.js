@@ -12,16 +12,16 @@ import SelectField from '../../../../components/SelectField';
 import { fetchDarklightQuery } from '../../../../relay/environmentDarkLight';
 
 const LoggedByQuery = graphql`
-query LoggedByQuery{
-    __type(name: "PartyType" ) {
+ query LoggedByQuery {
+  oscalParties {
+    edges {
+      node {
         name
         description
-        enumValues {
-          name
-          description
-        }
+      }
     }
   }
+}
 `;
 
 class RelatedResponse extends Component {
@@ -36,10 +36,10 @@ class RelatedResponse extends Component {
             .toPromise()
             .then((data) => {
                 const loggedByEntities = R.pipe(
-                    R.pathOr([], ['__type', 'enumValues']),
+                    R.pathOr([], ['oscalParties', 'edges']),
                     R.map((n) => ({
-                        label: n.description,
-                        value: n.name,
+                        label: n.node.description,
+                        value: n.node.name,
                     })),
                 )(data);
                 this.setState({

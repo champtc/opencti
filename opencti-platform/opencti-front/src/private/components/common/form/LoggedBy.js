@@ -6,7 +6,7 @@ import * as R from 'ramda';
 import MenuItem from '@material-ui/core/MenuItem';
 import Tooltip from '@material-ui/core/Tooltip';
 import { Information } from 'mdi-material-ui';
-import graphql from 'babel-plugin-relay/macro';
+import graphql from 'babel-plugin-relay/macro'
 import inject18n from '../../../../components/i18n';
 import SelectField from '../../../../components/SelectField';
 import { fetchDarklightQuery } from '../../../../relay/environmentDarkLight';

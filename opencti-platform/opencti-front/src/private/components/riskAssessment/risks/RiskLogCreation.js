@@ -11,6 +11,7 @@ import {
   evolve,
   pipe,
 } from 'ramda';
+import * as R from 'ramda';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
@@ -108,26 +109,25 @@ const RiskLogCreationMutation = graphql`
   ) {
     createRiskLogEntry(input: $input) {
       id
-      standard_id
-      entity_type
-      parent_types
-      entry_type
     }
   }
 `;
 
-const RiskLogValidation = (t) => Yup.object().shape({
-  source_name: Yup.string().required(t('This field is required')),
-  external_id: Yup.string(),
-  url: Yup.string().url(t('The value must be an URL')),
-  description: Yup.string(),
-});
+// const RiskLogValidation = (t) => Yup.object().shape({
+//   source_name: Yup.string().required(t('This field is required')),
+//   external_id: Yup.string(),
+//   url: Yup.string().url(t('The value must be an URL')),
+//   description: Yup.string(),
+// });
 
 class RiskLogCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
       open: false,
+      logged_by:[{
+        party: '',
+      }],
     };
   }
 
@@ -140,16 +140,22 @@ class RiskLogCreation extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
+     this.setState({
+      logged_by:[{
+        party: values.logged_by,
+      }],
+    })
     const adaptedValues = evolve(
       {
         event_end: () => values.event_end === null ? null : parse(values.event_end).format(),
-        event_start: () => values.event_start === null ? null : parse(values.event_start).format(),
+        event_start: () => values.event_end === null ? null : parse(values.event_end).format(),
+        entry_type: () => values.entry_type.split(),
       },
       values,
     );
-    const finalValues = pipe(
-      dissoc('logged_by'),
-    )(adaptedValues);
+    const finalValues = R.pipe(
+      R.assoc('logged_by', this.state.logged_by),
+    )(adaptedValues)
     CM(environmentDarkLight, {
       mutation: RiskLogCreationMutation,
       variables: {
@@ -160,6 +166,7 @@ class RiskLogCreation extends Component {
         setSubmitting(false);
         resetForm();
         this.handleClose();
+        this.props.history.push(`/activities/risk assessment/risks/${this.props.riskId}/tracking`);
       },
       onError: (err) => console.log('riskLogCreationValueError', err),
     });
@@ -300,7 +307,7 @@ class RiskLogCreation extends Component {
 
   renderContextual() {
     const {
-      t, classes, inputValue, display, riskStatusResponse
+      t, classes, inputValue, display, riskStatusResponse, riskId
     } = this.props;
     return (
       <div style={{ display: display ? 'block' : 'none' }}>
@@ -328,12 +335,13 @@ class RiskLogCreation extends Component {
           <Formik
             enableReinitialize={true}
             initialValues={{
+              risk_id: riskId,
               entry_type: [],
               name: '',
               description: '',
-              event_start: null,
-              event_end: null,
-              logged_by: [],
+              event_start: '',
+              event_end: '',
+              logged_by: '',
               status_change: '',
               related_responses: [],
             }}
@@ -645,6 +653,7 @@ RiskLogCreation.propTypes = {
   inputValue: PropTypes.string,
   onCreate: PropTypes.func,
   riskStatusResponse: PropTypes.array,
+  riskId: PropTypes.string,
 };
 
 export default compose(

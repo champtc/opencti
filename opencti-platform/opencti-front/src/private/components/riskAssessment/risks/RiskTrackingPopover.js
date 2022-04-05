@@ -470,6 +470,15 @@ class RiskTrackingPopover extends Component {
                           </Tooltip>
                         </div>
                         <div className="clearfix" />
+                        {/* <Field
+                          component={SelectField}
+                          variant='outlined'
+                          name="logged_by"
+                          size='small'
+                          fullWidth={true}
+                          style={{ height: '38.09px' }}
+                          containerstyle={{ width: '50%', padding: '0 0 1px 0' }}
+                        /> */}
                         <LoggedBy
                           variant='outlined'
                           name="logged_by"

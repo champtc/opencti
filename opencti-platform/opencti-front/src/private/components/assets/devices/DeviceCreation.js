@@ -126,6 +126,8 @@ class DeviceCreation extends Component {
       open: false,
       onSubmit: false,
       displayCancel: false,
+      ipv4_address: [{ ip_address_value: '' }],
+      ipv6_address: [{ ip_address_value: '' }],
     };
   }
 
@@ -134,6 +136,10 @@ class DeviceCreation extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
+    this.setState({
+      ipv4_address:[{ ip_address_value: values.ipv4_address.toString() }],
+      ipv6_address: [{ ip_address_value: values.ipv6_address.toString() }],
+    });
     const adaptedValues = evolve(
       {
         release_date: () => values.release_date === null ? null : parse(values.release_date).format(),
@@ -146,6 +152,8 @@ class DeviceCreation extends Component {
       R.dissoc('labels'),
       R.dissoc('locations'),
       R.assoc('asset_type', values.asset_type),
+      R.assoc('ipv4_address', this.state.ipv4_address),
+      R.assoc('ipv6_address', this.state.ipv6_address),
     )(adaptedValues);
     CM(environmentDarkLight, {
       mutation: deviceCreationMutation,
@@ -159,7 +167,7 @@ class DeviceCreation extends Component {
         this.handleClose();
         this.props.history.push('/defender HQ/assets/devices');
       },
-      onError: (err => (console.error('DeviceCreation Error', err))),
+      onError: (err => (console.log('DeviceCreation Erro', err))),
     });
     // commitMutation({
     //   mutation: deviceCreationMutation,
@@ -223,9 +231,9 @@ class DeviceCreation extends Component {
             serial_number: '',
             vendor_name: '',
             release_date: null,
-            ipv4_address: [],
+            ipv4_address: '',
             locations: [],
-            ipv6_address: [],
+            ipv6_address: '',
             ports: [],
             protocols: [],
             port_number: '',
@@ -245,7 +253,7 @@ class DeviceCreation extends Component {
             labels: [],
             asset_type: 'physical_device',
             mac_address: [],
-            installed_operating_system: [],
+            installed_operating_system: '',
             installed_hardware: [],
             installed_software: [],
             fqdn: '',

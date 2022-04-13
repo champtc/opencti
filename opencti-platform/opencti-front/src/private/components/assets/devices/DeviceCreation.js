@@ -126,8 +126,8 @@ class DeviceCreation extends Component {
       open: false,
       onSubmit: false,
       displayCancel: false,
-      ipv4_address: [{ ip_address_value: '' }],
-      ipv6_address: [{ ip_address_value: '' }],
+      ipv4_address: [],
+      ipv6_address: [],
     };
   }
 
@@ -136,10 +136,20 @@ class DeviceCreation extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    this.setState({
-      ipv4_address:[{ ip_address_value: values.ipv4_address.toString() }],
-      ipv6_address: [{ ip_address_value: values.ipv6_address.toString() }],
-    });
+    if(values.ipv4_address.length > 0){
+      this.setState({
+        ipv4_address: values.ipv4_address.map((value) => {
+          return { 'ip_address_value': value }
+        }),
+      });
+    }
+    if(values.ipv6_address.length > 0){
+      this.setState({
+        ipv6_address: values.ipv6_address.map((value) => {
+          return { 'ip_address_value': value }
+        }),
+      });
+    }
     const adaptedValues = evolve(
       {
         release_date: () => values.release_date === null ? null : parse(values.release_date).format(),
@@ -231,9 +241,9 @@ class DeviceCreation extends Component {
             serial_number: '',
             vendor_name: '',
             release_date: null,
-            ipv4_address: '',
+            ipv4_address: [],
             locations: [],
-            ipv6_address: '',
+            ipv6_address: [],
             ports: [],
             protocols: [],
             port_number: '',
@@ -339,7 +349,7 @@ class DeviceCreation extends Component {
                       stixCoreObjectId={device.id}
                     /> */}
                   <div>
-                    <CyioCoreObjectAssetCreationExternalReferences disableAdd={true}/>
+                    <CyioCoreObjectAssetCreationExternalReferences disableAdd={true} />
                   </div>
                 </Grid>
                 <Grid item={true} xs={6}>

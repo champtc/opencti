@@ -1134,7 +1134,7 @@ export const partyPredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   job_title: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/common#jjob_title>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#job_title>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "job_title");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },

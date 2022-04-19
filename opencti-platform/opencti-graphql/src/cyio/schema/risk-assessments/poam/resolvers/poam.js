@@ -1,6 +1,7 @@
 import { riskSingularizeSchema as singularizeSchema } from '../../risk-mappings.js';
 import {compareValues, updateQuery, filterValues} from '../../../utils.js';
 import {UserInputError} from "apollo-server-express";
+import { calculateRiskLevel } from '../../riskUtils.js';
 import {
   getReducer, 
   insertPOAMQuery,
@@ -53,9 +54,10 @@ const poamResolvers = {
       if (Array.isArray(response) && response.length > 0) {
         const edges = [];
         const reducer = getReducer("POAM");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? response.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         let poamList ;
         if (args.orderedBy !== undefined ) {
           poamList = response.sort(compareValues(args.orderedBy, args.orderMode ));
@@ -83,6 +85,7 @@ const poamResolvers = {
             if (!filterValues(poam, args.filters, args.filterMode) ) {
               continue
             }
+            filterCount++;
           }
 
           // if haven't reached limit to be returned
@@ -93,18 +96,30 @@ const poamResolvers = {
             }
             edges.push(edge)
             limit--;
+            if (limit === 0) break;
           }
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = poamList.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: poamList.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -452,9 +467,10 @@ const poamResolvers = {
       if (Array.isArray(iriArray) && iriArray.length > 0) {
         const edges = [];
         const reducer = getCommonReducer("ROLE");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? iriArray.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         for (let iri of iriArray) {
           if (iri === undefined || !iri.includes('Role')) continue ;
           const sparqlQuery = selectRoleByIriQuery(iri, selectMap.getNode('node'));
@@ -479,6 +495,7 @@ const poamResolvers = {
               }
               edges.push(edge);
               limit--;
+              if (limit === 0) break;
             }
           }
           else {
@@ -491,16 +508,27 @@ const poamResolvers = {
             }
           }  
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = iriArray.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: iriArray.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -514,9 +542,10 @@ const poamResolvers = {
       if (Array.isArray(iriArray) && iriArray.length > 0) {
         const edges = [];
         const reducer = getCommonReducer("LOCATION");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? iriArray.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         for (let iri of iriArray) {
           if (iri === undefined || !iri.includes('Location')) continue ;
           const sparqlQuery = selectLocationByIriQuery(iri, selectMap.getNode('node'));
@@ -541,6 +570,7 @@ const poamResolvers = {
               }
               edges.push(edge);
               limit--;
+              if (limit === 0) break;
             }
           }
           else {
@@ -553,16 +583,27 @@ const poamResolvers = {
             }
           }  
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = iriArray.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: iriArray.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -576,9 +617,10 @@ const poamResolvers = {
       if (Array.isArray(iriArray) && iriArray.length > 0) {
         const edges = [];
         const reducer = getCommonReducer("PARTY");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, limitCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? iriArray.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         for (let iri of iriArray) {
           if (iri === undefined || !iri.includes('Party')) continue ;
           const sparqlQuery = selectPartyByIriQuery(iri, selectMap.getNode('node'));
@@ -603,6 +645,7 @@ const poamResolvers = {
               }
               edges.push(edge);
               limit--;
+              if (limit === 0) break;
             }
           }
           else {
@@ -615,16 +658,27 @@ const poamResolvers = {
             }
           }  
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = iriArray.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: iriArray.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -638,9 +692,10 @@ const poamResolvers = {
       if (Array.isArray(iriArray) && iriArray.length > 0) {
         const edges = [];
         const reducer = getCommonReducer("RESPONSIBLE-PARTY");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? iriArray.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         for (let iri of iriArray) {
           if (iri === undefined || !iri.includes('ResponsibleParty')) continue ;
           const sparqlQuery = selectResponsiblePartyByIriQuery(iri, selectMap.getNode('node'));
@@ -665,6 +720,7 @@ const poamResolvers = {
               }
               edges.push(edge);
               limit--;
+              if (limit === 0) break;
             }
           }
           else {
@@ -677,16 +733,27 @@ const poamResolvers = {
             }
           }  
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = iriArray.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: iriArray.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -703,9 +770,10 @@ const poamResolvers = {
       if (Array.isArray(iriArray) && iriArray.length > 0) {
         const edges = [];
         const reducer = getAssessmentReducer("OBSERVATION");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? iriArray.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         for (let iri of iriArray) {
           if (iri === undefined || !iri.includes('Observation')) continue ;
           const sparqlQuery = selectObservationByIriQuery(iri, selectMap.getNode("node"));
@@ -730,6 +798,7 @@ const poamResolvers = {
               }
               edges.push(edge);
               limit--;
+              if (limit === 0) break;
             }
           }
           else {
@@ -742,16 +811,27 @@ const poamResolvers = {
             }
           }  
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = iriArray.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: iriArray.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -765,9 +845,10 @@ const poamResolvers = {
       if (Array.isArray(iriArray) && iriArray.length > 0) {
         const edges = [];
         const reducer = getAssessmentReducer("RISK");
-        let risk, limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, risk, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? iriArray.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         if (offset > iriArray.length) return null;
         for (let iri of iriArray) {
           if (iri === undefined || !iri.includes('Risk')) continue ;
@@ -805,17 +886,11 @@ const poamResolvers = {
             risk.risk_status = risk.risk_status.replace('_', '-');
           }
 
-          // calculate the risk level
           risk.risk_level = 'unknown';
           if (risk.cvss20_base_score !== undefined || risk.cvss30_base_score !== undefined) {
-            let riskLevel;
-            let score = risk.cvss30_base_score !== undefined ? parseFloat(risk.cvss30_base_score) : parseFloat(risk.cvss20_base_score) ;
-            if (score <= 10 && score >= 9.0) riskLevel = 'very-high';
-            if (score <= 8.9 && score >= 7.0) riskLevel = 'high';
-            if (score <= 6.9 && score >= 4.0) riskLevel = 'moderate';
-            if (score <= 3.9 && score >= 0.1) riskLevel = 'low';
-            if (score == 0) riskLevel = 'very-low';
-            risk.risk_score = score;
+            // calculate the risk level
+            const {riskLevel, riskScore} = calculateRiskLevel(risk);
+            risk.risk_score = riskScore;
             risk.risk_level = riskLevel;
 
             // clean up
@@ -837,17 +912,27 @@ const poamResolvers = {
             if (limit === 0) break;
           }
         }
-        // return null if no edges
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = iriArray.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: iriArray.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -861,9 +946,10 @@ const poamResolvers = {
       if (Array.isArray(iriArray) && iriArray.length > 0) {
         const edges = [];
         const reducer = getReducer("POAM-ITEM");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? iriArray.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         for (let iri of iriArray) {
           if (iri === undefined || !iri.includes('poam#Item')) continue ;
           const sparqlQuery = selectPOAMItemByIriQuery(iri, selectMap.getNode("nodes"));
@@ -888,6 +974,7 @@ const poamResolvers = {
               }
               edges.push(edge);
               limit--;
+              if (limit === 0) break;
             }
           }
           else {
@@ -900,16 +987,27 @@ const poamResolvers = {
             }
           }  
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = iriArray.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: iriArray.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }

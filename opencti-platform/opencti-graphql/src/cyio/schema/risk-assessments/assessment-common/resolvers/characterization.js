@@ -50,9 +50,10 @@ const characterizationResolvers = {
       if (Array.isArray(response) && response.length > 0) {
         const edges = [];
         const reducer = getReducer("CHARACTERIZATION");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? response.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         let characterizationList ;
         if (args.orderedBy !== undefined ) {
           characterizationList = response.sort(compareValues(args.orderedBy, args.orderMode ));
@@ -80,6 +81,7 @@ const characterizationResolvers = {
             if (!filterValues(characterization, args.filters, args.filterMode) ) {
               continue
             }
+            filterCount++;
           }
 
           // if haven't reached limit to be returned
@@ -92,16 +94,27 @@ const characterizationResolvers = {
             limit--;
           }
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = characterizationList.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: characterizationList.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -149,6 +162,7 @@ const characterizationResolvers = {
       }
     },
     facets: async (_, args, { dbName, dataSources, selectMap }) => {
+      // TODO: Update to support vulnerability-facets
       const sparqlQuery = selectAllFacets(selectMap.getNode("node"), args);
       let response;
       try {
@@ -167,9 +181,10 @@ const characterizationResolvers = {
       if (Array.isArray(response) && response.length > 0) {
         const edges = [];
         const reducer = getReducer("FACET");
-        let limit, offset, limitSize, offsetSize;
+        let filterCount, resultCount, limit, offset, limitSize, offsetSize;
         limitSize = limit = (args.first === undefined ? response.length : args.first) ;
         offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+        filterCount = 0;
         let facetList ;
         if (args.orderedBy !== undefined ) {
           facetList = response.sort(compareValues(args.orderedBy, args.orderMode ));
@@ -197,6 +212,7 @@ const characterizationResolvers = {
             if (!filterValues(facet, args.filters, args.filterMode) ) {
               continue
             }
+            filterCount++;
           }
 
           // if haven't reached limit to be returned
@@ -209,16 +225,27 @@ const characterizationResolvers = {
             limit--;
           }
         }
+        // check if there is data to be returned
         if (edges.length === 0 ) return null;
-        // Need to adjust limitSize in case filters were used
-        if (args !== undefined && 'filters' in args && args.filters !== null) limitSize++;
+        let hasNextPage = false, hasPreviousPage = false;
+        resultCount = facetList.length;
+        if (edges.length < resultCount) {
+          if (edges.length === limitSize && filterCount <= limitSize ) {
+            hasNextPage = true;
+            if (offsetSize > 0) hasPreviousPage = true;
+          }
+          if (edges.length <= limitSize) {
+            if (filterCount !== edges.length) hasNextPage = true;
+            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+          }
+        }
         return {
           pageInfo: {
             startCursor: edges[0].cursor,
             endCursor: edges[edges.length-1].cursor,
-            hasNextPage: (edges.length < limitSize ? false : true),
-            hasPreviousPage: (offsetSize > 0 ? true : false),
-            globalCount: facetList.length,
+            hasNextPage: (hasNextPage ),
+            hasPreviousPage: (hasPreviousPage),
+            globalCount: resultCount,
           },
           edges: edges,
         }
@@ -235,6 +262,7 @@ const characterizationResolvers = {
       }
     },
     facet: async (_, {id}, { dbName, dataSources, selectMap }) => {
+      // TODO: Update to support vulnerability-facets
       const sparqlQuery = selectFacetQuery(id, selectMap.getNode("facets"));
       let response;
       try {

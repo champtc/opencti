@@ -251,6 +251,7 @@ class RiskTrackingPopover extends Component {
       R.pathOr([], ['logged_by']),
       R.mergeAll,
     )(node);
+    console.log('Node', node)
     const initialValues = R.pipe(
       R.assoc('entry_type', node?.entry_type || []),
       R.assoc('title', node?.name || ''),

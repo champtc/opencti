@@ -29,6 +29,9 @@ import MarkDownField from '../../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
 
 const styles = (theme) => ({
+  dialogMain: {
+    overflow: 'hidden',
+  },
   dialogClosebutton: {
     float: 'left',
     marginLeft: '15px',
@@ -45,6 +48,7 @@ const styles = (theme) => ({
     padding: '0 24px',
     marginBottom: '24px',
     overflow: 'hidden',
+    height: '650px',
   },
   buttonPopover: {
     textTransform: 'capitalize',
@@ -159,7 +163,7 @@ class EntitiesRolesCreation extends Component {
         <Dialog
           open={openDataCreation}
           keepMounted={true}
-          onClose={() => handleRoleCreation()}
+          className={classes.dialogMain}
         >
           <Formik
             enableReinitialize={true}
@@ -202,6 +206,7 @@ class EntitiesRolesCreation extends Component {
                         <Field
                           component={TextField}
                           name="id"
+                          disabled={true}
                           fullWidth={true}
                           size="small"
                           containerstyle={{ width: '100%' }}
@@ -230,6 +235,7 @@ class EntitiesRolesCreation extends Component {
                         <Field
                           component={DatePickerField}
                           name="created"
+                          disabled={true}
                           fullWidth={true}
                           size="small"
                           containerstyle={{ width: '100%' }}
@@ -260,6 +266,7 @@ class EntitiesRolesCreation extends Component {
                         <Field
                           component={DatePickerField}
                           name="modified"
+                          disabled={true}
                           fullWidth={true}
                           size="small"
                           variant='outlined'

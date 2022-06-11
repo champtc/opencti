@@ -41,6 +41,9 @@ import { toastGenericError } from "../../../../../utils/bakedToast";
 
 
 const styles = (theme) => ({
+  dialogMain: {
+    overflow: 'hidden',
+  },
   dialogTitle: {
     padding: '24px 0 16px 24px',
   },
@@ -48,6 +51,7 @@ const styles = (theme) => ({
     padding: '0 24px',
     marginBottom: '24px',
     overflow: 'hidden',
+    height: '650px',
   },
   dialogClosebutton: {
     float: 'left',
@@ -178,7 +182,7 @@ class RoleEntityEditionContainer extends Component {
         <Dialog
           open={this.props.displayEdit}
           keepMounted={true}
-          onClose={() => this.props.handleDisplayEdit()}
+          className={classes.dialogMain}
         >
           <Formik
             enableReinitialize={true}
@@ -217,6 +221,7 @@ class RoleEntityEditionContainer extends Component {
                         <Field
                           component={TextField}
                           name="id"
+                          disabled={true}
                           fullWidth={true}
                           size="small"
                           containerstyle={{ width: '100%' }}
@@ -245,6 +250,7 @@ class RoleEntityEditionContainer extends Component {
                         <Field
                           component={DatePickerField}
                           name="created"
+                          disabled={true}
                           fullWidth={true}
                           size="small"
                           containerstyle={{ width: '100%' }}
@@ -275,6 +281,7 @@ class RoleEntityEditionContainer extends Component {
                         <Field
                           component={DatePickerField}
                           name="modified"
+                          disabled={true}
                           fullWidth={true}
                           size="small"
                           variant='outlined'

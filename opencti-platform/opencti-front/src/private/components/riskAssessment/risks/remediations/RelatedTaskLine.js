@@ -17,8 +17,7 @@ import { withStyles } from '@material-ui/core/styles';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import Typography from '@material-ui/core/Typography';
-import Badge from '@material-ui/core/Badge';
-import Avatar from '@material-ui/core/Avatar';
+import PersonIcon from '@material-ui/icons/Person';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import { MoreVert } from '@material-ui/icons';
@@ -86,6 +85,11 @@ const styles = (theme) => ({
     display: 'inline-block',
     height: '1em',
     backgroundColor: theme.palette.grey[700],
+  },
+  avatarIcon: {
+    width: '35px',
+    height: '35px',
+    color: 'white',
   },
   cardContent: {
     display: 'flex',
@@ -191,9 +195,8 @@ class RelatedTaskLine extends Component {
     const responsibleRoles = pipe(
       pathOr([], ['responsible_roles']),
       mergeAll,
-      path(['role']),
+      path(['parties']),
     )(data);
-
     return (
       <div style={{
         display: 'grid',
@@ -250,7 +253,6 @@ class RelatedTaskLine extends Component {
                   <div style={{ marginLeft: '10px' }}>
                     <Typography align="left" color="textSecondary" variant="h3">{t('Name')}</Typography>
                     <Typography align="left" variant="subtitle1">
-                      {/* {t('Lorem Ipsum')} */}
                       {data.name && t(data.name)}
                     </Typography>
                   </div>
@@ -266,7 +268,6 @@ class RelatedTaskLine extends Component {
                   <div style={{ marginLeft: '10px' }}>
                     <Typography align="left" color="textSecondary" variant="h3">{t('ID')}</Typography>
                     <Typography align="left" variant="subtitle1">
-                      {/* {t('Lorem Ipsum')} */}
                       {data.id && t(data.id)}
                     </Typography>
                   </div>
@@ -291,7 +292,7 @@ class RelatedTaskLine extends Component {
                     <Typography align="left" color="textSecondary" variant="h3">{t('Start Date')}</Typography>
                     <Typography align="left" variant="subtitle1">
                       {/* {t('21 June 2021')} */}
-                      {data.timing?.start_date && fldt(data.timing?.start_date)}
+                      {data.timing?.start_date && fsd(data.timing?.start_date)}
                     </Typography>
                   </div>
                 </Grid>
@@ -321,20 +322,20 @@ class RelatedTaskLine extends Component {
                   <div style={{ marginLeft: '18px' }}>
                     <Typography align="left" color="textSecondary" variant="h3">{t('End Date')}</Typography>
                     <Typography align="left" variant="subtitle1">
-                      {data.timing?.end_date && fldt(data.timing?.end_date)}
+                      {data.timing?.end_date && fsd(data.timing?.end_date)}
                     </Typography>
                   </div>
                 </Grid>
                 <Grid item={true} xs={6} style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
                   <div style={{ marginLeft: '18px' }}>
-                    <Typography align="left" color="textSecondary" variant="h3">{t('Responsible Role')}</Typography>
+                    <Typography align="left" color="textSecondary" variant="h3">{t('Responsible Parties')}</Typography>
                     <div className={classes.cardContent}>
-                      <Avatar alt="Travis Howard" src="/static/images/avatar/2.jpg" />
+                      <PersonIcon className={classes.avatarIcon} />
                       <div style={{ marginLeft: '10px' }}>
                         <Typography variant="subtitle1">
                           {responsibleRoles?.name && t(responsibleRoles?.name)}
                         </Typography>
-                        {responsibleRoles?.role_identifier && t(responsibleRoles?.role_identifier)}
+                        {responsibleRoles?.party_type && t(responsibleRoles?.party_type)}
                       </div>
                     </div>
                   </div>

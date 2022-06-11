@@ -42,6 +42,9 @@ import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/C
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
 
 const styles = (theme) => ({
+  dialogMain: {
+    overflow: 'hidden',
+  },
   dialogTitle: {
     padding: '24px 0 16px 24px',
   },
@@ -49,6 +52,7 @@ const styles = (theme) => ({
     padding: '0 24px',
     marginBottom: '24px',
     overflow: 'hidden',
+    height: '650px',
   },
   dialogClosebutton: {
     float: 'left',
@@ -106,6 +110,7 @@ class TaskEntityEditionContainer extends Component {
 
   onReset() {
     this.handleClose();
+    this.props.handleDisplayEdit();
   }
 
   handleCancelCloseClick() {
@@ -138,6 +143,7 @@ class TaskEntityEditionContainer extends Component {
         setSubmitting(false);
         resetForm();
         this.handleClose();
+        this.props.history.push('/data/entities/tasks');
       },
       onError: (err) => {
         console.error(err);
@@ -180,7 +186,7 @@ class TaskEntityEditionContainer extends Component {
         <Dialog
           open={this.props.displayEdit}
           keepMounted={true}
-          onClose={() => this.props.handleDisplayEdit()}
+          className={classes.dialogMain}
         >
           <Formik
             enableReinitialize={true}
@@ -217,7 +223,7 @@ class TaskEntityEditionContainer extends Component {
                       <div className="clearfix" />
                       <Field
                         component={TextField}
-                        name="id"
+                        name="name"
                         fullWidth={true}
                         size="small"
                         containerstyle={{ width: '100%' }}
@@ -242,6 +248,7 @@ class TaskEntityEditionContainer extends Component {
                       <Field
                         component={TextField}
                         name="id"
+                        disabled={true}
                         fullWidth={true}
                         size="small"
                         containerstyle={{ width: '100%' }}
@@ -531,8 +538,7 @@ class TaskEntityEditionContainer extends Component {
                 <DialogActions classes={{ root: classes.dialogClosebutton }}>
                   <Button
                     variant="outlined"
-                    // onClick={handleReset}
-                    onClick={() => this.props.handleDisplayEdit()}
+                    onClick={handleReset}
                     classes={{ root: classes.buttonPopover }}
                   >
                     {t('Cancel')}

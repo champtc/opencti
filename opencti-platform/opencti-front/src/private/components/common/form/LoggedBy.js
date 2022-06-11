@@ -39,9 +39,9 @@ class RelatedResponse extends Component {
         const loggedByEntities = R.pipe(
           R.pathOr([], ['oscalParties', 'edges']),
           R.map((n) => ({
-            id: n.node.id,
-            party_type: n.node.party_type,
-            name: n.node.name,
+            id: n?.node?.id,
+            party_type: n?.node?.party_type,
+            name: n?.node?.name,
           })),
         )(data);
         this.setState({
@@ -63,6 +63,7 @@ class RelatedResponse extends Component {
       variant,
       onChange,
       onFocus,
+      multiple,
       containerstyle,
       editContext,
       disabled,
@@ -81,6 +82,7 @@ class RelatedResponse extends Component {
           name={name}
           label={label}
           fullWidth={true}
+          multiple={multiple}
           containerstyle={containerstyle}
           variant={variant}
           disabled={disabled || false}

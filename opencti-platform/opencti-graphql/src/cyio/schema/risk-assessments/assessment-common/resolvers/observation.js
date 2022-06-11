@@ -19,10 +19,13 @@ import {
   selectAllObservations,
   deleteObservationQuery,
   attachToObservationQuery,
+  selectAllEvidence,
   selectEvidenceByIriQuery,
   insertEvidencesQuery,
   deleteEvidenceByIriQuery,
+  selectAllOrigins,
   selectOriginByIriQuery,
+  selectAllSubjects,
   selectSubjectByIriQuery,
   deleteSubjectByIriQuery,
   observationPredicateMap,
@@ -556,162 +559,108 @@ const observationResolvers = {
     },
     origins:async (parent, _, {dbName, dataSources, selectMap}) => {
       if (parent.origins_iri === undefined) return [];
-      let iriArray = parent.origins_iri;
       const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getReducer("ORIGIN");
-        for (let iri of iriArray) {
-          if (iri === undefined || !iri.includes('Origin')) {
-            continue;
-          }
-          const sparqlQuery = selectOriginByIriQuery(iri, selectMap.getNode("origins"));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: "Select Origin",
-              singularizeSchema
-            });
-          } catch (e) {
-            console.log(e)
-            throw e
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            
-            // TODO: Put logic to determine if actor_ref exists like is in subjects
-
-            results.push(reducer(response[0]))
-          }
-          else {
-            // Handle reporting Stardog Error
-            if (typeof (response) === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: (response.body.message ? response.body.message : response.body),
-                error_code: (response.body.code ? response.body.code : 'N/A')
-              });
-            }
-          }  
-        }
-        return results;
-      } else {
-        return [];
+      const reducer = getReducer("ORIGIN");
+      let sparqlQuery = selectAllOrigins(selectMap.getNode('origins'), undefined, parent);
+      let response;
+      try {
+        response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: "Select Referenced Origins",
+          singularizeSchema
+        });
+      } catch (e) {
+        console.log(e)
+        throw e
       }
+      if (response === undefined || response.length === 0) return null;
+
+      // Handle reporting Stardog Error
+      if (typeof (response) === 'object' && 'body' in response) {
+        throw new UserInputError(response.statusText, {
+          error_details: (response.body.message ? response.body.message : response.body),
+          error_code: (response.body.code ? response.body.code : 'N/A')
+        });
+      }
+
+      for (let origin of response) {
+        results.push(reducer(origin));
+      }
+
+      // check if there is data to be returned
+      if (results.length === 0 ) return [];
+      return results;
     },
     subjects: async (parent, _, {dbName, dataSources, selectMap}) => {
       if (parent.subjects_iri === undefined) return [];
-      let iriArray = parent.subjects_iri;
       const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getReducer("SUBJECT");
-        for (let iri of iriArray) {
-          if (iri === undefined || !iri.includes('Subject')) {
-            continue;
-          }
-          const sparqlQuery = selectSubjectByIriQuery(iri, selectMap.getNode("subjects"));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: "Select Subject",
-              singularizeSchema
-            });
-          } catch (e) {
-            console.log(e)
-            throw e
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            let subjectRef, subjectType;
-            if (response[0].subject_ref !== undefined) {
-              subjectRef = response[0].subject_ref[0];
-              subjectType = response[0].subject_type;
-              if (subjectRef !== undefined && subjectRef.includes('OperatingSystem')) {
-                console.error(`[CYIO] INVALID-IRI: ${response[0].iri} 'subject_ref' contains an IRI ${subjectRef} which is invalid; skipping`);
-                continue;
-              }
-            }
-
-            if (subjectRef !== undefined) {
-              // determine the actual IRI of the object referenced
-              let result;
-              let sparqlQuery = selectObjectByIriQuery(subjectRef, subjectType, ['id'] );
-              try {
-                result = await dataSources.Stardog.queryById({
-                dbName,
-                sparqlQuery,
-                queryId: "Obtaining Subject IRI",
-                singularizeSchema
-                });
-              } catch (e) {
-                  console.log(e)
-                  throw e
-              }
-              if (result === undefined || result.length === 0) {
-                console.error(`[CYIO] NON-EXISTENT: (${dbName}) '${response[0].subject_ref[0]}'; skipping Subject '${response[0].iri}`);              
-                continue;
-              }
-            }
-          results.push(reducer(response[0]));
-          }
-          else {
-            // Handle reporting Stardog Error
-            if (typeof (response) === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: (response.body.message ? response.body.message : response.body),
-                error_code: (response.body.code ? response.body.code : 'N/A')
-              });
-            }
-          }  
-        }
-        return results;
-      } else {
-        return [];
+      const reducer = getReducer("SUBJECT");
+      let sparqlQuery = selectAllSubjects(selectMap.getNode('subjects'), undefined, parent);
+      let response;
+      try {
+        response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: "Select Referenced Subjects",
+          singularizeSchema
+        });
+      } catch (e) {
+        console.log(e)
+        throw e
       }
+      if (response === undefined || response.length === 0) return null;
+
+      // Handle reporting Stardog Error
+      if (typeof (response) === 'object' && 'body' in response) {
+        throw new UserInputError(response.statusText, {
+          error_details: (response.body.message ? response.body.message : response.body),
+          error_code: (response.body.code ? response.body.code : 'N/A')
+        });
+      }
+
+      for (let subject of response) {
+        results.push(reducer(subject));
+      }
+
+      // check if there is data to be returned
+      if (results.length === 0 ) return [];
+      return results;
     },
     relevant_evidence: async (parent, _, {dbName, dataSources, selectMap}) => {
       if (parent.relevant_evidence_iri === undefined) return [];
-      let iriArray = parent.relevant_evidence_iri;
       const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getReducer("EVIDENCE");
-        for (let iri of iriArray) {
-          if (iri === undefined || !iri.includes('Evidence')) {
-            continue;
-          }
-          const sparqlQuery = selectEvidenceByIriQuery(iri, selectMap.getNode("relevant_evidence"));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: "Select Evidence",
-              singularizeSchema
-            });
-          } catch (e) {
-            console.log(e)
-            throw e
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]))
-          }
-          else {
-            // Handle reporting Stardog Error
-            if (typeof (response) === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: (response.body.message ? response.body.message : response.body),
-                error_code: (response.body.code ? response.body.code : 'N/A')
-              });
-            }
-          }  
-        }
-        return results;
-      } else {
-        return [];
+      const reducer = getReducer("EVIDENCE");
+      let sparqlQuery = selectAllEvidence(selectMap.getNode('evidence'), undefined, parent);
+      let response;
+      try {
+        response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: "Select Relevant Evidence",
+          singularizeSchema
+        });
+      } catch (e) {
+        console.log(e)
+        throw e
       }
+      if (response === undefined || response.length === 0) return null;
+
+      // Handle reporting Stardog Error
+      if (typeof (response) === 'object' && 'body' in response) {
+        throw new UserInputError(response.statusText, {
+          error_details: (response.body.message ? response.body.message : response.body),
+          error_code: (response.body.code ? response.body.code : 'N/A')
+        });
+      }
+
+      for (let evidence of response) {
+        results.push(reducer(evidence));
+      }
+
+      // check if there is data to be returned
+      if (results.length === 0 ) return [];
+      return results;
     },
   }
 }

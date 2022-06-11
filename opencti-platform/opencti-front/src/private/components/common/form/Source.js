@@ -38,16 +38,27 @@ const SourceActorTypeQuery = graphql`
   }
 `;
 
+const componentFilter = [];
+
+componentFilter.push({ key: 'asset_type', values: 'software' });
+
 const ComponentListQuery = graphql`
-  query SourceComponentListQuery {
-    componentList {
+  query SourceComponentListQuery{
+    componentList(filters: [
+    {
+      key: component_type,
+      values: "software"
+    }
+    ]){
       edges {
         node {
           id
           name
           description
         }
+        
       }
+      
     }
   }
 `;
@@ -109,26 +120,27 @@ class Source extends Component {
           },
         });
       });
+    this.handleThisChange('', this.props.values.actor_type);
   }
 
-  render() {
-    const {
-      size,
-      label,
-      style,
-      variant,
-      containerstyle,
-      disabled,
-      helperText,
-    } = this.props;
+  handleThisChange = (name, value) => {
+    let queryType;
+    let queryInfo;
+    let filterBy = '';
 
-    const handleThisChange = (name, value) => {
-      let queryType;
-      let queryInfo;
+    if (value) {
       switch (value) {
         case 'tool':
           queryType = ComponentListQuery;
           queryInfo = 'componentList';
+          filterBy = {
+            filters: [
+              {
+                key: 'component_type',
+                values: 'software',
+              },
+            ],
+          };
           break;
         case 'assessment_platform':
           queryType = AssessmentPlatformQuery;
@@ -139,7 +151,7 @@ class Source extends Component {
           queryInfo = 'oscalParties';
           break;
         default:
-          //
+        //
       }
       fetchDarklightQuery(queryType)
         .toPromise()
@@ -160,7 +172,19 @@ class Source extends Component {
             },
           });
         });
-    };
+    }
+  };
+
+  render() {
+    const {
+      size,
+      label,
+      style,
+      variant,
+      containerstyle,
+      disabled,
+      helperText,
+    } = this.props;
 
     const actorTypeList = R.pathOr(
       [],
@@ -173,14 +197,13 @@ class Source extends Component {
       ['oscalEntities'],
       this.state.actorReferences,
     );
-
     return (
       <div>
         <div className='clearfix' />
         <Field
           component={SelectField}
           name='actor_type'
-          onChange={handleThisChange.bind(this)}
+          onChange={this.handleThisChange.bind(this)}
           label={label}
           fullWidth={true}
           containerstyle={containerstyle}

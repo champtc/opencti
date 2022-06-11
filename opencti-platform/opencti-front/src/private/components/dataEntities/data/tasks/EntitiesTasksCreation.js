@@ -2,8 +2,12 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import * as Yup from 'yup';
-import * as R from 'ramda';
-import { compose, evolve } from 'ramda';
+import {
+  compose,
+  pipe,
+  dissoc,
+  assoc,
+} from 'ramda';
 import { Formik, Form, Field } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
@@ -40,6 +44,9 @@ import ResourceNameField from '../../../common/form/ResourceNameField';
 import ResourceTypeField from '../../../common/form/ResourceTypeField';
 
 const styles = (theme) => ({
+  dialogMain: {
+    overflow: 'hidden',
+  },
   dialogClosebutton: {
     float: 'left',
     marginLeft: '15px',
@@ -54,8 +61,8 @@ const styles = (theme) => ({
   },
   dialogContent: {
     padding: '0 24px',
-    marginBottom: '24px',
-    overflow: 'hidden',
+    overflow: 'scroll',
+    height: '650px',
   },
   buttonPopover: {
     textTransform: 'capitalize',
@@ -75,9 +82,23 @@ const entitiesTasksCreationMutation = graphql`
   }
 `;
 
-const riskValidation = (t) => Yup.object().shape({
+const taskValidation = (t) => Yup.object().shape({
   name: Yup.string().required(t('This field is required')),
+  description: Yup.string().required(t('This field is required')),
+  task_type: Yup.string().required(t('This field is required')),
+  resource: Yup.array().when('resource_type', {
+    is: (resource_type) => resource_type.length > 0,
+    then: Yup.array().nullable().min(1, 'This field is required'),
+  }),
+  end_date: Yup.date()
+  .when("start_date", {
+    is: (start_date) => start_date === null,
+    then: Yup.date().nullable().min(
+      Yup.ref('start_date'),
+      "End date can't be before start date")
+  }),
 });
+
 const Transition = React.forwardRef((props, ref) => (
   <Slide direction="up" ref={ref} {...props} />
 ));
@@ -133,9 +154,9 @@ class EntitiesTasksCreation extends Component {
           within_date_range: {
             start_date: values.start_date === null ? null : parse(values.start_date),
             end_date: values.end_date === null ? null : parse(values.end_date),
-          }
+          },
         },
-      })
+      });
     }
     const finalValues = pipe(
       dissoc('start_date'),
@@ -155,6 +176,7 @@ class EntitiesTasksCreation extends Component {
         setSubmitting(false);
         resetForm();
         this.handleClose();
+        this.props.history.push('/data/entities/tasks');
       },
       onError: (err) => {
         console.error(err);
@@ -191,6 +213,7 @@ class EntitiesTasksCreation extends Component {
 
   onReset() {
     this.handleClose();
+    this.props.handleTaskCreation();
   }
 
   render() {
@@ -208,7 +231,7 @@ class EntitiesTasksCreation extends Component {
         <Dialog
           open={openDataCreation}
           keepMounted={true}
-          onClose={() => handleTaskCreation()}
+          className={classes.dialogMain}
         >
           <Formik
             enableReinitialize={true}
@@ -216,19 +239,17 @@ class EntitiesTasksCreation extends Component {
               name: '',
               description: '',
               task_type: '',
-              created: null,
-              modified: null,
               associated_activities: [],
               related_tasks: [],
               subjects: [],
               start_date: null,
               end_date: null,
               resource_type: [],
-              resource_name: [],
-              responsible_parties: [],
-              dependencies: []
+              resource: [],
+              responsible_roles: [],
+              task_dependencies: [],
             }}
-            // validationSchema={RelatedTaskValidation(t)}
+            validationSchema={taskValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.onReset.bind(this)}
           >
@@ -240,7 +261,7 @@ class EntitiesTasksCreation extends Component {
               values,
             }) => (
               <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Role')}</DialogTitle>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Task')}</DialogTitle>
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={6}>
@@ -260,7 +281,7 @@ class EntitiesTasksCreation extends Component {
                       <div className="clearfix" />
                       <Field
                         component={TextField}
-                        name="id"
+                        name="name"
                         fullWidth={true}
                         size="small"
                         containerstyle={{ width: '100%' }}
@@ -285,6 +306,7 @@ class EntitiesTasksCreation extends Component {
                       <Field
                         component={TextField}
                         name="id"
+                        disabled={true}
                         fullWidth={true}
                         size="small"
                         containerstyle={{ width: '100%' }}
@@ -307,11 +329,12 @@ class EntitiesTasksCreation extends Component {
                       </div>
                       <div className="clearfix" />
                       <TaskType
-                          name="task_type"
-                          fullWidth={true}
-                          variant='outlined'
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '100%' }}
+                        name="task_type"
+                        taskType='OscalTaskType'
+                        fullWidth={true}
+                        variant='outlined'
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
                       />
                     </Grid>
                     <Grid xs={12} item={true}>
@@ -556,7 +579,7 @@ class EntitiesTasksCreation extends Component {
                             fieldName='links'
                             disableAdd={true}
                             cyioCoreObjectId={task?.id}
-                            // refreshQuery={refreshQuery}
+                          // refreshQuery={refreshQuery}
                           />
                         </Grid>
                         <Grid item={true} xs={12}>
@@ -577,7 +600,7 @@ class EntitiesTasksCreation extends Component {
                 <DialogActions classes={{ root: classes.dialogClosebutton }}>
                   <Button
                     variant="outlined"
-                    onClick={() => handleTaskCreation()}
+                    onClick={handleReset}
                     classes={{ root: classes.buttonPopover }}
                   >
                     {t('Cancel')}

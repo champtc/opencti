@@ -1461,8 +1461,8 @@ enum ReportMediaType {
 enum SarSections {
   "Risk Tracking Details"
   tracking
-  "Collected During Testing"
-  collected_during_testing
+  "Corrected During Testing"
+  corrected_during_testing
   "Mitigating Factors"
   mitigating_factor
 }

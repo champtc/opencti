@@ -76,7 +76,7 @@
     "migrate": "1.7.0",
     "mime-types": "2.1.32",
     "minio": "7.0.18",
-    "moment": "2.29.1",
+    "moment": "2.29.4",
     "moment-range": "4.0.2",
     "nconf": "0.11.3",
     "nodemailer": "6.6.3",

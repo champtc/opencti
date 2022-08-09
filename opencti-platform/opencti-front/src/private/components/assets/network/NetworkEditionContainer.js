@@ -33,6 +33,7 @@ import TextField from '../../../../components/TextField';
 import { SubscriptionAvatars } from '../../../../components/Subscription';
 import NetworkEditionOverview from './NetworkEditionOverview';
 import NetworkEditionDetails from './NetworkEditionDetails';
+import ErrorBox from '../../common/form/ErrorBox';
 import CyioDomainObjectAssetEditionOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetEditionOverview';
 import CyioCoreObjectExternalReferences from '../../analysis/external_references/CyioCoreObjectExternalReferences';
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
@@ -119,6 +120,7 @@ class NetworkEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       currentTab: 0,
       open: false,
       onSubmit: false,
@@ -176,11 +178,16 @@ class NetworkEditionContainer extends Component {
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data) => {
-        setSubmitting(false);
-        resetForm();
-        this.handleClose();
-        this.props.history.push('/defender HQ/assets/network');
+      onCompleted: (data, error) => {
+        if (error) {
+          this.setState({ error });
+        }
+        else {
+          setSubmitting(false);
+          resetForm();
+          this.handleClose();
+          this.props.history.push('/defender HQ/assets/network');
+        }
       },
       onError: (err) => console.error(err),
     });
@@ -423,6 +430,10 @@ class NetworkEditionContainer extends Component {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorBox
+          error={this.state.error}
+          pathname='/defender HQ/assets/network'
+        />
       </div>
     );
   }

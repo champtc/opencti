@@ -19,7 +19,6 @@ import {
   AddCircleOutline,
   CheckCircleOutline,
 } from '@material-ui/icons';
-import { dayStartDate, parse } from '../../../../utils/Time';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
@@ -30,17 +29,19 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import graphql from 'babel-plugin-relay/macro';
 import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
+import ErrorBox from '../../common/form/ErrorBox';
+import Loader from '../../../../components/Loader';
+import inject18n from '../../../../components/i18n';
+import { dayStartDate, parse } from '../../../../utils/Time';
+import SoftwareCreationDetails from './SoftwareCreationDetails';
+import { toastGenericError } from "../../../../utils/bakedToast";
 import environmentDarkLight from '../../../../relay/environmentDarkLight';
 import { commitMutation, QueryRenderer } from '../../../../relay/environment';
-import inject18n from '../../../../components/i18n';
 import StixDomainObjectHeader from '../../common/stix_domain_objects/StixDomainObjectHeader';
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import CyioDomainObjectAssetCreationOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetCreationOverview';
-import Loader from '../../../../components/Loader';
-import SoftwareCreationDetails from './SoftwareCreationDetails';
 import CyioCoreObjectAssetCreationExternalReferences from '../../analysis/external_references/CyioCoreObjectAssetCreationExternalReferences';
-import { toastGenericError } from "../../../../utils/bakedToast";
 
 const styles = (theme) => ({
   container: {
@@ -121,6 +122,7 @@ class SoftwareCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       open: false,
       onSubmit: false,
       displayCancel: false,
@@ -155,9 +157,9 @@ class SoftwareCreation extends Component {
         this.props.history.push('/defender HQ/assets/software');
       },
       onError: (err) => {
-        console.error(err);
         toastGenericError('Failed to create Software');
-        this.props.history.push('/defender HQ/assets/software');
+        const ErrorResponse = JSON.parse(JSON.stringify(err.source.errors))
+        this.setState({ error: ErrorResponse });
       }
     });
     // commitMutation({
@@ -359,6 +361,10 @@ class SoftwareCreation extends Component {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorBox
+          error={this.state.error}
+          pathname='/defender HQ/assets/software'
+        />
       </div>
     );
   }

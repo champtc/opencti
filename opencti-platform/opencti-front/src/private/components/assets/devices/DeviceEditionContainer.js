@@ -37,6 +37,7 @@ import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/Cyio
 import { SubscriptionAvatars } from '../../../../components/Subscription';
 import DeviceEditionOverview from './DeviceEditionOverview';
 import DeviceEditionDetails from './DeviceEditionDetails';
+import ErrorBox from '../../common/form/ErrorBox';
 import CyioDomainObjectAssetEditionOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetEditionOverview';
 
 const styles = (theme) => ({
@@ -104,6 +105,7 @@ class DeviceEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       open: false,
       onSubmit: false,
       displayCancel: false,
@@ -164,11 +166,15 @@ class DeviceEditionContainer extends Component {
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data) => {
-        setSubmitting(false);
-        resetForm();
-        this.handleClose();
-        this.props.history.push('/defender HQ/assets/devices');
+      onCompleted: (data, error) => {
+        if (error) {
+          this.setState({ error });
+        } else {
+          setSubmitting(false);
+          resetForm();
+          this.handleClose();
+          this.props.history.push('/defender HQ/assets/devices');
+        }
       },
     });
     // commitMutation({
@@ -457,6 +463,10 @@ class DeviceEditionContainer extends Component {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorBox
+          error={this.state.error}
+          pathname='/defender HQ/assets/devices'
+        />
       </div>
     );
   }

@@ -78,7 +78,7 @@ class ErrorBox extends Component {
               Sorry. Something went wrong and DarkLight Support has been notified. Please try again or contact <strong style={{ color: '#075AD3' }}>Support@darklight.ai</strong> for assistance.
             </Typography>
             {Object.keys(error).length && error.map((value, key) => {
-              if (!value.extensions.code.includes('INTERNAL_SERVER_ERROR')) {
+              if (value.extensions.code.includes('BAD_USER_INPUT')) {
                 return (
                   <>
                     <Accordion

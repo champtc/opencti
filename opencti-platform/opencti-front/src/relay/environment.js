@@ -1,5 +1,5 @@
 import {
-  Environment, RecordSource, Store, Observable,
+  Environment, RecordSource, Store, Observable, Network,
 } from 'relay-runtime';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { installRelayDevTools } from 'relay-devtools';
@@ -18,11 +18,6 @@ import * as PropTypes from 'prop-types';
 import {
   map, isEmpty, difference, filter, pathOr, isNil,
 } from 'ramda';
-import {
-  urlMiddleware,
-  RelayNetworkLayer,
-} from 'react-relay-network-modern/node8';
-import uploadMiddleware from './uploadMiddleware';
 import { toastGenericError } from '../utils/bakedToast';
 
 // Dev tools
@@ -92,17 +87,18 @@ const buildHeaders = () => {
   return headers;
 };
 
-const network = new RelayNetworkLayer(
-  [
-    urlMiddleware({
-      url: `${APP_BASE_PATH}/graphql`,
-      credentials: 'same-origin',
-      headers: buildHeaders(),
+const network = Network.create((operation, variables) => (
+  fetch(`${APP_BASE_PATH}/graphql`, {
+    method: 'POST',
+    headers: buildHeaders(),
+    body: JSON.stringify({
+      query: operation.text,
+      variables,
     }),
-    uploadMiddleware(),
-  ],
-  { subscribeFn },
-);
+  }).then((response) => (
+    response.json()
+  ))
+));
 
 const store = new Store(new RecordSource());
 // Activate the read from store then network

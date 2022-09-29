@@ -50,6 +50,9 @@ import LocationMiniMapTargets from './common/location/LocationMiniMapTargets';
 import { computeLevel } from '../../utils/Number';
 import ItemMarkings from '../../components/ItemMarkings';
 import ImportFreshdeskScript from '../../utils/freshdesk';
+import CyioCoreObjectRiskActivitiesAreaChart from './workspaces/risk-activities/CyioCoreObjectRiskActivitiesAreaChart';
+import CyioCoreObjectRiskActivitiesHorizontalBars from './workspaces/risk-activities/CyioCoreObjectRiskActivitiesHorizontalBars';
+import CyioCoreObjectRiskActivitiesVerticalBars from './workspaces/risk-activities/CyioCoreObjectRiskActivitiesVerticalBars';
 
 const styles = (theme) => ({
   root: {
@@ -351,7 +354,7 @@ class Dashboard extends Component {
     return truncate(this.props.t(`entity_${title}`), 10);
   }
 
-  render() {
+  renderDefault() {
     const {
       t, n, fsd, mtd, classes, theme,
     } = this.props;
@@ -977,6 +980,18 @@ class Dashboard extends Component {
           </Grid>
         </Security>
       </div>
+    );
+  }
+
+  render() {
+    const { t } = this.props;
+    ImportFreshdeskScript();
+    return (
+      <>
+        <CyioCoreObjectRiskActivitiesAreaChart height='400px' />
+        <CyioCoreObjectRiskActivitiesHorizontalBars height='400px' />
+        <CyioCoreObjectRiskActivitiesVerticalBars height='900px' />
+      </>
     );
   }
 }

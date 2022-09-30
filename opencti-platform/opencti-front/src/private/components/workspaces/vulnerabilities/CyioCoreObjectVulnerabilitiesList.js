@@ -27,6 +27,9 @@ const styles = () => ({
     padding: 0,
     borderRadius: 6,
   },
+  tableCell: {
+    padding: '0.6rem',
+  },
 });
 
 // const CyioCoreObjectVulnerabilitiesListQuery = graphql`
@@ -213,7 +216,7 @@ class CyioCoreObjectVulnerabilitiesList extends Component {
                     <TableBody>
                       {props.hardwareAssetList.edges.map((row) => (
                         <TableRow hover={true} key={row.node.name}>
-                          <TableCell align="center" style={{ width: 50 }}>
+                          <TableCell align="center" className={classes.tableCell}>
                             <ItemIcon
                               type={
                                 field === 'internal_id'
@@ -222,22 +225,22 @@ class CyioCoreObjectVulnerabilitiesList extends Component {
                               }
                             />
                           </TableCell>
-                          <TableCell align="left">
+                          <TableCell align="left" className={classes.tableCell}>
                             {field === 'internal_id'
                               ? row.node.entity.name
                               : row.node.name}
                           </TableCell>
-                          <TableCell align="left">
+                          <TableCell align="left" className={classes.tableCell}>
                             {field === 'internal_id'
                               ? row.node.entity.name
                               : row.node.asset_type}
                           </TableCell>
-                          <TableCell align="left">
+                          <TableCell align="left" className={classes.tableCell}>
                             {field === 'internal_id'
                               ? row.node.entity.name
                               : row.node.is_scanned}
                           </TableCell>
-                          <TableCell align="right">{row.node.id}</TableCell>
+                          <TableCell align="right" className={classes.tableCell}>{row.node.id}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

@@ -24,7 +24,7 @@ const styles = () => ({
     minHeight: 280,
     height: '100%',
     margin: '4px 0 0 0',
-    padding: '0 0 10px 0',
+    padding: '1rem',
     borderRadius: 6,
   },
   chip: {

@@ -24,7 +24,7 @@ const styles = () => ({
     minHeight: 280,
     height: '100%',
     margin: '4px 0 0 0',
-    padding: '0 0 10px 0',
+    padding: '1rem',
     borderRadius: 6,
   },
   chip: {
@@ -189,9 +189,9 @@ class CyioCoreObjectVulnerabilitiesVerticalBars extends Component {
           data={data}
           margin={{
             top: 20,
-            right: 50,
-            bottom: 20,
-            left: -10,
+            right: 20,
+            bottom: 0,
+            left: 0,
           }}
         >
           <CartesianGrid
@@ -227,7 +227,7 @@ class CyioCoreObjectVulnerabilitiesVerticalBars extends Component {
             // fill={theme.palette.primary.main}
             fill="#075AD3"
             dataKey="amt"
-            barSize={15}
+            barSize={25}
           />
         </BarChart>
       </ResponsiveContainer>

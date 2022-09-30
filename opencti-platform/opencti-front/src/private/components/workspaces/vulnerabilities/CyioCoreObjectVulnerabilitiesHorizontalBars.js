@@ -23,12 +23,11 @@ import { truncate } from '../../../../utils/String';
 
 const styles = () => ({
   paper: {
-    height: 300,
-    minHeight: 300,
-    maxHeight: 300,
-    margin: '10px 0 0 0',
-    padding: 0,
+    minHeight: 280,
+    height: '100%',
+    margin: '4px 0 0 0',
     borderRadius: 6,
+    padding: '1rem',
   },
 });
 
@@ -203,7 +202,7 @@ class CyioCoreObjectVulnerabilitiesHorizontalBars extends Component {
             // fill={theme.palette.primary.main}
             dataKey="amt"
             fill="#075AD3"
-            barSize={15}
+            barSize={30}
           />
           {/* {props.reportsDistribution.map((entry, index) => (
               <Cell

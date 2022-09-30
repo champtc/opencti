@@ -50,9 +50,6 @@ import LocationMiniMapTargets from './common/location/LocationMiniMapTargets';
 import { computeLevel } from '../../utils/Number';
 import ItemMarkings from '../../components/ItemMarkings';
 import ImportFreshdeskScript from '../../utils/freshdesk';
-import CyioCoreObjectRiskActivitiesAreaChart from './workspaces/risk-activities/CyioCoreObjectRiskActivitiesAreaChart';
-import CyioCoreObjectRiskActivitiesHorizontalBars from './workspaces/risk-activities/CyioCoreObjectRiskActivitiesHorizontalBars';
-import CyioCoreObjectRiskActivitiesVerticalBars from './workspaces/risk-activities/CyioCoreObjectRiskActivitiesVerticalBars';
 
 const styles = (theme) => ({
   root: {

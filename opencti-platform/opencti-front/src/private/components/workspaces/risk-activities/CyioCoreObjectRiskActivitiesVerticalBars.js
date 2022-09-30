@@ -228,19 +228,19 @@ class CyioCoreObjectRiskActivitiesVerticalBars extends Component {
             // fill={theme.palette.primary.main}
             fill="#075AD3"
             dataKey="amt"
-            barSize={15}
+            barSize={20}
           />
           <Bar
             // fill={theme.palette.primary.main}
             fill="#83ADE9"
             dataKey="pv"
-            barSize={15}
+            barSize={20}
           />
           <Bar
             // fill={theme.palette.primary.main}
             fill="#FFFFFF"
             dataKey="uv"
-            barSize={15}
+            barSize={20}
           />
         </BarChart>
       </ResponsiveContainer>

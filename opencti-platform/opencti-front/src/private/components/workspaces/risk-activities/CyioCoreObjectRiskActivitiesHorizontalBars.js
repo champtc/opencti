@@ -203,19 +203,19 @@ class CyioCoreObjectRiskActivitiesHorizontalBars extends Component {
             // fill={theme.palette.primary.main}
             dataKey="amt"
             fill="#075AD3"
-            barSize={15}
+            barSize={20}
           />
           <Bar
             // fill={theme.palette.primary.main}
             dataKey="uv"
             fill="#83ADE9"
-            barSize={15}
+            barSize={20}
           />
           <Bar
             // fill={theme.palette.primary.main}
             dataKey="pv"
             fill="#FFFFFF"
-            barSize={15}
+            barSize={20}
           />
           {/* {props.reportsDistribution.map((entry, index) => (
               <Cell

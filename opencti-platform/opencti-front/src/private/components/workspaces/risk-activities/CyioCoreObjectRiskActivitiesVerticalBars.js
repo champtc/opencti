@@ -24,7 +24,7 @@ const styles = () => ({
     minHeight: 280,
     height: '100%',
     margin: '4px 0 0 0',
-    padding: '0 0 10px 0',
+    padding: '1rem',
     borderRadius: 6,
   },
   chip: {
@@ -189,10 +189,11 @@ class CyioCoreObjectRiskActivitiesVerticalBars extends Component {
           data={data}
           margin={{
             top: 20,
-            right: 50,
-            bottom: 20,
-            left: -10,
+            right: 20,
+            bottom: 0,
+            left: 0,
           }}
+          barGap={0}
         >
           <CartesianGrid
             strokeDasharray="2 2"
@@ -284,9 +285,9 @@ class CyioCoreObjectRiskActivitiesVerticalBars extends Component {
     } = this.props;
     return (
       <div style={{ height: height || '100%' }}>
-        {/* <Typography variant="h4" gutterBottom={true}>
-          {title || t('Reports history')}
-        </Typography> */}
+        <Typography variant="h4" gutterBottom={true}>
+          {title || t('Risk Activities')}
+        </Typography>
         {variant !== 'inLine' ? (
           <Paper classes={{ root: classes.paper }} elevation={2}>
             {this.renderContent()}

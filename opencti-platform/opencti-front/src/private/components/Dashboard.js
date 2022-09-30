@@ -354,7 +354,7 @@ class Dashboard extends Component {
     return truncate(this.props.t(`entity_${title}`), 10);
   }
 
-  renderDefault() {
+  render() {
     const {
       t, n, fsd, mtd, classes, theme,
     } = this.props;
@@ -980,18 +980,6 @@ class Dashboard extends Component {
           </Grid>
         </Security>
       </div>
-    );
-  }
-
-  render() {
-    const { t } = this.props;
-    ImportFreshdeskScript();
-    return (
-      <>
-        <CyioCoreObjectRiskActivitiesAreaChart height='400px' />
-        <CyioCoreObjectRiskActivitiesHorizontalBars height='400px' />
-        <CyioCoreObjectRiskActivitiesVerticalBars height='900px' />
-      </>
     );
   }
 }

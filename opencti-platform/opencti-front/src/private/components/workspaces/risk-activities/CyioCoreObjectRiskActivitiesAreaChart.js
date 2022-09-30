@@ -24,7 +24,7 @@ const styles = () => ({
     minHeight: 280,
     height: '100%',
     margin: '4px 0 0 0',
-    padding: '0 0 10px 0',
+    padding: '1rem',
     borderRadius: 6,
   },
   chip: {
@@ -295,7 +295,7 @@ class CyioCoreObjectRiskActivitiesAreaChart extends Component {
     return (
       <div style={{ height: height || '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
-          {title || t('Reports history')}
+          {title || t('Risk Activities')}
         </Typography>
         {variant !== 'inLine' ? (
           <Paper classes={{ root: classes.paper }} elevation={2}>

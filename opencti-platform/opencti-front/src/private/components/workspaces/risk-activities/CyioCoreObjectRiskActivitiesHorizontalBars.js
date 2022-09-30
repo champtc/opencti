@@ -23,11 +23,10 @@ import { truncate } from '../../../../utils/String';
 
 const styles = () => ({
   paper: {
-    height: 300,
+    height: '100%',
     minHeight: 300,
-    maxHeight: 300,
     margin: '10px 0 0 0',
-    padding: 0,
+    padding: '1rem',
     borderRadius: 6,
   },
 });
@@ -166,6 +165,7 @@ class CyioCoreObjectRiskActivitiesHorizontalBars extends Component {
             bottom: 0,
             left: 0,
           }}
+          barGap={0}
         >
           <XAxis
             // type="number"
@@ -274,7 +274,7 @@ class CyioCoreObjectRiskActivitiesHorizontalBars extends Component {
     return (
       <div style={{ height: height || '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
-          {title || t('Reports distribution')}
+          {title || t('Risk Activities')}
         </Typography>
         {variant !== 'inLine' ? (
           <Paper classes={{ root: classes.paper }} elevation={2}>

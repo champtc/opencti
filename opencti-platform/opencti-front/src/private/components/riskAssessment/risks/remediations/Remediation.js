@@ -5,34 +5,24 @@ import PropTypes from 'prop-types';
 import { compose } from 'ramda';
 import { createFragmentContainer } from 'react-relay';
 import graphql from 'babel-plugin-relay/macro';
-import { Redirect } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import inject18n from '../../../../../components/i18n';
-import RiskDetails from '../RiskDetails';
-import RemediationEdition from './RemediationEdition';
 import RiskPopover from '../RiskPopover';
 import RemediationDeletion from './RemediationDeletion';
-import RiskCreation from '../RiskCreation';
-import StixCoreObjectOrStixCoreRelationshipLastReports from '../../../analysis/reports/StixCoreObjectOrStixCoreRelationshipLastReports';
-import StixDomainObjectHeader from '../../../common/stix_domain_objects/StixDomainObjectHeader';
 import CyioDomainObjectHeader from '../../../common/stix_domain_objects/CyioDomainObjectHeader';
-import Security, { KNOWLEDGE_KNUPDATE } from '../../../../../utils/Security';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import RemediationGeneralOverview from './RemediationGeneralOverview';
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
-import StixCoreObjectLatestHistory from '../../../common/stix_core_objects/StixCoreObjectLatestHistory';
-import SimpleStixObjectOrStixRelationshipStixCoreRelationships from '../../../common/stix_core_relationships/SimpleStixObjectOrStixRelationshipStixCoreRelationships';
 import RequiredResources from './RequiredResources';
 import RelatedTasks from './RelatedTasks';
 import TopMenuRisk from '../../../nav/TopMenuRisk';
-import RemediationGeneralDetails from './RemediationGeneralDetails';
 import RemediationDetailsPopover from './RemediationDetailsPopover';
 import RemediationCreation from './RemediationCreation';
 
 const styles = () => ({
   container: {
-    margin: 0,
+    margin: '0 0 30px 0',
   },
   gridContainer: {
     marginBottom: 20,
@@ -72,7 +62,6 @@ class RemediationComponent extends Component {
       risk,
       riskId,
       history,
-      location,
     } = this.props;
     return (
       <>
@@ -126,7 +115,7 @@ class RemediationComponent extends Component {
             container={true}
             spacing={3}
             classes={{ container: classes.gridContainer }}
-            style={{ marginTop: 50 }}
+            style={{ marginTop: 25 }}
           >
             <Grid item={true} xs={6}>
               <CyioCoreObjectExternalReferences

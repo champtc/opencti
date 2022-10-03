@@ -1,26 +1,16 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import {
-  Route, Redirect, withRouter, Switch,
+  Route, withRouter, Switch,
 } from 'react-router-dom';
 import graphql from 'babel-plugin-relay/macro';
-import { QueryRenderer as QR } from 'react-relay';
-import QueryRendererDarkLight from '../../../../../relay/environmentDarkLight';
 import {
   QueryRenderer,
   requestSubscription,
 } from '../../../../../relay/environment';
 import TopBar from '../../../nav/TopBar';
 import Remediation from './Remediation';
-// import RemediationKnowledge from './RemediationKnowledge';
 import Loader from '../../../../../components/Loader';
-import FileManager from '../../../common/files/FileManager';
-import StixDomainObjectHeader from '../../../common/stix_domain_objects/StixDomainObjectHeader';
-import RemediationPopover from './RemediationPopover';
-import StixCoreObjectHistory from '../../../common/stix_core_objects/StixCoreObjectHistory';
-import StixCoreObjectOrStixCoreRelationshipContainers from '../../../common/containers/StixCoreObjectOrStixCoreRelationshipContainers';
-import StixDomainObjectIndicators from '../../../observations/indicators/StixDomainObjectIndicators';
-import StixCoreRelationship from '../../../common/stix_core_relationships/StixCoreRelationship';
 import ErrorNotFound from '../../../../../components/ErrorNotFound';
 import StixCoreObjectKnowledgeBar from '../../../common/stix_core_objects/StixCoreObjectKnowledgeBar';
 
@@ -53,7 +43,7 @@ class RootRemediation extends Component {
     super(props);
     const {
       match: {
-        params: { riskId, remediationId },
+        params: { riskId },
       },
     } = props;
     this.sub = requestSubscription({
@@ -97,13 +87,10 @@ class RootRemediation extends Component {
             ]}
           />
         </Route>
-        {/* <QueryRenderer */}
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={remediationQuery}
           variables={{ id: remediationId }}
-          render={({ error, props, retry }) => {
-            console.log('RemediationRootQuery', props);
+          render={({ props, retry }) => {
             if (props) {
               if (props.riskResponse) {
                 return (

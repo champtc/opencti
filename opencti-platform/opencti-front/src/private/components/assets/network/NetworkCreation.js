@@ -5,20 +5,10 @@ import * as PropTypes from 'prop-types';
 import * as Yup from 'yup';
 import * as R from 'ramda';
 import { compose } from 'ramda';
-import { Formik, Form, Field } from 'formik';
+import { Formik, Form } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import Drawer from '@material-ui/core/Drawer';
-import Fab from '@material-ui/core/Fab';
-import {
-  Add,
-  Edit,
-  Close,
-  Delete,
-  ArrowBack,
-  AddCircleOutline,
-  CheckCircleOutline,
-} from '@material-ui/icons';
+import { Close, CheckCircleOutline } from '@material-ui/icons';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
@@ -28,29 +18,28 @@ import Typography from '@material-ui/core/Typography';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import graphql from 'babel-plugin-relay/macro';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
-import { commitMutation, QueryRenderer } from '../../../../relay/environment';
+import { parse } from '../../../../utils/Time';
+import { commitMutation } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
-import StixDomainObjectHeader from '../../common/stix_domain_objects/StixDomainObjectHeader';
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import CyioDomainObjectAssetCreationOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetCreationOverview';
-import Loader from '../../../../components/Loader';
 import CyioCoreObjectAssetCreationExternalReferences from '../../analysis/external_references/CyioCoreObjectAssetCreationExternalReferences';
 import NetworkCreationDetails from './NetworkCreationDetails';
-import { dayStartDate, parse } from '../../../../utils/Time';
 import { toastGenericError } from "../../../../utils/bakedToast";
+import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
     margin: 0,
   },
   header: {
-    margin: '-25px -24px 20px -24px',
-    padding: '23px 24px 24px 24px',
     height: '64px',
+    display: 'flex',
+    marginBottom: '20px',
     backgroundColor: '#1F2842',
+    padding: '23px 0 24px 12px',
+    justifyContent: 'space-between',
   },
   gridContainer: {
     marginBottom: 20,
@@ -65,8 +54,12 @@ const styles = (theme) => ({
     float: 'left',
   },
   rightContainer: {
-    float: 'right',
-    marginTop: '-5px',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  leftContainer: {
+    display: 'flex',
+    alignItems: 'center',
   },
   editButton: {
     position: 'fixed',
@@ -109,8 +102,12 @@ const networkCreationMutation = graphql`
   }
 `;
 
-const deviceValidation = (t) => Yup.object().shape({
+const networkValidation = (t) => Yup.object().shape({
   name: Yup.string().required(t('This field is required')),
+  asset_type: Yup.string().required(t('This field is required')),
+  network_id: Yup.string().required(t('This field is required')),
+  network_name: Yup.string().required(t('This field is required')),
+  is_scanned: Yup.boolean().required(t('This field is required')),
 });
 
 const Transition = React.forwardRef((props, ref) => (
@@ -121,6 +118,7 @@ class NetworkCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       open: false,
       onSubmit: false,
       displayCancel: false,
@@ -150,7 +148,8 @@ class NetworkCreation extends Component {
     }
     const adaptedValues = R.evolve(
       {
-        release_date: () => values.release_date === null ? null : values.release_date.toISOString(),
+        release_date: () => values.release_date === null ? null : parse(values.release_date).format(),
+        last_scanned: () => values.last_scanned === null ? null : parse(values.last_scanned).format(),
       },
       values,
     );
@@ -160,7 +159,7 @@ class NetworkCreation extends Component {
       R.dissoc('labels'),
       R.assoc('network_ipv4_address_range', network_ipv4_address_range),
     )(adaptedValues);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: networkCreationMutation,
       variables: {
         input: finalValues,
@@ -173,9 +172,9 @@ class NetworkCreation extends Component {
         this.props.history.push('/defender HQ/assets/network');
       },
       onError: (err) => {
-        console.error(err);
         toastGenericError('Failed to Create Network');
-        this.props.history.push('/defender HQ/assets/network');
+        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors))
+        this.setState({ error: ErrorResponse });
       }
     });
     // commitMutation({
@@ -214,10 +213,7 @@ class NetworkCreation extends Component {
   render() {
     const {
       t,
-      classes,
-      deviceId,
-      open,
-      history,
+      classes
     } = this.props;
     return (
       <div className={classes.container}>
@@ -240,14 +236,14 @@ class NetworkCreation extends Component {
             starting_address: '',
             ending_address: '',
             is_scanned: false,
+            last_scanned: null,
           }}
-          validationSchema={deviceValidation(t)}
+          validationSchema={networkValidation(t)}
           onSubmit={this.onSubmit.bind(this)}
           onReset={this.onReset.bind(this)}
         >
           {({
             submitForm,
-            handleReset,
             isSubmitting,
             setFieldValue,
             values,
@@ -257,7 +253,7 @@ class NetworkCreation extends Component {
                 <Typography
                   variant="h1"
                   gutterBottom={true}
-                  classes={{ root: classes.title }}
+                  className={ classes.leftContainer }
                 >
                   {t('New Asset')}
                 </Typography>
@@ -317,7 +313,7 @@ class NetworkCreation extends Component {
                     stixCoreObjectId={device.id}
                   /> */}
                   <div>
-                    <CyioCoreObjectAssetCreationExternalReferences disableAdd={true}/>
+                    <CyioCoreObjectAssetCreationExternalReferences disableAdd={true} />
                   </div>
                 </Grid>
                 <Grid item={true} xs={6}>
@@ -368,6 +364,10 @@ class NetworkCreation extends Component {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorBox
+          error={this.state.error}
+          pathname='/defender HQ/assets/network'
+        />
       </div>
     );
   }

@@ -24,11 +24,9 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import AddIcon from '@material-ui/icons/Add';
 import { MoreVertOutlined } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM, createFragmentContainer } from 'react-relay';
 import { ConnectionHandler } from 'relay-runtime';
 import inject18n from '../../../../../components/i18n';
 import { commitMutation } from '../../../../../relay/environment';
-import environmentDarkLight from '../../../../../relay/environmentDarkLight';
 import { dateFormat, parse } from '../../../../../utils/Time';
 import { adaptFieldValue } from '../../../../../utils/String';
 import SelectField from '../../../../../components/SelectField';
@@ -129,7 +127,7 @@ class ResponsiblePartyEntityEditionContainer extends Component {
         'value': adaptFieldValue(n[1]),
       })),
     )(values);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: respPartyEntityEditionContainerMutation,
       variables: {
         id: this.props.responsibleParty.id,
@@ -153,28 +151,28 @@ class ResponsiblePartyEntityEditionContainer extends Component {
     const {
       classes,
       t,
-      disabled,
       responsibleParty,
-      risk,
-      remediation,
     } = this.props;
     const responsibleParties = R.pathOr([], ['parties'])(responsibleParty);
     const responsibleRoles = R.pathOr([], ['role'])(responsibleParty);
     const responsibleMarking = R.pathOr([], ['marking'])(responsibleParty);
-
     const initialValues = R.pipe(
+      R.assoc('id', responsibleParty?.id || ''),
+      R.assoc('name', responsibleParty?.name || ''),
       R.assoc('description', responsibleParties?.description || ''),
-      R.assoc('parties', responsibleParties?.name || []),
+      R.assoc('parties', responsibleParties.map((party) => party.id) || []),
       R.assoc('created', responsibleParties?.created || null),
       R.assoc('modified', responsibleParties?.modified || null),
-      R.assoc('role', responsibleRoles?.name || ''),
+      R.assoc('role', responsibleRoles?.id || ''),
       R.assoc('marking', responsibleMarking?.name),
       R.pick([
-        'parties',
+        'id',
+        'name',
         'role',
+        'marking',
+        'parties',
         'created',
         'modified',
-        'marking',
         'description',
       ]),
     )(responsibleParty);

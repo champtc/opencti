@@ -36,14 +36,27 @@ class EntitiesPartiesCards extends Component {
   handleSetBookmarkList(bookmarks) {
     this.setState({ bookmarks });
   }
-  handleOffsetChange() {
+
+  handleIncrementedOffsetChange() {
     const incrementedOffset = this.state.offset += nbOfCardsToLoad;
     this.setState({ offset: incrementedOffset })
     this.props.relay.refetchConnection(nbOfCardsToLoad, null, {
       offset: this.state.offset,
       first: nbOfCardsToLoad,
+       ...this.props.paginationOptions,
     })
   }
+
+  handleDecrementedOffsetChange() {
+    const decrementedOffset = this.state.offset -= nbOfCardsToLoad;
+    this.setState({ offset: decrementedOffset })
+    this.props.relay.refetchConnection(nbOfCardsToLoad, null, {
+      offset: this.state.offset,
+      first: nbOfCardsToLoad,
+       ...this.props.paginationOptions,
+    })
+  }
+
   render() {
     const {
       initialLoading,
@@ -59,7 +72,8 @@ class EntitiesPartiesCards extends Component {
       <CyioListCardsContent
         initialLoading={initialLoading}
         loadMore={relay.loadMore.bind(this)}
-        handleOffsetChange={this.handleOffsetChange.bind(this)}
+        handleIncrementedOffsetChange={this.handleIncrementedOffsetChange.bind(this)}
+        handleDecrementedOffsetChange={this.handleDecrementedOffsetChange.bind(this)}
         hasMore={relay.hasMore.bind(this)}
         isLoading={relay.isLoading.bind(this)}
         dataList={pathOr([], ['oscalParties', 'edges'], this.props.data)}

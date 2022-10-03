@@ -10,6 +10,7 @@ import {
   dissoc,
   map,
 } from 'ramda';
+import * as Yup from 'yup';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
 import Menu from '@material-ui/core/Menu';
@@ -26,7 +27,6 @@ import Typography from '@material-ui/core/Typography';
 import NoteAddIcon from '@material-ui/icons/NoteAdd';
 import IconButton from '@material-ui/core/IconButton';
 import MenuItem from '@material-ui/core/MenuItem';
-import { commitMutation as CM } from 'react-relay';
 import inject18n from './i18n';
 import SwitchField from './SwitchField';
 import SelectField from './SelectField';
@@ -34,7 +34,8 @@ import TextField from './TextField';
 import ItemIcon from './ItemIcon';
 import { adaptFieldValue } from '../utils/String';
 import TaskType from '../private/components/common/form/TaskType';
-import environmentDarkLight, { fetchDarklightQuery } from '../relay/environmentDarkLight';
+import { commitMutation, fetchQuery } from '../relay/environment';
+import { toastGenericError } from '../utils/bakedToast';
 
 const styles = (theme) => ({
   dialogRoot: {
@@ -110,6 +111,10 @@ const exportMutation = graphql`
   }
 `;
 
+const ExportValidation = (t) => Yup.object().shape({
+  media_type: Yup.string().required(t('This field is required')),
+});
+
 class Export extends Component {
   constructor(props) {
     super(props);
@@ -123,7 +128,7 @@ class Export extends Component {
   }
 
   componentDidMount() {
-    fetchDarklightQuery(exportTypeQuery)
+    fetchQuery(exportTypeQuery)
       .toPromise()
       .then((data) => {
         const ExportTypeEntities = pipe(
@@ -210,7 +215,7 @@ class Export extends Component {
           : [adaptFieldValue(n[1])],
       })),
     )(values);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: exportMutation,
       variables: {
         report: this.state.reportType,
@@ -218,13 +223,13 @@ class Export extends Component {
         options: finalValues,
       },
       setSubmitting,
-      onCompleted: (response) => {
+      onCompleted: () => {
         setSubmitting(false);
         resetForm();
         this.handleClose();
       },
-      onError: (err) => {
-        console.error(err);
+      onError: () => {
+        toastGenericError('Failed to Generate Sar Report');
       },
     });
   }
@@ -235,7 +240,7 @@ class Export extends Component {
 
   render() {
     const {
-      t, classes, location, history, keyword, theme,
+      t, classes,
     } = this.props;
     const exportTypeListData = pathOr(
       [],
@@ -251,7 +256,7 @@ class Export extends Component {
             classes={{ root: classes.button }}
             onClick={this.handleClickMenuOpen.bind(this)}
           >
-            <NoteAddIcon fontSize="default" />
+            <NoteAddIcon fontSize="medium" />
           </IconButton>
         </Tooltip>
         <Menu
@@ -262,7 +267,7 @@ class Export extends Component {
           onClose={this.handleClickMenuClose.bind(this)}
         >
           <div style={{ display: 'flex', alignItems: 'center', padding: '10px 13px' }}>
-            <NoteAddIcon fontSize="default" />
+            <NoteAddIcon fontSize="medium" />
             <Typography style={{ marginLeft: '10px' }}>
               {t('Generate Report')}
             </Typography>
@@ -301,7 +306,7 @@ class Export extends Component {
               collected_during_testing: false,
               tracking: false,
             }}
-            // validationSchema={RelatedTaskValidation(t)}
+            validationSchema={ExportValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.onResetContextual.bind(this)}
           >
@@ -561,10 +566,10 @@ class Export extends Component {
                           inputProps={{ 'aria-label': 'ant design' }}
                         />
                         <Typography>
-                          {t('Migrating Factors')}
+                          {t('Mitigating Factors')}
                         </Typography>
                         <div style={{ float: 'left', margin: '3px 0 0 5px' }}>
-                          <Tooltip title={t('Migrating Factors')} >
+                          <Tooltip title={t('Mitigating Factors')} >
                             <Information fontSize="inherit" color="disabled" />
                           </Tooltip>
                         </div>

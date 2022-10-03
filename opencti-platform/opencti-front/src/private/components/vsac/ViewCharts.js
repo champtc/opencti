@@ -82,6 +82,8 @@ class ViewCharts extends Component {
     const analysesMap = {}
     this.props.location.state?.analyses.forEach((a) => analysesMap[a.id] = a);
     this.state = {
+      trendingData: [],
+      trendingName: '',
       tabValue: 0,
       anchorEl: false,
       clientId: localStorage.getItem('client_id'),
@@ -126,6 +128,23 @@ class ViewCharts extends Component {
       });
   }
 
+  handleTrendingClick(s) {
+    const { value } = s;
+    const { trendingData } = this.state;
+    if (trendingData.includes(value)) {
+      this.setState({ trendingData: trendingData.filter((k) => k !== value) })
+    } else {
+      this.setState({ trendingData: [...trendingData, value] });
+    }
+  }
+
+  handleMouseEnter(s) {
+    const { value } = s;
+    this.setState({ trendingName: value });
+  }
+  handleMouseLeave() {
+    this.setState({ trendingName: '' });
+  }
 
   render() {
 
@@ -145,12 +164,17 @@ class ViewCharts extends Component {
     } = this.state;
 
     const COLORS = {
-      Low: '#FCCF7E',
-      Medium: '#F9B406',
-      High: '#E28120',
-      Severe: '#A33611',
-      Critical: '#7F0909',
+      Low: '#FFD773',
+      Medium: '#FFB000',
+      High: '#F17B00',
+      Severe: '#FF4100',
+      Critical: '#FF0000',
+      Informational: '#FFEBBC',
     };
+
+
+
+    const colorsForTrendingChart = ['#FEECC1', '#3C5A96', '#F9B406', '#2AA3EF', '#F35426', '#11B3A9', '#AD0036', '#16D36D'];
 
     const handleTabChange = (event, newValue) => {
       this.setState({ tabValue: newValue });
@@ -339,7 +363,7 @@ class ViewCharts extends Component {
       }
     };
 
-   const CustomTooltip = ({ active, payload, label }) => {
+    const CustomTooltip = ({ active, payload, label }) => {
       if (active) {
         return (
           <div
@@ -360,6 +384,7 @@ class ViewCharts extends Component {
       }
       return null;
     };
+    const { trendingName, trendingData } = this.state;
 
     return (
       <div>
@@ -384,7 +409,7 @@ class ViewCharts extends Component {
             {analysises &&
               Object.entries(analysises).map(([id, analysis]) => {
                 return (
-                  <MenuItem onClick={handleClose}>
+                  <MenuItem>
                     <ListItem key={analysis.id}>
                       <ListItemText
                         id={analysis.id}
@@ -582,13 +607,13 @@ class ViewCharts extends Component {
                           <Bar
                             stackId="a"
                             dataKey="Informational"
-                            fill="#FCCF7E"
+                            fill="#FFEBBC"
                           />
-                          <Bar stackId="a" dataKey="Low" fill="#FCCF7E" />
-                          <Bar stackId="a" dataKey="Medium" fill="#F9B406" />
-                          <Bar stackId="a" dataKey="High" fill="#E28120" />
-                          <Bar stackId="a" dataKey="Severe" fill="#A33611" />
-                          <Bar stackId="a" dataKey="Critical" fill="#7F0909" />
+                          <Bar stackId="a" dataKey="Low" fill="#FFD773" />
+                          <Bar stackId="a" dataKey="Medium" fill="#FFB000" />
+                          <Bar stackId="a" dataKey="High" fill="#F17B00" />
+                          <Bar stackId="a" dataKey="Severe" fill="#FF4100" />
+                          <Bar stackId="a" dataKey="Critical" fill="#FF0000" />
                         </BarChart>
                       </ResponsiveContainer>
                     </Paper>
@@ -639,13 +664,13 @@ class ViewCharts extends Component {
                           <Bar
                             stackId="a"
                             dataKey="Informational"
-                            fill="#FCCF7E"
+                            fill="#FFEBBC"
                           />
-                          <Bar stackId="a" dataKey="Low" fill="#FCCF7E" />
-                          <Bar stackId="a" dataKey="Medium" fill="#F9B406" />
-                          <Bar stackId="a" dataKey="High" fill="#E28120" />
-                          <Bar stackId="a" dataKey="Severe" fill="#A33611" />
-                          <Bar stackId="a" dataKey="Critical" fill="#7F0909" />
+                          <Bar stackId="a" dataKey="Low" fill="#FFD773" />
+                          <Bar stackId="a" dataKey="Medium" fill="#FFB000" />
+                          <Bar stackId="a" dataKey="High" fill="#F17B00" />
+                          <Bar stackId="a" dataKey="Severe" fill="#FF4100" />
+                          <Bar stackId="a" dataKey="Critical" fill="#FF0000" />
                         </BarChart>
                       </ResponsiveContainer>
                     </Paper>
@@ -691,13 +716,13 @@ class ViewCharts extends Component {
                           <Bar
                             stackId="a"
                             dataKey="Informational"
-                            fill="#FCCF7E"
+                            fill="#FFEBBC"
                           />
-                          <Bar stackId="a" dataKey="Low" fill="#FCCF7E" />
-                          <Bar stackId="a" dataKey="Medium" fill="#F9B406" />
-                          <Bar stackId="a" dataKey="High" fill="#E28120" />
-                          <Bar stackId="a" dataKey="Severe" fill="#A33611" />
-                          <Bar stackId="a" dataKey="Critical" fill="#7F0909" />
+                          <Bar stackId="a" dataKey="Low" fill="#FFD773" />
+                          <Bar stackId="a" dataKey="Medium" fill="#FFB000" />
+                          <Bar stackId="a" dataKey="High" fill="#F17B00" />
+                          <Bar stackId="a" dataKey="Severe" fill="#FF4100" />
+                          <Bar stackId="a" dataKey="Critical" fill="#FF0000" />
                         </BarChart>
                       </ResponsiveContainer>
                     </Paper>
@@ -728,18 +753,28 @@ class ViewCharts extends Component {
                         type="category"
                         allowDuplicatedCategory={false}
                         tick={{ fill: 'white' }}
+                        interval={"preserveStartEnd"}
                       />
                       <YAxis dataKey="value" tick={{ fill: 'white' }} />
                       <Tooltip />
-                      <Legend wrapperStyle={{ bottom: -20 }} />
-                      {trendingChatData.map((s) => (
+                      <Legend
+                        onClick={this.handleTrendingClick.bind(this)}
+                        onMouseEnter={this.handleMouseEnter.bind(this)}
+                        onMouseLeave={this.handleMouseLeave.bind(this)}
+                        wrapperStyle={{ bottom: -20 }}
+                      />
+                      {trendingChatData.map((s, index) => (
                         <Line
                           dataKey="value"
+                          isAnimationActive={trendingName === s.name ? false : true}
                           data={s.data}
+                          hide={trendingData.includes(s.name) && true}
+                          strokeWidth={3}
                           name={s.name}
                           key={s.name}
                           dot={{ r: 8 }}
                           activeDot={{ r: 8 }}
+                          stroke={colorsForTrendingChart[index]}
                         />
                       ))}
                     </LineChart>

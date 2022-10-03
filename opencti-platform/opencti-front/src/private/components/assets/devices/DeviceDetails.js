@@ -11,13 +11,8 @@ import Typography from '@material-ui/core/Typography';
 import { Grid, Switch, Tooltip } from '@material-ui/core';
 import Chip from '@material-ui/core/Chip';
 import Link from '@material-ui/core/Link';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
 import Launch from '@material-ui/icons/Launch';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import { BullseyeArrow, ArmFlexOutline, Information } from 'mdi-material-ui';
-import ListItemText from '@material-ui/core/ListItemText';
-import ExpandableMarkdown from '../../../../components/ExpandableMarkdown';
+import { Information } from 'mdi-material-ui';
 import inject18n from '../../../../components/i18n';
 
 const styles = (theme) => ({
@@ -62,15 +57,31 @@ const styles = (theme) => ({
     padding: '0px',
     textAlign: 'left',
   },
+  thumb: {
+    '&.MuiSwitch-thumb': {
+      color: 'white',
+    },
+  },
+  switch_track: {
+    backgroundColor: '#D3134A !important',
+    opacity: '1 !important',
+  },
+  switch_base: {
+    color: 'white',
+    '&.Mui-checked + .MuiSwitch-track': {
+      backgroundColor: '#49B8FC !important',
+      opacity: 1,
+    },
+  },
 });
 
 class DeviceDetailsComponent extends Component {
   render() {
     const {
       t,
+      fldt,
       classes,
       device,
-      fd,
       history,
     } = this.props;
     return (
@@ -164,27 +175,6 @@ class DeviceDetailsComponent extends Component {
                   gutterBottom={true}
                   style={{ float: 'left', marginTop: 20 }}
                 >
-                  {t('Ports')}
-                </Typography>
-                <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                  <Tooltip title={t('Ports')} >
-                    <Information fontSize="inherit" color="disabled" />
-                  </Tooltip>
-                </div>
-                <div className="clearfix" />
-                {device?.ports && device.ports.map((port, key) => (
-                  port.protocols && port.protocols.map((protocol) => (
-                    <Chip key={key} classes={{ root: classes.chip }} label={`${port.port_number && t(port.port_number)} ${protocol && t(protocol)}`} color="primary" />
-                  ))
-                ))}
-              </div>
-              <div>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  gutterBottom={true}
-                  style={{ float: 'left', marginTop: 20 }}
-                >
                   {t('Installation ID')}
                 </Typography>
                 <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
@@ -254,7 +244,16 @@ class DeviceDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                <Switch disabled color="primary" defaultChecked={device?.is_virtual} size="small" />
+                <Switch
+                  disabled
+                  defaultChecked={device?.is_virtual}
+                  classes={{
+                    thumb: classes.thumb,
+                    track: classes.switch_track,
+                    switchBase: classes.switch_base,
+                    colorPrimary: classes.switch_primary,
+                  }}
+                />
               </div>
               <div>
                 <Typography
@@ -263,15 +262,42 @@ class DeviceDetailsComponent extends Component {
                   gutterBottom={true}
                   style={{ float: 'left', marginTop: 20 }}
                 >
-                  {t('Publicly Accessible')}
+                  {t('Scanned')}
                 </Typography>
                 <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                  <Tooltip title={t('Publicly Accessible')} >
+                  <Tooltip title={t('Scanned')} >
                     <Information fontSize="inherit" color="disabled" />
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                <Switch disabled color="primary" defaultChecked={device?.is_publicly_accessible} size="small" />
+                <Switch
+                  disabled
+                  defaultChecked={device?.is_scanned}
+                  classes={{
+                    thumb: classes.thumb,
+                    track: classes.switch_track,
+                    switchBase: classes.switch_base,
+                    colorPrimary: classes.switch_primary,
+                  }}
+                />
+              </div>
+              <div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left', marginTop: 20 }}
+                >
+                  {t('Host Name')}
+                </Typography>
+                <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                  <Tooltip title={t('Host Name')} >
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
+                <div className="clearfix" />
+                {device?.hostname
+                  && t(device.hostname)}
               </div>
               <div>
                 <Typography
@@ -289,6 +315,23 @@ class DeviceDetailsComponent extends Component {
                 </div>
                 <div className="clearfix" />
                 {device?.fqdn && t(device.fqdn)}
+              </div>
+              <div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left', marginTop: 20 }}
+                >
+                  {t('Implementation Point')}
+                </Typography>
+                <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                  <Tooltip title={t('Implementation Point')} >
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
+                <div className="clearfix" />
+                {device.implementation_point && t(device.implementation_point)}
               </div>
             </Grid>
             <Grid item={true} xs={6}>
@@ -435,15 +478,24 @@ class DeviceDetailsComponent extends Component {
                   gutterBottom={true}
                   style={{ float: 'left', marginTop: 20 }}
                 >
-                  {t('Scanned')}
+                  {t('Publicly Accessible')}
                 </Typography>
                 <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                  <Tooltip title={t('Scanned')} >
+                  <Tooltip title={t('Publicly Accessible')} >
                     <Information fontSize="inherit" color="disabled" />
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                <Switch disabled color="primary" defaultChecked={device?.is_scanned} size="small" />
+                <Switch
+                  disabled
+                  defaultChecked={device?.is_publicly_accessible}
+                  classes={{
+                    thumb: classes.thumb,
+                    track: classes.switch_track,
+                    switchBase: classes.switch_base,
+                    colorPrimary: classes.switch_primary,
+                  }}
+                />
               </div>
               <div>
                 <Typography
@@ -452,16 +504,15 @@ class DeviceDetailsComponent extends Component {
                   gutterBottom={true}
                   style={{ float: 'left', marginTop: 20 }}
                 >
-                  {t('Host Name')}
+                  {t('Last Scanned')}
                 </Typography>
                 <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                  <Tooltip title={t('Host Name')} >
+                  <Tooltip title={t('Last Scanned')} >
                     <Information fontSize="inherit" color="disabled" />
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {device?.hostname
-                  && t(device.hostname)}
+                {device?.last_scanned && fldt(device.last_scanned)}
               </div>
               <div>
                 <Typography
@@ -502,6 +553,36 @@ class DeviceDetailsComponent extends Component {
             </Grid>
           </Grid>
           <Grid container={true} spacing={3}>
+            <Grid item={true} xs={12}>
+              <Typography
+                variant="h3"
+                color="textSecondary"
+                gutterBottom={true}
+                style={{ float: 'left', marginTop: 20 }}
+              >
+                {t('Ports')}
+              </Typography>
+              <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                <Tooltip title={t('Ports')}>
+                  <Information fontSize="inherit" color="disabled" />
+                </Tooltip>
+              </div>
+              <div className="clearfix" />
+              <div className={classes.scrollBg}>
+                <div className={classes.scrollDiv}>
+                  <div className={classes.scrollObj}>
+                    {device?.ports && device.ports.map((port, key) => (
+                      port.protocols && port.protocols.map((protocol) => (
+                        <div key={key}>
+                          <div className="clearfix" />
+                          {port.port_number && t(port.port_number)} {protocol && t(protocol)}
+                        </div>
+                      ))
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Grid>
             <Grid item={true} xs={12}>
               <Typography
                 variant="h3"
@@ -600,6 +681,7 @@ DeviceDetailsComponent.propTypes = {
   classes: PropTypes.object,
   t: PropTypes.func,
   fd: PropTypes.func,
+  fldt: PropTypes.func,
 };
 
 const DeviceDetails = createFragmentContainer(
@@ -646,6 +728,7 @@ const DeviceDetails = createFragmentContainer(
         model
         mac_address
         fqdn
+        last_scanned
         cpe_identifier
         baseline_configuration_name
         bios_id
@@ -657,6 +740,7 @@ const DeviceDetails = createFragmentContainer(
         netbios_name
         is_virtual
         is_publicly_accessible
+        implementation_point
         installed_hardware {
           id
           name

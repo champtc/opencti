@@ -4,8 +4,6 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import * as R from 'ramda';
-import { QueryRenderer as QR } from 'react-relay';
-import QueryRendererDarkLight from '../../../relay/environmentDarkLight';
 import { QueryRenderer } from '../../../relay/environment';
 import {
   buildViewParamsFromUrlAndStorage,
@@ -23,10 +21,8 @@ import NetworkLines, {
 } from './network/NetworkLines';
 import NetworkCreation from './network/NetworkCreation';
 import NetworkDeletion from './network/NetworkDeletion';
-import Security, { KNOWLEDGE_KNUPDATE } from '../../../utils/Security';
 import { isUniqFilter } from '../common/lists/Filters';
-import ErrorNotFound from '../../../components/ErrorNotFound';
-import { toastSuccess, toastGenericError } from "../../../utils/bakedToast";
+import { toastGenericError } from "../../../utils/bakedToast";
 
 class Network extends Component {
   constructor(props) {
@@ -40,7 +36,7 @@ class Network extends Component {
       sortBy: R.propOr('name', 'sortBy', params),
       orderAsc: R.propOr(true, 'orderAsc', params),
       searchTerm: R.propOr('', 'searchTerm', params),
-      view: 'lines',
+      view: R.propOr('lines', 'view', params),
       filters: R.propOr({}, 'filters', params),
       openExports: false,
       numberOfElements: { number: 0, symbol: '' },
@@ -61,7 +57,7 @@ class Network extends Component {
   }
 
   handleChangeView(mode) {
-    this.setState({ view: mode });
+    this.setState({ view: mode }, () => this.saveView());
   }
 
   handleSearch(value) {
@@ -219,9 +215,7 @@ class Network extends Component {
           'label_name',
         ]}
       >
-        {/* <QueryRenderer */}
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={networkCardsQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
@@ -256,7 +250,6 @@ class Network extends Component {
       openExports,
       selectedElements,
       numberOfElements,
-      openNetworkCreation,
     } = this.state;
     let numberOfSelectedElements = Object.keys(selectedElements || {}).length;
     if (selectAll) {
@@ -326,9 +319,7 @@ class Network extends Component {
           'label_name',
         ]}
       >
-        {/* <QueryRenderer */}
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={networkLinesQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {

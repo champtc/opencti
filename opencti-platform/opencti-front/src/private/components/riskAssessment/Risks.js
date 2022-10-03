@@ -2,9 +2,7 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import * as R from 'ramda';
-import { QueryRenderer as QR } from 'react-relay';
 import { QueryRenderer } from '../../../relay/environment';
-import QueryRendererDarkLight from '../../../relay/environmentDarkLight';
 import {
   buildViewParamsFromUrlAndStorage,
   convertFilters,
@@ -20,11 +18,9 @@ import RisksLines, {
   risksLinesQuery,
 } from './risks/RisksLines';
 import RiskCreation from './risks/RiskCreation';
-import Security, { KNOWLEDGE_KNUPDATE } from '../../../utils/Security';
 import { isUniqFilter } from '../common/lists/Filters';
 import RiskDeletion from './risks/RiskDeletion';
-import ErrorNotFound from '../../../components/ErrorNotFound';
-import { toastSuccess, toastGenericError } from '../../../utils/bakedToast';
+import { toastGenericError } from '../../../utils/bakedToast';
 
 class Risks extends Component {
   constructor(props) {
@@ -38,7 +34,7 @@ class Risks extends Component {
       sortBy: R.propOr('poam_id', 'sortBy', params),
       orderAsc: R.propOr(true, 'orderAsc', params),
       searchTerm: R.propOr('', 'searchTerm', params),
-      view: 'lines',
+      view: R.propOr('lines', 'view', params),
       filters: R.propOr({}, 'filters', params),
       openExports: false,
       numberOfElements: { number: 0, symbol: '' },
@@ -59,7 +55,7 @@ class Risks extends Component {
   }
 
   handleChangeView(mode) {
-    this.setState({ view: mode });
+    this.setState({ view: mode }, () => this.saveView());
   }
 
   handleSearch(value) {
@@ -219,8 +215,7 @@ class Risks extends Component {
           'label_name',
         ]}
       >
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={risksCardsQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
@@ -278,10 +273,6 @@ class Risks extends Component {
       selectedElements,
       numberOfElements,
     } = this.state;
-    let numberOfSelectedElements = Object.keys(selectedElements || {}).length;
-    if (selectAll) {
-      numberOfSelectedElements = numberOfElements.original;
-    }
     const dataColumns = {
       poam_id: {
         label: 'POAM ID',
@@ -361,13 +352,11 @@ class Risks extends Component {
           'label_name',
         ]}
       >
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={risksLinesQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
             if (error) {
-              console.error(error);
               toastGenericError('Request Failed');
             }
             return (

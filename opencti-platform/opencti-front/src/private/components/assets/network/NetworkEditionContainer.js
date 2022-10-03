@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import * as Yup from 'yup';
 import * as R from 'ramda';
 import graphql from 'babel-plugin-relay/macro';
-// import { createFragmentContainer } from 'react-relay';
+import { createFragmentContainer } from 'react-relay';
 import { compose } from 'ramda';
 import { Formik, Form, Field } from 'formik';
 import Dialog from '@material-ui/core/Dialog';
@@ -13,30 +13,23 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import DialogActions from '@material-ui/core/DialogActions';
-import AppBar from '@material-ui/core/AppBar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
 import { Close, CheckCircleOutline } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM, createFragmentContainer } from 'react-relay';
-import { RelayProfiler } from 'relay-runtime';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
 import inject18n from '../../../../components/i18n';
 import { adaptFieldValue } from '../../../../utils/String';
 import { dateFormat, parse } from '../../../../utils/Time';
 import TextField from '../../../../components/TextField';
-import { SubscriptionAvatars } from '../../../../components/Subscription';
-import NetworkEditionOverview from './NetworkEditionOverview';
 import NetworkEditionDetails from './NetworkEditionDetails';
 import CyioDomainObjectAssetEditionOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetEditionOverview';
 import CyioCoreObjectExternalReferences from '../../analysis/external_references/CyioCoreObjectExternalReferences';
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
+import ErrorBox from '../../common/form/ErrorBox';
+import { commitMutation } from '../../../../relay/environment';
 
 const styles = (theme) => ({
   container: {
@@ -44,7 +37,7 @@ const styles = (theme) => ({
   },
   header: {
     margin: '-25px -24px 20px -24px',
-    padding: '14px 24px 24px 24px',
+    padding: '25px 30px 50px 50px',
     height: '64px',
     backgroundColor: '#1F2842',
   },
@@ -94,6 +87,9 @@ const styles = (theme) => ({
 const networkValidation = (t) => Yup.object().shape({
   name: Yup.string().required(t('This field is required')),
   asset_type: Yup.string().required(t('This field is required')),
+  network_id: Yup.string().required(t('This field is required')),
+  network_name: Yup.string().required(t('This field is required')),
+  is_scanned: Yup.boolean().required(t('This field is required')),
   // implementation_point: Yup.string().required(t('This field is required')),
   // operational_status: Yup.string().required(t('This field is required')),
 });
@@ -119,6 +115,7 @@ class NetworkEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       currentTab: 0,
       open: false,
       onSubmit: false,
@@ -127,7 +124,7 @@ class NetworkEditionContainer extends Component {
     };
   }
 
-  handleChangeTab(event, value) {
+  handleChangeTab(value) {
     this.setState({ currentTab: value });
   }
 
@@ -144,7 +141,8 @@ class NetworkEditionContainer extends Component {
     };
     const adaptedValues = R.evolve(
       {
-        release_date: () => values.release_date === null ? null : values.release_date.toISOString(),
+        release_date: () => values.release_date === null ? null : parse(values.release_date).format(),
+        last_scanned: () => values.last_scanned === null ? null : parse(values.last_scanned).format(),
       },
       values,
     );
@@ -169,18 +167,22 @@ class NetworkEditionContainer extends Component {
         'value': Array.isArray(adaptFieldValue(n[1])) ? adaptFieldValue(n[1]) : [adaptFieldValue(n[1])],
       })),
     )(filteredValue);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: networkEditionMutation,
       variables: {
         id: this.props.network.id,
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data) => {
-        setSubmitting(false);
-        resetForm();
-        this.handleClose();
-        this.props.history.push('/defender HQ/assets/network');
+      onCompleted: (data, error) => {
+        if (error) {
+          this.setState({ error });
+        } else {
+          setSubmitting(false);
+          resetForm();
+          this.handleClose();
+          this.props.history.push('/defender HQ/assets/network');
+        }
       },
       onError: (err) => console.error(err),
     });
@@ -227,7 +229,7 @@ class NetworkEditionContainer extends Component {
 
   render() {
     const {
-      t, classes, handleClose, network, refreshQuery,
+      t, classes, network, refreshQuery,
     } = this.props;
     // const { editContext } = network;
     const initialValues = R.pipe(
@@ -245,7 +247,8 @@ class NetworkEditionContainer extends Component {
       R.assoc('operational_status', network?.operational_status),
       R.assoc('network_name', network?.network_name),
       R.assoc('network_id', network?.network_id),
-      R.assoc('is_scanned', network?.is_scanned),
+      R.assoc('is_scanned', network?.is_scanned),      
+      R.assoc('last_scanned', network?.last_scanned),
       R.assoc('implementation_point', network?.implementation_point),
       R.assoc('starting_address', network?.network_address_range?.starting_ip_address?.ip_address_value || ''),
       R.assoc('ending_address', network?.network_address_range?.ending_ip_address?.ip_address_value || ''),
@@ -264,6 +267,7 @@ class NetworkEditionContainer extends Component {
         'operational_status',
         'network_name',
         'is_scanned',
+        'last_scanned',
         'network_id',
         'implementation_point',
         'starting_address',
@@ -278,13 +282,7 @@ class NetworkEditionContainer extends Component {
           onSubmit={this.onSubmit.bind(this)}
           onReset={this.onReset.bind(this)}
         >
-          {({
-            submitForm,
-            handleReset,
-            isSubmitting,
-            setFieldValue,
-            values,
-          }) => (
+          {({ submitForm, isSubmitting }) => (
             <>
               <div className={classes.header}>
                 <div>
@@ -423,6 +421,10 @@ class NetworkEditionContainer extends Component {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorBox
+          error={this.state.error}
+          pathname='/defender HQ/assets/devices'
+        />
       </div>
     );
   }
@@ -491,6 +493,7 @@ const NetworkEditionFragment = createFragmentContainer(
         network_name
         network_id
         is_scanned
+        last_scanned
         implementation_point
         network_address_range {
           ending_ip_address{

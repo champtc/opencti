@@ -3,11 +3,8 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import * as R from 'ramda';
-// import { createPaginationContainer } from 'react-relay';
-// import { ConnectionHandler } from 'relay-runtime';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import Accordion from '@material-ui/core/Accordion';
@@ -26,26 +23,13 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogActions from '@material-ui/core/DialogActions';
-import { ExpandMoreOutlined, ExpandLessOutlined } from '@material-ui/icons';
 import Slide from '@material-ui/core/Slide';
-import { interval } from 'rxjs';
-import { commitMutation as CM, createFragmentContainer, createPaginationContainer } from 'react-relay';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
+import { commitMutation } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
 import { truncate } from '../../../../utils/String';
-// import { commitMutation } from '../../../../relay/environment';
-import CyioAddExternalReferences from './CyioAddExternalReferences';
 import { cyioExternalReferenceMutationRelationDelete } from './CyioAddExternalReferencesLines';
-import Security, {
-  // KNOWLEDGE_KNENRICHMENT,
-  KNOWLEDGE_KNUPDATE,
-  // KNOWLEDGE_KNUPLOAD,
-} from '../../../../utils/Security';
-import { FIVE_SECONDS } from '../../../../utils/Time';
 import CyioExternalReferencePopover from './CyioExternalReferencePopover';
 import { toastGenericError } from "../../../../utils/bakedToast";
-
-const interval$ = interval(FIVE_SECONDS);
 
 const styles = (theme) => ({
   paper: {
@@ -158,7 +142,7 @@ class CyioCoreObjectExternalReferencesLinesContainer extends Component {
   }
 
   removeExternalReference(externalReferenceEdge) {
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: cyioExternalReferenceMutationRelationDelete,
       variables: {
         toId: externalReferenceEdge.id,
@@ -201,7 +185,7 @@ class CyioCoreObjectExternalReferencesLinesContainer extends Component {
 
   render() {
     const {
-      t, classes, cyioCoreObjectId, externalReference, refreshQuery,
+      t, classes, externalReference, refreshQuery,
     } = this.props;
     const { expanded, displayExternalRefID } = this.state;
     // const externalReferencesEdges = externalReference || [];

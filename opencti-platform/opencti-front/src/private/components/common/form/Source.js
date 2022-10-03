@@ -7,7 +7,7 @@ import graphql from 'babel-plugin-relay/macro';
 import Tooltip from '@material-ui/core/Tooltip';
 import inject18n from '../../../../components/i18n';
 import SelectField from '../../../../components/SelectField';
-import { fetchDarklightQuery } from '../../../../relay/environmentDarkLight';
+import { fetchQuery } from '../../../../relay/environment';
 
 const styles = (theme) => ({
   chip: {
@@ -37,10 +37,6 @@ const SourceActorTypeQuery = graphql`
     }
   }
 `;
-
-const componentFilter = [];
-
-componentFilter.push({ key: 'asset_type', values: 'software' });
 
 const ComponentListQuery = graphql`
   query SourceComponentListQuery{
@@ -103,7 +99,7 @@ class Source extends Component {
   }
 
   componentDidMount() {
-    fetchDarklightQuery(SourceActorTypeQuery)
+    fetchQuery(SourceActorTypeQuery)
       .toPromise()
       .then((data) => {
         const actorTypeEntities = R.pathOr([], ['__type', 'enumValues']).length > 0
@@ -122,27 +118,17 @@ class Source extends Component {
           },
         });
       });
-    this.handleThisChange('', this.props.values.actor_type);
+    this.handleThisChange(this.props.values.actor_type);
   }
 
-  handleThisChange = (name, value) => {
+  handleThisChange = (value) => {
     let queryType;
     let queryInfo;
-    let filterBy = '';
-
     if (value) {
       switch (value) {
         case 'tool':
           queryType = ComponentListQuery;
           queryInfo = 'componentList';
-          filterBy = {
-            filters: [
-              {
-                key: 'component_type',
-                values: 'software',
-              },
-            ],
-          };
           break;
         case 'assessment_platform':
           queryType = AssessmentPlatformQuery;
@@ -155,7 +141,7 @@ class Source extends Component {
         default:
         //
       }
-      fetchDarklightQuery(queryType)
+      fetchQuery(queryType)
         .toPromise()
         .then((data) => {
           const oscalEntities = R.pathOr([], [queryInfo, 'edges'], data).length > 0
@@ -206,7 +192,6 @@ class Source extends Component {
         <Field
           component={SelectField}
           name='actor_type'
-          onChange={this.handleThisChange.bind(this)}
           label={label}
           fullWidth={true}
           containerstyle={containerstyle}
@@ -217,9 +202,17 @@ class Source extends Component {
           helperText={helperText}
         >
           {actorTypeList.map(
-            (et) => et.label && (
-              <Tooltip title={et.label} value={et.value} key={et.label}>
-                <MenuItem value={et.value}>{et.value}
+            (et) => et.value && (
+              <Tooltip
+                title={et.label}
+                value={et.value}
+                key={et.label}
+                onClick={() => this.handleThisChange(et.value)}
+              >
+                <MenuItem
+                  value={et.value}
+                >
+                  {et.value}
                 </MenuItem>
               </Tooltip>
             ),

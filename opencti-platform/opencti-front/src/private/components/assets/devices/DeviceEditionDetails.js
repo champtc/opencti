@@ -2,36 +2,27 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import graphql from 'babel-plugin-relay/macro';
 import { createFragmentContainer } from 'react-relay';
-import * as Yup from 'yup';
 import * as R from 'ramda';
-import { Formik, Form, Field } from 'formik';
+import { Field } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
-import Switch from '@material-ui/core/Switch';
 import Paper from '@material-ui/core/Paper';
-import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import { Information } from 'mdi-material-ui';
-import AddIcon from '@material-ui/icons/Add';
 import Tooltip from '@material-ui/core/Tooltip';
 import inject18n from '../../../../components/i18n';
 import TextField from '../../../../components/TextField';
 import SwitchField from '../../../../components/SwitchField';
 import SelectField from '../../../../components/SelectField';
-import { SubscriptionFocus } from '../../../../components/Subscription';
+import DateTimePickerField from '../../../../components/DateTimePickerField';
 import { commitMutation } from '../../../../relay/environment';
-import OpenVocabField from '../../common/form/OpenVocabField';
-import { dateFormat, parse } from '../../../../utils/Time';
-import DatePickerField from '../../../../components/DatePickerField';
-import CommitMessage from '../../common/form/CommitMessage';
-import { adaptFieldValue } from '../../../../utils/String';
 import InstalledAsset from '../../common/form/InstalledAsset';
-import ItemIcon from '../../../../components/ItemIcon';
 import PortsField from '../../common/form/PortsField';
 import AddressField from '../../common/form/AddressField';
 import { ipv4AddrRegex, ipv6AddrRegex, macAddrRegex } from '../../../../utils/Network';
+import TaskType from '../../common/form/TaskType';
 
-const styles = (theme) => ({
+const styles = () => ({
   paper: {
     height: '100%',
     minHeight: '100%',
@@ -88,9 +79,7 @@ class DeviceEditionDetailsComponent extends Component {
       classes,
       values,
       isSubmitting,
-      device,
       setFieldValue,
-      enableReferences,
     } = this.props;
     return (
       <div>
@@ -101,7 +90,7 @@ class DeviceEditionDetailsComponent extends Component {
           <Paper classes={{ root: classes.paper }} elevation={2}>
             <Grid container={true} spacing={3}>
               <Grid item={true} xs={6}>
-                <div style={{ marginBottom: '122px' }}>
+                <div style={{ marginBottom: '45px' }}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
@@ -173,20 +162,6 @@ class DeviceEditionDetailsComponent extends Component {
                     name="motherboard_id"
                     size='small'
                     fullWidth={true}
-                  />
-                </div>
-                <div>
-                  <PortsField
-                    setFieldValue={setFieldValue}
-                    values={values}
-                    disabled={isSubmitting}
-                    style={{ height: '38.09px' }}
-                    variant='outlined'
-                    // onChange={this.handlePortChange.bind(this)}
-                    name="ports"
-                    size='small'
-                    fullWidth={true}
-                    containerstyle={{ width: '50%', padding: '0 0 1px 0' }}
                   />
                 </div>
                 <div>
@@ -290,10 +265,10 @@ class DeviceEditionDetailsComponent extends Component {
                     gutterBottom={true}
                     style={{ float: 'left', marginTop: 20 }}
                   >
-                    {t('Publicly Accessible')}
+                    {t('Scanned')}
                   </Typography>
                   <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                    <Tooltip title={t('Publicly Accessible')} >
+                    <Tooltip title={t('Scanned')} >
                       <Information fontSize="inherit" color="disabled" />
                     </Tooltip>
                   </div>
@@ -303,12 +278,34 @@ class DeviceEditionDetailsComponent extends Component {
                     <Field
                       component={SwitchField}
                       type="checkbox"
-                      name="is_publicly_accessible"
+                      name="is_scanned"
                       containerstyle={{ marginLeft: 10, marginRight: '-15px' }}
                       inputProps={{ 'aria-label': 'ant design' }}
                     />
                     <Typography>Yes</Typography>
                   </div>
+                </div>
+                <div>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left', marginTop: 20 }}
+                  >
+                    {t('Host Name')}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                    <Tooltip title={t('Host Name')} >
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
+                  <Field
+                    component={TextField}
+                    variant='outlined'
+                    name="hostname"
+                    size='small'
+                    fullWidth={true}
+                  />
                 </div>
                 <div>
                   <Typography
@@ -330,6 +327,29 @@ class DeviceEditionDetailsComponent extends Component {
                     name="fqdn"
                     size='small'
                     fullWidth={true}
+                  />
+                </div>
+                <div>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left', marginTop: 20 }}
+                  >
+                    {t('Implementation Point')}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                    <Tooltip title={t('Implementation Point')} >
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
+                  <TaskType
+                    name="implementation_point"
+                    taskType='ImplementationPoint'
+                    fullWidth={true}
+                    style={{ height: '38.09px' }}
+                    containerstyle={{ width: '100%' }}
+                    variant='outlined'
                   />
                 </div>
               </Grid>
@@ -480,10 +500,10 @@ class DeviceEditionDetailsComponent extends Component {
                     gutterBottom={true}
                     style={{ float: 'left', marginTop: 20 }}
                   >
-                    {t('Scanned')}
+                    {t('Publicly Accessible')}
                   </Typography>
                   <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                    <Tooltip title={t('Scanned')} >
+                    <Tooltip title={t('Publicly Accessible')} >
                       <Information fontSize="inherit" color="disabled" />
                     </Tooltip>
                   </div>
@@ -493,7 +513,7 @@ class DeviceEditionDetailsComponent extends Component {
                     <Field
                       component={SwitchField}
                       type="checkbox"
-                      name="is_scanned"
+                      name="is_publicly_accessible"
                       containerstyle={{ marginLeft: 10, marginRight: '-15px' }}
                       inputProps={{ 'aria-label': 'ant design' }}
                     />
@@ -507,19 +527,24 @@ class DeviceEditionDetailsComponent extends Component {
                     gutterBottom={true}
                     style={{ float: 'left', marginTop: 20 }}
                   >
-                    {t('Host Name')}
+                    {t('Last Scanned')}
                   </Typography>
                   <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                    <Tooltip title={t('Host Name')} >
+                    <Tooltip title={t('Last Scanned')} >
                       <Information fontSize="inherit" color="disabled" />
                     </Tooltip>
                   </div>
                   <Field
-                    component={TextField}
-                    variant='outlined'
-                    name="hostname"
-                    size='small'
+                    component={DateTimePickerField}
+                    variant="outlined"
+                    name="last_scanned"
+                    size="small"
+                    invalidDateMessage={t(
+                      'The value must be a date (YYYY-MM-DD HH:MM)',
+                    )}
                     fullWidth={true}
+                    style={{ height: '38.09px' }}
+                    containerstyle={{ width: '100%' }}
                   />
                 </div>
                 <div>
@@ -566,6 +591,20 @@ class DeviceEditionDetailsComponent extends Component {
                     fullWidth={true}
                   />
                 </div>
+              </Grid>
+              <Grid item={true} xs={12}>
+                <PortsField
+                  setFieldValue={setFieldValue}
+                  values={values}
+                  disabled={isSubmitting}
+                  style={{ height: '38.09px' }}
+                  variant='outlined'
+                  // onChange={this.handlePortChange.bind(this)}
+                  name="ports"
+                  size='small'
+                  fullWidth={true}
+                  containerstyle={{ width: '50%', padding: '0 0 1px 0' }}
+                />
               </Grid>
               <Grid item={true} xs={12}>
                 <AddressField
@@ -653,6 +692,7 @@ const DeviceEditionDetails = createFragmentContainer(
         baseline_configuration_name
         bios_id
         is_scanned
+        last_scanned
         hostname
         default_gateway
         motherboard_id

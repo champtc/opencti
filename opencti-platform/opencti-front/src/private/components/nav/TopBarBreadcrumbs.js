@@ -2,7 +2,10 @@
 /* refactor */
 import React, { useState } from 'react';
 import * as PropTypes from 'prop-types';
-import { withRouter, Link } from 'react-router-dom';
+import {
+  withRouter,
+  Link,
+} from 'react-router-dom';
 import { compose } from 'ramda';
 import { withTheme, withStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
@@ -12,12 +15,10 @@ import {
   AccountCircleOutlined,
   ExploreOutlined,
   InsertChartOutlined,
+  Info,
 } from '@material-ui/icons';
-import NoteAddIcon from '@material-ui/icons/NoteAdd';
-import PublishIcon from '@material-ui/icons/Publish';
 import FindInPageIcon from '@material-ui/icons/FindInPage';
 import DashboardIcon from '@material-ui/icons/Dashboard';
-import { UploadOutline } from 'mdi-material-ui';
 import Menu from '@material-ui/core/Menu';
 import Divider from '@material-ui/core/Divider';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -26,7 +27,7 @@ import graphql from 'babel-plugin-relay/macro';
 import Typography from '@material-ui/core/Typography';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import inject18n from '../../../components/i18n';
-import SearchInput from '../../../components/SearchInput';
+import Grid from '@material-ui/core/Grid';
 import { commitMutation } from '../../../relay/environment';
 import Security, {
   KNOWLEDGE,
@@ -36,11 +37,11 @@ import Security, {
 import Filters from '../common/lists/Filters';
 import ExportPoam from '../../../components/ExportPoam';
 import Export from '../../../components/Export';
+import AboutModal from '../../../components/AboutModal';
 
 const styles = (theme) => ({
   appBar: {
     width: '100%',
-    zIndex: theme.zIndex.drawer + 1,
     backgroundColor: theme.palette.header.background,
     color: theme.palette.header.text,
   },
@@ -48,14 +49,12 @@ const styles = (theme) => ({
     flexGrow: 1,
   },
   logoContainer: {
-
     height: 64,
     width: 255,
     marginLeft: -24,
     paddingTop: 15,
     borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
     backgroundColor: theme.palette.background.nav,
-
   },
   logo: {
     cursor: 'pointer',
@@ -66,7 +65,19 @@ const styles = (theme) => ({
   },
   menuContainer: {
     float: 'left',
-    marginLeft: 40,
+    marginLeft: '17rem',
+    transition: theme.transitions.create('margin', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  },
+  menuContainerClose: {
+    float: 'left',
+    marginLeft: '5.55rem',
+    transition: theme.transitions.create('margin', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
   },
   barRight: {
     position: 'absolute',
@@ -113,11 +124,11 @@ const TopBarBreadcrumbs = ({
   risk,
   remediation,
   riskId,
+  drawer,
 }) => {
   const pathParts = location.pathname.split('/').filter((entry) => entry !== '');
 
   const [menuOpen, setMenuOpen] = useState({ open: false, anchorEl: null });
-
   const buildBreadCrumbs = (array) => {
     let url = '';
     const crumbArry = [];
@@ -163,13 +174,8 @@ const TopBarBreadcrumbs = ({
       elevation={1}
       style={{ backgroundColor: theme.palette.header.background }}
     >
-      <Toolbar>
-        <div className={classes.logoContainer}>
-          <Link to="/dashboard">
-            <img src={theme.logo} alt="logo" className={classes.logo} />
-          </Link>
-        </div>
-        <div className={classes.menuContainer}>
+      <Toolbar>        
+        <div className={drawer ? classes.menuContainerClose : classes.menuContainer }>
           <Breadcrumbs aria-label="breadcrumb">
             {breadCrumbs.map((crumb, i, array) => {
               if (crumb.label === riskId) {
@@ -243,7 +249,7 @@ const TopBarBreadcrumbs = ({
                   }
                   classes={{ root: classes.button }}
                 >
-                  <InsertChartOutlined fontSize="default" />
+                  <InsertChartOutlined fontSize="medium" />
                 </IconButton>
               </Tooltip>
               <Tooltip title={t('Investigations')}>
@@ -266,45 +272,58 @@ const TopBarBreadcrumbs = ({
                   }
                   classes={{ root: classes.button }}
                 >
-                  <ExploreOutlined fontSize="default" />
+                  <ExploreOutlined fontSize="medium" />
                 </IconButton>
               </Tooltip>
             </Security>
-            <Tooltip title={t('Dashboard')}>
-              <IconButton
-                component={Link}
-                to='/dashboard'
-                classes={{ root: classes.button }}
-              >
-                <DashboardIcon fontSize="default" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t('Find in Page')}>
-              <IconButton
-                disabled={true}
-                component={Link}
-                classes={{ root: classes.button }}
-              >
-                <FindInPageIcon fontSize="default" />
-              </IconButton>
-            </Tooltip>
-            <>
-              <ExportPoam />
-            </>
-            <>
-              <Export />
-            </>
-            <IconButton
-              size="medium"
-              classes={{ root: classes.button }}
-              aria-owns={menuOpen.open ? 'menu-appbar' : null}
-              aria-haspopup="true"
-              onClick={handleOpenMenu}
-              color="inherit"
-              data-cy='menu'
-            >
-              <AccountCircleOutlined fontSize="default" />
-            </IconButton>
+            <Grid container={true} spacing={0}>
+              <Grid item={true} xs='auto'>
+                <Tooltip title={t('Dashboard')}>
+                  <IconButton
+                    component={Link}
+                    to='/dashboard'
+                    classes={{ root: classes.button }}
+                  >
+                    <DashboardIcon fontSize="medium" />
+                  </IconButton>
+                </Tooltip>
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <AboutModal
+                  history={history}
+                  location={location}
+                />
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <Tooltip title={t('Find in Page')}>
+                  <IconButton
+                    disabled={true}
+                    component={Link}
+                    classes={{ root: classes.button }}
+                  >
+                    <FindInPageIcon fontSize="medium" />
+                  </IconButton>
+                </Tooltip>
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <ExportPoam />
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <Export />
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <IconButton
+                  size="medium"
+                  classes={{ root: classes.button }}
+                  aria-owns={menuOpen.open ? 'menu-appbar' : null}
+                  aria-haspopup="true"
+                  onClick={handleOpenMenu}
+                  data-cy='menu'
+                >
+                  <AccountCircleOutlined fontSize="medium" />
+                </IconButton>
+              </Grid>
+            </Grid>
             <Menu
               id="menu-appbar"
               style={{ marginTop: 40, zIndex: 2100 }}
@@ -339,6 +358,7 @@ TopBarBreadcrumbs.propTypes = {
   location: PropTypes.object,
   t: PropTypes.func,
   history: PropTypes.object,
+  drawer: PropTypes.bool,
 };
 
 export default compose(

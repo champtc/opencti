@@ -4,8 +4,6 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import * as R from 'ramda';
-import { QueryRenderer as QR } from 'react-relay';
-import QueryRendererDarkLight from '../../../relay/environmentDarkLight';
 import { QueryRenderer } from '../../../relay/environment';
 import {
   buildViewParamsFromUrlAndStorage,
@@ -23,10 +21,8 @@ import SoftwareLines, {
 } from './software/SoftwareLines';
 import SoftwareCreation from './software/SoftwareCreation';
 import SoftwareDeletion from './software/SoftwareDeletion';
-import Security, { KNOWLEDGE_KNUPDATE } from '../../../utils/Security';
 import { isUniqFilter } from '../common/lists/Filters';
-import ErrorNotFound from '../../../components/ErrorNotFound';
-import {toastSuccess, toastGenericError} from "../../../utils/bakedToast";
+import {toastGenericError} from "../../../utils/bakedToast";
 
 class Software extends Component {
   constructor(props) {
@@ -40,7 +36,7 @@ class Software extends Component {
       sortBy: R.propOr('name', 'sortBy', params),
       orderAsc: R.propOr(true, 'orderAsc', params),
       searchTerm: R.propOr('', 'searchTerm', params),
-      view: 'lines',
+      view: R.propOr('lines', 'view', params),
       filters: R.propOr({}, 'filters', params),
       openExports: false,
       numberOfElements: { number: 0, symbol: '' },
@@ -61,7 +57,7 @@ class Software extends Component {
   }
 
   handleChangeView(mode) {
-    this.setState({ view: mode });
+    this.setState({ view: mode }, () => this.saveView());
   }
 
   handleSearch(value) {
@@ -171,7 +167,7 @@ class Software extends Component {
       selectedElements,
       numberOfElements,
     } = this.state;
-    let numberOfSelectedElements = Object.keys(selectedElements || {}).length;
+
     if (selectAll) {
       numberOfSelectedElements = numberOfElements.original;
     }
@@ -222,9 +218,7 @@ class Software extends Component {
           'label_name',
         ]}
       >
-        {/* <QueryRenderer */}
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={softwareCardsQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
@@ -259,7 +253,6 @@ class Software extends Component {
       openExports,
       selectedElements,
       numberOfElements,
-      openSoftwareCreation,
     } = this.state;
     let numberOfSelectedElements = Object.keys(selectedElements || {}).length;
     if (selectAll) {
@@ -335,9 +328,7 @@ class Software extends Component {
           'label_name',
         ]}
       >
-        {/* <QueryRenderer */}
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={softwareLinesQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {

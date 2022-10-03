@@ -4,14 +4,15 @@ import { withRouter, Link } from 'react-router-dom';
 import { compose } from 'ramda';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
-import { PublicOutlined, LaptopChromebookOutlined } from '@material-ui/icons';
-import { DiamondOutline, ChessKnight } from 'mdi-material-ui';
 import inject18n from '../../../components/i18n';
 import deviceIcon from '../../../resources/images/assets/deviceIcon.svg';
 import networkIcon from '../../../resources/images/assets/networkIcon.svg';
 import softwareIcon from '../../../resources/images/assets/softwareIcon.svg';
 
 const styles = (theme) => ({
+  root: {
+    marginTop: -7,
+  },
   button: {
     marginRight: theme.spacing(1),
     padding: '4px 25px',
@@ -19,6 +20,7 @@ const styles = (theme) => ({
     minWidth: 20,
     textTransform: 'none',
     borderRadius: '8px 8px 0px 0px',
+    color: '#fff',
   },
   icon: {
     marginRight: theme.spacing(1),
@@ -29,7 +31,7 @@ class TopMenuAssets extends Component {
   render() {
     const { t, location, classes } = this.props;
     return (
-      <div>
+      <div className={classes.root}>
         <Button
           component={Link}
           to="/defender HQ/assets/devices"
@@ -42,7 +44,7 @@ class TopMenuAssets extends Component {
           color={
             location.pathname.includes('/defender HQ/assets/devices')
               ? 'secondary'
-              : 'inherit'
+              : 'default'
           }
           classes={{ root: classes.button }}
           data-cy='asset devices'
@@ -62,7 +64,7 @@ class TopMenuAssets extends Component {
           color={
             location.pathname.includes('/defender HQ/assets/network')
               ? 'secondary'
-              : 'inherit'
+              : 'default'
           }
           classes={{ root: classes.button }}
           data-cy='asset networks'
@@ -82,7 +84,7 @@ class TopMenuAssets extends Component {
           color={
             location.pathname === '/defender HQ/assets/software'
               ? 'secondary'
-              : 'inherit'
+              : 'default'
           }
           classes={{ root: classes.button }}
           data-cy='asset software'

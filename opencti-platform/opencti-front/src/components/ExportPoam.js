@@ -1,13 +1,11 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
 import graphql from 'babel-plugin-relay/macro';
 import {
   compose,
-  dissoc,
-  pipe,
 } from 'ramda';
-import { commitMutation as CM } from 'react-relay';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
@@ -24,7 +22,7 @@ import inject18n from './i18n';
 import SelectField from './SelectField';
 import OscalModalTypeList from '../private/components/common/form/OscalModalTypeList';
 import OscalMediaTypeList from '../private/components/common/form/OscalMediaTypeList';
-import environmentDarkLight from '../relay/environmentDarkLight';
+import { commitMutation } from '../relay/environment';
 import { toastGenericError } from '../utils/bakedToast';
 
 const styles = (theme) => ({
@@ -63,6 +61,10 @@ const ExportPoamMutation = graphql`
     exportOscal(model: $model, id: $exportOscalId, media_type: $mediaType)
   }
 `;
+
+const RelatedTaskValidation = (t) => Yup.object().shape({
+  mediaType: Yup.string().required(t('This field is required')),
+});
 
 class ExportPoam extends Component {
   constructor(props) {
@@ -115,11 +117,7 @@ class ExportPoam extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    const finalValues = pipe(
-      dissoc('marking'),
-      // assoc('model', this.state.selectedOscalType),
-    )(values);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: ExportPoamMutation,
       variables: {
         model: this.state.selectedOscalType,
@@ -127,13 +125,12 @@ class ExportPoam extends Component {
         id: '',
       },
       setSubmitting,
-      onCompleted: (response) => {
+      onCompleted: () => {
         setSubmitting(false);
         resetForm();
         this.handleClose();
       },
-      onError: (err) => {
-        console.error(err);
+      onError: () => {
         toastGenericError('Failed to export data');
       },
     });
@@ -145,7 +142,7 @@ class ExportPoam extends Component {
 
   render() {
     const {
-      t, classes, location, history, keyword, theme,
+      t, classes,
     } = this.props;
     return (
       <>
@@ -156,7 +153,7 @@ class ExportPoam extends Component {
             onClick={this.handleOscalModalOpen.bind((this))}
             aria-haspopup='true'
           >
-            <PublishIcon fontSize="default" />
+            <PublishIcon fontSize="medium" />
           </IconButton>
         </Tooltip>
 
@@ -175,7 +172,7 @@ class ExportPoam extends Component {
           onClose={this.handleOscalModalClose.bind(this)}
         >
           <div style={{ display: 'flex', alignItems: 'center', padding: '10px 13px' }}>
-            <PublishIcon fontSize="default" />
+            <PublishIcon fontSize="medium" />
             <Typography style={{ marginLeft: '10px' }}>
               {t('Data Export')}
             </Typography>
@@ -194,7 +191,7 @@ class ExportPoam extends Component {
             mediaType: '',
             marking: '',
           }}
-          // validationSchema={RelatedTaskValidation(t)}
+          validationSchema={RelatedTaskValidation(t)}
           onSubmit={this.onSubmit.bind(this)}
           onReset={this.onReset.bind(this)}
         >

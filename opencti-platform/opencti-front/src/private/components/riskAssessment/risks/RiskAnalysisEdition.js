@@ -2,12 +2,7 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { compose } from 'ramda';
 import { withStyles } from '@material-ui/core/styles';
-import Drawer from '@material-ui/core/Drawer';
-import Fab from '@material-ui/core/Fab';
-import { Edit } from '@material-ui/icons';
 import graphql from 'babel-plugin-relay/macro';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
 import { commitMutation, QueryRenderer } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
 import RiskAnalysisEditionContainer from './RiskAnalysisEditionContainer';
@@ -66,9 +61,7 @@ class RiskAnalysisEdition extends Component {
 
   render() {
     const {
-      classes,
       riskId,
-      open,
       history,
     } = this.props;
     return (
@@ -88,12 +81,10 @@ class RiskAnalysisEdition extends Component {
           onClose={this.handleClose.bind(this)}
         > */}
         <div>
-        <QR
-          environment={environmentDarkLight}
+        <QueryRenderer
           query={riskAnalysisEditionQuery}
           variables={{ id: riskId }}
-          render={({ error, props }) => {
-            console.log('RiskEditionPropsContainer', props);
+          render={({ props }) => {
             if (props) {
               return (
                 <RiskAnalysisEditionContainer

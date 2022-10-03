@@ -10,39 +10,22 @@ import { Formik, Form, Field } from 'formik';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import NoteAddIcon from '@material-ui/icons/NoteAdd';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import IconButton from '@material-ui/core/IconButton';
 import { Information } from 'mdi-material-ui';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Tooltip from '@material-ui/core/Tooltip';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
-import AddIcon from '@material-ui/icons/Add';
-import { MoreVertOutlined } from '@material-ui/icons';
-import {
-  QueryRenderer as QR,
-  commitMutation as CM,
-  createFragmentContainer,
-} from 'react-relay';
-import { ConnectionHandler } from 'relay-runtime';
-import inject18n from '../../../../../components/i18n';
 import { commitMutation } from '../../../../../relay/environment';
-import environmentDarkLight from '../../../../../relay/environmentDarkLight';
-import { dateFormat, parse } from '../../../../../utils/Time';
-import { adaptFieldValue } from '../../../../../utils/String';
-import SelectField from '../../../../../components/SelectField';
+import inject18n from '../../../../../components/i18n';
 import TextField from '../../../../../components/TextField';
-import DatePickerField from '../../../../../components/DatePickerField';
 import MarkDownField from '../../../../../components/MarkDownField';
 import ResponseType from '../../../common/form/ResponseType';
 import RiskLifeCyclePhase from '../../../common/form/RiskLifeCyclePhase';
 import Source from '../../../common/form/Source';
 import { toastGenericError } from '../../../../../utils/bakedToast';
+import ErrorBox from '../../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
@@ -118,6 +101,7 @@ class RemediationCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       anchorEl: null,
       details: false,
       close: false,
@@ -166,7 +150,7 @@ class RemediationCreation extends Component {
       R.assoc('origins', [{ origin_actors: [adaptedValues] }])
     )(values);
 
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: remediationCreationMutation,
       variables: {
         input: finalValues,
@@ -180,7 +164,11 @@ class RemediationCreation extends Component {
           `/activities/risk assessment/risks/${this.props.riskId}/remediation`
         );
       },
-      onError: (err) => toastGenericError('Failed to create Remediation'),
+      onError: (err) => {
+        toastGenericError('Failed to create Remediation');
+        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors));
+        this.setState({ error: ErrorResponse });
+      },
     });
     this.setState({ onSubmit: true });
   }
@@ -189,12 +177,8 @@ class RemediationCreation extends Component {
     const {
       classes,
       t,
-      disabled,
-      risk,
-      remediationId,
       history,
       riskId,
-      handleOpenCreation,
     } = this.props;
     return (
       <>
@@ -221,7 +205,6 @@ class RemediationCreation extends Component {
           >
             {({
               submitForm,
-              handleReset,
               isSubmitting,
               setFieldValue,
               values,
@@ -452,11 +435,15 @@ class RemediationCreation extends Component {
               </Form>
             )}
           </Formik>
+          <ErrorBox
+            error={this.state.error}
+            pathname={`/activities/risk assessment/risks/${this.props.riskId}/remediation`}
+          />
         </Dialog>
         <Dialog
           open={this.state.close}
           keepMounted={true}
-          // TransitionComponent={Transition}
+        // TransitionComponent={Transition}
         >
           <DialogContent>
             <Typography className={classes.popoverDialog}>

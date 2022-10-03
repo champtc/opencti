@@ -3,14 +3,9 @@ import * as PropTypes from 'prop-types';
 import { compose } from 'ramda';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles/index';
-import Menu from '@material-ui/core/Menu';
-import { QueryRenderer as QR } from 'react-relay';
 import Slide from '@material-ui/core/Slide';
-import { MoreVertOutlined } from '@material-ui/icons';
-import { ConnectionHandler } from 'relay-runtime';
 import inject18n from '../../../../../components/i18n';
-import QueryRendererDarkLight from '../../../../../relay/environmentDarkLight';
-import { commitMutation } from '../../../../../relay/environment';
+import { QueryRenderer } from '../../../../../relay/environment';
 import LabelEntityEditionContainer from './LabelEntityEditionContainer';
 import { toastGenericError } from '../../../../../utils/bakedToast';
 
@@ -66,7 +61,7 @@ const labelEntityEditionQuery = graphql`
   }
 `;
 
-class RoleEntityEdition extends Component {
+class LabelEntityEdition extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -76,17 +71,15 @@ class RoleEntityEdition extends Component {
 
   render() {
     const {
-      classes, t, displayEdit, handleDisplayEdit, history, labelId,
+      classes, displayEdit, handleDisplayEdit, history, labelId,
     } = this.props;
     return (
       <div className={classes.container}>
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={labelEntityEditionQuery}
           variables={{ id: labelId }}
-          render={({ error, props, retry }) => {
+          render={({ error, props }) => {
             if (error) {
-              console.error(error);
               toastGenericError('Failed to edit Label');
             }
             if (props) {
@@ -107,7 +100,7 @@ class RoleEntityEdition extends Component {
   }
 }
 
-RoleEntityEdition.propTypes = {
+LabelEntityEdition.propTypes = {
   labelId: PropTypes.string,
   displayEdit: PropTypes.bool,
   handleDisplayEdit: PropTypes.func,
@@ -119,4 +112,4 @@ RoleEntityEdition.propTypes = {
 export default compose(
   inject18n,
   withStyles(styles),
-)(RoleEntityEdition);
+)(LabelEntityEdition);

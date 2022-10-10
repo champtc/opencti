@@ -4,31 +4,20 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { compose } from 'ramda';
 import { withStyles } from '@material-ui/core/styles';
-import Drawer from '@material-ui/core/Drawer';
 import IconButton from '@material-ui/core/IconButton';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
 import Dialog from '@material-ui/core/Dialog';
 import Button from '@material-ui/core/Button';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import CardActions from '@material-ui/core/CardActions';
 import TextField from '@material-ui/core/TextField';
 import Collapse from '@material-ui/core/Collapse';
+import Add from '@material-ui/icons/Add';
 import Divider from '@material-ui/core/Divider';
 import KeyboardArrowDownOutlinedIcon from '@material-ui/icons/KeyboardArrowDownOutlined';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import ListItemText from '@material-ui/core/ListItemText';
-import Typography from '@material-ui/core/Typography';
-import { Add, Close } from '@material-ui/icons';
-import Skeleton from '@material-ui/lab/Skeleton';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
 import inject18n from '../../../../components/i18n';
-import SearchInput from '../../../../components/SearchInput';
 import { QueryRenderer } from '../../../../relay/environment';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
-import AddNotesLines, { addNotesLinesQuery } from './AddNotesLines';
-import NoteCreation from './NoteCreation';
+import { commitMutation } from '../../../../relay/environment';
 import CyioNoteCreation from './CyioNoteCreation';
 import CyioAddNotesLines, { cyioAddNotesLinesQuery, cyioNoteLinesMutationRelationAdd } from './CyioAddNotesLines';
 
@@ -121,7 +110,7 @@ class CyioAddNotes extends Component {
     // };
     if (this.state.totalNotes.length > 0) {
       this.state.totalNotes.map((note) => (
-        CM(environmentDarkLight, {
+        commitMutation({
           mutation: cyioNoteLinesMutationRelationAdd,
           variables: {
             toId: note.id,
@@ -151,7 +140,7 @@ class CyioAddNotes extends Component {
         })
       ));
     } else {
-      CM(environmentDarkLight, {
+      commitMutation({
         mutation: cyioNoteLinesMutationRelationAdd,
         variables: {
           toId: createNote.id,
@@ -306,8 +295,7 @@ class CyioAddNotes extends Component {
             </div>
             <Collapse sx={{ maxWidth: '500px', borderRadius: 0 }} in={this.state.expanded} timeout="auto" unmountOnExit>
               <div className={classes.collapse}>
-                <QR
-                  environment={environmentDarkLight}
+                <QueryRenderer
                   query={cyioAddNotesLinesQuery}
                   variables={{
                     search: this.state.search,

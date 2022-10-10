@@ -15,11 +15,11 @@ import FindInPageIcon from '@material-ui/icons/FindInPage';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import Menu from '@material-ui/core/Menu';
 import Divider from '@material-ui/core/Divider';
+import Grid from '@material-ui/core/Grid';
 import MenuItem from '@material-ui/core/MenuItem';
 import Tooltip from '@material-ui/core/Tooltip';
 import graphql from 'babel-plugin-relay/macro';
 import inject18n from '../../../components/i18n';
-import SearchInput from '../../../components/SearchInput';
 import TopMenuDashboard from './TopMenuDashboard';
 import TopMenuSearch from './TopMenuSearch';
 import TopMenuAnalysis from './TopMenuAnalysis';
@@ -61,6 +61,7 @@ import Security, {
   KNOWLEDGE,
   EXPLORE,
 } from '../../../utils/Security';
+import AboutModal from '../../../components/AboutModal';
 import TopMenuCourseOfAction from './TopMenuCourseOfAction';
 import TopMenuWorkspacesDashboards from './TopMenuWorkspacesDashboards';
 import TopMenuWorkspacesInvestigations from './TopMenuWorkspacesInvestigations';
@@ -71,7 +72,7 @@ import ExportPoam from '../../../components/ExportPoam';
 const styles = (theme) => ({
   appBar: {
     width: '100%',
-    zIndex: theme.zIndex.drawer + 1,
+    zIndex: theme.zIndex.drawer - 1,
     backgroundColor: theme.palette.header.background,
     color: theme.palette.header.text,
   },
@@ -135,7 +136,7 @@ const logoutMutation = graphql`
 `;
 
 const TopBar = ({
-  t, classes, location, history, keyword, theme,
+  t, classes, location, history, theme,
 }) => {
   const [menuOpen, setMenuOpen] = useState({ open: false, anchorEl: null });
   const handleOpenMenu = (event) => {
@@ -155,14 +156,6 @@ const TopBar = ({
       },
     });
   };
-  const handleSearch = (searchKeyword) => {
-    if (searchKeyword.length > 0) {
-      // With need to double encode because of react router.
-      // Waiting for history 5.0 integrated to react router.
-      const encodeKey = encodeURIComponent(encodeURIComponent(searchKeyword));
-      history.push(`/dashboard/search/${encodeKey}`);
-    }
-  };
   return (
     <AppBar
       position="fixed"
@@ -171,19 +164,20 @@ const TopBar = ({
       style={{ backgroundColor: theme.palette.header.background }}
     >
       <Toolbar>
-        <div className={classes.logoContainer}>
+        {/* <div className={classes.logoContainer}>
           <Link to="/dashboard">
             <img src={theme.logo} alt="logo" className={classes.logo} />
           </Link>
-        </div>
+        </div> */}
         <div className={classes.menuContainer}>
           {(location.pathname === '/dashboard'
             || location.pathname === '/dashboard/import') && <TopMenuDashboard />}
           {location.pathname.includes('/dashboard/search') && <TopMenuSearch />}
           {(location.pathname === '/dashboard/analysis'
-            || location.pathname.match('/dashboard/analysis/[a-z_]+$')) && (
+            || location.pathname.match('/dashboard/analysis/[a-z_]+$'))
+            && (
               <TopMenuAnalysis />
-          )}
+            )}
           {location.pathname.includes('/dashboard/analysis/reports/') && (
             <TopMenuReport />
           )}
@@ -197,9 +191,10 @@ const TopBar = ({
             '/dashboard/analysis/external_references/',
           ) && <TopMenuExternalReference />}
           {(location.pathname === '/dashboard/events'
-            || location.pathname.match('/dashboard/events/[a-z_]+$')) && (
+            || location.pathname.match('/dashboard/events/[a-z_]+$'))
+            && (
               <TopMenuEvents />
-          )}
+            )}
           {location.pathname.includes('/dashboard/events/incidents/') && (
             <TopMenuIncident />
           )}
@@ -210,9 +205,10 @@ const TopBar = ({
             <TopMenuEvents />
           )}
           {(location.pathname === '/dashboard/observations'
-            || location.pathname.match('/dashboard/observations/[a-z_]+$')) && (
+            || location.pathname.match('/dashboard/observations/[a-z_]+$'))
+            && (
               <TopMenuObservations />
-          )}
+            )}
           {location.pathname.includes(
             '/dashboard/observations/indicators/',
           ) && <TopMenuIndicator />}
@@ -226,9 +222,10 @@ const TopBar = ({
             <TopMenuArtifact />
           )}
           {(location.pathname === '/dashboard/threats'
-            || location.pathname.match('/dashboard/threats/[a-z_]+$')) && (
+            || location.pathname.match('/dashboard/threats/[a-z_]+$'))
+            && (
               <TopMenuThreats />
-          )}
+            )}
           {location.pathname.includes('/dashboard/threats/threat_actors/') && (
             <TopMenuThreatActor />
           )}
@@ -239,9 +236,10 @@ const TopBar = ({
             <TopMenuCampaign />
           )}
           {(location.pathname === '/dashboard/arsenal'
-            || location.pathname.match('/dashboard/arsenal/[a-z_]+$')) && (
+            || location.pathname.match('/dashboard/arsenal/[a-z_]+$'))
+            && (
               <TopMenuArsenal />
-          )}
+            )}
           {location.pathname.includes('/dashboard/arsenal/malwares/') && (
             <TopMenuMalware />
           )}
@@ -258,9 +256,10 @@ const TopBar = ({
             '/dashboard/arsenal/vulnerabilities/',
           ) && <TopMenuVulnerability />}
           {(location.pathname === '/dashboard/entities'
-            || location.pathname.match('/dashboard/entities/[a-z_]+$')) && (
+            || location.pathname.match('/dashboard/entities/[a-z_]+$'))
+            && (
               <TopMenuEntities />
-          )}
+            )}
           {location.pathname.includes('/dashboard/entities/sectors/') && (
             <TopMenuSector />
           )}
@@ -346,7 +345,7 @@ const TopBar = ({
                   }
                   classes={{ root: classes.button }}
                 >
-                  <InsertChartOutlined fontSize="default" />
+                  <InsertChartOutlined fontSize="medium" />
                 </IconButton>
               </Tooltip>
               <Tooltip title={t('Investigations')}>
@@ -369,44 +368,58 @@ const TopBar = ({
                   }
                   classes={{ root: classes.button }}
                 >
-                  <ExploreOutlined fontSize="default" />
+                  <ExploreOutlined fontSize="medium" />
                 </IconButton>
               </Tooltip>
             </Security>
-            <Tooltip title={t('Dashboard')}>
-              <IconButton
-                component={Link}
-                to='/dashboard'
-                classes={{ root: classes.button }}
-              >
-                <DashboardIcon fontSize="default" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t('Find in Page')}>
-              <IconButton
-                component={Link}
-                disabled={true}
-                classes={{ root: classes.button }}
-              >
-                <FindInPageIcon fontSize="default" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t('Data Import')}>
-              <ExportPoam />
-            </Tooltip>
-            <Tooltip title={t('Add Note')}>
-              <Export />
-            </Tooltip>
-            <IconButton
-              size="medium"
-              classes={{ root: classes.button }}
-              aria-owns={menuOpen.open ? 'menu-appbar' : null}
-              aria-haspopup="true"
-              onClick={handleOpenMenu}
-              color="inherit"
-            >
-              <AccountCircleOutlined fontSize="default" />
-            </IconButton>
+            <Grid container={true} spacing={0}>
+              <Grid item={true} xs='auto'>
+                <Tooltip title={t('Dashboard')}>
+                  <IconButton
+                    component={Link}
+                    to='/dashboard'
+                    classes={{ root: classes.button }}
+                  >
+                    <DashboardIcon fontSize="medium" />
+                  </IconButton>
+                </Tooltip>
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <AboutModal
+                  history={history}
+                  location={location}
+                />
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <Tooltip title={t('Find in Page')}>
+                  <IconButton
+                    disabled={true}
+                    component={Link}
+                    classes={{ root: classes.button }}
+                  >
+                    <FindInPageIcon fontSize="medium" />
+                  </IconButton>
+                </Tooltip>
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <ExportPoam />
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <Export />
+              </Grid>
+              <Grid item={true} xs='auto'>
+                <IconButton
+                  size="medium"
+                  classes={{ root: classes.button }}
+                  aria-owns={menuOpen.open ? 'menu-appbar' : null}
+                  aria-haspopup="true"
+                  onClick={handleOpenMenu}
+                  color="inherit"
+                >
+                  <AccountCircleOutlined fontSize="medium" />
+                </IconButton>
+              </Grid>
+            </Grid>
             <Menu
               id="menu-appbar"
               style={{ marginTop: 40, zIndex: 2100 }}

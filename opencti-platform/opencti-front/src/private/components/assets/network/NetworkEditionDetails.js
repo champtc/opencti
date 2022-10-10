@@ -4,31 +4,26 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import graphql from 'babel-plugin-relay/macro';
 import { createFragmentContainer } from 'react-relay';
-import { Form, Formik, Field } from 'formik';
-import {
-  assoc, compose, join, pick, pipe, split,
-} from 'ramda';
+import { Field } from 'formik';
+import { compose, split } from 'ramda';
 import * as Yup from 'yup';
 import * as R from 'ramda';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import Switch from '@material-ui/core/Switch';
 import SwitchField from '../../../../components/SwitchField';
+import DateTimePickerField from '../../../../components/DateTimePickerField';
 import Paper from '@material-ui/core/Paper';
 import { Information } from 'mdi-material-ui';
 import Tooltip from '@material-ui/core/Tooltip';
 import inject18n from '../../../../components/i18n';
-import DatePickerField from '../../../../components/DatePickerField';
-import { SubscriptionFocus } from '../../../../components/Subscription';
 import { commitMutation } from '../../../../relay/environment';
-import { dateFormat, parse } from '../../../../utils/Time';
-import OpenVocabField from '../../common/form/OpenVocabField';
+import { parse } from '../../../../utils/Time';
 import TextField from '../../../../components/TextField';
-import CommitMessage from '../../common/form/CommitMessage';
 import { adaptFieldValue } from '../../../../utils/String';
+import TaskType from '../../common/form/TaskType';
 
-const styles = (theme) => ({
+const styles = () => ({
   paper: {
     height: '100%',
     minHeight: '100%',
@@ -161,9 +156,7 @@ class NetworkEditionDetailsComponent extends Component {
   }
 
   render() {
-    const {
-      t, classes, network, context, enableReferences,
-    } = this.props;
+    const { t, classes, enableReferences } = this.props;
     // const initialValues = pipe(
     //   assoc('first_seen', dateFormat(network.first_seen)),
     //   assoc('last_seen', dateFormat(network.last_seen)),
@@ -191,8 +184,8 @@ class NetworkEditionDetailsComponent extends Component {
           </Typography>
           <Paper classes={{ root: classes.paper }} elevation={2}>
             <Grid container={true} spacing={3}>
-              <Grid item={true} xs={6}>
-                <div>
+              <Grid container spacing={3}>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
@@ -213,8 +206,35 @@ class NetworkEditionDetailsComponent extends Component {
                     size='small'
                     fullWidth={true}
                   />
-                </div>
-                <div>
+                </Grid>
+                <Grid item={true} xs={6}>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left' }}
+                  >
+                    {t('Network ID')}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '-5px 0 0 5px' }}>
+                    <Tooltip title={t('Network ID')} >
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
+                  <div className="clearfix" />
+                  <Field
+                    component={TextField}
+                    style={{ height: '38.09px' }}
+                    variant='outlined'
+                    name="network_id"
+                    size='small'
+                    fullWidth={true}
+                    containerstyle={{ width: '100%' }}
+                  />
+                </Grid>
+              </Grid>
+              <Grid container spacing={3}>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
@@ -237,8 +257,32 @@ class NetworkEditionDetailsComponent extends Component {
                     fullWidth={true}
                     containerstyle={{ width: '100%' }}
                   />
-                </div>
-                <div>
+                </Grid>
+                <Grid item={true} xs={6}>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left', marginTop: 20 }}
+                  >
+                    {t('Ending Address')}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                    <Tooltip title={t('Ending Address')} >
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
+                  <Field
+                    component={TextField}
+                    variant='outlined'
+                    name="ending_address"
+                    size='small'
+                    fullWidth={true}
+                  />
+                </Grid>
+              </Grid>
+              <Grid container spacing={3}>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
@@ -264,57 +308,37 @@ class NetworkEditionDetailsComponent extends Component {
                     />
                     <Typography>Yes</Typography>
                   </div>
-                </div>
-              </Grid>
-              <Grid item={true} xs={6}>
-                <div>
-                  <Typography
-                    variant="h3"
-                    color="textSecondary"
-                    gutterBottom={true}
-                    style={{ float: 'left' }}
-                  >
-                    {t('Network ID')}
-                  </Typography>
-                  <div style={{ float: 'left', margin: '-5px 0 0 5px' }}>
-                    <Tooltip title={t('Network ID')} >
-                      <Information fontSize="inherit" color="disabled" />
-                    </Tooltip>
-                  </div>
-                  <div className="clearfix" />
-                  <Field
-                    component={TextField}
-                    style={{ height: '38.09px' }}
-                    variant='outlined'
-                    name="network_id"
-                    size='small'
-                    fullWidth={true}
-                    containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
-                  />
-                </div>
-                <div>
+                </Grid>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
                     gutterBottom={true}
                     style={{ float: 'left', marginTop: 20 }}
                   >
-                    {t('Ending Address')}
+                    {t('Last Scanned')}
                   </Typography>
                   <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                    <Tooltip title={t('Ending Address')} >
+                    <Tooltip title={t('Last Scanned')} >
                       <Information fontSize="inherit" color="disabled" />
                     </Tooltip>
                   </div>
                   <Field
-                    component={TextField}
-                    variant='outlined'
-                    name="ending_address"
-                    size='small'
+                    component={DateTimePickerField}
+                    variant="outlined"
+                    name="last_scanned"
+                    size="small"
+                    invalidDateMessage={t(
+                      'The value must be a date (YYYY-MM-DD HH:MM)',
+                    )}
                     fullWidth={true}
+                    style={{ height: '38.09px' }}
+                    containerstyle={{ width: '100%' }}
                   />
-                </div>
-                <div>
+                </Grid>
+              </Grid>
+              <Grid container={true} spacing={3}>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
@@ -324,18 +348,19 @@ class NetworkEditionDetailsComponent extends Component {
                     {t('Implementation Point')}
                   </Typography>
                   <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                    <Tooltip title={t('Implementation Point')} >
+                    <Tooltip title={t('Implementation Point')}>
                       <Information fontSize="inherit" color="disabled" />
                     </Tooltip>
                   </div>
-                  <Field
-                    component={TextField}
-                    variant='outlined'
-                    name="implementation_point"
-                    size='small'
+                  <TaskType
+                    name='implementation_point'
+                    taskType='ImplementationPoint'
                     fullWidth={true}
+                    variant='outlined'
+                    style={{ height: '38.09px' }}
+                    containerstyle={{ width: '100%' }}
                   />
-                </div>
+                </Grid>
               </Grid>
             </Grid>
           </Paper>

@@ -40,6 +40,20 @@ import { selectObjectIriByIdQuery } from '../../global/global-utils.js';
 const computingDeviceResolvers = {
   Query: {
     computingDeviceAssetList: async (_, args, {dbName, dataSources, selectMap}) => {
+      // TODO: WORKAROUND to remove argument fields with null or empty values
+      if (args !== undefined) {
+        for (const [key, value] of Object.entries(args)) {
+          if (Array.isArray(args[key]) && args[key].length === 0) {
+            delete args[key];
+            continue;
+          }
+          if (value === null || value.length === 0) {
+            delete args[key];
+          }
+        }
+      }
+      // END WORKAROUND
+
       const selectList = selectMap.getNode("node")
       const sparqlQuery = getSelectSparqlQuery('COMPUTING-DEVICE', selectList, undefined, args);
       const reducer = getReducer('COMPUTING-DEVICE');
@@ -133,9 +147,9 @@ const computingDeviceResolvers = {
         }
       }
     },
-    computingDeviceAsset: async (_, args, {dbName, dataSources, selectMap}) => {
-      var sparqlQuery = getSelectSparqlQuery('COMPUTING-DEVICE',selectMap.getNode('computingDeviceAsset'), args.id);
-      var reducer = getReducer('COMPUTING-DEVICE');
+    computingDeviceAsset: async (_, {id}, {dbName, dataSources, selectMap}) => {
+      const sparqlQuery = getSelectSparqlQuery('COMPUTING-DEVICE',selectMap.getNode('computingDeviceAsset'), id);
+      let reducer = getReducer('COMPUTING-DEVICE');
       let response;
       try {
         response = await dataSources.Stardog.queryById({
@@ -411,11 +425,15 @@ const computingDeviceResolvers = {
       return id;
     },
     editComputingDeviceAsset: async (_, { id, input }, {dbName, dataSources, selectMap}) => {
+      // make sure there is input data containing what is to be edited
+      if (input === undefined || input.length === 0) throw new UserInputError(`No input data was supplied`);
+
       // check that the object to be edited exists with the predicates - only get the minimum of data
-      let editSelect = ['id'];
+      let editSelect = ['id','modified'];
       for (let editItem of input) {
         editSelect.push(editItem.key);
       }
+
       const sparqlQuery = selectComputingDeviceQuery(id, editSelect );
       let response = await dataSources.Stardog.queryById({
         dbName,
@@ -425,12 +443,21 @@ const computingDeviceResolvers = {
       })
       if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
-      // TODO: WORKAROUND to handle UI where it DOES NOT provide an explicit operation
+      // determine operation, if missing
       for (let editItem of input) {
-        if (!response[0].hasOwnProperty(editItem.key)) editItem.operation = 'add';
+        if (editItem.operation !== undefined) continue;
+        if (!response[0].hasOwnProperty(editItem.key)) {
+          editItem.operation = 'add';
+        } else {
+          editItem.operation = 'replace';
+        }
       }
-      // END WORKAROUND
 
+      // Push an edit to update the modified time of the object
+      const timestamp = new Date().toISOString();
+      let update = {key: "modified", value:[`${timestamp}`], operation: "replace"}
+      input.push(update);
+      
       const query = updateQuery(
         `http://scap.nist.gov/ns/asset-identification#ComputingDevice-${id}`,
         "http://scap.nist.gov/ns/asset-identification#ComputingDevice",

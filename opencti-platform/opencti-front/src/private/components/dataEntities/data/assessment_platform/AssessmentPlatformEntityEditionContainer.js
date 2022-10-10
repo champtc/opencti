@@ -23,11 +23,9 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import AddIcon from '@material-ui/icons/Add';
 import { MoreVertOutlined } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM, createFragmentContainer } from 'react-relay';
 import { ConnectionHandler } from 'relay-runtime';
 import inject18n from '../../../../../components/i18n';
 import { commitMutation } from '../../../../../relay/environment';
-import environmentDarkLight from '../../../../../relay/environmentDarkLight';
 import { dateFormat, parse } from '../../../../../utils/Time';
 import { adaptFieldValue } from '../../../../../utils/String';
 import SelectField from '../../../../../components/SelectField';
@@ -124,22 +122,25 @@ class AssessmentPlatformEntityEditionContainer extends Component {
       values,
     );
     const finalValues = R.pipe(
+      R.dissoc('created'),
+      R.dissoc('modified'),
       R.toPairs,
       R.map((n) => ({
         'key': n[0],
         'value': adaptFieldValue(n[1]),
       })),
     )(adaptedValues);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: assessmentPlatformEntityEditionContainerMutation,
       variables: {
-        id: this.props.cyioCoreRelationshipId,
+        id: this.props.assessmentPlatform.id,
         input: finalValues,
       },
       setSubmitting,
       onCompleted: (data) => {
         setSubmitting(false);
         resetForm();
+        this.props.history.push('/data/entities/assessment_platform');
         this.handleClose();
       },
       onError: (err) => {
@@ -154,23 +155,20 @@ class AssessmentPlatformEntityEditionContainer extends Component {
     const {
       classes,
       t,
-      disabled,
-      risk,
-      remediation,
+      assessmentPlatform,
     } = this.props;
-    const remediationOriginData = R.pathOr([], ['origins', 0, 'origin_actors', 0, 'actor'], remediation);
     const initialValues = R.pipe(
-      R.assoc('name', remediation?.name || ''),
-      R.assoc('description', remediation?.description || ''),
-      R.assoc('modified', dateFormat(remediation?.modified)),
-      R.assoc('created', dateFormat(remediation?.created)),
+      R.assoc('name', assessmentPlatform?.name || ''),
+      R.assoc('description', assessmentPlatform?.description || ''),
+      R.assoc('modified', dateFormat(assessmentPlatform?.modified)),
+      R.assoc('created', dateFormat(assessmentPlatform?.created)),
       R.pick([
         'name',
         'description',
         'modified',
         'created',
       ]),
-    )(remediation);
+    )(assessmentPlatform);
     return (
       <>
         <Dialog
@@ -345,10 +343,10 @@ class AssessmentPlatformEntityEditionContainer extends Component {
                         gutterBottom={true}
                         style={{ float: 'left' }}
                       >
-                        {t('User Component(s)')}
+                        {t('Uses Component(s)')}
                       </Typography>
                       <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('User Component(s)')} >
+                        <Tooltip title={t('Uses Component(s)')} >
                           <Information fontSize="inherit" color="disabled" />
                         </Tooltip>
                       </div>
@@ -365,7 +363,7 @@ class AssessmentPlatformEntityEditionContainer extends Component {
                         <Field
                           component={SelectField}
                           variant='outlined'
-                          name="user_component"
+                          name="uses_component"
                           fullWidth={true}
                           style={{ height: '38.09px' }}
                           containerstyle={{ width: '100%' }}
@@ -427,6 +425,7 @@ class AssessmentPlatformEntityEditionContainer extends Component {
 }
 
 AssessmentPlatformEntityEditionContainer.propTypes = {
+  assessmentPlatform: PropTypes.object,
   handleDisplayEdit: PropTypes.func,
   displayEdit: PropTypes.bool,
   history: PropTypes.object,

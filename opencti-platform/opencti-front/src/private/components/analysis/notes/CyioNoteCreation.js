@@ -1,9 +1,8 @@
 /* eslint-disable */
 /* refactor */
-import React, { Component, useContext } from 'react';
+import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { Formik, Form, Field } from 'formik';
-// import { ConnectionHandler } from 'relay-runtime';
 import {
   compose, union, map, pathOr, pipe, dissoc, assoc,
 } from 'ramda';
@@ -17,27 +16,19 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Badge from '@material-ui/core/Badge';
-import Avatar from '@material-ui/core/Avatar';
-import Fab from '@material-ui/core/Fab';
 import { Add, Close } from '@material-ui/icons';
-import { commitMutation as CM } from 'react-relay';
 import { cyioLabelsQuery } from '../../settings/CyioLabelsQuery';
-import { commitMutation, QueryRenderer } from '../../../../relay/environment';
-import environmentDarkLight, { fetchDarklightQuery } from '../../../../relay/environmentDarkLight';
-// import { commitMutation } from '../../../../relay/environment';
+import { commitMutation, QueryRenderer, fetchQuery } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
 import ObjectMarkingField from '../../common/form/ObjectMarkingField';
 import CreatedByField from '../../common/form/CreatedByField';
 import ObjectLabelField from '../../common/form/ObjectLabelField';
 import MarkDownField from '../../../../components/MarkDownField';
 import ConfidenceField from '../../common/form/ConfidenceField';
-import { Label, Information } from 'mdi-material-ui';
 import { dayStartDate } from '../../../../utils/Time';
 import DatePickerField from '../../../../components/DatePickerField';
 import TextField from '../../../../components/TextField';
 import { UserContext } from '../../../../utils/Security';
-import AutocompleteField from '../../../../components/AutocompleteField';
-import LabelCreation from '../../settings/labels/LabelCreation';
 import { toastGenericError } from '../../../../utils/bakedToast';
 
 const styles = (theme) => ({
@@ -168,7 +159,7 @@ class CyioNoteCreation extends Component {
     this.setState({
       labelInput: event && event.target.value !== 0 ? event.target.value : '',
     });
-    fetchDarklightQuery(cyioLabelsQuery, {
+    fetchQuery(cyioLabelsQuery, {
       search: event && event.target.value !== 0 ? event.target.value : '',
     })
       .toPromise()
@@ -200,7 +191,7 @@ class CyioNoteCreation extends Component {
       dissoc('labels'),
       assoc('authors', values.authors),
     )(values);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: cyioNoteCreationMutation,
       variables: {
         input: finalValues,
@@ -383,7 +374,6 @@ class CyioNoteCreation extends Component {
     const {
       t,
       classes,
-      inputValue,
       display,
     } = this.props;
     const { me } = this.context;

@@ -1,11 +1,7 @@
-/* eslint-disable */
-/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import * as R from 'ramda';
-import { QueryRenderer as QR } from 'react-relay';
-import QueryRendererDarkLight from '../../../relay/environmentDarkLight';
 import { QueryRenderer } from '../../../relay/environment';
 import {
   buildViewParamsFromUrlAndStorage,
@@ -23,10 +19,8 @@ import SoftwareLines, {
 } from './software/SoftwareLines';
 import SoftwareCreation from './software/SoftwareCreation';
 import SoftwareDeletion from './software/SoftwareDeletion';
-import Security, { KNOWLEDGE_KNUPDATE } from '../../../utils/Security';
 import { isUniqFilter } from '../common/lists/Filters';
-import ErrorNotFound from '../../../components/ErrorNotFound';
-import {toastSuccess, toastGenericError} from "../../../utils/bakedToast";
+import { toastGenericError } from '../../../utils/bakedToast';
 
 class Software extends Component {
   constructor(props) {
@@ -40,7 +34,7 @@ class Software extends Component {
       sortBy: R.propOr('name', 'sortBy', params),
       orderAsc: R.propOr(true, 'orderAsc', params),
       searchTerm: R.propOr('', 'searchTerm', params),
-      view: 'lines',
+      view: R.propOr('lines', 'view', params),
       filters: R.propOr({}, 'filters', params),
       openExports: false,
       numberOfElements: { number: 0, symbol: '' },
@@ -60,8 +54,31 @@ class Software extends Component {
     );
   }
 
+  componentWillUnmount() {
+    const {
+      sortBy,
+      orderAsc,
+      openSoftwareCreation,
+    } = this.state;
+    const paginationOptions = {
+      sortBy,
+      orderAsc,
+      filters: [],
+      openSoftwareCreation,
+    };
+    if (this.props.history.location.pathname !== '/defender HQ/assets/software'
+      && convertFilters(this.state.filters).length) {
+      saveViewParameters(
+        this.props.history,
+        this.props.location,
+        'view-software',
+        paginationOptions,
+      );
+    }
+  }
+
   handleChangeView(mode) {
-    this.setState({ view: mode });
+    this.setState({ view: mode }, () => this.saveView());
   }
 
   handleSearch(value) {
@@ -141,13 +158,13 @@ class Software extends Component {
               ]),
             this.state.filters,
           ),
-        },
+        }, () => this.saveView(),
       );
     } else {
       this.setState(
         {
           filters: R.assoc(key, [{ id, value }], this.state.filters),
-        },
+        }, () => this.saveView(),
       );
     }
   }
@@ -171,10 +188,6 @@ class Software extends Component {
       selectedElements,
       numberOfElements,
     } = this.state;
-    let numberOfSelectedElements = Object.keys(selectedElements || {}).length;
-    if (selectAll) {
-      numberOfSelectedElements = numberOfElements.original;
-    }
     const dataColumns = {
       name: {
         label: 'Name',
@@ -222,9 +235,7 @@ class Software extends Component {
           'label_name',
         ]}
       >
-        {/* <QueryRenderer */}
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={softwareCardsQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
@@ -259,12 +270,7 @@ class Software extends Component {
       openExports,
       selectedElements,
       numberOfElements,
-      openSoftwareCreation,
     } = this.state;
-    let numberOfSelectedElements = Object.keys(selectedElements || {}).length;
-    if (selectAll) {
-      numberOfSelectedElements = numberOfElements.original;
-    }
     const dataColumns = {
       name: {
         label: 'Name',
@@ -335,9 +341,7 @@ class Software extends Component {
           'label_name',
         ]}
       >
-        {/* <QueryRenderer */}
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={softwareLinesQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
@@ -356,7 +360,7 @@ class Software extends Component {
                 onToggleEntity={this.handleToggleSelectEntity.bind(this)}
                 setNumberOfElements={this.setNumberOfElements.bind(this)}
               />
-            )
+            );
           }}
         />
       </CyioListLines>

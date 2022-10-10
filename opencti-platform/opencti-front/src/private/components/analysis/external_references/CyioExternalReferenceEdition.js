@@ -8,8 +8,6 @@ import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import * as Yup from 'yup';
-import { commitMutation as CM } from 'react-relay';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
 import inject18n from '../../../../components/i18n';
 import {
   commitMutation,
@@ -123,7 +121,7 @@ class CyioExternalReferenceEditionContainer extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: cyioExternalReferenceMutationFieldPatch,
       variables: {
         id: this.props.externalReference.id,
@@ -141,9 +139,8 @@ class CyioExternalReferenceEditionContainer extends Component {
         this.props.handleClose();
         this.props.refreshQuery();
       },
-      onError: (err) => {
+      onError: () => {
         toastGenericError('Failed to update external reference');
-        console.error(err);
       },
     });
   }

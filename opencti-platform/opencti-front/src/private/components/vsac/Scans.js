@@ -25,6 +25,7 @@ import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import ImportExportIcon from "@material-ui/icons/ImportExport";
 import CompareIcon from "@material-ui/icons/Compare";
 import ScannerIcon from "@material-ui/icons/Scanner";
+import EditIcon from "@material-ui/icons/Edit";
 import PublishIcon from "@material-ui/icons/Publish";
 import Popover from '@material-ui/core/Popover';
 import Button from "@material-ui/core/Button";
@@ -68,8 +69,11 @@ import Chip from "@material-ui/core/Chip";
 import {toastSuccess} from "../../../utils/bakedToast";
 import DeleteScanVerify from "./modals/DeleteScanVerify";
 import CircularProgress from '@material-ui/core/CircularProgress';
+import UpdateScan from "./modals/UpdateScan";
+import { Box, Card } from "@material-ui/core";
+import { withTheme, withStyles } from '@material-ui/core/styles';
 
-const classes = {
+const styles = (theme) => ({
   root: {
     flexGrow: 1,
   },
@@ -167,8 +171,12 @@ const classes = {
     overflow: "hidden",
     textOverflow: "ellipsis",
     textAlign: "left",
-  },
-};
+  },  
+  popoverContainer: { width: '40rem' ,padding:"3%", backgroundColor: 'rgb(56,64,87)'} ,
+  popoverItems: {margin:"1% 0"},
+  popoverHeader: {color: 'rgb(146,150,163)', marginBottom: '0.5em'}
+
+})
 
 const ScanSortBy = {
   UploadDate: 0,
@@ -231,7 +239,7 @@ class Scans extends Component {
         .then((response) => {
           const newScans = response.data;
           if(refreshInBackground){
-            
+
             if(JSON.stringify(this.state.renderScans) !== JSON.stringify(newScans)){
               this.setState({ renderScans: this.sortScans(newScans, this.state.scanSortBy) });
               clearInterval(this.state.refreshIntervalId);
@@ -277,7 +285,7 @@ class Scans extends Component {
                   });
                   if(scatterPlot.length === 0) return;
                   scatterPlotData[analysis.id] = scatterPlot;
-                  
+
                 })
                 .catch((error) => {
                   console.log(error);
@@ -322,7 +330,7 @@ class Scans extends Component {
 
   render() {
 
-    const { t } = this.props;
+    const { t, classes } = this.props;
     const {
       client_ID,
       loadingScans,
@@ -512,7 +520,7 @@ class Scans extends Component {
       this.refreshScans(false)
       this.refreshAnalyses(false)
     }
-    
+
     const renderDialogSwitch = () => {
       switch (this.state.dialogParams.modal) {
         case "New Analysis":
@@ -571,6 +579,17 @@ class Scans extends Component {
               onComplete={this.state.dialogParams.action}
               onClose={handleDialogClose}
             />
+        case "Edit Scan":
+          return <UpdateScan
+            onClose={(success) => {
+              if(success) {
+                this.refreshScans()
+              }
+              handleDialogClose()
+            }}
+            clientId={this.state.client_ID}
+            scan={this.state.dialogParams.scan}
+          />
         default:
           return;
       }
@@ -694,12 +713,14 @@ class Scans extends Component {
                       }
                       return (
                         <ListItem
-                          key={scan.id}
-                          onMouseEnter={(e) => handlePopoverOpen(e, scan.id)}
-                          onMouseLeave={(e) => handlePopoverClose()}
+                          key={scan.id}                          
                           className={["scansListItem" , NoResults ? "NoResults" : (Invalid ? "Invalid" : "")]}
                         >
-                          <ListItemText primary={scan.scan_name} />
+                          <ListItemText primary={scan.scan_name} 
+                            onMouseEnter={(e) => handlePopoverOpen(e, scan.id)}
+                            onMouseLeave={() => handlePopoverClose()}
+                            style={ { maxWidth:"30%" } }
+                          />
                           <ListItemSecondaryAction>
                             <IconButton
                               edge="end"
@@ -715,6 +736,17 @@ class Scans extends Component {
                                 this.setState({vulnerabilityAnchorEl: null, openScanMenu: null})
                               }}
                             >
+                              <MenuItem
+                                onClick={() =>
+                                  handleDialogOpen({
+                                    modal: "Edit Scan",
+                                    scan: scan,
+                                  })
+                                }
+                              >
+                                <ListItemIcon><EditIcon fontSize="small"/></ListItemIcon>
+                                Edit Scan
+                              </MenuItem>
                               <MenuItem
                                 onClick={() =>
                                   handleDialogOpen({
@@ -747,42 +779,117 @@ class Scans extends Component {
                             style={{ pointerEvents: 'none'}}
                             open={openedPopoverId === scan.id}
                             anchorEl={popoverAnchorEl}
-                            
+
                             anchorOrigin={{
                               vertical: 'bottom',
-                              horizontal: 'center',
+                              horizontal: 'left',
                             }}
                             transformOrigin={{
                               vertical: 'top',
-                              horizontal: 'center',
+                              horizontal: 'left',
                             }}
                             onClose={handlePopoverClose}
                             disableRestoreFocus
                           >
-                            <List>
-                              <ListItem>Report Name: {scan.report_name} </ListItem>
-                              <ListItem>Policy Name: {scan.policy_name} </ListItem>
-                              <ListItem>Scan Date: {scan.report_date}</ListItem>
-                              <ListItem>Uploaded: {scan.upload_date}</ListItem>
-                              <ListItem>Total Vulnerabilities: {scan.total_cve}</ListItem>
-                              <ListItem>Unique Vulnerabilities: {scan.unique_cve}</ListItem>
-                              <ListItem>Total Records: {scan.record_count_total}</ListItem>
-                              <ListItem>...with vulnerabilities:
-                                {scan.vulnerability_count}
-                                {scan.record_count_total > 0 &&
-                                  ` (${percentage(
-                                    scan.vulnerability_count,
-                                    scan.record_count_total
-                                  )}%)`}
-                              </ListItem>
-                              <ListItem>Total Hosts: {scan.host_count_total}</ListItem>
-                              <ListItem>...with vulnerabilities:
-                                {scan.host_count}
-                                {scan.host_count_total > 0 &&
-                                  ` (${percentage(scan.host_count, scan.host_count_total)}%)`}
-                              </ListItem>
-                              <ListItem>Cyio Analysis {scan.analysis_count}</ListItem>
-                            </List>
+                            <Box className={classes.popoverContainer}>
+                              <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+                                <Grid item xs={6} className={classes.popoverItems}>                              
+                                  <Typography gutterBottom variant="body2" component="div" className={classes.popoverHeader}>
+                                    Report Name 
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.report_name}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    Policy Name  
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.policy_name}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    Scan Date  
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.report_date}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    Uploaded  
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.upload_date}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    Total Vulnerabilities 
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.total_cve}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    Unique Vulnerabilities 
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.unique_cve}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    Total Records 
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.record_count_total}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    With vulnerabilities                                
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.vulnerability_count}
+                                    {scan.record_count_total > 0 &&
+                                      ` (${percentage(
+                                        scan.vulnerability_count,
+                                        scan.record_count_total
+                                      )}%)`} 
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                  Total Hosts
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.host_count_total}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    With vulnerabilities                                
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.host_count}
+                                    {scan.host_count_total > 0 &&
+                                      ` (${percentage(scan.host_count, scan.host_count_total)}%)`}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={6} className={classes.popoverItems}> 
+                                  <Typography gutterBottom variant="body2" className={classes.popoverHeader} component="div">
+                                    Cyio Analysis  
+                                  </Typography>
+                                  <Typography component="div" variant="h5">
+                                    {scan.analysis_count}
+                                  </Typography>
+                                </Grid>                            
+                              </Grid>                            
+                            </Box>                            
                           </Popover>
                         </ListItem>
 
@@ -1138,4 +1245,4 @@ Scans.propTypes = {
   onChangeOpenExports: PropTypes.func,
 };
 
-export default R.compose(inject18n, withRouter)(Scans);
+export default R.compose(inject18n, withRouter,withTheme, withStyles(styles))(Scans);

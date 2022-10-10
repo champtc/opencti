@@ -10,13 +10,11 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Avatar from '@material-ui/core/Avatar';
 import Skeleton from '@material-ui/lab/Skeleton';
-import { QueryRenderer as QR } from 'react-relay';
-import QueryRendererDarkLight from '../../../../../relay/environmentDarkLight';
 import inject18n from '../../../../../components/i18n';
-import { QueryRenderer } from '../../../../../relay/environment';
 import RequiredResourcesLines, {
   requiredResourcesLinesQuery,
 } from './RequiredResourcesLines';
+import { QueryRenderer } from '../../../../../relay/environment';
 
 const styles = (theme) => ({
   paper: {
@@ -51,11 +49,10 @@ class RequiredResources extends Component {
       history,
     } = this.props;
     return (
-      <QR
-        environment={QueryRendererDarkLight}
+      <QueryRenderer
         query={requiredResourcesLinesQuery}
         variables={{ id: remediationId }}
-        render={({ props, error, retry }) => {
+        render={({ props, retry }) => {
           if (props) {
             return (
               <RequiredResourcesLines

@@ -14,8 +14,6 @@ import MenuItem from '@material-ui/core/MenuItem';
 import {
   Share,
   Edit,
-  ArrowDownward,
-  ArrowUpward,
   AddCircleOutline,
   FormatListBulleted,
 } from '@material-ui/icons';
@@ -30,7 +28,6 @@ import parties from '../../resources/images/entities/parties.svg';
 import assessmentPlatform from '../../resources/images/entities/assessment_platform.svg';
 import labels from '../../resources/images/entities/labelsImage.svg';
 import externalReferenceIcon from '../../resources/images/entities/externalReferenceIcon.svg';
-import SearchInput from '../SearchInput';
 import inject18n from '../i18n';
 // import Security, { KNOWLEDGE_KNGETEXPORT, KNOWLEDGE_KNUPDATE } from '../../utils/Security';
 import Filters from '../../private/components/common/lists/Filters';
@@ -54,7 +51,7 @@ const styles = (theme) => ({
     margin: '0 300px 0 -10px',
   },
   toolBar: {
-    margin: '-20px -24px 20px -24px',
+    margin: '0 0 30px 0',
     height: '100%',
     display: 'flex',
     '@media (max-width: 1400px)': {
@@ -63,7 +60,8 @@ const styles = (theme) => ({
     alignItems: 'self-start',
     justifyContent: 'space-between',
     color: theme.palette.header.text,
-    boxShadow: 'inset 0px 4px 4px rgba(0, 0, 0, 0.25)',
+    backgroundColor: theme.palette.background.paper,
+    // boxShadow: 'inset 0px 4px 4px rgba(0, 0, 0, 0.25)',
   },
   dataEntities: {
     width: '180px',
@@ -86,17 +84,17 @@ const styles = (theme) => ({
     minWidth: '280px',
     float: 'right',
     marginTop: '5px',
-    padding: '14px 18px 12px 18px',
+    padding: '14px 10px 12px 18px',
   },
   selectedViews: {
     width: '430px',
     minWidth: '415px',
     float: 'right',
     marginTop: '5px',
-    padding: '14px 18px 12px 18px',
+    padding: '14px 10px 12px 18px',
   },
   cardsContainer: {
-    marginTop: 10,
+    marginTop: -13,
     paddingTop: '0px 16px 16px 16px',
   },
   icon: {
@@ -152,23 +150,18 @@ class CyioListCards extends Component {
     const {
       t,
       classes,
-      handleSearch,
       handleChangeView,
       handleAddFilter,
       handleRemoveFilter,
       openExports,
-      dataColumns,
       OperationsComponent,
       handleDisplayEdit,
       selectedElements,
       disabled,
-      keyword,
       filterEntityType,
       selectedDataEntity,
       filters,
       selectAll,
-      sortBy,
-      orderAsc,
       children,
       handleNewCreation,
       numberOfElements,
@@ -186,7 +179,6 @@ class CyioListCards extends Component {
         <div
           className={classes.toolBar}
           elevation={1}
-          style={{ backgroundColor: '#075AD333' }}
         >
           <div className={classes.parameters}>
             <div className={classes.searchBar}>

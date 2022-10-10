@@ -307,11 +307,15 @@ const poamResolvers = {
       return id;
     },
     editPOAM: async (_, {id, input}, {dbName, dataSources, selectMap}) => {
+      // make sure there is input data containing what is to be edited
+      if (input === undefined || input.length === 0) throw new UserInputError(`No input data was supplied`);
+
       // check that the object to be edited exists with the predicates - only get the minimum of data
-      let editSelect = ['id'];
+      let editSelect = ['id','modified'];
       for (let editItem of input) {
         editSelect.push(editItem.key);
       }
+
       const sparqlQuery = selectPOAMQuery(id, editSelect );
       let response = await dataSources.Stardog.queryById({
         dbName,
@@ -321,11 +325,20 @@ const poamResolvers = {
       })
       if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
-      // TODO: WORKAROUND to handle UI where it DOES NOT provide an explicit operation
+      // determine operation, if missing
       for (let editItem of input) {
-        if (!response[0].hasOwnProperty(editItem.key)) editItem.operation = 'add';
+        if (editItem.operation !== undefined) continue;
+        if (!response[0].hasOwnProperty(editItem.key)) {
+          editItem.operation = 'add';
+        } else {
+          editItem.operation = 'replace';
+        }
       }
-      // END WORKAROUND
+
+      // Push an edit to update the modified time of the object
+      const timestamp = new Date().toISOString();
+      let update = {key: "modified", value:[`${timestamp}`], operation: "replace"}
+      input.push(update);
 
       const query = updateQuery(
         `http://csrc.nist.gov/ns/oscal/common#POAM-${id}`,
@@ -1289,6 +1302,8 @@ const poamResolvers = {
 
       // compose name to include version and patch level
       for (let component of response) {
+        // filter out network assets
+        if (component.asset_type === 'network') continue;
         let name = component.name;
         if (component.hasOwnProperty('vendor_name')) {
           if (!component.name.startsWith(component.vendor_name)) name = `${component.vendor_name} ${component.name}`;
@@ -1313,10 +1328,35 @@ const poamResolvers = {
           continue;
         }
 
+        // Determine the proper component type for the asset
+        if (component.component_type === undefined) {
+          switch(component.asset_type) {
+            case 'software':
+            case 'operating-system':
+            case 'application-software':
+              component.component_type = 'software';
+              break;
+            case 'firewall':
+              component.component_type = 'software';
+              break;
+            case 'network':
+              component.component_type = 'network';
+              break;
+            default:
+              console.error(`[CYIO] UNKNOWN-COMPONENT Unknown component type '${component.component_type}' for object ${component.iri}`);        
+              console.error(`[CYIO] UNKNOWN-TYPE Unknown asset type '${component.asset_type}' for object ${component.iri}`);        
+              if (component.iri.includes('Software')) item.component_type = 'software';
+              if (component.iri.includes('Network')) item.component_type = 'network';
+              if (component.component_type === undefined) continue;
+          }
+        }
+
+        // TODO: WORKAROUND missing component type 
         if (!component.hasOwnProperty('operational_status')) {
           console.warn(`[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${component.iri} missing field 'operational_status'; fixing`);
           component.operational_status = 'operational';
         }
+        // END WORKAROUND
 
         // filter out non-matching entries if a filter is to be applied
         if ('filters' in args && args.filters != null && args.filters.length > 0) {

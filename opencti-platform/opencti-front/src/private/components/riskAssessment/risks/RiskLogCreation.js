@@ -6,12 +6,10 @@ import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import {
   compose,
-  dissoc,
-  assoc,
   evolve,
   pipe,
+  assoc,
 } from 'ramda';
-import * as R from 'ramda';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
@@ -27,24 +25,21 @@ import Typography from '@material-ui/core/Typography';
 import MenuItem from '@material-ui/core/MenuItem';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
-import AddIcon from '@material-ui/icons/Add';
 import Fab from '@material-ui/core/Fab';
 import Slide from '@material-ui/core/Slide';
 import { Add, Close } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
 import DatePickerField from '../../../../components/DatePickerField';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
 import { commitMutation } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
 import TextField from '../../../../components/TextField';
 import SelectField from '../../../../components/SelectField';
 import MarkDownField from '../../../../components/MarkDownField';
-import { insertNode } from '../../../../utils/Store';
-import { dateFormat, parse } from '../../../../utils/Time';
+import { parse } from '../../../../utils/Time';
 import EntryType from '../../common/form/EntryType';
 import RiskStatus from '../../common/form/RiskStatus';
 import LoggedBy from '../../common/form/LoggedBy';
 import { toastGenericError } from "../../../../utils/bakedToast";
+import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   drawerPaper: {
@@ -139,6 +134,7 @@ class RiskLogCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       open: false,
       onSubmit: false,
       displayCancel: false,
@@ -158,20 +154,24 @@ class RiskLogCreation extends Component {
   }
 
   handleClose() {
-    this.setState({ open: false });
+    this.setState({ open: false, displayCancel: false });
   }
 
-  onSubmit(values, { setSubmitting, resetForm }) {
+  onSubmit(values, { setSubmitting }) {
     const adaptedValues = evolve(
       {
         event_start: () => values.event_start === null ? null : parse(values.event_start).format(),
         event_end: () => values.event_end === null ? null : parse(values.event_end).format(),
         entry_type: () => values.entry_type.toString().split(),
-        logged_by: () => values.logged_by.length > 0 && [{'party': values.logged_by}],
+        logged_by: () => values.logged_by.length > 0 && [{ 'party': values.logged_by }],
       },
       values,
     );
-    CM(environmentDarkLight, {
+
+    const finalValues = pipe(
+      assoc('logged_by', this.state.logged_by),
+    )(adaptedValues)
+    commitMutation({
       mutation: RiskLogCreationMutation,
       variables: {
         input: adaptedValues,
@@ -183,8 +183,9 @@ class RiskLogCreation extends Component {
         this.props.refreshQuery();
       },
       onError: (err) => {
-        console.error('riskLogCreationValueError', err)
-        toastGenericError("Failed to create Risk Log")
+        toastGenericError("Failed to create Risk Log");
+        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors));
+        this.setState({ error: ErrorResponse });
         setSubmitting(false);
       },
     });
@@ -220,7 +221,7 @@ class RiskLogCreation extends Component {
   }
 
   renderClassic() {
-    const { t, classes, data } = this.props;
+    const { t, classes } = this.props;
 
     return (
       <div>
@@ -326,7 +327,7 @@ class RiskLogCreation extends Component {
 
   renderContextual() {
     const {
-      t, classes, inputValue, display, riskStatusResponse, riskId
+      t, classes, display, riskStatusResponse, riskId
     } = this.props;
     return (
       <div style={{ display: display ? 'block' : 'none' }}>
@@ -617,6 +618,10 @@ class RiskLogCreation extends Component {
               </Form>
             )}
           </Formik>
+          <ErrorBox
+            error={this.state.error}
+            pathname={`/activities/risk assessment/risks/${riskId}/tracking`}
+          />
         </Dialog>
         <Dialog
           open={this.state.displayCancel}
@@ -643,7 +648,7 @@ class RiskLogCreation extends Component {
               {t('Go Back')}
             </Button>
             <Button
-              onClick={() => this.props.history.push(`/activities/risk assessment/risks/${riskId}/tracking`)}
+              onClick={() => this.handleClose()}
               color="secondary"
               // disabled={this.state.deleting}
               classes={{ root: classes.buttonPopover }}

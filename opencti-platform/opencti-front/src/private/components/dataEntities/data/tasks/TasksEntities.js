@@ -2,10 +2,7 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import * as R from 'ramda';
-import { QueryRenderer as QR } from 'react-relay';
-import Typography from '@material-ui/core/Typography';
 import { QueryRenderer } from '../../../../../relay/environment';
-import QueryRendererDarkLight from '../../../../../relay/environmentDarkLight';
 import {
   buildViewParamsFromUrlAndStorage,
   convertFilters,
@@ -21,11 +18,9 @@ import EntitiesTasksLines, {
   entitiesTasksLinesQuery,
 } from './EntitiesTasksLines';
 import EntitiesTasksCreation from './EntitiesTasksCreation';
-import Security, { KNOWLEDGE_KNUPDATE } from '../../../../../utils/Security';
 import { isUniqFilter } from '../../../common/lists/Filters';
 import EntitiesTasksDeletion from './EntitiesTasksDeletion';
-import ErrorNotFound from '../../../../../components/ErrorNotFound';
-import { toastSuccess, toastGenericError } from '../../../../../utils/bakedToast';
+import { toastGenericError } from '../../../../../utils/bakedToast';
 import TaskEntityEdition from './TaskEntityEdition';
 
 class TasksEntities extends Component {
@@ -60,6 +55,30 @@ class TasksEntities extends Component {
       'view-tasks',
       this.state,
     );
+  }
+
+  componentWillUnmount() {
+    const {
+      view,
+      sortBy,
+      orderAsc,
+      searchTerm,
+    } = this.state;
+    if (this.props.history.location.pathname !== '/data/entities/tasks'
+      && convertFilters(this.state.filters).length) {
+      saveViewParameters(
+        this.props.history,
+        this.props.location,
+        'view-tasks',
+        {
+          view,
+          sortBy,
+          searchTerm,
+          orderAsc,
+          filters: [],
+        },
+      );
+    }
   }
 
   handleChangeView(mode) {
@@ -143,13 +162,13 @@ class TasksEntities extends Component {
               ]),
             this.state.filters,
           ),
-        },
+        }, () => this.saveView(),
       );
     } else {
       this.setState(
         {
           filters: R.assoc(key, [{ id, value }], this.state.filters),
-        },
+        }, () => this.saveView(),
       );
     }
   }
@@ -174,7 +193,7 @@ class TasksEntities extends Component {
       selectAll,
     } = this.state;
     const {
-      t, history,
+      history,
     } = this.props;
     const dataColumns = {
       type: {
@@ -227,13 +246,11 @@ class TasksEntities extends Component {
           'label_name',
         ]}
       >
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={entitiesTasksCardsQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
             if (error) {
-              console.error(error);
               toastGenericError('Request Failed');
             }
             return (
@@ -268,12 +285,8 @@ class TasksEntities extends Component {
       numberOfElements,
     } = this.state;
     const {
-      t, history,
+      history,
     } = this.props;
-    let numberOfSelectedElements = Object.keys(selectedElements || {}).length;
-    if (selectAll) {
-      numberOfSelectedElements = numberOfElements.original;
-    }
     const dataColumns = {
       type: {
         label: 'Type',
@@ -338,13 +351,11 @@ class TasksEntities extends Component {
           'label_name',
         ]}
       >
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={entitiesTasksLinesQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
             if (error) {
-              console.error(error);
               toastGenericError('Request Failed');
             }
             return (
@@ -384,7 +395,6 @@ class TasksEntities extends Component {
       filters: finalFilters,
       filterMode: 'and',
     };
-    const { location } = this.props;
     return (
       <div>
         {view === 'cards' && this.renderCards(paginationOptions)}
@@ -394,12 +404,14 @@ class TasksEntities extends Component {
           handleTaskCreation={this.handleTaskCreation.bind(this)}
           history={this.props.history}
         />
-        <TaskEntityEdition
-          displayEdit={this.state.displayEdit}
-          history={this.props.history}
-          taskId={this.state.selectedTaskId}
-          handleDisplayEdit={this.handleDisplayEdit.bind(this)}
-        />
+        {this.state.selectedTaskId && (
+          <TaskEntityEdition
+            displayEdit={this.state.displayEdit}
+            history={this.props.history}
+            taskId={this.state.selectedTaskId}
+            handleDisplayEdit={this.handleDisplayEdit.bind(this)}
+          />
+        )}
       </div>
     );
   }

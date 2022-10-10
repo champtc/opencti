@@ -3,12 +3,11 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { Formik, Form, Field } from 'formik';
+import { withRouter } from 'react-router-dom';
 import {
   compose,
   evolve,
-  mergeAll,
   map,
-  path,
   pipe,
   dissoc,
   assoc,
@@ -16,11 +15,8 @@ import {
 } from 'ramda';
 import * as R from 'ramda';
 import graphql from 'babel-plugin-relay/macro';
-import { ConnectionHandler } from 'relay-runtime';
 import { withStyles } from '@material-ui/core/styles/index';
-import Drawer from '@material-ui/core/Drawer';
 import Typography from '@material-ui/core/Typography';
-import AddIcon from '@material-ui/icons/Add';
 import { Information } from 'mdi-material-ui';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -35,23 +31,18 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import { MoreVertOutlined } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
 import DatePickerField from '../../../../../components/DatePickerField';
-import environmentDarkLight from '../../../../../relay/environmentDarkLight';
 import inject18n from '../../../../../components/i18n';
 import TextField from '../../../../../components/TextField';
 import { dateFormat, parse } from '../../../../../utils/Time';
 import { adaptFieldValue } from '../../../../../utils/String';
-import SelectField from '../../../../../components/SelectField';
-import { commitMutation, QueryRenderer } from '../../../../../relay/environment';
-import CyioExternalReferenceEdition from '../../../analysis/external_references/CyioExternalReferenceEdition';
-import Loader from '../../../../../components/Loader';
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import MarkDownField from '../../../../../components/MarkDownField';
 import TaskType from '../../../common/form/TaskType';
 import RelatedTaskFields from '../../../common/form/RelatedTaskFields';
 import { toastGenericError } from '../../../../../utils/bakedToast';
+import ErrorBox from '../../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
@@ -127,6 +118,7 @@ class RelatedTaskPopover extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       anchorEl: null,
       displayUpdate: false,
       displayDelete: false,
@@ -192,7 +184,7 @@ class RelatedTaskPopover extends Component {
         'value': adaptFieldValue(n[1]),
       })),
     )(adaptedValues);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: relatedTaskEditionQuery,
       variables: {
         id: this.props.data.id,
@@ -214,19 +206,24 @@ class RelatedTaskPopover extends Component {
 
   submitDelete() {
     this.setState({ deleting: true });
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: relatedTaskPopoverDeletionMutation,
       variables: {
         id: this.props.relatedTaskId,
       },
-      onCompleted: (data) => {
-        this.setState({ deleting: false });
-        this.handleCloseDelete();
-        this.props.refreshQuery();
+      onCompleted: (data, error) => {
+        if (error) {
+          this.setState({ error });
+        } else {
+          this.setState({ deleting: false });
+          this.handleCloseDelete();
+          this.props.refreshQuery();
+        }
       },
       onError: (err) => {
-        console.error(err);
         toastGenericError('Failed to delete Related Task');
+        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors));
+        this.setState({ error: ErrorResponse });
       },
     });
     // commitMutation({
@@ -260,11 +257,9 @@ class RelatedTaskPopover extends Component {
     const {
       classes,
       t,
-      externalReferenceId,
       handleRemove,
       remediationId,
       refreshQuery,
-      relatedTaskData,
       data,
     } = this.props;
     const initialValues = R.pipe(
@@ -702,6 +697,10 @@ class RelatedTaskPopover extends Component {
               </Form>
             )}
           </Formik>
+          <ErrorBox
+            error={this.state.error}
+            pathname={this.props.history.location.pathname}
+          />
         </Dialog>
         <Dialog
           open={this.state.displayDelete}
@@ -751,9 +750,10 @@ RelatedTaskPopover.propTypes = {
   paginationOptions: PropTypes.object,
   classes: PropTypes.object,
   t: PropTypes.func,
+  history: PropTypes.object,
   handleRemove: PropTypes.func,
   data: PropTypes.object,
   relatedTaskId: PropTypes.string,
 };
 
-export default compose(inject18n, withStyles(styles))(RelatedTaskPopover);
+export default compose(withRouter, inject18n, withStyles(styles))(RelatedTaskPopover);

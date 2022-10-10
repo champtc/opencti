@@ -4,14 +4,10 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import {
   compose,
-  dissoc,
   evolve,
-  assoc,
-  pipe,
 } from 'ramda';
 import * as R from 'ramda';
 import graphql from 'babel-plugin-relay/macro';
-import { ConnectionHandler } from 'relay-runtime';
 import { withStyles } from '@material-ui/core/styles/index';
 import Typography from '@material-ui/core/Typography';
 import Menu from '@material-ui/core/Menu';
@@ -29,22 +25,20 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import { MoreVertOutlined } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
 import { adaptFieldValue } from '../../../../utils/String';
 import DatePickerField from '../../../../components/DatePickerField';
 import TextField from '../../../../components/TextField';
 import SelectField from '../../../../components/SelectField';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
 import inject18n from '../../../../components/i18n';
-import { commitMutation, QueryRenderer } from '../../../../relay/environment';
-// import CyioExternalReferenceEdition from './CyioExternalReferenceEdition';
-import Loader from '../../../../components/Loader';
 import MarkDownField from '../../../../components/MarkDownField';
-import { dateFormat, parse } from '../../../../utils/Time';
+import { dateFormat } from '../../../../utils/Time';
 import EntryType from '../../common/form/EntryType';
 import RiskStatus from '../../common/form/RiskStatus';
 import LoggedBy from '../../common/form/LoggedBy';
 import { toastGenericError } from '../../../../utils/bakedToast';
+import ErrorBox from '../../common/form/ErrorBox';
+import { commitMutation } from '../../../../relay/environment';
+
 const styles = (theme) => ({
   container: {
     margin: 0,
@@ -109,6 +103,7 @@ class RiskTrackingPopover extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       anchorEl: null,
       displayUpdate: false,
       displayCancel: false,
@@ -131,7 +126,7 @@ class RiskTrackingPopover extends Component {
     this.handleClose();
   }
 
-  handleCloseEditUpdate(){
+  handleCloseEditUpdate() {
     this.setState({ displayUpdate: false });
   }
 
@@ -148,14 +143,18 @@ class RiskTrackingPopover extends Component {
     this.setState({ displayDelete: false });
   }
 
-  handleCancelButton() {
+  handleBackButton() {
     this.setState({ displayCancel: false });
   }
 
-  onSubmit(values, { setSubmitting, resetForm }) {
+  handleCancelButton() {
+    this.setState({ displayCancel: false, displayUpdate: false });
+  }
+
+  onSubmit(values, { setSubmitting }) {
     const adaptedValues = evolve(
       {
-        logged_by: () => values.logged_by.length > 0 && [JSON.stringify({'party': values.logged_by})],
+        logged_by: () => values.logged_by.length > 0 && [JSON.stringify({ 'party': values.logged_by })],
       },
       values,
     );
@@ -166,21 +165,26 @@ class RiskTrackingPopover extends Component {
         'value': adaptFieldValue(n[1]),
       })),
     )(adaptedValues);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: RiskTrackingEditionQuery,
       variables: {
         id: this.props.node.id,
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data) => {
-        setSubmitting(false);
-        this.handleCloseEditUpdate();
-        this.props.refreshQuery();
+      onCompleted: (data, error) => {
+        if (error) {
+          this.setState({ error });
+        } else {
+          setSubmitting(false);
+          this.handleCloseEditUpdate();
+          this.props.refreshQuery();
+        }
       },
       onError: (err) => {
-        console.error(err);
         toastGenericError('Request Failed');
+        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors));
+        this.setState({ error: ErrorResponse });
       },
     });
 
@@ -206,7 +210,7 @@ class RiskTrackingPopover extends Component {
 
   submitDelete() {
     this.setState({ deleting: true });
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: RiskTrackingPopoverDeletionMutation,
       variables: {
         id: this.props.node.id,
@@ -253,9 +257,7 @@ class RiskTrackingPopover extends Component {
     const {
       classes,
       t,
-      externalReferenceId,
       handleRemove,
-      handleOpenUpdate,
       node,
       riskStatusResponse,
     } = this.props;
@@ -634,6 +636,10 @@ class RiskTrackingPopover extends Component {
               </Form>
             )}
           </Formik>
+          <ErrorBox
+            error={this.state.error}
+            pathname={`/activities/risk assessment/risks/${this.props.riskId}/tracking`}
+          />
         </Dialog>
         <Dialog
           open={this.state.displayCancel}
@@ -655,7 +661,7 @@ class RiskTrackingPopover extends Component {
             <Button
               // onClick={this.handleCloseDelete.bind(this)}
               // disabled={this.state.deleting}
-              onClick={this.handleCancelButton.bind(this)}
+              onClick={this.handleBackButton.bind(this)}
               classes={{ root: classes.buttonPopover }}
               variant="outlined"
               size="small"
@@ -665,7 +671,7 @@ class RiskTrackingPopover extends Component {
             <Button
               // onClick={this.submitDelete.bind(this)}
               // disabled={this.state.deleting}
-              onClick={() => this.props.history.push(`/activities/risk assessment/risks/${this.props.riskId}/tracking`)}
+              onClick={() => this.handleCancelButton()}
               color="primary"
               classes={{ root: classes.buttonPopover }}
               variant="contained"

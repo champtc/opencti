@@ -156,13 +156,13 @@ export const selectAllInventoryItems = (select, args) => {
     // add value of filter's key to cause special predicates to be included
     if ( args.filters !== undefined ) {
       for( const filter of args.filters) {
-        if (!select.hasOwnProperty(filter.key)) select.push( filter.key );
+        if (!select.includes(filter.key)) select.push( filter.key );
       }
     }
 
     // add value of orderedBy's key to cause special predicates to be included
     if ( args.orderedBy !== undefined ) {
-      if (!select.hasOwnProperty(args.orderedBy)) select.push(args.orderedBy);
+      if (!select.includes(args.orderedBy)) select.push(args.orderedBy);
     }
   }
 
@@ -550,8 +550,6 @@ export function convertAssetToInventoryItem(asset) {
       case 'object_type':
       case 'entity_type':
       case 'standard_id':
-      case 'created':
-      case 'modified':
       case 'links':
       case 'labels':
       case 'remarks':
@@ -563,6 +561,11 @@ export function convertAssetToInventoryItem(asset) {
       // case 'installed_os_id':
       // case 'installed_software_id':
           continue;
+      case 'created':
+      case 'modified':
+      case 'last_scanned':
+        if (value instanceof Date ) value = value.toISOString();
+        break;
       case 'is_scanned':
       case 'allows_authenticated_scans':
         value = (value === true ? 'yes' : 'no');

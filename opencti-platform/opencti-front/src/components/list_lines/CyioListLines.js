@@ -18,8 +18,6 @@ import MenuItem from '@material-ui/core/MenuItem';
 import {
   Edit,
   Share,
-  ArrowDownward,
-  ArrowUpward,
   ArrowDropDown,
   ArrowDropUp,
   AppsOutlined,
@@ -39,7 +37,6 @@ import notes from '../../resources/images/entities/Notes.svg';
 import parties from '../../resources/images/entities/parties.svg';
 import assessmentPlatform from '../../resources/images/entities/assessment_platform.svg';
 import externalReferenceIcon from '../../resources/images/entities/externalReferenceIcon.svg';
-import SearchInput from '../SearchInput';
 import inject18n from '../i18n';
 // import Security, { KNOWLEDGE_KNGETEXPORT, KNOWLEDGE_KNUPDATE } from '../../utils/Security';
 import Filters from '../../private/components/common/lists/Filters';
@@ -70,7 +67,7 @@ const styles = (theme) => ({
     padding: '0 310px 50px 0',
   },
   toolBar: {
-    margin: '-20px -24px 20px -24px',
+    margin: '0 0 30px 0',
     height: '100%',
     display: 'flex',
     '@media (max-width: 1400px)': {
@@ -79,7 +76,8 @@ const styles = (theme) => ({
     justifyContent: 'space-between',
     alignItems: 'self-start',
     color: theme.palette.header.text,
-    boxShadow: 'inset 0px 4px 4px rgba(0, 0, 0, 0.25)',
+    backgroundColor: theme.palette.background.paper,
+    // boxShadow: 'inset 0px 4px 4px rgba(0, 0, 0, 0.25)',
   },
   dataEntities: {
     width: '180px',
@@ -101,14 +99,14 @@ const styles = (theme) => ({
     width: '295px',
     minWidth: '285px',
     marginTop: '5px',
-    padding: '14px 18px 12px 18px',
+    padding: '14px 10px 12px 18px',
   },
   selectedViews: {
     width: '430px',
     minWidth: '415px',
     float: 'right',
     marginTop: '5px',
-    padding: '14px 18px 12px 18px',
+    padding: '14px 10px 12px 18px',
   },
   iconButton: {
     float: 'left',
@@ -117,7 +115,7 @@ const styles = (theme) => ({
     padding: '7px',
   },
   linesContainer: {
-    marginTop: '10px',
+    marginTop: '-20px',
     padding: '0px 16px 16px 16px',
   },
   linesContainerBottomNav: {
@@ -213,7 +211,7 @@ class CyioListLines extends Component {
     window.removeEventListener('scroll', this.handleScroll.bind(this));
   }
 
-  handleScroll(event) {
+  handleScroll() {
     this.setState({ scrollValue: window.pageYOffset });
   }
 
@@ -227,7 +225,7 @@ class CyioListLines extends Component {
 
   renderHeaderElement(field, label, width, isSortable) {
     const {
-      classes, t, sortBy, orderAsc, handleToggleSelectAll,
+      classes, t, sortBy, orderAsc,
     } = this.props;
     if (isSortable) {
       const orderComponent = orderAsc ? (
@@ -263,10 +261,7 @@ class CyioListLines extends Component {
   render() {
     const {
       t,
-      sortBy,
-      orderAsc,
       classes,
-      handleSearch,
       handleChangeView,
       disableCards,
       handleAddFilter,
@@ -280,7 +275,6 @@ class CyioListLines extends Component {
       noBottomPadding,
       dataColumns,
       secondaryAction,
-      keyword,
       filters,
       disabled,
       bottomNav,
@@ -291,7 +285,6 @@ class CyioListLines extends Component {
       handleNewCreation,
       noHeaders,
       iconExtension,
-      searchVariant,
       selectedDataEntity,
       OperationsComponent,
       message,
@@ -310,7 +303,6 @@ class CyioListLines extends Component {
         <div
           className={classes.toolBar}
           elevation={1}
-          style={{ backgroundColor: '#075AD333' }}
         >
           <div className={classes.parameters}>
             <div className={classes.searchBar}>

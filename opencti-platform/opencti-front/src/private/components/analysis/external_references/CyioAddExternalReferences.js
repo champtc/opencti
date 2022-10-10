@@ -3,11 +3,10 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import {
-  map, filter, head, compose,
+  compose,
 } from 'ramda';
 import { withStyles } from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
-import List from '@material-ui/core/List';
 import Dialog from '@material-ui/core/Dialog';
 import Button from '@material-ui/core/Button';
 import InputAdornment from '@material-ui/core/InputAdornment';
@@ -17,20 +16,13 @@ import Collapse from '@material-ui/core/Collapse';
 import Divider from '@material-ui/core/Divider';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { ConnectionHandler } from 'relay-runtime';
-import ListItem from '@material-ui/core/ListItem';
 import KeyboardArrowDownOutlinedIcon from '@material-ui/icons/KeyboardArrowDownOutlined';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
 import { Add } from '@material-ui/icons';
-import Skeleton from '@material-ui/lab/Skeleton';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
 import inject18n from '../../../../components/i18n';
-import { commitMutation } from '../../../../relay/environment';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
+import { commitMutation, QueryRenderer } from '../../../../relay/environment';
 import CyioExternalReferenceCreation from './CyioExternalReferenceCreation';
 import CyioAddExternalReferencesLines, {
   cyioAddExternalReferencesLinesQuery,
-  cyioExternalReferenceMutationRelationDelete,
   cyioExternalReferenceLinesMutationRelationAdd,
 } from './CyioAddExternalReferencesLines';
 
@@ -129,7 +121,7 @@ class CyioAddExternalReferences extends Component {
     } = this.props;
     if (this.state.totalExternalReference.length > 0) {
       this.state.totalExternalReference.map((externalReference) => (
-        CM(environmentDarkLight, {
+        commitMutation({
           mutation: cyioExternalReferenceLinesMutationRelationAdd,
           variables: {
             toId: externalReference.id,
@@ -159,7 +151,7 @@ class CyioAddExternalReferences extends Component {
         })
       ));
     } else {
-      CM(environmentDarkLight, {
+      commitMutation({
         mutation: cyioExternalReferenceLinesMutationRelationAdd,
         variables: {
           toId: createExternalRef.id,
@@ -312,8 +304,7 @@ class CyioAddExternalReferences extends Component {
             </div>
             <Collapse sx={{ maxWidth: '500px', borderRadius: 0 }} in={this.state.expanded} timeout="auto" unmountOnExit>
               <div className={classes.collapse}>
-                <QR
-                  environment={environmentDarkLight}
+                <QueryRenderer
                   query={cyioAddExternalReferencesLinesQuery}
                   variables={{
                     search: this.state.search,

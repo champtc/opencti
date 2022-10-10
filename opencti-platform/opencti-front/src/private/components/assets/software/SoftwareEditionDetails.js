@@ -4,26 +4,25 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import graphql from 'babel-plugin-relay/macro';
 import { createFragmentContainer } from 'react-relay';
-import { Form, Formik, Field } from 'formik';
+import { Field } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
 import * as Yup from 'yup';
 import * as R from 'ramda';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import Switch from '@material-ui/core/Switch';
 import Paper from '@material-ui/core/Paper';
 import { Information } from 'mdi-material-ui';
 import Tooltip from '@material-ui/core/Tooltip';
 import inject18n from '../../../../components/i18n';
 import TextField from '../../../../components/TextField';
-import DatePickerField from '../../../../components/DatePickerField';
-import { SubscriptionFocus } from '../../../../components/Subscription';
 import { commitMutation } from '../../../../relay/environment';
-import { dateFormat, parse } from '../../../../utils/Time';
-import CommitMessage from '../../common/form/CommitMessage';
+import { parse } from '../../../../utils/Time';
 import { adaptFieldValue } from '../../../../utils/String';
+import TaskType from '../../common/form/TaskType';
+import SwitchField from '../../../../components/SwitchField';
+import DateTimePickerField from '../../../../components/DateTimePickerField';
 
-const styles = (theme) => ({
+const styles = () => ({
   paper: {
     height: '100%',
     minHeight: '100%',
@@ -171,8 +170,8 @@ class SoftwareEditionDetailsComponent extends Component {
           </Typography>
           <Paper classes={{ root: classes.paper }} elevation={2}>
             <Grid container={true} spacing={3}>
-              <Grid item={true} xs={6}>
-                <div>
+              <Grid container spacing={3}>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
@@ -193,62 +192,8 @@ class SoftwareEditionDetailsComponent extends Component {
                     size='small'
                     fullWidth={true}
                   />
-                </div>
-                <div>
-                  <Typography
-                    variant="h3"
-                    color="textSecondary"
-                    gutterBottom={true}
-                    style={{ float: 'left', marginTop: 20 }}
-                  >
-                    {t('License Key')}
-                  </Typography>
-                  <div style={{ float: 'left', margin: '15px 0 0 5px' }}>
-                    <Tooltip title={t('License Key')} >
-                      <Information fontSize="inherit" color="disabled" />
-                    </Tooltip>
-                  </div>
-                  <Field
-                    component={TextField}
-                    style={{ height: '38.09px' }}
-                    variant='outlined'
-                    name="license_key"
-                    size='small'
-                    fullWidth={true}
-                    containerstyle={{ width: '100%' }}
-                  />
-                </div>
-                <div>
-                  <Typography
-                    variant="h3"
-                    color="textSecondary"
-                    gutterBottom={true}
-                    style={{ float: 'left', marginTop: 20 }}
-                  >
-                    {t('CPE Identifier')}
-                  </Typography>
-                  <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                    <Tooltip
-                      title={t('CPE Identifier')}>
-                      <Information fontSize="inherit" color="disabled" />
-                    </Tooltip>
-                  </div>
-                  <Field
-                    component={TextField}
-                    variant='outlined'
-                    name="cpe_identifier"
-                    size='small'
-                    fullWidth={true}
-                  // helperText={
-                  //   <SubscriptionFocus
-                  //   fieldName="cpe_identifier"
-                  //   />
-                  // }
-                  />
-                </div>
-              </Grid>
-              <Grid item={true} xs={6}>
-                <div>
+                </Grid>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
@@ -272,8 +217,82 @@ class SoftwareEditionDetailsComponent extends Component {
                     fullWidth={true}
                     containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
                   />
-                </div>
-                <div>
+                </Grid>
+              </Grid>
+              <Grid container spacing={3}>
+                <Grid item={true} xs={6}>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left', marginTop: 20 }}
+                  >
+                    {t('CPE Identifier')}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                    <Tooltip
+                      title={t('CPE Identifier')}>
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
+                  <Field
+                    component={TextField}
+                    variant='outlined'
+                    name="cpe_identifier"
+                    size='small'
+                    fullWidth={true}
+                  />
+                </Grid>
+                <Grid item={true} xs={6}>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left', marginTop: 20 }}
+                  >
+                    {t('Implementation Point')}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                    <Tooltip title={t('Implementation Point')} >
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
+                  <TaskType
+                    name='implementation_point'
+                    taskType='ImplementationPoint'
+                    fullWidth={true}
+                    variant='outlined'
+                    style={{ height: '38.09px' }}
+                    containerstyle={{ width: '100%' }}
+                  />
+                </Grid>
+              </Grid>
+              <Grid container spacing={3}>
+                <Grid item={true} xs={6}>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left', marginTop: 20 }}
+                  >
+                    {t('License Key')}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '15px 0 0 5px' }}>
+                    <Tooltip title={t('License Key')} >
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
+                  <Field
+                    component={TextField}
+                    style={{ height: '38.09px' }}
+                    variant='outlined'
+                    name="license_key"
+                    size='small'
+                    fullWidth={true}
+                    containerstyle={{ width: '100%' }}
+                  />
+                </Grid>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
@@ -294,29 +313,63 @@ class SoftwareEditionDetailsComponent extends Component {
                     size='small'
                     fullWidth={true}
                   />
-                </div>
-                <div>
+                </Grid>
+              </Grid>
+              <Grid container spacing={3}>
+                <Grid item={true} xs={6}>
                   <Typography
                     variant="h3"
                     color="textSecondary"
                     gutterBottom={true}
                     style={{ float: 'left', marginTop: 20 }}
                   >
-                    {t('Implementation Point')}
+                    {t('Scanned')}
                   </Typography>
                   <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
-                    <Tooltip title={t('Implementation Point')} >
+                    <Tooltip title={t('Scanned')} >
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
+                  <div className="clearfix" />
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography>No</Typography>
+                    <Field
+                      component={SwitchField}
+                      type="checkbox"
+                      name="is_scanned"
+                      containerstyle={{ marginLeft: 10, marginRight: '-15px' }}
+                      inputProps={{ 'aria-label': 'ant design' }}
+                    />
+                    <Typography>Yes</Typography>
+                  </div>
+                </Grid>
+                <Grid item={true} xs={6}>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left', marginTop: 20 }}
+                  >
+                    {t('Last Scaned')}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '21px 0 0 5px' }}>
+                    <Tooltip title={t('Last Scaned')}>
                       <Information fontSize="inherit" color="disabled" />
                     </Tooltip>
                   </div>
                   <Field
-                    component={TextField}
-                    variant='outlined'
-                    name="implementation_point"
-                    size='small'
+                    component={DateTimePickerField}
+                    variant="outlined"
+                    name="last_scanned"
+                    size="small"
+                    invalidDateMessage={t(
+                      'The value must be a date (YYYY-MM-DD HH:MM)',
+                    )}
                     fullWidth={true}
+                    style={{ height: '38.09px' }}
+                    containerstyle={{ width: '100%' }}
                   />
-                </div>
+                </Grid>
               </Grid>
             </Grid>
           </Paper>

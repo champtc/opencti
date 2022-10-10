@@ -18,7 +18,6 @@ import Chip from '@material-ui/core/Chip';
 import { withRouter } from 'react-router-dom';
 import DialogActions from '@material-ui/core/DialogActions';
 import Button from '@material-ui/core/Button';
-import { fetchQuery } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
 import { identityCreationIdentitiesSearchQuery } from '../identities/IdentityCreation';
 import { labelsSearchQuery } from '../../settings/LabelsQuery';
@@ -35,13 +34,13 @@ import ItemIcon from '../../../../components/ItemIcon';
 import { truncate } from '../../../../utils/String';
 import { stixDomainObjectsLinesSearchQuery } from '../stix_domain_objects/StixDomainObjectsLines';
 import { statusFieldStatusesSearchQuery } from '../form/StatusField';
-import { fetchDarklightQuery } from '../../../../relay/environmentDarkLight';
+import { fetchQuery } from '../../../../relay/environment';
 import { dateFormatRegex } from '../../../../utils/Network';
 
 const styles = (theme) => ({
   filters: {
     float: 'left',
-    margin: '0 10px 0 20px',
+    margin: '0 10px 0 10px',
   },
   filtersDialog: {
     margin: '0 0 20px 0',
@@ -135,7 +134,7 @@ class Filters extends Component {
     }
     switch (filterKey) {
       case 'asset_type_or':
-        fetchDarklightQuery(itAssetFiltersAssetTypeFieldQuery, {
+        fetchQuery(itAssetFiltersAssetTypeFieldQuery, {
           type: `${this.props.filterEntityType}AssetTypes`,
           search: event && event.target.value !== 0 ? event.target.value : '',
         })
@@ -144,7 +143,7 @@ class Filters extends Component {
             const assetTypeEntities = R.pipe(
               R.pathOr([], ['__type', 'enumValues']),
               R.map((n) => ({
-                label: t(n.description),
+                label: n.description,
                 value: n.name,
                 type: n.name,
               })),
@@ -167,7 +166,7 @@ class Filters extends Component {
         let namePath = [];
         if (this.props.filterEntityType === 'Device') {
           nameQuery = itAssetFiltersDeviceFieldsQuery;
-          namePath = ['computingDeviceAssetList', 'edges'];
+          namePath = ['hardwareAssetList', 'edges'];
         }
         if (this.props.filterEntityType === 'Network') {
           nameQuery = itAssetFiltersNetworkFieldsQuery;
@@ -181,7 +180,7 @@ class Filters extends Component {
           nameQuery = riskFiltersNameQuery;
           namePath = ['risks', 'edges'];
         }
-        fetchDarklightQuery(nameQuery, {
+        fetchQuery(nameQuery, {
           search: event && event.target.value !== 0 ? event.target.value : '',
         })
           .toPromise()
@@ -206,7 +205,7 @@ class Filters extends Component {
           });
         break;
       case 'risk_level':
-        fetchDarklightQuery(RiskFiltersQuery, {
+        fetchQuery(RiskFiltersQuery, {
           type: 'RiskLevel',
         })
           .toPromise()
@@ -214,7 +213,7 @@ class Filters extends Component {
             const riskLevelEntities = R.pipe(
               R.pathOr([], ['__type', 'enumValues']),
               R.map((n) => ({
-                label: t(n.name),
+                label: n.name,
                 value: n.name,
                 type: 'attribute',
               })),
@@ -231,7 +230,7 @@ class Filters extends Component {
           });
         break;
       case 'risk_status':
-        fetchDarklightQuery(RiskFiltersQuery, {
+        fetchQuery(RiskFiltersQuery, {
           type: 'RiskStatus',
         })
           .toPromise()
@@ -239,7 +238,7 @@ class Filters extends Component {
             const riskStatusEntities = R.pipe(
               R.pathOr([], ['__type', 'enumValues']),
               R.map((n) => ({
-                label: t(n.name),
+                label: n.name,
                 value: n.name,
                 type: 'attribute',
               })),
@@ -256,7 +255,7 @@ class Filters extends Component {
           });
         break;
       case 'lifecycle':
-        fetchDarklightQuery(RiskFiltersQuery, {
+        fetchQuery(RiskFiltersQuery, {
           type: 'RiskLifeCyclePhase',
         })
           .toPromise()
@@ -264,7 +263,7 @@ class Filters extends Component {
             const riskLifecycleEntities = R.pipe(
               R.pathOr([], ['__type', 'enumValues']),
               R.map((n) => ({
-                label: t(n.name),
+                label: n.name,
                 value: n.name,
                 type: 'attribute',
               })),
@@ -281,7 +280,7 @@ class Filters extends Component {
           });
         break;
       case 'response_type':
-        fetchDarklightQuery(RiskFiltersQuery, {
+        fetchQuery(RiskFiltersQuery, {
           type: 'ResponseType',
         })
           .toPromise()
@@ -289,7 +288,7 @@ class Filters extends Component {
             const riskResponseEntities = R.pipe(
               R.pathOr([], ['__type', 'enumValues']),
               R.map((n) => ({
-                label: t(n.name),
+                label: n.name,
                 value: n.name,
                 type: 'attribute',
               })),
@@ -306,7 +305,7 @@ class Filters extends Component {
           });
         break;
       case 'vendor_name_or':
-        fetchDarklightQuery(itAssetFiltersSoftwareFieldsQuery, {
+        fetchQuery(itAssetFiltersSoftwareFieldsQuery, {
           search: event && event.target.value !== 0 ? event.target.value : '',
         })
           .toPromise()
@@ -314,7 +313,7 @@ class Filters extends Component {
             const vendorEntities = R.pipe(
               R.pathOr([], ['softwareAssetList', 'edges']),
               R.map((n) => ({
-                label: t(n.node.vendor_name),
+                label: n.node.vendor_name,
                 value: n.node.vendor_name,
                 type: n.node.vendor_name === 'apple' || n.node.vendor_name === 'microsoft' || n.node.vendor_name === 'linux' ? n.node.vendor_name : 'other',
               })),
@@ -332,7 +331,7 @@ class Filters extends Component {
         break;
       case 'label_name':
         // eslint-disable-next-line no-case-declarations
-        fetchDarklightQuery(labelsSearchQuery, {
+        fetchQuery(labelsSearchQuery, {
           search: event && event.target.value !== 0 ? event.target.value : '',
         })
           .toPromise()
@@ -340,7 +339,7 @@ class Filters extends Component {
             const cyioLabelEntities = R.pipe(
               R.pathOr([], ['cyioLabels', 'edges']),
               R.map((n) => ({
-                label: n.node?.name && t(n.node?.name),
+                label: n.node?.name,
                 value: n.node?.name,
                 type: 'Label',
                 color: n.node?.color,
@@ -1133,7 +1132,7 @@ class Filters extends Component {
 
   renderDialogFilters() {
     const {
-      t, classes, theme, disabled,
+      t, classes, disabled,
     } = this.props;
     const { open, filters } = this.state;
     return (
@@ -1144,7 +1143,7 @@ class Filters extends Component {
             disabled={disabled}
           // style={{ color: theme.palette.header.text }}
           >
-            <ToyBrickSearchOutline fontSize="default" />
+            <ToyBrickSearchOutline fontSize="medium" />
           </IconButton>
         </Tooltip>
         <Dialog

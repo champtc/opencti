@@ -5,18 +5,11 @@ import * as PropTypes from 'prop-types';
 import * as Yup from 'yup';
 import * as R from 'ramda';
 import { compose, evolve } from 'ramda';
-import { Formik, Form, Field } from 'formik';
+import { Formik, Form } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import Drawer from '@material-ui/core/Drawer';
-import Fab from '@material-ui/core/Fab';
 import {
-  Add,
-  Edit,
   Close,
-  Delete,
-  ArrowBack,
-  AddCircleOutline,
   CheckCircleOutline,
 } from '@material-ui/icons';
 import Dialog from '@material-ui/core/Dialog';
@@ -28,29 +21,27 @@ import Typography from '@material-ui/core/Typography';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import graphql from 'babel-plugin-relay/macro';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
-import { dayStartDate, parse } from '../../../../utils/Time';
-import { commitMutation, QueryRenderer } from '../../../../relay/environment';
+import { parse } from '../../../../utils/Time';
+import { commitMutation } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
-import StixDomainObjectHeader from '../../common/stix_domain_objects/StixDomainObjectHeader';
-import DeviceCreationOverview from './DeviceCreationOverview';
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import CyioDomainObjectAssetCreationOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetCreationOverview';
 import CyioCoreObjectAssetCreationExternalReferences from '../../analysis/external_references/CyioCoreObjectAssetCreationExternalReferences';
-import Loader from '../../../../components/Loader';
 import { toastGenericError } from "../../../../utils/bakedToast";
 import DeviceCreationDetails from './DeviceCreationDetails';
+import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
     marginBottom: 0,
   },
   header: {
-    margin: '-25px -24px 20px -24px',
-    padding: '23px 24px 24px 24px',
+    display: 'flex',
     height: '64px',
+    marginBottom: '20px',
+    padding: '23px 0 24px 12px',
+    justifyContent: 'space-between',
     backgroundColor: theme.palette.background.paper,
   },
   gridContainer: {
@@ -69,8 +60,12 @@ const styles = (theme) => ({
     textTransform: 'capitalize',
   },
   rightContainer: {
-    float: 'right',
-    marginTop: '-10px',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  leftContainer: {
+    display: 'flex',
+    alignItems: 'center',
   },
   editButton: {
     position: 'fixed',
@@ -125,6 +120,7 @@ class DeviceCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       open: false,
       onSubmit: false,
       displayCancel: false,
@@ -139,8 +135,9 @@ class DeviceCreation extends Component {
     const adaptedValues = evolve(
       {
         release_date: () => values.release_date === null ? null : parse(values.release_date).format(),
-        ipv4_address: () => values.ipv4_address.length > 0 ? values.ipv4_address.map((address) => { return {ip_address_value: address } }) : [],
-        ipv6_address: () => values.ipv6_address.length > 0 ? values.ipv6_address.map((address) => { return {ip_address_value: address } }) : [],
+        last_scanned: () => values.last_scanned === null ? null : parse(values.last_scanned).format(),
+        ipv4_address: () => values.ipv4_address.length > 0 ? values.ipv4_address.map((address) => { return { ip_address_value: address } }) : [],
+        ipv6_address: () => values.ipv6_address.length > 0 ? values.ipv6_address.map((address) => { return { ip_address_value: address } }) : [],
       },
       values,
     );
@@ -151,7 +148,7 @@ class DeviceCreation extends Component {
       R.dissoc('port_number'),
       R.assoc('asset_type', values.asset_type),
     )(adaptedValues);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: deviceCreationMutation,
       variables: {
         input: finalValues,
@@ -164,9 +161,9 @@ class DeviceCreation extends Component {
         this.props.history.push('/defender HQ/assets/devices');
       },
       onError: (err) => {
-        console.error(err);
         toastGenericError("Failed to create Device");
-        this.props.history.push('/defender HQ/assets/devices');
+        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors))
+        this.setState({ error: ErrorResponse });
       }
     });
     // commitMutation({
@@ -213,9 +210,6 @@ class DeviceCreation extends Component {
     const {
       t,
       classes,
-      deviceId,
-      open,
-      history,
     } = this.props;
     return (
       <div className={classes.container}>
@@ -247,17 +241,19 @@ class DeviceCreation extends Component {
             is_virtual: false,
             is_publicly_accessible: false,
             is_scanned: false,
+            last_scanned: null,
             baseline_configuration_name: '',
             bios_id: '',
             hostname: '',
             default_gateway: '',
             labels: [],
-            asset_type: 'physical_device',
+            asset_type: 'computing_device',
             mac_address: [],
             installed_operating_system: '',
             installed_hardware: [],
             installed_software: [],
             fqdn: '',
+            implementation_point: 'internal',
           }}
           validationSchema={deviceValidation(t)}
           onSubmit={this.onSubmit.bind(this)}
@@ -275,7 +271,7 @@ class DeviceCreation extends Component {
                 <Typography
                   variant="h1"
                   gutterBottom={true}
-                  classes={{ root: classes.title }}
+                  className={ classes.leftContainer }
                 >
                   {t('New Asset')}
                 </Typography>
@@ -391,6 +387,10 @@ class DeviceCreation extends Component {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorBox
+          error={this.state.error}
+          pathname='/defender HQ/assets/devices'
+        />
       </div>
     );
   }

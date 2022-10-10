@@ -137,7 +137,7 @@ export const insertComponentQuery = (propValues) => {
   return {iri, id, query}  
 }
 export const selectComponentQuery = (id, select) => {
-  return selectComponentByIriQuery(`http://csrc.nist.gov/ns/oscal/common#Comoponent-${id}`, select);
+  return selectComponentByIriQuery(`http://csrc.nist.gov/ns/oscal/common#Component-${id}`, select);
 }
 export const selectComponentByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
@@ -168,13 +168,13 @@ export const selectAllComponents = (select, args, parent) => {
     // add value of filter's key to cause special predicates to be included
     if ( args.filters !== undefined ) {
       for( const filter of args.filters) {
-        if (!select.hasOwnProperty(filter.key)) select.push( filter.key );
+        if (!select.includes(filter.key)) select.push( filter.key );
       }
     }
 
     // add value of orderedBy's key to cause special predicates to be included
     if ( args.orderedBy !== undefined ) {
-      if (!select.hasOwnProperty(args.orderedBy)) select.push(args.orderedBy);
+      if (!select.includes(args.orderedBy)) select.push(args.orderedBy);
     }
   }
 
@@ -489,8 +489,6 @@ export function convertAssetToComponent(asset) {
       case 'object_type':
       case 'entity_type':
       case 'standard_id':
-      case 'created':
-      case 'modified':
       case 'links':
       case 'labels':
       case 'remarks':
@@ -503,6 +501,11 @@ export function convertAssetToComponent(asset) {
       case 'responsible_roles':
       case 'protocols':
         continue;
+      case 'created':
+      case 'modified':
+      case 'last_scanned':
+        if (value instanceof Date ) value = value.toISOString();
+        break;
       case 'cpe_identifier':
         key = 'software-identifier';
         break;

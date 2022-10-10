@@ -6,7 +6,7 @@ import graphql from 'babel-plugin-relay/macro';
 import * as Yup from 'yup';
 import * as R from 'ramda';
 import { Formik, Form, Field } from 'formik';
-// import { createFragmentContainer } from 'react-relay';
+import { createFragmentContainer } from 'react-relay';
 import { compose } from 'ramda';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -17,26 +17,19 @@ import Grid from '@material-ui/core/Grid';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import { withStyles } from '@material-ui/core/styles';
-import AppBar from '@material-ui/core/AppBar';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
 import { Close, CheckCircleOutline } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM, createFragmentContainer } from 'react-relay';
 import { dateFormat, parse } from '../../../../utils/Time';
 import { commitMutation } from '../../../../relay/environment';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
 import inject18n from '../../../../components/i18n';
 import TextField from '../../../../components/TextField';
-import { SubscriptionAvatars } from '../../../../components/Subscription';
-import SoftwareEditionOverview from './SoftwareEditionOverview';
 import SoftwareEditionDetails from './SoftwareEditionDetails';
 import CyioDomainObjectAssetEditionOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetEditionOverview';
 import CyioCoreObjectExternalReferences from '../../analysis/external_references/CyioCoreObjectExternalReferences';
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import { adaptFieldValue } from '../../../../utils/String';
+import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
@@ -44,7 +37,7 @@ const styles = (theme) => ({
   },
   header: {
     margin: '-25px -24px 20px -24px',
-    padding: '14px 24px 24px 24px',
+    padding: '25px 30px 50px 50px',
     height: '64px',
     backgroundColor: '#1F2842',
   },
@@ -119,6 +112,7 @@ class SoftwareEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       currentTab: 0,
       onSubmit: false,
       open: false,
@@ -126,7 +120,7 @@ class SoftwareEditionContainer extends Component {
     };
   }
 
-  handleChangeTab(event, value) {
+  handleChangeTab(value) {
     this.setState({ currentTab: value });
   }
 
@@ -148,10 +142,11 @@ class SoftwareEditionContainer extends Component {
     const adaptedValues = R.evolve(
       {
         release_date: () => values.release_date === null ? null : parse(values.release_date).format(),
+        last_scanned: () => values.last_scanned === null ? null : parse(values.last_scanned).format(),
       },
       values,
     );
-    Object.keys(totalInitial).forEach((key, j) => {
+    Object.keys(totalInitial).forEach((key) => {
       if (Array.isArray(adaptedValues[key])) {
         if (adaptedValues[key].some((value, i) => value !== totalInitial[key][i])) {
           filteredValue[key] = adaptedValues[key];
@@ -169,18 +164,22 @@ class SoftwareEditionContainer extends Component {
         'value': Array.isArray(adaptFieldValue(n[1])) ? adaptFieldValue(n[1]) : [adaptFieldValue(n[1])],
       })),
     )(filteredValue);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: softwareEditionMutation,
       variables: {
         id: this.props.software.id,
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data) => {
-        setSubmitting(false);
-        resetForm();
-        this.handleClose();
-        this.props.history.push('/defender HQ/assets/software');
+      onCompleted: (data, error) => {
+        if (error) {
+          this.setState({ error });
+        } else {
+          setSubmitting(false);
+          resetForm();
+          this.handleClose();
+          this.props.history.push('/defender HQ/assets/software');
+        }
       },
     });
     // commitMutation({
@@ -220,7 +219,6 @@ class SoftwareEditionContainer extends Component {
     const {
       t, classes, handleClose, software, refreshQuery,
     } = this.props;
-    const { editContext } = software;
     const initialValues = R.pipe(
       R.assoc('id', software?.id || ''),
       R.assoc('asset_id', software?.asset_id || ''),
@@ -240,6 +238,8 @@ class SoftwareEditionContainer extends Component {
       R.assoc('cpe_identifier', software?.cpe_identifier || ''),
       R.assoc('installation_id', software?.installation_id || ''),
       R.assoc('implementation_point', software?.implementation_point || ''),
+      R.assoc('is_scanned', software?.is_scanned),      
+      R.assoc('last_scanned', software?.last_scanned),
       R.pick([
         'id',
         'asset_id',
@@ -259,6 +259,8 @@ class SoftwareEditionContainer extends Component {
         'cpe_identifier',
         'installation_id',
         'implementation_point',
+        'is_scanned',
+        'last_scanned',
       ]),
     )(software);
     return (
@@ -271,10 +273,7 @@ class SoftwareEditionContainer extends Component {
         >
           {({
             submitForm,
-            handleReset,
             isSubmitting,
-            setFieldValue,
-            values,
           }) => (
             <>
               <div className={classes.header}>
@@ -420,6 +419,10 @@ class SoftwareEditionContainer extends Component {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorBox
+          error={this.state.error}
+          pathname='/defender HQ/assets/software'
+        />
       </div>
     );
   }
@@ -487,6 +490,8 @@ const SoftwareEditionFragment = createFragmentContainer(
         patch_level
         installation_id
         implementation_point
+        is_scanned
+        last_scanned
         # ...SoftwareEditionOverview_software
         # editContext {
         #   name

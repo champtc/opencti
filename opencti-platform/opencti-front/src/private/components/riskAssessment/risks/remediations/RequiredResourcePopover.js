@@ -2,13 +2,10 @@
 /* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
+import { withRouter } from 'react-router-dom';
 import * as R from 'ramda';
 import {
-  compose,
-  pathOr,
-  mergeAll,
   map,
-  path,
   pipe,
   dissoc,
   assoc,
@@ -16,16 +13,11 @@ import {
 } from 'ramda';
 import { Formik, Form, Field } from 'formik';
 import graphql from 'babel-plugin-relay/macro';
-import { ConnectionHandler } from 'relay-runtime';
 import { withStyles } from '@material-ui/core/styles/index';
-import Drawer from '@material-ui/core/Drawer';
 import Typography from '@material-ui/core/Typography';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Button from '@material-ui/core/Button';
-import AddIcon from '@material-ui/icons/Add';
-import ListItem from '@material-ui/core/ListItem';
-import List from '@material-ui/core/List';
 import { Information } from 'mdi-material-ui';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -37,22 +29,17 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import { MoreVertOutlined } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
-import environmentDarkLight, { fetchDarklightQuery } from '../../../../../relay/environmentDarkLight';
+import { commitMutation } from '../../../../../relay/environment';
 import inject18n from '../../../../../components/i18n';
-import { commitMutation, QueryRenderer } from '../../../../../relay/environment';
 import TextField from '../../../../../components/TextField';
-import { dateFormat, parse } from '../../../../../utils/Time';
 import { adaptFieldValue } from '../../../../../utils/String';
-import SelectField from '../../../../../components/SelectField';
-// import CyioExternalReferenceEdition from './CyioExternalReferenceEdition';
-import Loader from '../../../../../components/Loader';
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import MarkDownField from '../../../../../components/MarkDownField';
 import ResourceNameField from '../../../common/form/ResourceNameField';
 import ResourceTypeField from '../../../common/form/ResourceTypeField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
+import ErrorBox from '../../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
@@ -149,6 +136,7 @@ class RequiredResourcePopover extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       anchorEl: null,
       displayUpdate: false,
       displayDelete: false,
@@ -221,29 +209,34 @@ class RequiredResourcePopover extends Component {
         'value': adaptFieldValue(n[1]),
       })),
     )(values);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: requiredResourcePopoverEditionMutation,
       variables: {
         id: this.props.data.id,
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: () => {
-        setSubmitting(false);
-        resetForm();
-        this.handleCloseUpdate();
-        this.props.refreshQuery();
+      onCompleted: (data, error) => {
+        if (error) {
+          this.setState({ error });
+        } else {
+          setSubmitting(false);
+          resetForm();
+          this.handleCloseUpdate();
+          this.props.refreshQuery();
+        }
       },
       onError: (err) => {
-        console.error(err);
         toastGenericError('Failed to update Required Resource');
+        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors));
+        this.setState({ error: ErrorResponse });
       },
     });
   }
 
   submitDelete() {
     this.setState({ deleting: true });
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: requiredResourcePopoverDeletionMutation,
       variables: {
         id: this.props.requiredResourceId,
@@ -291,10 +284,8 @@ class RequiredResourcePopover extends Component {
       t,
       handleRemove,
       refreshQuery,
-      inputValue,
       remediationId,
       data,
-      requiredResourceId,
     } = this.props;
     const requiredResourceNode = R.pipe(
       R.pathOr([], ['subjects']),
@@ -582,6 +573,10 @@ class RequiredResourcePopover extends Component {
               </Form>
             )}
           </Formik>
+          <ErrorBox
+            error={this.state.error}
+            pathname={this.props.history.location.pathname}
+          />
         </Dialog>
         <Dialog
           open={this.state.displayDelete}
@@ -628,6 +623,7 @@ RequiredResourcePopover.propTypes = {
   externalReferenceId: PropTypes.string,
   paginationOptions: PropTypes.object,
   classes: PropTypes.object,
+  history: PropTypes.object,
   t: PropTypes.func,
   handleRemove: PropTypes.func,
   refreshQuery: PropTypes.func,
@@ -635,4 +631,4 @@ RequiredResourcePopover.propTypes = {
   requiredResourceId: PropTypes.string,
 };
 
-export default R.compose(inject18n, withStyles(styles))(RequiredResourcePopover);
+export default R.compose(withRouter, inject18n, withStyles(styles))(RequiredResourcePopover);

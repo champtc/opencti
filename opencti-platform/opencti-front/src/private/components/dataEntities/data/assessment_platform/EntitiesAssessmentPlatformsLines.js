@@ -26,11 +26,23 @@ class EntitiesAssessmentPlatformsLines extends Component {
     );
   }
 
-  handleOffsetChange() {
+  handleIncrementedOffsetChange() {
     const incrementedOffset = this.state.offset += nbOfRowsToLoad;
     this.setState({ offset: incrementedOffset })
     this.props.relay.refetchConnection(nbOfRowsToLoad, null, {
       offset: this.state.offset,
+      first: nbOfRowsToLoad,
+      ...this.props.paginationOptions,
+    })
+  }
+
+  handleDecrementedOffsetChange() {
+    const decrementedOffset = this.state.offset -= nbOfRowsToLoad;
+    this.setState({ offset: decrementedOffset })
+    this.props.relay.refetchConnection(nbOfRowsToLoad, null, {
+      offset: this.state.offset,
+      first: nbOfRowsToLoad,
+      ...this.props.paginationOptions,
     })
   }
 
@@ -49,7 +61,8 @@ class EntitiesAssessmentPlatformsLines extends Component {
       <ListLinesContent
         initialLoading={initialLoading}
         loadMore={relay.loadMore.bind(this)}
-        handleOffsetChange={this.handleOffsetChange.bind(this)}
+        handleIncrementedOffsetChange={this.handleIncrementedOffsetChange.bind(this)}
+        handleDecrementedOffsetChange={this.handleDecrementedOffsetChange.bind(this)}
         hasMore={relay.hasMore.bind(this)}
         isLoading={relay.isLoading.bind(this)}
         dataList={pathOr([], ['assessmentPlatforms', 'edges'], this.props.data)}

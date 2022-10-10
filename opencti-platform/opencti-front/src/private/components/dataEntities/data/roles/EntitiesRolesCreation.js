@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
-import * as Yup from 'yup';
 import * as R from 'ramda';
-import { compose, evolve } from 'ramda';
+import { compose } from 'ramda';
 import { Formik, Form, Field } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
@@ -13,14 +12,10 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import DialogActions from '@material-ui/core/DialogActions';
 import graphql from 'babel-plugin-relay/macro';
-import { QueryRenderer as QR, commitMutation as CM } from 'react-relay';
-import environmentDarkLight from '../../../../../relay/environmentDarkLight';
-import { dayStartDate, parse } from '../../../../../utils/Time';
-import { commitMutation, QueryRenderer } from '../../../../../relay/environment';
+import { commitMutation } from '../../../../../relay/environment';
 import inject18n from '../../../../../components/i18n';
 import SelectField from '../../../../../components/SelectField';
 import TextField from '../../../../../components/TextField';
@@ -67,10 +62,6 @@ const entitiesRolesCreationMutation = graphql`
     }
   }
 `;
-
-const riskValidation = (t) => Yup.object().shape({
-  name: Yup.string().required(t('This field is required')),
-});
 const Transition = React.forwardRef((props, ref) => (
   <Slide direction="up" ref={ref} {...props} />
 ));
@@ -100,20 +91,23 @@ class EntitiesRolesCreation extends Component {
   onSubmit(values, { setSubmitting, resetForm }) {
     const finalValues = R.pipe(
       R.assoc('name', values.name),
+      R.dissoc('created'),
+      R.dissoc('modified'),
     )(values);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: entitiesRolesCreationMutation,
       variables: {
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data) => {
+      onCompleted: () => {
         setSubmitting(false);
         resetForm();
         this.handleClose();
+        this.props.handleRoleCreation();
+        this.props.history.push('/data/entities/responsibility');
       },
-      onError: (err) => {
-        console.error(err);
+      onError: () => {
         toastGenericError('Failed to create responsibility');
       },
     });
@@ -155,8 +149,6 @@ class EntitiesRolesCreation extends Component {
       classes,
       openDataCreation,
       handleRoleCreation,
-      open,
-      history,
     } = this.props;
     return (
       <>
@@ -171,6 +163,9 @@ class EntitiesRolesCreation extends Component {
               name: '',
               created: null,
               modified: null,
+              short_name: '',
+              role_identifier: '',
+              description: '',
             }}
             // validationSchema={RelatedTaskValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
@@ -178,10 +173,7 @@ class EntitiesRolesCreation extends Component {
           >
             {({
               submitForm,
-              handleReset,
               isSubmitting,
-              setFieldValue,
-              values,
             }) => (
               <Form>
                 <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Responsibility')}</DialogTitle>

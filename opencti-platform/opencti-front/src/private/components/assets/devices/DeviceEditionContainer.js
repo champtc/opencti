@@ -6,38 +6,29 @@ import * as Yup from 'yup';
 import * as R from 'ramda';
 import graphql from 'babel-plugin-relay/macro';
 import { Formik, Form, Field } from 'formik';
-// import { createFragmentContainer } from 'react-relay';
-import { compose } from 'ramda';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
-import AppBar from '@material-ui/core/AppBar';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import DialogActions from '@material-ui/core/DialogActions';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
 import { Close, CheckCircleOutline } from '@material-ui/icons';
-import { QueryRenderer as QR, commitMutation as CM, createFragmentContainer } from 'react-relay';
+import { createFragmentContainer } from 'react-relay';
 import { adaptFieldValue } from '../../../../utils/String';
 import { commitMutation } from '../../../../relay/environment';
-import environmentDarkLight from '../../../../relay/environmentDarkLight';
 import inject18n from '../../../../components/i18n';
-import { insertNode } from '../../../../utils/Store';
 import { dateFormat, parse } from '../../../../utils/Time';
 import TextField from '../../../../components/TextField';
 import CyioCoreObjectExternalReferences from '../../analysis/external_references/CyioCoreObjectExternalReferences';
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
-import { SubscriptionAvatars } from '../../../../components/Subscription';
-import DeviceEditionOverview from './DeviceEditionOverview';
 import DeviceEditionDetails from './DeviceEditionDetails';
 import CyioDomainObjectAssetEditionOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetEditionOverview';
+import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
@@ -45,7 +36,7 @@ const styles = (theme) => ({
   },
   header: {
     margin: '-25px -24px 30px -24px',
-    padding: '15px',
+    padding: '25px 30px 50px 50px',
     height: '64px',
     backgroundColor: '#1F2842',
   },
@@ -104,6 +95,7 @@ class DeviceEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      error: {},
       open: false,
       onSubmit: false,
       displayCancel: false,
@@ -139,6 +131,7 @@ class DeviceEditionContainer extends Component {
     const adaptedValues = R.evolve(
       {
         release_date: () => values.release_date === null ? null : parse(values.release_date).format(),
+        last_scanned: () => values.last_scanned === null ? null : parse(values.last_scanned).format(),
         ipv4_address: () => values.ipv4_address.length > 0 ? values.ipv4_address.map((address) => JSON.stringify({ ip_address_value: address })) : [],
         ipv6_address: () => values.ipv6_address.length > 0 ? values.ipv6_address.map((address) => JSON.stringify({ ip_address_value: address })) : [],
         ports: () => values.ports.length > 0 ? values.ports.map((port) => JSON.stringify(port)) : [],
@@ -157,18 +150,22 @@ class DeviceEditionContainer extends Component {
         'value': Array.isArray(adaptFieldValue(n[1])) ? adaptFieldValue(n[1]) : [adaptFieldValue(n[1])],
       })),
     )(adaptedValues);
-    CM(environmentDarkLight, {
+    commitMutation({
       mutation: deviceEditionMutation,
       variables: {
         id: this.props.device?.id,
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data) => {
-        setSubmitting(false);
-        resetForm();
-        this.handleClose();
-        this.props.history.push('/defender HQ/assets/devices');
+      onCompleted: (data, error) => {
+        if (error) {
+          this.setState({ error });
+        } else {
+          setSubmitting(false);
+          resetForm();
+          this.handleClose();
+          this.props.history.push('/defender HQ/assets/devices');
+        }
       },
     });
     // commitMutation({
@@ -252,6 +249,7 @@ class DeviceEditionContainer extends Component {
       R.assoc('default_gateway', device?.default_gateway || ''),
       R.assoc('motherboard_id', device?.motherboard_id || ''),
       R.assoc('is_scanned', device?.is_scanned || false),
+      R.assoc('last_scanned', device?.last_scanned),
       R.assoc('is_virtual', device?.is_virtual || false),
       R.assoc('is_publicly_accessible', device?.is_publicly_accessible || false),
       R.assoc('uri', device?.uri || null),
@@ -259,6 +257,7 @@ class DeviceEditionContainer extends Component {
       R.assoc('ipv4_address', R.pluck('ip_address_value', device?.ipv4_address || [])),
       R.assoc('ipv6_address', R.pluck('ip_address_value', device?.ipv6_address || [])),
       R.assoc('responsible_parties', ''),
+      R.assoc('implementation_point', device?.implementation_point),
       R.pick([
         'id',
         'asset_id',
@@ -294,10 +293,12 @@ class DeviceEditionContainer extends Component {
         'default_gateway',
         'motherboard_id',
         'is_scanned',
+        'last_scanned',
         'is_virtual',
         'is_publicly_accessible',
         'resposnible_parties',
         'uri',
+        'implementation_point',
       ]),
     )(device);
     // const { editContext } = device;
@@ -311,7 +312,6 @@ class DeviceEditionContainer extends Component {
         >
           {({
             submitForm,
-            handleReset,
             isSubmitting,
             setFieldValue,
             values,
@@ -457,6 +457,10 @@ class DeviceEditionContainer extends Component {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorBox
+          error={this.state.error}
+          pathname='/defender HQ/assets/devices'
+        />
       </div>
     );
   }
@@ -561,6 +565,7 @@ const DeviceEditionFragment = createFragmentContainer(
         baseline_configuration_name
         bios_id
         is_scanned
+        last_scanned
         hostname
         default_gateway
         motherboard_id
@@ -568,6 +573,7 @@ const DeviceEditionFragment = createFragmentContainer(
         netbios_name
         is_virtual
         is_publicly_accessible
+        implementation_point
         # ...DeviceEditionOverview_device
         # ...DeviceEditionDetails_device
         # editContext {

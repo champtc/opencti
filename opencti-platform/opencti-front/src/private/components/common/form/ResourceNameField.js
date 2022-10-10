@@ -1,14 +1,12 @@
 import React, { Component } from 'react';
 import { Field } from 'formik';
 import * as R from 'ramda';
-import { ListItem } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import graphql from 'babel-plugin-relay/macro';
 import inject18n from '../../../../components/i18n';
 import SelectField from '../../../../components/SelectField';
-import ItemIcon from '../../../../components/ItemIcon';
-import { fetchDarklightQuery } from '../../../../relay/environmentDarkLight';
+import { fetchQuery } from '../../../../relay/environment';
 
 const styles = () => ({
   resourceTypeField: {
@@ -124,7 +122,7 @@ class ResourceNameField extends Component {
   handleResourceType() {
     this.setState({ typeList: null });
     if (this.props.resourceTypename === 'component') {
-      fetchDarklightQuery(ResourceNameFieldComponentQuery)
+      fetchQuery(ResourceNameFieldComponentQuery)
         .toPromise()
         .then((data) => {
           const ResourceTypeEntities = R.pipe(
@@ -139,7 +137,7 @@ class ResourceNameField extends Component {
         });
     }
     if (this.props.resourceTypename === 'location') {
-      fetchDarklightQuery(ResourceNameFieldLocationQuery)
+      fetchQuery(ResourceNameFieldLocationQuery)
         .toPromise()
         .then((data) => {
           const ResourceTypeEntities = R.pipe(
@@ -154,7 +152,7 @@ class ResourceNameField extends Component {
         });
     }
     if (this.props.resourceTypename === 'inventory_item') {
-      fetchDarklightQuery(ResourceNameFieldInventoryQuery)
+      fetchQuery(ResourceNameFieldInventoryQuery)
         .toPromise()
         .then((data) => {
           const ResourceTypeEntities = R.pipe(
@@ -169,7 +167,7 @@ class ResourceNameField extends Component {
         });
     }
     if (this.props.resourceTypename === 'party') {
-      fetchDarklightQuery(ResourceNameFieldPartyQuery)
+      fetchQuery(ResourceNameFieldPartyQuery)
         .toPromise()
         .then((data) => {
           const ResourceTypeEntities = R.pipe(
@@ -184,7 +182,7 @@ class ResourceNameField extends Component {
         });
     }
     if (this.props.resourceTypename === 'user') {
-      fetchDarklightQuery(ResourceNameFieldUserQuery)
+      fetchQuery(ResourceNameFieldUserQuery)
         .toPromise()
         .then((data) => {
           const ResourceTypeEntities = R.pipe(
@@ -199,7 +197,7 @@ class ResourceNameField extends Component {
         });
     }
     if (this.props.resourceTypename === 'resource') {
-      fetchDarklightQuery(ResourceNameFieldResourceQuery)
+      fetchQuery(ResourceNameFieldResourceQuery)
         .toPromise()
         .then((data) => {
           const ResourceTypeEntities = R.pipe(
@@ -217,18 +215,13 @@ class ResourceNameField extends Component {
 
   render() {
     const {
-      t,
       name,
       classes,
       size,
       label,
       style,
       variant,
-      onChange,
-      onFocus,
-      resourceTypename,
       containerstyle,
-      editContext,
       disabled,
       helperText,
     } = this.props;

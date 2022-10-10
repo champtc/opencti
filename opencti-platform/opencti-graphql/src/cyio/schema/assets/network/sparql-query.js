@@ -103,13 +103,13 @@ export function getSelectSparqlQuery(type, select, id, args, ) {
     if (args !== undefined ) {
       if ( args.filters !== undefined && id === undefined ) {
         for( const filter of args.filters) {
-          if (!select.hasOwnProperty(filter.key)) select.push( filter.key );
+          if (!select.includes(filter.key)) select.push( filter.key );
         }
       }
       
       // add value of orderedBy's key to cause special predicates to be included
       if ( args.orderedBy !== undefined ) {
-        if (!select.hasOwnProperty(args.orderedBy)) select.push(args.orderedBy);
+        if (!select.includes(args.orderedBy)) select.push(args.orderedBy);
       }
     }
   }
@@ -154,6 +154,7 @@ export function getSelectSparqlQuery(type, select, id, args, ) {
   // console.log(`[INFO] Query = ${sparqlQuery}`)
   return sparqlQuery ;
 }
+
 export const insertQuery = (propValues) => {
   const id_material = {
     ...(propValues.network_name && { "network_name": propValues.network_name}),
@@ -274,17 +275,18 @@ export const selectNetworkByIriQuery = (iri, select) => {
 export const selectAllNetworks = (select, args) => {
   if (select === undefined || select === null) select = Object.keys(networkPredicateMap);
   if (!select.includes('id')) select.push('id');
+  if (!select.includes('network_id')) select.push('network_id');
 
   if (args !== undefined ) {
     if ( args.filters !== undefined ) {
       for( const filter of args.filters) {
-        if (!select.hasOwnProperty(filter.key)) select.push( filter.key );
+        if (!select.includes(filter.key)) select.push( filter.key );
       }
     }
     
     // add value of orderedBy's key to cause special predicates to be included
     if ( args.orderedBy !== undefined ) {
-      if (!select.hasOwnProperty(args.orderedBy)) select.push(args.orderedBy);
+      if (!select.includes(args.orderedBy)) select.push(args.orderedBy);
     }
   }
 

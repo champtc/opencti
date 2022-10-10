@@ -2,10 +2,7 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import * as R from 'ramda';
-import { QueryRenderer as QR } from 'react-relay';
-import Typography from '@material-ui/core/Typography';
 import { QueryRenderer } from '../../../../../relay/environment';
-import QueryRendererDarkLight from '../../../../../relay/environmentDarkLight';
 import {
   buildViewParamsFromUrlAndStorage,
   convertFilters,
@@ -21,11 +18,9 @@ import EntitiesNotesLines, {
   entitiesNotesLinesQuery,
 } from './EntitiesNotesLines';
 import EntitiesNotesCreation from './EntitiesNotesCreation';
-import Security, { KNOWLEDGE_KNUPDATE } from '../../../../../utils/Security';
 import { isUniqFilter } from '../../../common/lists/Filters';
 import EntitiesNotesDeletion from './EntitiesNotesDeletion';
-import ErrorNotFound from '../../../../../components/ErrorNotFound';
-import { toastSuccess, toastGenericError } from '../../../../../utils/bakedToast';
+import { toastGenericError } from '../../../../../utils/bakedToast';
 import NoteEntityEdition from './NoteEntityEdition';
 
 class ResponsiblePartiesEntities extends Component {
@@ -60,6 +55,30 @@ class ResponsiblePartiesEntities extends Component {
       'view-notes',
       this.state,
     );
+  }
+
+  componentWillUnmount() {
+    const {
+      view,
+      sortBy,
+      orderAsc,
+      searchTerm,
+    } = this.state;
+    if (this.props.history.location.pathname !== '/data/entities/notes'
+      && convertFilters(this.state.filters).length) {
+      saveViewParameters(
+        this.props.history,
+        this.props.location,
+        'view-notes',
+        {
+          view,
+          sortBy,
+          searchTerm,
+          orderAsc,
+          filters: [],
+        },
+      );
+    }
   }
 
   handleChangeView(mode) {
@@ -143,13 +162,13 @@ class ResponsiblePartiesEntities extends Component {
               ]),
             this.state.filters,
           ),
-        },
+        }, () => this.saveView(),
       );
     } else {
       this.setState(
         {
           filters: R.assoc(key, [{ id, value }], this.state.filters),
-        },
+        }, () => this.saveView(),
       );
     }
   }
@@ -173,9 +192,6 @@ class ResponsiblePartiesEntities extends Component {
       selectedElements,
       selectAll,
     } = this.state;
-    const {
-      t,
-    } = this.props;
     const dataColumns = {
       type: {
         label: 'Type',
@@ -227,13 +243,11 @@ class ResponsiblePartiesEntities extends Component {
           'label_name',
         ]}
       >
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={entitiesNotesCardsQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
             if (error) {
-              console.error(error);
               toastGenericError('Request Failed');
             }
             return (
@@ -266,13 +280,6 @@ class ResponsiblePartiesEntities extends Component {
       selectedElements,
       numberOfElements,
     } = this.state;
-    const {
-      t,
-    } = this.props;
-    let numberOfSelectedElements = Object.keys(selectedElements || {}).length;
-    if (selectAll) {
-      numberOfSelectedElements = numberOfElements.original;
-    }
     const dataColumns = {
       type: {
         label: 'Type',
@@ -337,13 +344,11 @@ class ResponsiblePartiesEntities extends Component {
           'label_name',
         ]}
       >
-        <QR
-          environment={QueryRendererDarkLight}
+        <QueryRenderer
           query={entitiesNotesLinesQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
           render={({ error, props }) => {
             if (error) {
-              console.error(error);
               toastGenericError('Request Failed');
             }
             return (
@@ -382,7 +387,6 @@ class ResponsiblePartiesEntities extends Component {
       filters: finalFilters,
       filterMode: 'and',
     };
-    const { location } = this.props;
     const { me } = this.props.me;
     return (
       <div>
@@ -394,12 +398,14 @@ class ResponsiblePartiesEntities extends Component {
           history={this.props.history}
           me={me}
         />
-        <NoteEntityEdition
-          displayEdit={this.state.displayEdit}
-          history={this.props.history}
-          noteId={this.state.selectedNoteId}
-          handleDisplayEdit={this.handleDisplayEdit.bind(this)}
-        />
+        {this.state.selectedNoteId && (
+          <NoteEntityEdition
+            displayEdit={this.state.displayEdit}
+            history={this.props.history}
+            noteId={this.state.selectedNoteId}
+            handleDisplayEdit={this.handleDisplayEdit.bind(this)}
+          />
+        )}
       </div>
     );
   }

@@ -219,8 +219,9 @@ class CyioCoreObjectVulnerableComponentVerticalBars extends Component {
               strokeWidth: 2,
             }}
             contentStyle={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: '#1F2842',
               fontSize: 12,
+              border: '1px solid #06102D',
               borderRadius: 10,
             }}
             labelFormatter={md}

@@ -20,6 +20,7 @@ const styles = () => ({
   container: {
     width: '100%',
     height: '100%',
+    overflowY: 'auto',
   },
   paper: {
     height: '100%',
@@ -210,7 +211,7 @@ class CyioCoreObjectVulnerabilitiesList extends Component {
             // }
             return (
               <div id="container" className={classes.container}>
-                <TableContainer component={Paper}>
+                <TableContainer style= {{ overflow: 'hidden' }}>
                   <Table size="small" style={{ width: '100%' }}>
                     <TableBody>
                       {props.hardwareAssetList.edges.map((row) => (

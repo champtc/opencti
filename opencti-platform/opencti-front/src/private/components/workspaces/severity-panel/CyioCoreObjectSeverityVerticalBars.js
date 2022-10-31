@@ -137,7 +137,7 @@ class CyioCoreObjectRiskSeverityVerticalBars extends Component {
                   <Bar
                     // fill={theme.palette.primary.main}
                     fill="#075AD3"
-                    dataKey="amt"
+                    dataKey="value"
                     barSize={20}
                   />
                 </BarChart>

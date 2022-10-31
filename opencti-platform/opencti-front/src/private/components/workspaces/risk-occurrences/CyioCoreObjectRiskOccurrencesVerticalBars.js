@@ -114,6 +114,7 @@ class CyioCoreObjectRiskOccurrencesVerticalBars extends Component {
                   <XAxis
                     dataKey='value'
                     stroke={theme.palette.text.primary}
+                    type='number'
                   // interval={interval}
                   // angle={-45}
                   // textAnchor="end"
@@ -137,7 +138,7 @@ class CyioCoreObjectRiskOccurrencesVerticalBars extends Component {
                   <Bar
                     // fill={theme.palette.primary.main}
                     fill="#075AD3"
-                    dataKey="amt"
+                    dataKey="value"
                     barSize={20}
                   />
                 </BarChart>

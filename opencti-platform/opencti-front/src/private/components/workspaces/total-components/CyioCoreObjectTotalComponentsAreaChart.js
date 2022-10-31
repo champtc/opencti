@@ -118,7 +118,7 @@ class CyioCoreObjectTotalComponentsAreaChart extends Component {
                   // angle={-30}
                   // tickFormatter={tickFormatter}
                   />
-                  <YAxis dataKey='value' stroke={theme.palette.text.primary} />
+                  <YAxis domain={[0, 'dataMax']} dataKey='value' type='number' stroke={theme.palette.text.primary} />
                   <Tooltip
                     cursor={{
                       fill: 'rgba(0, 0, 0, 0.2)',
@@ -134,7 +134,7 @@ class CyioCoreObjectTotalComponentsAreaChart extends Component {
                   // labelFormatter={tickFormatter}
                   />
                   <Area
-                    dataKey="uv"
+                    dataKey="value"
                     stroke={theme.palette.primary.main}
                     strokeWidth={2}
                     // fill={theme.palette.primary.main}

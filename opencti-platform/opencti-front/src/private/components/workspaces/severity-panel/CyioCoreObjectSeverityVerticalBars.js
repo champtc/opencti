@@ -114,6 +114,7 @@ class CyioCoreObjectRiskSeverityVerticalBars extends Component {
                   <XAxis
                     dataKey='value'
                     stroke={theme.palette.text.primary}
+                    type='number'
                   // interval={interval}
                   // angle={-45}
                   // textAnchor="end"

@@ -18,7 +18,8 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import { Close, CheckCircleOutline } from '@material-ui/icons';
+import { Close } from '@material-ui/icons';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { dateFormat, parse } from '../../../../utils/Time';
 import { commitMutation } from '../../../../relay/environment';
 import inject18n from '../../../../components/i18n';
@@ -29,17 +30,16 @@ import CyioCoreObjectExternalReferences from '../../analysis/external_references
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import { adaptFieldValue } from '../../../../utils/String';
-import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
     margin: 0,
   },
   header: {
-    margin: '-25px -24px 20px -24px',
-    padding: '25px 30px 50px 50px',
-    height: '64px',
-    backgroundColor: '#1F2842',
+    margin: '0 -1.5rem 1rem -1.5rem',
+    padding: '1rem 1.5rem',
+    height: '70px',
+    backgroundColor: theme.palette.background.paper,
   },
   gridContainer: {
     marginBottom: 20,
@@ -49,7 +49,6 @@ const styles = (theme) => ({
     minWidth: '0px',
     marginRight: 15,
     marginTop: -35,
-    padding: '8px 16px 8px 8px',
   },
   title: {
     float: 'left',
@@ -112,7 +111,6 @@ class SoftwareEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: {},
       currentTab: 0,
       onSubmit: false,
       open: false,
@@ -171,6 +169,7 @@ class SoftwareEditionContainer extends Component {
         input: finalValues,
       },
       setSubmitting,
+      pathname: '/defender HQ/assets/software',
       onCompleted: (data, error) => {
         if (error) {
           this.setState({ error });
@@ -298,9 +297,7 @@ class SoftwareEditionContainer extends Component {
                   <Tooltip title={t('Cancel')}>
                     <Button
                       variant="outlined"
-                      size="small"
                       startIcon={<Close />}
-                      color='primary'
                       onClick={this.handleOpenCancelButton.bind(this)}
                       className={classes.iconButton}
                     >
@@ -311,7 +308,7 @@ class SoftwareEditionContainer extends Component {
                     <Button
                       variant="contained"
                       color="primary"
-                      startIcon={<CheckCircleOutline />}
+                      startIcon={<CheckCircleIcon />}
                       onClick={() => this.setState({ totalInitial: initialValues }, submitForm)}
                       disabled={isSubmitting}
                       classes={{ root: classes.iconButton }}
@@ -410,7 +407,7 @@ class SoftwareEditionContainer extends Component {
             </Button>
             <Button
               onClick={() => this.props.history.goBack()}
-              color="primary"
+              color="secondary"
               classes={{ root: classes.buttonPopover }}
               variant="contained"
               size="small"
@@ -419,10 +416,6 @@ class SoftwareEditionContainer extends Component {
             </Button>
           </DialogActions>
         </Dialog>
-        <ErrorBox
-          error={this.state.error}
-          pathname='/defender HQ/assets/software'
-        />
       </div>
     );
   }

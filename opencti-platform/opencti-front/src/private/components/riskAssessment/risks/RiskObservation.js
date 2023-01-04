@@ -15,12 +15,14 @@ import { toastGenericError } from '../../../../utils/bakedToast';
 import { QueryRenderer } from '../../../../relay/environment';
 
 const styles = (theme) => ({
+  mainContainer: {
+    height: '30%',
+  },
   paper: {
-    height: '100%',
-    minHeight: '100%',
-    margin: '10px 0 0 0',
-    padding: '19px 0',
+    marginTop: '2%',
+    padding: '1.5rem',
     overflowY: 'scroll',
+    maxHeight: '381px',
   },
   avatar: {
     width: 24,
@@ -49,7 +51,7 @@ const styles = (theme) => ({
     },
   },
   bodyItem: {
-    height: 55,
+    height: 45,
     fontSize: 13,
     paddingLeft: 24,
     float: 'left',
@@ -76,8 +78,8 @@ class RiskObservation extends Component {
       history,
     } = this.props;
     return (
-      <div style={{ marginTop: '50px', height: '500px' }}>
-        <Typography variant="h4" gutterBottom={true}>
+      <div className={classes.mainContainer}>
+        <Typography variant="h4" gutterBottom={true} style={{ marginTop: '10px' }}>
           {t('Observations')}
         </Typography>
         <div className="clearfix" />
@@ -100,9 +102,9 @@ class RiskObservation extends Component {
                 );
               }
               return (
-                <div style={{ height: '100%' }}>
+                <div>
                   <List>
-                    {Array.from(Array(6), (e, i) => (
+                    {Array.from(Array(4), (e, i) => (
                       <ListItem
                         key={i}
                         dense={true}
@@ -119,7 +121,7 @@ class RiskObservation extends Component {
                                   animation="wave"
                                   variant="rect"
                                   width={800}
-                                  height="100%"
+                                  height={60}
                                 />
                               </div>
                               <div

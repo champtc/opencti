@@ -39,7 +39,6 @@ import MarkDownField from '../../../../../components/MarkDownField';
 import ResourceNameField from '../../../common/form/ResourceNameField';
 import ResourceTypeField from '../../../common/form/ResourceTypeField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
-import ErrorBox from '../../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
@@ -105,10 +104,8 @@ const Transition = React.forwardRef((props, ref) => (
 Transition.displayName = 'TransitionSlide';
 
 const requiredResourcePopoverDeletionMutation = graphql`
-  mutation RequiredResourcePopoverDeletionMutation($id: ID!) {
-    externalReferenceEdit(id: $id) {
-      delete
-    }
+  mutation RequiredResourcePopoverDeletionMutation($id: ID!, $remediationId: ID) {
+    deleteRequiredAsset(id: $id, remediationId: $remediationId)
   }
 `;
 
@@ -136,7 +133,6 @@ class RequiredResourcePopover extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: {},
       anchorEl: null,
       displayUpdate: false,
       displayDelete: false,
@@ -240,6 +236,7 @@ class RequiredResourcePopover extends Component {
       mutation: requiredResourcePopoverDeletionMutation,
       variables: {
         id: this.props.requiredResourceId,
+        remediationId: this.props.remediationId,
       },
       onCompleted: (data) => {
         this.setState({ deleting: false });
@@ -573,10 +570,6 @@ class RequiredResourcePopover extends Component {
               </Form>
             )}
           </Formik>
-          <ErrorBox
-            error={this.state.error}
-            pathname={this.props.history.location.pathname}
-          />
         </Dialog>
         <Dialog
           open={this.state.displayDelete}

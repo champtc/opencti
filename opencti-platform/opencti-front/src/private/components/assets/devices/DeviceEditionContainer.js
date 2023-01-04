@@ -16,7 +16,8 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import DialogActions from '@material-ui/core/DialogActions';
 import Typography from '@material-ui/core/Typography';
-import { Close, CheckCircleOutline } from '@material-ui/icons';
+import { Close } from '@material-ui/icons';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { createFragmentContainer } from 'react-relay';
 import { adaptFieldValue } from '../../../../utils/String';
 import { commitMutation } from '../../../../relay/environment';
@@ -28,17 +29,16 @@ import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCore
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import DeviceEditionDetails from './DeviceEditionDetails';
 import CyioDomainObjectAssetEditionOverview from '../../common/stix_domain_objects/CyioDomainObjectAssetEditionOverview';
-import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
     margin: 0,
   },
   header: {
-    margin: '-25px -24px 30px -24px',
-    padding: '25px 30px 50px 50px',
-    height: '64px',
-    backgroundColor: '#1F2842',
+    margin: '0 -1.5rem 1rem -1.5rem',
+    padding: '1rem 1.5rem',
+    height: '70px',
+    backgroundColor: theme.palette.background.paper,
   },
   gridContainer: {
     marginBottom: 20,
@@ -48,10 +48,13 @@ const styles = (theme) => ({
     minWidth: '0px',
     marginRight: 15,
     marginTop: -35,
-    padding: '8px 16px 8px 8px',
   },
   title: {
     float: 'left',
+  },
+  leftContainer: {
+    display: 'flex',
+    alignItems: 'center',
   },
   rightContainer: {
     float: 'right',
@@ -95,7 +98,6 @@ class DeviceEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: {},
       open: false,
       onSubmit: false,
       displayCancel: false,
@@ -157,15 +159,11 @@ class DeviceEditionContainer extends Component {
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data, error) => {
-        if (error) {
-          this.setState({ error });
-        } else {
-          setSubmitting(false);
-          resetForm();
-          this.handleClose();
-          this.props.history.push('/defender HQ/assets/devices');
-        }
+      onCompleted: (data) => {
+        setSubmitting(false);
+        resetForm();
+        this.handleClose();
+        this.props.history.push('/defender HQ/assets/devices');
       },
     });
     // commitMutation({
@@ -318,7 +316,7 @@ class DeviceEditionContainer extends Component {
           }) => (
             <>
               <div className={classes.header}>
-                <div>
+                <div className={classes.leftContainer}>
                   <Typography
                     variant="h2"
                     gutterBottom={true}
@@ -339,9 +337,7 @@ class DeviceEditionContainer extends Component {
                   <Tooltip title={t('Cancel')}>
                     <Button
                       variant="outlined"
-                      size="small"
                       startIcon={<Close />}
-                      color='primary'
                       onClick={this.handleOpenCancelButton.bind(this)}
                       className={classes.iconButton}
                     >
@@ -352,7 +348,7 @@ class DeviceEditionContainer extends Component {
                     <Button
                       variant="contained"
                       color="primary"
-                      startIcon={<CheckCircleOutline />}
+                      startIcon={<CheckCircleIcon />}
                       onClick={() => this.setState({ totalInitial: initialValues }, submitForm)}
                       disabled={isSubmitting}
                       classes={{ root: classes.iconButton }}
@@ -448,7 +444,7 @@ class DeviceEditionContainer extends Component {
             </Button>
             <Button
               onClick={() => this.props.history.goBack()}
-              color="primary"
+              color="secondary"
               classes={{ root: classes.buttonPopover }}
               variant="contained"
               size="small"
@@ -457,10 +453,6 @@ class DeviceEditionContainer extends Component {
             </Button>
           </DialogActions>
         </Dialog>
-        <ErrorBox
-          error={this.state.error}
-          pathname='/defender HQ/assets/devices'
-        />
       </div>
     );
   }

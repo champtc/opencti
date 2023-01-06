@@ -66,7 +66,7 @@ class Risks extends Component {
       filters: [],
       openRiskCreation,
     };
-    if (this.props.history.location.pathname !== '/activities/risk assessment/risks'
+    if (this.props.history.location.pathname !== '/activities/risk_assessment/risks'
       && convertFilters(this.state.filters).length) {
       saveViewParameters(
         this.props.history,
@@ -106,13 +106,13 @@ class Risks extends Component {
   }
 
   handleRefresh() {
-    this.props.history.push('/activities/risk assessment/risks');
+    this.props.history.push('/activities/risk_assessment/risks');
   }
 
   handleDisplayEdit(selectedElements) {
     const riskId = Object.entries(selectedElements)[0][1].id;
     this.props.history.push({
-      pathname: `/activities/risk assessment/risks/${riskId}`,
+      pathname: `/activities/risk_assessment/risks/${riskId}`,
       openEdit: true,
     });
   }
@@ -299,7 +299,7 @@ class Risks extends Component {
     const dataColumns = {
       poam_id: {
         label: 'POAM ID',
-        width: '12%',
+        width: '9%',
         isSortable: true,
       },
       name: {
@@ -308,33 +308,33 @@ class Risks extends Component {
         isSortable: true,
       },
       risk_level: {
-        label: 'Risk',
-        width: '7%',
+        label: 'Severity',
+        width: '11%',
         isSortable: true,
       },
       risk_status: {
         label: 'Status',
-        width: '16%',
+        width: '10%',
         isSortable: true,
       },
       response_type: {
         label: 'Response',
-        width: '11%',
+        width: '10%',
         isSortable: true,
       },
       lifecycle: {
         label: 'Lifecycle',
-        width: '13%',
+        width: '18%',
         isSortable: true,
       },
       occurrences: {
         label: 'Occurrences',
-        width: '10%',
+        width: '12%',
         isSortable: true,
       },
       deadline: {
         label: 'Deadline',
-        width: '10%',
+        width: '7%',
         isSortable: true,
       },
     };

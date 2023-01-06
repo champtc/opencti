@@ -137,6 +137,7 @@ class EntitiesPartiesCreation extends Component {
         input: finalValues,
       },
       setSubmitting,
+      pathname: '/data/entities/parties',
       onCompleted: () => {
         setSubmitting(false);
         resetForm();
@@ -358,6 +359,7 @@ class EntitiesPartiesCreation extends Component {
                           name='party_type'
                           taskType='PartyType'
                           fullWidth={true}
+                          required={true}
                           variant='outlined'
                           style={{ height: '38.09px' }}
                           containerstyle={{ width: '100%' }}

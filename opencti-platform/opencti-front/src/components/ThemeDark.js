@@ -5,8 +5,8 @@ export default (logo = null, primary = null, secondary = null) => ({
   palette: {
     type: 'dark',
     text: { secondary: 'rgba(255, 255, 255, 0.5)' },
-    primary: { main: primary || '#00bcd4' },
-    secondary: { main: secondary || '#E28120' },
+    primary: { main: primary || '#075AD3' },
+    secondary: { main: secondary || '#F9B406' },
     header: { background: '#06102D', text: '#ffffff' },
     navAlt: {
       background: '#075AD3',
@@ -25,6 +25,18 @@ export default (logo = null, primary = null, secondary = null) => ({
     },
     action: { disabled: '#4f4f4f', grid: '#0f181f', expansion: '#193e45' },
     divider: 'rgba(255, 255, 255, 0.2)',
+    riskPriority: {
+      veryHigh: '#FC0D1B',
+      high: '#F35426',
+      moderate: '#E28120',
+      low: '#FFA800',
+      veryLow: '#FCC434',
+    },
+    dataView: {
+      selectedBackgroundColor: 'linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),#075AD3 !important',
+      selectedBorder: '#075AD3',
+      border: '#1F2842',
+    },
   },
   typography: {
     useNextVariants: true,
@@ -37,7 +49,7 @@ export default (logo = null, primary = null, secondary = null) => ({
     h1: {
       margin: '0 0 10px 0',
       padding: 0,
-      color: primary || '#00bcd4',
+      color: primary || '#fff',
       fontWeight: 400,
       fontSize: 22,
     },
@@ -75,6 +87,14 @@ export default (logo = null, primary = null, secondary = null) => ({
     },
   },
   overrides: {
+    MuiButton: {
+      containedPrimary: {
+        color: '#fff',
+      },
+      containedSecondary: {
+        color: '#06102D',
+      },
+    },
     MuiCssBaseline: {
       '@global': {
         '*': {

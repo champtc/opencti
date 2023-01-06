@@ -18,7 +18,8 @@ import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import { Close, CheckCircleOutline } from '@material-ui/icons';
+import { Close } from '@material-ui/icons';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import inject18n from '../../../../components/i18n';
 import { adaptFieldValue } from '../../../../utils/String';
 import { dateFormat, parse } from '../../../../utils/Time';
@@ -28,7 +29,6 @@ import CyioDomainObjectAssetEditionOverview from '../../common/stix_domain_objec
 import CyioCoreObjectExternalReferences from '../../analysis/external_references/CyioCoreObjectExternalReferences';
 import CyioCoreObjectLatestHistory from '../../common/stix_core_objects/CyioCoreObjectLatestHistory';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
-import ErrorBox from '../../common/form/ErrorBox';
 import { commitMutation } from '../../../../relay/environment';
 
 const styles = (theme) => ({
@@ -36,10 +36,10 @@ const styles = (theme) => ({
     margin: 0,
   },
   header: {
-    margin: '-25px -24px 20px -24px',
-    padding: '25px 30px 50px 50px',
-    height: '64px',
-    backgroundColor: '#1F2842',
+    margin: '0 -1.5rem 1rem -1.5rem',
+    padding: '1rem 1.5rem',
+    height: '70px',
+    backgroundColor: theme.palette.background.paper,
   },
   gridContainer: {
     marginBottom: 20,
@@ -49,7 +49,6 @@ const styles = (theme) => ({
     minWidth: '0px',
     marginRight: 15,
     marginTop: -35,
-    padding: '8px 16px 8px 8px',
   },
   title: {
     float: 'left',
@@ -115,7 +114,6 @@ class NetworkEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: {},
       currentTab: 0,
       open: false,
       onSubmit: false,
@@ -174,15 +172,12 @@ class NetworkEditionContainer extends Component {
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data, error) => {
-        if (error) {
-          this.setState({ error });
-        } else {
-          setSubmitting(false);
-          resetForm();
-          this.handleClose();
-          this.props.history.push('/defender HQ/assets/network');
-        }
+      pathname: '/defender HQ/assets/network',
+      onCompleted: (data) => {
+        setSubmitting(false);
+        resetForm();
+        this.handleClose();
+        this.props.history.push('/defender HQ/assets/network');
       },
       onError: (err) => console.error(err),
     });
@@ -247,7 +242,7 @@ class NetworkEditionContainer extends Component {
       R.assoc('operational_status', network?.operational_status),
       R.assoc('network_name', network?.network_name),
       R.assoc('network_id', network?.network_id),
-      R.assoc('is_scanned', network?.is_scanned),      
+      R.assoc('is_scanned', network?.is_scanned),
       R.assoc('last_scanned', network?.last_scanned),
       R.assoc('implementation_point', network?.implementation_point),
       R.assoc('starting_address', network?.network_address_range?.starting_ip_address?.ip_address_value || ''),
@@ -306,9 +301,7 @@ class NetworkEditionContainer extends Component {
                   <Tooltip title={t('Cancel')}>
                     <Button
                       variant="outlined"
-                      size="small"
                       startIcon={<Close />}
-                      color='primary'
                       onClick={this.handleOpenCancelButton.bind(this)}
                       className={classes.iconButton}
                     >
@@ -319,7 +312,7 @@ class NetworkEditionContainer extends Component {
                     <Button
                       variant="contained"
                       color="primary"
-                      startIcon={<CheckCircleOutline />}
+                      startIcon={<CheckCircleIcon />}
                       onClick={() => this.setState({ totalInitial: initialValues }, submitForm)}
                       disabled={isSubmitting}
                       classes={{ root: classes.iconButton }}
@@ -412,7 +405,7 @@ class NetworkEditionContainer extends Component {
             </Button>
             <Button
               onClick={() => this.props.history.goBack()}
-              color="primary"
+              color="secondary"
               classes={{ root: classes.buttonPopover }}
               variant="contained"
               size="small"
@@ -421,10 +414,6 @@ class NetworkEditionContainer extends Component {
             </Button>
           </DialogActions>
         </Dialog>
-        <ErrorBox
-          error={this.state.error}
-          pathname='/defender HQ/assets/devices'
-        />
       </div>
     );
   }

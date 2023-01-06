@@ -24,8 +24,14 @@ const styles = (theme) => ({
     width: '100%',
     height: '319px',
     borderRadius: 9,
-    // background: theme.palette.navAlt.background,
-
+    border: `1.5px solid ${theme.palette.dataView.border}`,
+  },
+  selectedItem: {
+    width: '100%',
+    height: '319px',
+    borderRadius: 9,
+    border: `1.5px solid ${theme.palette.dataView.selectedBorder}`,
+    background: theme.palette.dataView.selectedBackgroundColor,
   },
   cardDummy: {
     width: '100%',
@@ -119,11 +125,17 @@ class EntityLocationCardComponent extends Component {
       selectedElements,
     } = this.props;
     return (
-      <Card classes={{ root: classes.card }} raised={true} elevation={3}>
+      <Card
+        classes={{
+          root: (selectAll || node.id in (selectedElements || {}))
+            ? classes.selectedItem : classes.card,
+        }}
+        raised={true}
+        elevation={3}
+      >
         <CardActionArea
           classes={{ root: classes.area }}
           component={Link}
-          style={{ background: (selectAll || node.id in (selectedElements || {})) && '#075AD3' }}
           TouchRippleProps={this.state.openMenu && { classes: { root: classes.buttonRipple } }}
           to={`/data/entities/locations/${node?.id}`}
         >

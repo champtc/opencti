@@ -8,7 +8,8 @@ import { compose, evolve } from 'ramda';
 import { Formik, Form } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import { Close, CheckCircleOutline } from '@material-ui/icons';
+import { Close } from '@material-ui/icons';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { parse } from '../../../../utils/Time';
 import Search from '@material-ui/icons/Search';
 import Dialog from '@material-ui/core/Dialog';
@@ -30,17 +31,16 @@ import CyioDomainObjectAssetCreationOverview from '../../common/stix_domain_obje
 import SoftwareCreationDetails from './SoftwareCreationDetails';
 import CyioCoreObjectAssetCreationExternalReferences from '../../analysis/external_references/CyioCoreObjectAssetCreationExternalReferences';
 import { toastGenericError } from "../../../../utils/bakedToast";
-import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
     margin: 0,
   },
   header: {
-    marginBottom: '20px',
-    padding: '23px 0 24px 12px',
-    height: '64px',
-    backgroundColor: '#1F2842',
+    margin: '0 -1.5rem 1rem -1.5rem',
+    padding: '1rem 1.5rem',
+    height: '70px',
+    backgroundColor: theme.palette.background.paper,
     display: 'flex',
     justifyContent: 'space-between',
   },
@@ -50,7 +50,6 @@ const styles = (theme) => ({
   iconButton: {
     minWidth: '0px',
     marginRight: 15,
-    padding: '8px 16px 8px 8px',
   },
   title: {
     float: 'left',
@@ -156,7 +155,6 @@ class SoftwareCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: {},
       open: false,
       openAutocomplete: false,
       products: [],
@@ -213,10 +211,6 @@ class SoftwareCreation extends Component {
       });
   }
 
-  handleClearError() {
-    this.setState({ error: {} });
-  }
-
   onSubmit(values, { setSubmitting, resetForm }) {
     const adaptedValues = evolve(
       {
@@ -235,16 +229,15 @@ class SoftwareCreation extends Component {
         input: finalValues,
       },
       setSubmitting,
+      pathname: '/defender HQ/assets/software',
       onCompleted: (data) => {
         setSubmitting(false);
         resetForm();
         this.handleClose();
         this.props.history.push('/defender HQ/assets/software');
       },
-      onError: (err) => {
+      onError: () => {
         toastGenericError('Failed to create Software');
-        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors))
-        this.setState({ error: ErrorResponse });
       }
     });
     // commitMutation({
@@ -377,9 +370,7 @@ class SoftwareCreation extends Component {
                   <Tooltip title={t('Cancel')}>
                     <Button
                       variant="outlined"
-                      size="small"
                       startIcon={<Close />}
-                      color='primary'
                       // onClick={handleReset}
                       onClick={this.handleOpenCancelButton.bind(this)}
                       className={classes.iconButton}
@@ -391,7 +382,7 @@ class SoftwareCreation extends Component {
                     <Button
                       variant="contained"
                       color="primary"
-                      startIcon={<CheckCircleOutline />}
+                      startIcon={<CheckCircleIcon />}
                       onClick={submitForm}
                       disabled={isSubmitting}
                       classes={{ root: classes.iconButton }}
@@ -472,7 +463,7 @@ class SoftwareCreation extends Component {
             <Button
               onClick={() => this.props.history.push('/defender HQ/assets/software')}
               // onClick={() => history.goBack()}
-              color="primary"
+              color="secondary"
               classes={{ root: classes.buttonPopover }}
               variant="contained"
               size="small"
@@ -481,11 +472,6 @@ class SoftwareCreation extends Component {
             </Button>
           </DialogActions>
         </Dialog>
-        <ErrorBox
-          error={this.state.error}
-          pathname='/defender HQ/assets/software'
-          handleClearError={this.handleClearError.bind(this)}
-        />
       </div>
     );
   }

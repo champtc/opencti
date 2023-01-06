@@ -10,6 +10,7 @@ import {
   pipe,
 } from 'ramda';
 import graphql from 'babel-plugin-relay/macro';
+import * as Yup from 'yup';
 import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import Dialog from '@material-ui/core/Dialog';
@@ -28,12 +29,9 @@ import { commitMutation } from '../../../../../relay/environment';
 import inject18n from '../../../../../components/i18n';
 import TextField from '../../../../../components/TextField';
 import MarkDownField from '../../../../../components/MarkDownField';
-import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
-import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import ResourceNameField from '../../../common/form/ResourceNameField';
 import ResourceTypeField from '../../../common/form/ResourceTypeField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
-import ErrorBox from '../../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   item: {
@@ -65,7 +63,7 @@ const styles = (theme) => ({
   },
   dialogContent: {
     overflowY: 'scroll',
-    height: '550px',
+    height: '500px',
     overflowX: 'hidden',
     padding: '8px 24px',
   },
@@ -129,19 +127,16 @@ const RequiredResourceCreationMutation = graphql`
   }
 `;
 
-// const RequiredResourceValidation = (t) =>
-//   Yup.object().shape({
-//     // source_name: Yup.string().required(t('This field is required')),
-//     // external_id: Yup.string(),
-//     // url: Yup.string().url(t('The value must be an URL')),
-//     // description: Yup.string(),
-//   });
+const RequiredResourceValidation = (t) =>
+  Yup.object().shape({
+    name: Yup.string().required(t('This field is required')),
+    description: Yup.string().required(t('This field is required')),
+  });
 
 class RequiredResourceCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: {},
       open: false,
       close: false,
       resourceName: '',
@@ -205,10 +200,8 @@ class RequiredResourceCreation extends Component {
           this.props.onCreate(response.externalReferenceAdd, true);
         }
       },
-      onError: (err) => {
+      onError: () => {
         toastGenericError('Failed to create Required Resource');
-        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors));
-        this.setState({ error: ErrorResponse });
       },
     });
     // commitMutation({
@@ -278,7 +271,7 @@ class RequiredResourceCreation extends Component {
                 resource_type: '',
                 resource: '',
               }}
-              // validationSchema={RequiredResourceValidation(t)}
+              validationSchema={RequiredResourceValidation(t)}
               onSubmit={this.onSubmit.bind(this)}
               onReset={this.onResetClassic.bind(this)}
             >
@@ -374,7 +367,7 @@ class RequiredResourceCreation extends Component {
               description: '',
               resource_type: '',
             }}
-            // validationSchema={RequiredResourceValidation(t)}
+            validationSchema={RequiredResourceValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.onResetContextual.bind(this)}
           >
@@ -486,28 +479,6 @@ class RequiredResourceCreation extends Component {
                         containerstyle={{ width: '100%' }}
                       />
                     </Grid>
-                    <Grid style={{ marginTop: '6px' }} xs={12} item={true}>
-                      <CyioCoreObjectExternalReferences
-                        refreshQuery={refreshQuery}
-                        disableAdd={true}
-                        fieldName='links'
-                        typename='CyioExternalReference'
-                        externalReferences={[]}
-                        cyioCoreObjectId={remediationId}
-                      />
-                    </Grid>
-                    <Grid style={{ marginTop: '25px' }} xs={12} item={true}>
-                      <CyioCoreObjectOrCyioCoreRelationshipNotes
-                        refreshQuery={refreshQuery}
-                        disableAdd={true}
-                        fieldName='remarks'
-                        typename='CyioNotes'
-                        notes={[]}
-                        cyioCoreObjectOrCyioCoreRelationshipId={remediationId}
-                        // data={props}
-                        marginTop='0px'
-                      />
-                    </Grid>
                   </Grid>
                 </DialogContent>
                 <DialogActions classes={{ root: classes.dialogClosebutton }}>
@@ -532,10 +503,6 @@ class RequiredResourceCreation extends Component {
               </Form>
             )}
           </Formik>
-          <ErrorBox
-            error={this.state.error}
-            pathname={this.props.history.location.pathname}
-          />
           <Dialog
             open={this.state.close}
             keepMounted={true}

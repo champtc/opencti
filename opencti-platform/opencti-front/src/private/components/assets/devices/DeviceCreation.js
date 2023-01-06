@@ -9,9 +9,9 @@ import { Formik, Form } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import {
-  Close,
-  CheckCircleOutline,
+  Close
 } from '@material-ui/icons';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
@@ -30,7 +30,6 @@ import CyioDomainObjectAssetCreationOverview from '../../common/stix_domain_obje
 import CyioCoreObjectAssetCreationExternalReferences from '../../analysis/external_references/CyioCoreObjectAssetCreationExternalReferences';
 import { toastGenericError } from "../../../../utils/bakedToast";
 import DeviceCreationDetails from './DeviceCreationDetails';
-import ErrorBox from '../../common/form/ErrorBox';
 
 const styles = (theme) => ({
   container: {
@@ -38,9 +37,9 @@ const styles = (theme) => ({
   },
   header: {
     display: 'flex',
-    height: '64px',
-    marginBottom: '20px',
-    padding: '23px 0 24px 12px',
+    height: '70px',
+    margin: '0 -1.5rem 1rem -1.5rem',
+    padding: '1rem 1.5rem',
     justifyContent: 'space-between',
     backgroundColor: theme.palette.background.paper,
   },
@@ -51,7 +50,6 @@ const styles = (theme) => ({
     float: 'left',
     minWidth: '0px',
     marginRight: 15,
-    padding: '8px 16px 8px 8px',
   },
   title: {
     float: 'left',
@@ -66,6 +64,7 @@ const styles = (theme) => ({
   leftContainer: {
     display: 'flex',
     alignItems: 'center',
+    marginTop: '0.5rem',
   },
   editButton: {
     position: 'fixed',
@@ -120,7 +119,6 @@ class DeviceCreation extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: {},
       open: false,
       onSubmit: false,
       displayCancel: false,
@@ -160,10 +158,9 @@ class DeviceCreation extends Component {
         this.handleClose();
         this.props.history.push('/defender HQ/assets/devices');
       },
-      onError: (err) => {
+      pathname: '/defender HQ/assets/devices',
+      onError: () => {
         toastGenericError("Failed to create Device");
-        const ErrorResponse = JSON.parse(JSON.stringify(err.res.errors))
-        this.setState({ error: ErrorResponse });
       }
     });
     // commitMutation({
@@ -279,9 +276,7 @@ class DeviceCreation extends Component {
                   <Tooltip title={t('Cancel')}>
                     <Button
                       variant="outlined"
-                      size="small"
                       startIcon={<Close />}
-                      color='primary'
                       onClick={this.handleOpenCancelButton.bind(this)}
                       className={classes.iconButton}
                     >
@@ -292,7 +287,7 @@ class DeviceCreation extends Component {
                     <Button
                       variant="contained"
                       color="primary"
-                      startIcon={<CheckCircleOutline />}
+                      startIcon={<CheckCircleIcon />}
                       onClick={submitForm}
                       disabled={isSubmitting}
                       classes={{ root: classes.iconButton }}
@@ -378,7 +373,7 @@ class DeviceCreation extends Component {
             <Button
               onClick={() => this.props.history.push('/defender HQ/assets/devices')}
               // onClick={() => this.props.history.goBack()}
-              color="primary"
+              color="secondary"
               classes={{ root: classes.buttonPopover }}
               variant="contained"
               size="small"
@@ -387,10 +382,6 @@ class DeviceCreation extends Component {
             </Button>
           </DialogActions>
         </Dialog>
-        <ErrorBox
-          error={this.state.error}
-          pathname='/defender HQ/assets/devices'
-        />
       </div>
     );
   }

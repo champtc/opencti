@@ -15,20 +15,29 @@ import {
   Typography,
   Grid,
   Checkbox,
+  Button,
 } from '@material-ui/core';
 import CardActionArea from '@material-ui/core/CardActionArea';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import Skeleton from '@material-ui/lab/Skeleton';
 import inject18n from '../../../../components/i18n';
-import { truncate } from '../../../../utils/String';
 import RiskAssessmentPopover from './RiskAssessmentPopover';
+import RiskLevel from '../../common/form/RiskLevel';
 
 const styles = (theme) => ({
   card: {
     width: '100%',
     height: '319px',
     borderRadius: 9,
+    border: `1.5px solid ${theme.palette.dataView.border}`,
+  },
+  selectedItem: {
+    width: '100%',
+    height: '319px',
+    borderRadius: 9,
+    border: `1.5px solid ${theme.palette.dataView.selectedBorder}`,
+    background: theme.palette.dataView.selectedBackgroundColor,
   },
   cardDummy: {
     width: '100%',
@@ -92,6 +101,12 @@ const styles = (theme) => ({
   buttonRipple: {
     opacity: 0,
   },
+  statusButton: {
+    cursor: 'default',
+    background: 'rgba(249, 180, 6, 0.2)',
+    marginBottom: '5px',
+    border: '1px solid #F9B406',
+  },
 });
 
 class RiskCardComponent extends Component {
@@ -120,18 +135,20 @@ class RiskCardComponent extends Component {
       pathOr([]),
       mergeAll,
     )(node);
-    const riskRemediation = pipe(
-      pathOr([], ['remediations']),
-      mergeAll,
-    )(node);
     return (
-      <Card classes={{ root: classes.card }} raised={true} elevation={3}>
+      <Card
+        classes={{
+          root: (selectAll || node.id in (selectedElements || {}))
+            ? classes.selectedItem : classes.card,
+        }}
+        raised={true}
+        elevation={3}
+      >
         <CardActionArea
           classes={{ root: classes.area }}
           component={Link}
-          style={{ background: (selectAll || node.id in (selectedElements || {})) && '#075AD3' }}
-          TouchRippleProps={ this.state.openMenu && { classes: { root: classes.buttonRipple } }}
-          to={`/activities/risk assessment/risks/${node?.id}`}
+          TouchRippleProps={this.state.openMenu && { classes: { root: classes.buttonRipple } }}
+          to={`/activities/risk_assessment/risks/${node?.id}`}
         >
           {/* <CardHeader
             classes={{ root: classes.header }}
@@ -160,15 +177,15 @@ class RiskCardComponent extends Component {
               item={true}
               className={classes.header}
             >
-              <div>
+              <div style={{ marginTop: '1%' }}>
                 <Typography
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
                 >
-                  {t('Name')}
+                  {t('POAM ID')}
                 </Typography>
-                {node.name && t(node.name)}
+                {node.poam_id && t(node.poam_id)}
               </div>
               <Grid
                 item={true}
@@ -196,79 +213,34 @@ class RiskCardComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}>
-                  {t('Priority')}
+                  {t('Severity')}
                 </Typography>
-                <Typography>
-                  {node.priority && t(node.priority)}
-                  {/* {t('Priority')} */}
-                </Typography>
+                <div
+                  // className={classes.bodyItem}
+                  style={{
+                    display: 'flex',
+                    marginRight: '20px',
+                  }}
+                >
+                  <RiskLevel
+                    node={node}
+                  />
+                </div>
               </Grid>
               <Grid item={true} xs={6} className={classes.body}>
                 <Typography
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}>
-                  {t('Risk')}
+                  {t('Status')}
                 </Typography>
-                <Typography>
-                  {node?.risk_level && node?.risk_level}
-                </Typography>
-              </Grid>
-            </Grid>
-            <Grid container={true} >
-              <Grid item={true} xs={6} className={classes.body}>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  style={{ marginTop: '13px' }}
-                  gutterBottom={true}
+                {node.risk_status && <Button
+                  variant="outlined"
+                  size="small"
+                  className={classes.statusButton}
                 >
-                  {t('Component')}
-                </Typography>
-                <Typography>
-                  {node.fqdn && truncate(t(node.fqdn), 25)}
-                </Typography>
-              </Grid>
-              <Grid item={true} xs={6} className={classes.body}>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  style={{ marginTop: '13px' }}
-                  gutterBottom={true}
-                >
-                  {t('Controls')}
-                </Typography>
-                <Typography>
-                  {node.network_id && t(node.network_id)}
-                </Typography>
-              </Grid>
-            </Grid>
-            <Grid container={true}>
-              <Grid item={true} xs={6} className={classes.body}>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  style={{ marginTop: '13px' }}
-                  gutterBottom={true}
-                >
-                  {t('Component')}
-                </Typography>
-                <Typography>
-                  {node.component_type && t(node.component_type)}
-                </Typography>
-              </Grid>
-              <Grid item={true} xs={6} className={classes.body}>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  style={{ marginTop: '13px' }}
-                  gutterBottom={true}
-                >
-                  {t('Controls')}
-                </Typography>
-                <Typography>
-                  {node.network_id && t(node.network_id)}
-                </Typography>
+                  {t(node.risk_status)}
+                </Button>}
               </Grid>
             </Grid>
             <Grid container={true} >
@@ -281,9 +253,18 @@ class RiskCardComponent extends Component {
                 >
                   {t('Response')}
                 </Typography>
-                <Typography>
-                  {riskRemediation.response_type && t(riskRemediation.response_type)}
-                </Typography>
+                {node.response_type && <Button
+                  variant="outlined"
+                  size="small"
+                  style={{
+                    cursor: 'default',
+                    background: 'rgba(211, 19, 74, 0.2)',
+                    marginBottom: '5px',
+                    border: '1px solid #D3134A',
+                  }}
+                >
+                  {node.response_type && t(node.response_type)}
+                </Button>}
               </Grid>
               <Grid xs={6} item={true} className={classes.body}>
                 <Typography
@@ -294,8 +275,40 @@ class RiskCardComponent extends Component {
                 >
                   {t('Lifecycle')}
                 </Typography>
+                {node.lifecycle && <Button
+                  variant="outlined"
+                  size="small"
+                  className={classes.statusButton}
+                >
+                  {node.lifecycle && t(node.lifecycle)}
+                </Button>}
+              </Grid>
+            </Grid>
+            <Grid container={true}>
+              <Grid item={true} xs={6} className={classes.body}>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  style={{ marginTop: '13px' }}
+                  gutterBottom={true}
+                >
+                  {t('Occurences')}
+                </Typography>
                 <Typography>
-                  {riskRemediation.lifecycle && t(riskRemediation.lifecycle)}
+                  {node.occurrences && t(node.occurrences)}
+                </Typography>
+              </Grid>
+              <Grid item={true} xs={6} className={classes.body}>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  style={{ marginTop: '13px' }}
+                  gutterBottom={true}
+                >
+                  {t('Deadline')}
+                </Typography>
+                <Typography>
+                  {node.deadline && t(node.deadline)}
                 </Typography>
               </Grid>
             </Grid>
@@ -329,7 +342,7 @@ const RiskCardFragment = createFragmentContainer(
         response_type
         lifecycle
         occurrences
-        deadline
+         
       }
     `,
   },

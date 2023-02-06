@@ -4,7 +4,7 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { createPaginationContainer } from 'react-relay';
 import graphql from 'babel-plugin-relay/macro';
-import { pathOr } from 'ramda';
+import { pathOr, pipe, filter } from 'ramda';
 import ListLinesContent from '../../../../components/list_lines/ListLinesContent';
 import { RiskLine, RiskLineDummy } from './RiskLine';
 import { setNumberOfElements } from '../../../../utils/Number';
@@ -24,6 +24,13 @@ class RisksLines extends Component {
       'risks',
       this.props.setNumberOfElements.bind(this),
     );
+    const errorDataList = pipe(
+      pathOr([], ['risks', 'edges']),
+      filter((n) => n === null),
+    )(this.props.data);
+    if (prevProps.errorCount === this.props.errorCount) {
+      this.props.handleErrorCount(errorDataList.length);
+    }
   }
 
   handleIncrementedOffsetChange() {
@@ -57,6 +64,10 @@ class RisksLines extends Component {
       onToggleEntity,
       selectedElements,
     } = this.props;
+    const dataList = pipe(
+      pathOr([], ['risks', 'edges']),
+      filter((n) => n !== null),
+    )(this.props.data);
     return (
       <ListLinesContent
         initialLoading={initialLoading}
@@ -65,7 +76,7 @@ class RisksLines extends Component {
         handleDecrementedOffsetChange={this.handleDecrementedOffsetChange.bind(this)}
         hasMore={relay.hasMore.bind(this)}
         isLoading={relay.isLoading.bind(this)}
-        dataList={pathOr([], ['risks', 'edges'], this.props.data)}
+        dataList={dataList}
         globalCount={pathOr(
           nbOfRowsToLoad,
           ['risks', 'pageInfo', 'globalCount'],
@@ -89,6 +100,8 @@ RisksLines.propTypes = {
   classes: PropTypes.object,
   paginationOptions: PropTypes.object,
   dataColumns: PropTypes.object.isRequired,
+  handleErrorCount: PropTypes.func,
+  errorCount: PropTypes.number,
   data: PropTypes.object,
   relay: PropTypes.object,
   threatActors: PropTypes.object,

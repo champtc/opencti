@@ -22,6 +22,7 @@ import {
   ArrowDropUp,
   AppsOutlined,
   AddCircleOutline,
+  Warning,
 } from '@material-ui/icons';
 import Chip from '@material-ui/core/Chip';
 import Button from '@material-ui/core/Button';
@@ -297,6 +298,7 @@ class CyioListLines extends Component {
       iconExtension,
       selectedDataEntity,
       OperationsComponent,
+      errorCount,
       message,
       handleClearSelectedElements,
     } = this.props;
@@ -521,6 +523,21 @@ class CyioListLines extends Component {
                   </MenuItem>
                 </Select>
               </FormControl>
+            )}
+            {errorCount > 0 && (
+              <Tooltip title={t('Some items cannot be retrieved')}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: '45px',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Warning />
+                  {t(errorCount)}
+                </div>
+              </Tooltip>
             )}
             <div className={classes.filters}>
               {map((currentFilter) => {
@@ -752,6 +769,7 @@ CyioListLines.propTypes = {
   handleChangeView: PropTypes.func,
   disableCards: PropTypes.bool,
   enableDuplicates: PropTypes.bool,
+  errorCount: PropTypes.number,
   handleAddFilter: PropTypes.func,
   handleRemoveFilter: PropTypes.func,
   handleToggleExports: PropTypes.func,

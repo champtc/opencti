@@ -104,7 +104,6 @@ class RisksCards extends Component {
 
 RisksCards.propTypes = {
   data: PropTypes.object,
-  extra: PropTypes.object,
   connectorsExport: PropTypes.array,
   relay: PropTypes.object,
   initialLoading: PropTypes.bool,

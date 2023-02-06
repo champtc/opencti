@@ -98,7 +98,7 @@ class ListLinesContent extends Component {
   componentDidMount() {
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (entry.isIntersecting && this.state.newDataList.length > 50
+      if (entry.isIntersecting && this.state.newDataList.length > this.props.dataList.length
         && this.props.offset >= 0) {
         if (this.props.offset !== 0) {
           window.scrollTo(0, 2500);
@@ -140,9 +140,9 @@ class ListLinesContent extends Component {
       });
       handleIncrementedOffsetChange();
       loadMore(nbOfRowsToLoad, this._resetLoadingRowCount);
-      if (newDataList.length > 50 && difference > 0) {
+      if (newDataList.length > this.props.dataList.length && difference > 0) {
         setTimeout(() => {
-          this.setState({ newDataList: newDataList.slice(50) });
+          this.setState({ newDataList: newDataList.slice(this.props.dataList.length) });
           window.scrollTo(0, 1500);
         }, 500);
       }

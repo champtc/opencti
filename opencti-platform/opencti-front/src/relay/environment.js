@@ -115,6 +115,8 @@ export class QueryRenderer extends Component {
             // binary good or fail
             if (query.operation.name === 'RootPrivateQuery') {
               render(error);
+            } else if (error && error.res && error.res.data) {
+              return render(data);
             } else {
               toastGenericError('Query Error');
               throw new ApplicationError(error);

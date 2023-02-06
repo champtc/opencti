@@ -37,6 +37,7 @@ class Risks extends Component {
       view: R.propOr('lines', 'view', params),
       filters: R.propOr({}, 'filters', params),
       openExports: false,
+      errorCount: 0,
       numberOfElements: { number: 0, symbol: '' },
       selectedElements: null,
       selectAll: false,
@@ -75,6 +76,10 @@ class Risks extends Component {
         paginationOptions,
       );
     }
+  }
+
+  handleErrorCount(count) {
+    this.setState({ errorCount: this.state.errorCount + count });
   }
 
   handleChangeView(mode) {
@@ -241,25 +246,19 @@ class Risks extends Component {
         <QueryRenderer
           query={risksCardsQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
-          render={({ error, props }) => {
-            if (error) {
-              toastGenericError('Request Failed');
-            }
-            return (
-              <RisksCards
-                data={props}
-                extra={props}
-                selectAll={selectAll}
-                history={this.props.history}
-                paginationOptions={paginationOptions}
-                initialLoading={props === null}
-                selectedElements={selectedElements}
-                onLabelClick={this.handleAddFilter.bind(this)}
-                setNumberOfElements={this.setNumberOfElements.bind(this)}
-                onToggleEntity={this.handleToggleSelectEntity.bind(this)}
-              />
-            );
-          }}
+          render={({ error, props }) => (
+            <RisksCards
+              data={(error && error.res.data) ? error.res.data : props}
+              selectAll={selectAll}
+              history={this.props.history}
+              paginationOptions={paginationOptions}
+              initialLoading={props === null}
+              selectedElements={selectedElements}
+              onLabelClick={this.handleAddFilter.bind(this)}
+              setNumberOfElements={this.setNumberOfElements.bind(this)}
+              onToggleEntity={this.handleToggleSelectEntity.bind(this)}
+            />
+          )}
         />
         {/* <QueryRenderer
           query={risksCardsQuery}
@@ -343,6 +342,7 @@ class Risks extends Component {
         sortBy={sortBy}
         orderAsc={orderAsc}
         dataColumns={dataColumns}
+        errorCount={this.state.errorCount}
         handleSort={this.handleSort.bind(this)}
         handleSearch={this.handleSearch.bind(this)}
         handleChangeView={this.handleChangeView.bind(this)}
@@ -378,25 +378,22 @@ class Risks extends Component {
         <QueryRenderer
           query={risksLinesQuery}
           variables={{ first: 50, offset: 0, ...paginationOptions }}
-          render={({ error, props }) => {
-            if (error) {
-              toastGenericError('Request Failed');
-            }
-            return (
-              <RisksLines
-                data={props}
-                selectAll={selectAll}
-                dataColumns={dataColumns}
-                history={this.props.history}
-                initialLoading={props === null}
-                selectedElements={selectedElements}
-                paginationOptions={paginationOptions}
-                onLabelClick={this.handleAddFilter.bind(this)}
-                onToggleEntity={this.handleToggleSelectEntity.bind(this)}
-                setNumberOfElements={this.setNumberOfElements.bind(this)}
-              />
-            );
-          }}
+          render={({ error, props }) => (
+            <RisksLines
+              data={(error && error.res.data) ? error.res.data : props}
+              selectAll={selectAll}
+              dataColumns={dataColumns}
+              errorCount={this.state.errorCount}
+              history={this.props.history}
+              initialLoading={props === null}
+              selectedElements={selectedElements}
+              paginationOptions={paginationOptions}
+              onLabelClick={this.handleAddFilter.bind(this)}
+              handleErrorCount={this.handleErrorCount.bind(this)}
+              onToggleEntity={this.handleToggleSelectEntity.bind(this)}
+              setNumberOfElements={this.setNumberOfElements.bind(this)}
+            />
+          )}
         />
         {/* <QueryRenderer
           query={risksLinesQuery}

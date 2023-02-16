@@ -2,7 +2,7 @@ import qs from 'qs';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { logApp } from './conf';
-import {AuthenticationFailure} from "./errors";
+import { AuthenticationFailure } from './errors';
 
 let oidcRefreshAxios = null;
 let oidcIssuer = null;
@@ -10,7 +10,7 @@ let oidcIssuer = null;
 export const oidcRefresh = async (refreshToken) => {
   if (oidcRefreshAxios === null) throw new Error('Unable to refresh token, OIDC not configured.');
   try {
-    logApp.debug(`[OIDC] Token refresh: ${refreshToken?.substring(0, 20) ?? 'missing refresh token'}`);
+    logApp.info(`[OIDC] Token refresh: ${refreshToken?.substring(0, 20) ?? 'missing refresh token'}`);
     const { data } = await oidcRefreshAxios.post(
       '/protocol/openid-connect/token',
       qs.stringify({
@@ -33,7 +33,7 @@ export const oidcRefresh = async (refreshToken) => {
       `[OIDC] Failed to refresh token`,
       e.response && {
         status: e.response.status,
-        data: e.response.data
+        data: e.response.data,
       }
     );
     throw AuthenticationFailure(e.response.data.error_description, e.response.data);

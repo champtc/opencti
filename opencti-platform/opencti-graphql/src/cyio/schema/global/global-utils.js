@@ -72,7 +72,19 @@ import {
 import {
   connectionInformationPredicateMap, attachToConnectionInformationQuery, detachFromConnectionInformationQuery
 } from '../data-sources/schema/sparql/connectionInformation.js';
+import {
+  informationTypeCatalogPredicateMap, attachToInformationTypeCatalogQuery, detachFromInformationTypeCatalogQuery
+} from '../information-system/schema/sparql/informationTypeCatalog.js';
+import {
+  informationTypeEntryPredicateMap, attachToInformationTypeEntryQuery, detachFromInformationTypeEntryQuery
+} from '../information-system/schema/sparql/informationTypeEntry.js';
 
+
+// find id of parent
+export const findParentId = (iri) => {
+  let index = iri.lastIndexOf('--');
+  return iri.substring(index + 1);
+}
 
 // find IRI of parent
 export const findParentIriQuery = (iri, field, predicateMap) => {
@@ -128,7 +140,7 @@ export const selectObjectIriByIdQuery = (id, type) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
       ?iri a <${objectMap[type].classIri}> .
-      ?iri <http://darklight.ai/ns/common#id> "${id}" .
+      ?iri <http://darklight.ai/ns/common#id>|<http://docs.oasis-open.org/ns/cti#id> "${id}" .
   }
   `
 }
@@ -196,6 +208,15 @@ export const objectMap = {
     graphQLType: "CivicAddress",
     classIri: "http://csrc.nist.gov/ns/oscal/common#Address",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#Address"
+  },
+  "appliance": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "ApplianceDeviceAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Appliance",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Appliance",
   },
   "application-software": {
     predicateMap: softwarePredicateMap,
@@ -279,6 +300,15 @@ export const objectMap = {
     classIri: "<http://darklight.ai/ns/cyio/datasource#DataSource",
     iriTemplate: "http://cyio.darklight.ai/data-source"
   },
+  "embedded": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "HardwareAsset",
+    parent: "computing-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Embedded",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Embedded",
+  },
   "evidence": {
     predicateMap: evidencePredicateMap,
     attachQuery: attachToEvidenceQuery,
@@ -312,6 +342,15 @@ export const objectMap = {
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Facet",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Facet"
   },
+  "firewall": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "FirewallAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Firewall",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Firewall",
+  },
   "hardware": {
     predicateMap: hardwarePredicateMap,
     attachQuery: attachToHardwareQuery,
@@ -319,6 +358,15 @@ export const objectMap = {
     graphQLType: "HardwareAsset",
     classIri: "http://scap.nist.gov/ns/asset-identification#Hardware",
     iriTemplate: "http://scap.nist.gov/ns/asset-identification#Hardware"
+  },
+  "hypervisor": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "HardwareAsset",
+    parent: "computing-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Hypervisor",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Hypervisor",
   },
   "inventory-item": {
     predicateMap: inventoryItemPredicateMap,
@@ -328,6 +376,22 @@ export const objectMap = {
     classIri: "http://csrc.nist.gov/ns/oscal/common#InventoryItem",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#InventoryItem"
   },
+  "information-type-catalog": {
+    predicateMap: informationTypeCatalogPredicateMap,
+    attachQuery: attachToInformationTypeCatalogQuery,
+    detachQuery: detachFromInformationTypeCatalogQuery,
+    graphQLType: "InformationTypeCatalog",
+    classIri: "http://nist.gov/ns/sp800-60#InformationTypeCatalog",
+    iriTemplate: "http://cyio.darklight.ai/information-type-catalog"
+  },
+  "information-type-entry": {
+    predicateMap: informationTypeEntryPredicateMap,
+    attachQuery: attachToInformationTypeEntryQuery,
+    detachQuery: detachFromInformationTypeEntryQuery,
+    graphQLType: "InformationTypeEntry",
+    classIri: "http://nist.gov/ns/sp800-60#InformationTypeEntry",
+    iriTemplate: "http://cyio.darklight.ai/information-type-entry"
+  },
   "label": {
     predicateMap: labelPredicateMap,
     attachQuery: attachToLabelQuery,
@@ -335,6 +399,24 @@ export const objectMap = {
     graphQLType: "CyioLabel",
     classIri: "http://darklight.ai/ns/common#Label",
     iriTemplate: "http://darklight.ai/ns/common#Label"
+  },
+  "laptop": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "LaptopAsset",
+    parent: "computing-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Laptop",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Laptop",
+  },
+  "load-balancer": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "NetworkDeviceAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#LoadBalancer",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#LoadBalancer",
   },
   "log-entry-author": {
     predicateMap: logEntryAuthorPredicateMap,
@@ -349,7 +431,7 @@ export const objectMap = {
     attachQuery: attachToDataMarkingQuery,
     detachQuery: detachFromDataMarkingQuery,
     graphQLType: "DataMarkingObject",
-    classIri: "<http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition",
+    classIri: "http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition",
     iriTemplate: "http://cyio.darklight.ai/marking-definition"
   },
   "mitigating-factor": {
@@ -360,6 +442,15 @@ export const objectMap = {
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#MitigatingFactor",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#MitigatingFactor"
   },
+  "mobile-device": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "MobileDeviceAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#MobileDevice",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#MobileDevice",
+  },
   "network": {
     predicateMap: networkPredicateMap,
     attachQuery: attachToNetworkQuery,
@@ -367,6 +458,24 @@ export const objectMap = {
     graphQLType: "NetworkAsset",
     classIri: "http://scap.nist.gov/ns/asset-identification#Network",
     iriTemplate: "http://scap.nist.gov/ns/asset-identification#Network"
+  },
+  "network-device": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "NetworkDeviceAsset",
+    parent: "hardware",
+    classIri:"http://scap.nist.gov/ns/asset-identification#NetworkDevice",
+    iriTemplate:"http://scap.nist.gov/ns/asset-identification#NetworkDevice",
+  },
+  "network-switch": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "SwitchAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#NetworkSwitch",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#NetworkSwitch",
   },
   "note": {
     predicateMap: notePredicateMap,
@@ -456,6 +565,15 @@ export const objectMap = {
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Task",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Task"
   },
+  "pbx": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "HardwareAsset",
+    parent: "hardware",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#PBX",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#PBX",
+  },
   "poam": {
     predicateMap: poamPredicateMap,
     attachQuery: attachToPOAMQuery,
@@ -479,6 +597,24 @@ export const objectMap = {
     graphQLType: "POAMLocalDefinition",
     classIri: "http://csrc.nist.gov/ns/oscal/poam#LocalDefinition",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/poam#LocalDefinition"
+  },
+  "printer": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "HardwareAsset",
+    parent: "hardware",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Printer",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Printer",
+  },
+  "physical-device": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "PhysicalDeviceAsset",
+    parent: "hardware",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#PhysicalDevice",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#PhysicalDevice",
   },
   "required-asset": {
     predicateMap: requiredAssetPredicateMap,
@@ -513,6 +649,24 @@ export const objectMap = {
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#RiskResponse",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#RiskResponse"
   },
+  "router": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "RouterAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Router",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Router",
+  },
+  "server": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "ServerAsset",
+    parent: "computing-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Server",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Server",
+  },
   "software": {
     predicateMap: softwarePredicateMap,
     attachQuery: attachToSoftwareQuery,
@@ -521,6 +675,15 @@ export const objectMap = {
     alternateKey: "tool",
     classIri: "http://scap.nist.gov/ns/asset-identification#Software",
     iriTemplate: "http://scap.nist.gov/ns/asset-identification#Software"
+  },
+  "storage-array": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "StorageArrayAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#StorageArray",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#StorageArray",
   },
   "subject": {
     predicateMap: subjectPredicateMap,
@@ -538,6 +701,42 @@ export const objectMap = {
     classIri: "http://csrc.nist.gov/ns/oscal/common#TelephoneNumber",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#TelephoneNumber"
   },
+  "voip-device": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "NetworkDeviceAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#VoIPDevice",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#VoIPDevice",
+  },
+  "voip-handset": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "VoIPHandsetAsset",
+    parent: "voip-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#VoIPHandset",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#VoIPHandset",
+  },
+  "voip-router": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "VoIPRouterAsset",
+    parent: "voip-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#VoIPRouter",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#VoIPRouter",
+  },
+  "wireless-access-point": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "NetworkDeviceAsset",
+    parent: "network-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#WirelessAccessPoint",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#WirelessAccessPoint",
+  },
   "workspace": {
     predicateMap: workspacePredicateMap,
     attachQuery: attachToWorkspaceQuery,
@@ -545,5 +744,14 @@ export const objectMap = {
     graphQLType: "Workspace",
     classIri: "http://darklight.ai/ns/cyio/workspace#Workspace",
     iriTemplate: "http://cyio.darklight.ai/workspace"
+  },
+  "workstation": {
+    predicateMap: hardwarePredicateMap,
+    attachQuery: attachToHardwareQuery,
+    detachQuery: detachFromHardwareQuery,
+    graphQLType: "WorkstationAsset",
+    parent: "computing-device",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#Workstation",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Workstation",
   },
 };

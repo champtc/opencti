@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "type": "node-terminal",
+            "name": "Cyio",
+            "request": "launch",
+            "command": "yarn start",
+            "cwd": "${workspaceFolder}/opencti-platform/opencti-front",
+            "envFile": "${workspaceFolder}/opencti-platform/opencti-front/.env"
+        },
+        {
+            "type": "node-terminal",
+            "name": "GraphQL",
+            "request": "launch",
+            "command": "yarn start",
+            "cwd": "${workspaceFolder}/opencti-platform/opencti-graphql",
+            "envFile": "${workspaceFolder}/opencti-platform/opencti-graphql/.env"
+        }
+    ]
+}

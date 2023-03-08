@@ -54,6 +54,7 @@ import ItemMarkings from '../../components/ItemMarkings';
 import ImportFreshdeskScript from '../../utils/freshdesk';
 import TopBar from './nav/TopBar';
 import { toastGenericError } from '../../utils/bakedToast';
+import DashboardSettings from './DashboardSettings';
 
 const styles = (theme) => ({
   root: {
@@ -364,7 +365,7 @@ class Dashboard extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      dashboard: or(localStorage.getItem('view-dashboard'), 'default'),
+      dashboard: or(localStorage.getItem('view-dashboard'), '15794f5d-b071-4ddc-9567-d786149fa74f'),
     };
   }
 
@@ -1012,6 +1013,13 @@ class Dashboard extends Component {
               toastGenericError('Request Failed');
             }
             if (props) {
+              if(!props.workspace) {
+                return <DashboardSettings
+                          dashboard={this.state.dashboard}
+                          handleChangeDashboard={this.handleChangeDashboard.bind(this)}
+                          isDashboard={false}
+                        />
+              }
               return (
                 <CyioDashboard
                   workspace={props.workspace}

@@ -2,6 +2,8 @@ import * as R from 'ramda';
 import { map } from 'ramda';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
+import jwt from 'jsonwebtoken';
+import axios from 'axios';
 import { delEditContext, delUserContext, notify, setEditContext } from '../database/redis';
 import { AuthenticationFailure, FunctionalError } from '../config/errors';
 import { BUS_TOPICS, logApp, logAudit, OPENCTI_SESSION } from '../config/conf';
@@ -48,8 +50,8 @@ import {
 import { buildPagination, isEmptyField, isNotEmptyField } from '../database/utils';
 import { BYPASS, SYSTEM_USER } from '../utils/access';
 import { ENTITY_TYPE_MARKING_DEFINITION } from '../schema/stixMetaObject';
-import { oidcRefresh, tokenExpired } from '../config/tokenManagement';
-import {keycloakAdminClient} from "../service/keycloak";
+import { oidcRefresh } from '../config/tokenManagement';
+import { keycloakAdminClient } from '../service/keycloak';
 
 const BEARER = 'Bearer ';
 const BASIC = 'Basic ';
@@ -89,18 +91,22 @@ const extractTokenFromBasicAuth = async (authorization) => {
   return null;
 };
 
-// TODO: Need to rework to use Keycloak before returning undefined
 export const findById = async (user, userId) => {
   const data = await loadById(user, userId, ENTITY_TYPE_USER);
   const userObj = data ? R.dissoc('password', data) : data;
-  if(userObj === undefined) return undefined;
-  const q = {email: userObj.user_email};
+  if (userObj === undefined) return undefined;
+  const q = { email: userObj.user_email };
   const kcUserRes = await keycloakAdminClient.users.find(q);
-  if(kcUserRes.length === 0) return userObj;
-  const kcUser = kcUserRes[0];
+  if (kcUserRes.length === 0) return userObj;
+  const kcUser = kcUserRes.at(0);
+  if (kcUser.attributes?.api_token && kcUser.attributes?.api_token.length > 0) {
+    userObj.api_token = kcUser.attributes.api_token.at(0);
+  }
+  userObj.id = kcUser.id;
+  userObj.internal_id = kcUser.id;
   userObj.user_email = kcUser.email;
-  userObj.firstName = kcUser.firstName;
-  userObj.lastName = kcUser.lastName;
+  userObj.firstname = kcUser.firstName;
+  userObj.lastname = kcUser.lastName;
   return userObj;
 };
 
@@ -162,6 +168,22 @@ export const getCapabilities = async (userId) => {
   if (userId === OPENCTI_ADMIN_UUID && !R.find(R.propEq('name', BYPASS))(capabilities)) {
     const id = generateStandardId(ENTITY_TYPE_CAPABILITY, { name: BYPASS });
     capabilities.push({ id, standard_id: id, internal_id: id, name: BYPASS });
+  }
+  if (!R.find(R.propEq('name', 'SETTINGS'))(capabilities)) {
+    const id = generateStandardId(ENTITY_TYPE_CAPABILITY, { name: 'SETTINGS' });
+    capabilities.push({ id, standard_id: id, internal_id: id, name: 'SETTINGS' });
+  }
+  if (!R.find(R.propEq('name', 'MODULES'))(capabilities)) {
+    const id = generateStandardId(ENTITY_TYPE_CAPABILITY, { name: 'MODULES' });
+    capabilities.push({ id, standard_id: id, internal_id: id, name: 'MODULES' });
+  }
+  if (!R.find(R.propEq('name', 'KNOWLEDGE'))(capabilities)) {
+    const id = generateStandardId(ENTITY_TYPE_CAPABILITY, { name: 'KNOWLEDGE' });
+    capabilities.push({ id, standard_id: id, internal_id: id, name: 'KNOWLEDGE' });
+  }
+  if (!R.find(R.propEq('name', 'TAXIIAPI_SETCOLLECTIONS'))(capabilities)) {
+    const id = generateStandardId(ENTITY_TYPE_CAPABILITY, { name: 'TAXIIAPI_SETCOLLECTIONS' });
+    capabilities.push({ id, standard_id: id, internal_id: id, name: 'TAXIIAPI_SETCOLLECTIONS' });
   }
   return capabilities;
 };
@@ -515,7 +537,7 @@ export const loginFromProvider = async (
     const groupsCreation = R.map((group) => assignGroupToUser(SYSTEM_USER, user.id, group), providerGroups);
     await Promise.all(groupsCreation);
   }
-  return { ...user, access_token: accessToken };
+  return { ...user, access_token: accessToken, refresh_token: refreshToken };
 };
 
 export const login = async (email, password) => {
@@ -527,11 +549,45 @@ export const login = async (email, password) => {
   return user;
 };
 
+const endKCSession = (user) => {
+  if (!user.access_token && !user.refresh_token) {
+    logApp.warn('Current user is missing both access and refresh tokens');
+    return;
+  }
+
+  const decoded = jwt.decode(user.access_token, { complete: true });
+  if (!decoded.payload?.iss) {
+    logApp.warn('Unable to determine the token issuer');
+    return;
+  }
+
+  const baseURL = decoded.payload.iss;
+  const logoutEndpoint = new URL(`${baseURL}/protocol/openid-connect/logout`);
+  logoutEndpoint.search = new URLSearchParams({
+    token: user.access_token,
+    refresh_token: user.refresh_token,
+  }).toString();
+
+  axios
+    .post(logoutEndpoint.href)
+    .then((r) => {
+      if (r.status && r.statusText) {
+        logApp.info(`Keycloak session closed for ${user.user_email}: ${r.statusText} (${r.status})`);
+      } else {
+        logApp.warn('No status message returned from Keycloak for closing current users active session');
+      }
+    })
+    .catch((e) => {
+      logApp.error('Failed to call Keycloak logout endpoint for session closure', e);
+    });
+};
+
 export const logout = async (user, req, res) => {
   await delUserContext(user);
   await patchAttribute(SYSTEM_USER, user.id, ENTITY_TYPE_USER, { access_token: null, refresh_token: null });
   res.clearCookie(OPENCTI_SESSION);
   req.session.destroy();
+  endKCSession(user);
   logAudit.info(user, LOGOUT_ACTION);
   return user.id;
 };
@@ -585,12 +641,12 @@ const resolveUserByToken = async (tokenValue) => {
 
 export const userRenewToken = async (user, userId) => {
   let patch;
-  if(user.access_token && user.refresh_token) {
-    patch = await oidcRefresh(user.refresh_token)
+  if (user.access_token && user.refresh_token) {
+    patch = await oidcRefresh(user.refresh_token);
     patch = {
       access_token: patch.accessToken,
       refresh_token: patch.refreshToken,
-    }
+    };
   } else {
     patch = { api_token: uuid() };
   }
@@ -598,24 +654,9 @@ export const userRenewToken = async (user, userId) => {
   return loadById(user, userId, ENTITY_TYPE_USER);
 };
 
-const authenticateUserOIDC = async (user) => {
-  const token = user.access_token;
-  if (tokenExpired(token)) {
-    const tokenSet = await oidcRefresh(user.refresh_token);
-    if (tokenSet === null) return user;
-    const patch = {
-      access_token: tokenSet.accessToken,
-      refresh_token: tokenSet.refreshToken,
-    };
-    const { element: updatedUser } = await patchAttribute(SYSTEM_USER, user.id, ENTITY_TYPE_USER, patch);
-    return buildCompleteUser(updatedUser);
-  }
-  return user;
-};
-
 export const authenticateUser = async (req, user, provider) => {
   // Build the user session with only required fields
-  let sessionUser = await buildCompleteUser(user);
+  const sessionUser = await buildCompleteUser(user);
   logAudit.info(userWithOrigin(req, user), LOGIN_ACTION, { provider });
   req.session.user = sessionUser;
   return sessionUser;
@@ -624,7 +665,7 @@ export const authenticateUser = async (req, user, provider) => {
 export const authenticateUserFromRequest = async (req) => {
   const auth = req?.session?.user;
   if (auth) {
-      return authenticateUser(req, auth, 'Bearer');
+    return authenticateUser(req, auth, 'Bearer');
   }
   // If user not identified, try to extract token from bearer
   let loginProvider = 'Bearer';
@@ -652,7 +693,7 @@ export const authenticateUserFromRequest = async (req) => {
 export const initAdmin = async (email, password, tokenValue) => {
   const existingAdmin = await findById(SYSTEM_USER, OPENCTI_ADMIN_UUID);
   if (existingAdmin) {
-    logApp.info('[INIT] Admin user exists, patching...')
+    logApp.info('[INIT] Admin user exists, patching...');
     // If admin user exists, just patch the fields
     const patch = {
       user_email: email,
@@ -661,7 +702,7 @@ export const initAdmin = async (email, password, tokenValue) => {
       external: true,
     };
     await patchAttribute(SYSTEM_USER, existingAdmin.id, ENTITY_TYPE_USER, patch);
-    logApp.info('[INIT] Admin user patched')
+    logApp.info('[INIT] Admin user patched');
   } else {
     const userToCreate = {
       internal_id: OPENCTI_ADMIN_UUID,
@@ -677,7 +718,7 @@ export const initAdmin = async (email, password, tokenValue) => {
       password,
     };
     await addUser(SYSTEM_USER, userToCreate);
-    logApp.info('[INIT] Admin user created')
+    logApp.info('[INIT] Admin user created');
   }
 };
 

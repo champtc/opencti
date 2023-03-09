@@ -17,6 +17,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import Slide from '@material-ui/core/Slide';
+import ClearIcon from '@material-ui/icons/Clear';
 import { MoreVertOutlined } from '@material-ui/icons';
 import Grid from '@material-ui/core/Grid';
 import { adaptFieldValue } from '../../../../utils/String';
@@ -24,8 +25,9 @@ import TextField from '../../../../components/TextField';
 import DatePickerField from '../../../../components/DatePickerField';
 import inject18n from '../../../../components/i18n';
 import RiskStatus from '../../common/form/RiskStatus';
-import { toastGenericError } from "../../../../utils/bakedToast";
+import { toastGenericError } from '../../../../utils/bakedToast';
 import { commitMutation } from '../../../../relay/environment';
+import { parse } from '../../../../utils/Time';
 
 const styles = (theme) => ({
   container: {
@@ -50,14 +52,15 @@ const styles = (theme) => ({
   },
   dialogActions: {
     justifyContent: 'flex-start',
-    margin: '20px 0 10px 0',
-    padding: '10px 0 20px 22px',
+    margin: '0 0 20px 0',
+    padding: '0 0 0 22px',
   },
   dialogRiskLevelAction: {
     textAlign: 'right',
   },
   buttonPopover: {
     textTransform: 'capitalize',
+    marginTop: '10px',
   },
   dialogRoot: {
     padding: '24px',
@@ -70,6 +73,16 @@ const styles = (theme) => ({
     width: '170px',
     margin: '0 20px',
     justifyContent: 'center',
+  },
+  clearContainer: {
+    display: 'flex',
+    placeItems: 'center',
+  },
+  clearIcon: {
+    padding: '5px',
+  },
+  iconText: {
+    margin: '0 0 0 5px',
   },
 });
 
@@ -117,10 +130,19 @@ class RiskAssessmentPopover extends Component {
     const finalValues = R.pipe(
       R.assoc('poam_id', values.poam_id),
       R.toPairs,
-      R.map((n) => ({
-        'key': n[0],
-        'value': adaptFieldValue(n[1]),
-      })),
+      R.map((n) => {
+        if (values.poam_id === '' || values.poam_id === null) {
+          return {
+            key: n[0],
+            value: this.props.node.poam_id,
+            operation: 'remove',
+          };
+        }
+        return {
+          key: n[0],
+          value: adaptFieldValue(n[1]),
+        };
+      }),
     )(values);
     commitMutation({
       mutation: riskAssessmentPopoverEditMutation,
@@ -137,8 +159,8 @@ class RiskAssessmentPopover extends Component {
       },
       onError: (err) => {
         console.error(err);
-        toastGenericError("Failed to fetch Risk");
-      }
+        toastGenericError('Failed to fetch Risk');
+      },
     });
   }
 
@@ -147,8 +169,8 @@ class RiskAssessmentPopover extends Component {
       R.assoc('risk_status', values.risk_status),
       R.toPairs,
       R.map((n) => ({
-        'key': n[0],
-        'value': adaptFieldValue(n[1]),
+        key: n[0],
+        value: adaptFieldValue(n[1]),
       })),
     )(values);
     commitMutation({
@@ -166,18 +188,28 @@ class RiskAssessmentPopover extends Component {
       },
       onError: (err) => {
         console.error(err);
-        toastGenericError("Failed to fetch Risk");
-      }
+        toastGenericError('Failed to fetch Risk');
+      },
     });
   }
 
   onRiskDeadlineSubmit(values, { setSubmitting, resetForm }) {
     const finalValues = R.pipe(
       R.toPairs,
-      R.map((n) => ({
-        'key': n[0],
-        'value': [adaptFieldValue(n[1])],
-      })),
+      R.map((n) => {
+        if (!values.deadline) {
+          const date = this.props.node.deadline;
+          return {
+            key: n[0],
+            value: [adaptFieldValue(parse(date))],
+            operation: 'remove',
+          };
+        }
+        return {
+          key: n[0],
+          value: [adaptFieldValue(n[1])],
+        };
+      }),
     )(values);
     commitMutation({
       mutation: riskAssessmentPopoverEditMutation,
@@ -194,8 +226,8 @@ class RiskAssessmentPopover extends Component {
       },
       onError: (err) => {
         console.error(err);
-        toastGenericError("Failed to fetch Risk");
-      }
+        toastGenericError('Failed to fetch Risk');
+      },
     });
   }
 
@@ -265,7 +297,7 @@ class RiskAssessmentPopover extends Component {
     } = this.props;
     return (
       <div className={classes.container}>
-        <IconButton onClick={this.handleOpen.bind(this)} aria-haspopup='true'>
+        <IconButton onClick={this.handleOpen.bind(this)} aria-haspopup="true">
           <MoreVertOutlined />
         </IconButton>
         <Menu
@@ -277,7 +309,8 @@ class RiskAssessmentPopover extends Component {
           <MenuItem
             className={classes.menuItem}
             divider={true}
-            onClick={() => history.push(`/activities/risk_assessment/risks/${nodeId}`)}
+            onClick={() => history.push(`/activities/risk_assessment/risks/${nodeId}`)
+            }
           >
             {t('Details')}
           </MenuItem>
@@ -303,7 +336,7 @@ class RiskAssessmentPopover extends Component {
           </MenuItem>
         </Menu>
         <Dialog
-          maxWidth='sm'
+          maxWidth="sm"
           fullWidth={true}
           keepMounted={true}
           open={this.state.displayPoamId}
@@ -319,43 +352,67 @@ class RiskAssessmentPopover extends Component {
             onSubmit={this.onPoamSubmit.bind(this)}
             onReset={this.onResetPoam.bind(this)}
           >
-            {({ submitForm, handleReset, isSubmitting }) => (
+            {({
+              submitForm,
+              handleReset,
+              isSubmitting,
+              setFieldValue,
+              values,
+            }) => (
               <Form>
                 <DialogTitle>{t('Assign POAM ID')}</DialogTitle>
                 <DialogContent>
                   <Typography
-                    variant='h3'
-                    color='textSecondary'
+                    variant="h3"
+                    color="textSecondary"
                     gutterBottom={true}
                     style={{ float: 'left' }}
                   >
                     {t('POAM ID')}
                   </Typography>
-                  <div className='clearfix' />
+                  <div className="clearfix" />
                   <Field
                     component={TextField}
-                    name='poam_id'
+                    name="poam_id"
                     fullWidth={true}
-                    size='small'
+                    size="small"
                     containerstyle={{ width: '100%' }}
-                    variant='outlined'
+                    variant="outlined"
                   />
                 </DialogContent>
+                {values.poam_id && (
+                  <DialogContent className={classes.clearContainer} style={{ marginTop: '-13px' }}>
+                    <IconButton
+                      onClick={() => setFieldValue('poam_id', '')}
+                      className={classes.clearIcon}
+                      style={{ marginLeft: '-7px' }}
+                    >
+                      <ClearIcon />
+                    </IconButton>
+                    <Typography
+                      variant="h3"
+                      color="textSecondary"
+                      className={classes.iconText}
+                    >
+                      {t('Remove POAM ID')}
+                    </Typography>
+                  </DialogContent>
+                )}
                 <DialogActions className={classes.dialogActions}>
                   <Button
                     onClick={handleReset}
                     disabled={this.state.deleting}
                     classes={{ root: classes.buttonPopover }}
-                    variant='outlined'
+                    variant="outlined"
                   >
                     {t('Cancel')}
                   </Button>
                   <Button
                     // onClick={this.submitDelete.bind(this)}
-                    color='primary'
+                    color="primary"
                     onClick={submitForm}
                     classes={{ root: classes.buttonPopover }}
-                    variant='contained'
+                    variant="contained"
                     disabled={isSubmitting}
                   >
                     {t('Submit')}
@@ -391,29 +448,32 @@ class RiskAssessmentPopover extends Component {
                 >
                   <DialogContent classes={{ root: classes.dialogContent }}>
                     <RiskStatus
-                      variant='outlined'
-                      name='risk_status'
-                      size='small'
+                      variant="outlined"
+                      name="risk_status"
+                      size="small"
                       fullWidth={true}
                       style={{ height: '38.09px', marginBottom: '3px' }}
                       containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
                     />
                   </DialogContent>
-                  <DialogActions style={{ marginTop: '6px' }} className={classes.dialogRiskLevelAction}>
+                  <DialogActions
+                    style={{ marginTop: '6px' }}
+                    className={classes.dialogRiskLevelAction}
+                  >
                     <Button
                       onClick={handleReset}
                       disabled={this.state.deleting}
                       classes={{ root: classes.buttonPopover }}
-                      variant='outlined'
+                      variant="outlined"
                     >
                       {t('Cancel')}
                     </Button>
                     <Button
                       // onClick={this.submitDelete.bind(this)}
-                      color='primary'
+                      color="primary"
                       onClick={submitForm}
                       classes={{ root: classes.buttonPopover }}
-                      variant='contained'
+                      variant="contained"
                       disabled={isSubmitting}
                     >
                       {t('Submit')}
@@ -425,7 +485,7 @@ class RiskAssessmentPopover extends Component {
           </Formik>
         </Dialog>
         <Dialog
-          maxWidth='sm'
+          maxWidth="sm"
           fullWidth={true}
           keepMounted={true}
           open={this.state.displayRiskDeadline}
@@ -441,7 +501,13 @@ class RiskAssessmentPopover extends Component {
             onSubmit={this.onRiskDeadlineSubmit.bind(this)}
             onReset={this.onResetRiskDeadline.bind(this)}
           >
-            {({ submitForm, handleReset, isSubmitting }) => (
+            {({
+              submitForm,
+              handleReset,
+              isSubmitting,
+              setFieldValue,
+              values,
+            }) => (
               <Form>
                 <DialogTitle>{t('Assign Risk Deadline')}</DialogTitle>
                 <DialogContent>
@@ -455,10 +521,28 @@ class RiskAssessmentPopover extends Component {
                     style={{ overflowY: 'hidden', padding: '10px 0' }}
                   />
                 </DialogContent>
+                {values.deadline && (
+                  <DialogContent className={classes.clearContainer} style={{ marginTop: '-20px' }}>
+                    <IconButton
+                      onClick={() => setFieldValue('deadline', null)}
+                      className={classes.clearIcon}
+                      style={{ marginLeft: '-10px' }}
+                    >
+                      <ClearIcon />
+                    </IconButton>
+                    <Typography
+                      variant="h3"
+                      color="textSecondary"
+                      className={classes.iconText}
+                    >
+                      {t('Remove Risk Deadline')}
+                    </Typography>
+                  </DialogContent>
+                )}
                 <DialogActions className={classes.dialogActions}>
                   <Button
-                    size='small'
-                    variant='outlined'
+                    size="small"
+                    variant="outlined"
                     onClick={handleReset}
                     disabled={this.state.deleting}
                     classes={{ root: classes.buttonPopover }}
@@ -466,9 +550,9 @@ class RiskAssessmentPopover extends Component {
                     {t('Cancel')}
                   </Button>
                   <Button
-                    size='small'
-                    color='primary'
-                    variant='contained'
+                    size="small"
+                    color="primary"
+                    variant="contained"
                     onClick={submitForm}
                     disabled={isSubmitting}
                     classes={{ root: classes.buttonPopover }}

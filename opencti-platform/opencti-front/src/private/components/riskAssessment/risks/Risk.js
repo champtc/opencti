@@ -176,6 +176,7 @@ class RiskComponent extends Component {
             enableReinitialize={true}
             initialValues={initialValues}
           >
+          {({ setFieldValue, values }) => (
             <Form>
             <div className={classes.container}>
             <CyioDomainObjectHeader
@@ -213,6 +214,8 @@ class RiskComponent extends Component {
                   handleEditOpen={this.handleEditOpen.bind(this)}
                   open={open}
                   modelName={modelName}
+                  setFieldValue={setFieldValue} 
+                  values={values}
                 />
                 <RiskObservation risk={risk} history={history}/>
               </Grid>
@@ -248,6 +251,7 @@ class RiskComponent extends Component {
               </Security> */}
           </div>
             </Form>
+          )}
           </Formik>
           
         ) : (

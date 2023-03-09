@@ -5,6 +5,7 @@ import * as R from 'ramda';
 import { Field } from 'formik';
 import { createFragmentContainer } from 'react-relay';
 import graphql from 'babel-plugin-relay/macro';
+import ClearIcon from '@material-ui/icons/Clear';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -102,6 +103,8 @@ class RiskDetailsComponent extends Component {
       handleEditOpen,
       open,
       modelName,
+      setFieldValue,
+      values,
     } = this.props;
     const riskDetectionSource = R.pipe(
       R.path(['origins']),
@@ -277,6 +280,7 @@ class RiskDetailsComponent extends Component {
                   </div>
                   <div className="clearfix" />
                   {open && modelName === 'deadline' ? (
+                    <>
                     <Field
                       component={DatePickerField}
                       name='deadline'
@@ -286,6 +290,23 @@ class RiskDetailsComponent extends Component {
                       onSubmit={handleSubmitField.bind(this)}
                       invalidDateMessage={t('The value must be a date (YYYY-MM-DD)')}
                     />
+                    { values.deadline && (
+                  <div
+                    style={{ display: 'flex', placeItems: 'center' }}
+                  >
+                    <IconButton onClick={() => setFieldValue('deadline', null)}>
+                      <ClearIcon />
+                    </IconButton>
+                    <Typography
+                      variant="h3"
+                      color="textSecondary"
+                      style={{ margin: '0 0 0 5px' }}
+                    >
+                      {t('Remove Deadline')}
+                    </Typography>
+                  </div>
+                    )}
+                  </>
                   ) : risk.deadline && fldt(risk.deadline)
                   }
                 </Grid>

@@ -319,7 +319,7 @@ class RiskAssessmentPopover extends Component {
             onClick={this.handleOpenPoam.bind(this)}
             divider={true}
           >
-            {t('Assign POAM ID')}
+            {this.props.node.poam_id === null || this.props.node.poam_id === '' ? t('Assign POAM ID'): t('Remove POAM ID')}
           </MenuItem>
           <MenuItem
             divider={true}
@@ -332,7 +332,7 @@ class RiskAssessmentPopover extends Component {
             className={classes.menuItem}
             onClick={this.handleOpenRiskDeadline.bind(this)}
           >
-            {t('Assign Risk Deadline')}
+            {this.props.node.deadline ? t('Remove Risk Deadline') : t('Assign Risk Deadline')}
           </MenuItem>
         </Menu>
         <Dialog
@@ -360,7 +360,7 @@ class RiskAssessmentPopover extends Component {
               values,
             }) => (
               <Form>
-                <DialogTitle>{t('Assign POAM ID')}</DialogTitle>
+              {this.props.node.poam_id === null || this.props.node.poam_id === '' ? <DialogTitle>{t('Assign POAM ID')}</DialogTitle> : <DialogTitle>{t('Remove POAM ID')}</DialogTitle>}
                 <DialogContent>
                   <Typography
                     variant="h3"
@@ -509,7 +509,7 @@ class RiskAssessmentPopover extends Component {
               values,
             }) => (
               <Form>
-                <DialogTitle>{t('Assign Risk Deadline')}</DialogTitle>
+              {this.props.node.deadline ? <DialogTitle>{t('Remove Risk Deadline')}</DialogTitle> : <DialogTitle>{t('Assign Risk Deadline')}</DialogTitle>}
                 <DialogContent>
                   <Field
                     component={DatePickerField}

@@ -1,6 +1,7 @@
 import { UserInputError } from 'apollo-server-errors';
 import conf from '../../../../config/conf';
 import { selectObjectIriByIdQuery } from '../../global/global-utils.js';
+import { objectTypeMapping } from '../../assets/asset-mappings';
 import { 
   compareValues, 
   filterValues, 
@@ -23,6 +24,8 @@ import {
   attachToInformationSystemQuery,
   detachFromInformationSystemQuery,
 } from '../schema/sparql/informationSystem.js';
+import { findLeveragedAuthorizationByIri } from '../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
+import { findUserTypeByIri } from '../../risk-assessments/oscal-common/domain/oscalUser.js';
 import { addToInventoryQuery, removeFromInventoryQuery } from '../../assets/assetUtil.js';
 import { createInformationType, findInformationTypeByIri } from './informationType.js';
 import { createDescriptionBlock, deleteDescriptionBlockByIri } from './descriptionBlock.js';
@@ -264,7 +267,7 @@ export const createInformationSystem = async (input, dbName, dataSources, select
   if (input.authenticator_assurance_level === undefined) input.authenticator_assurance_level = 'AAL1';
   if (input.federation_assurance_level === undefined) input.federation_assurance_level = 'UNKNOWN';
 
-  // If not specified, supply default objectives impact levels
+  // If not specified, supply default objectives impact
   let { confidentiality, integrity, availability } = await computeSecurityObjectives(input.information_types);
   if (input.security_objective_confidentiality === undefined) input.security_objective_confidentiality = confidentiality;
   if (input.security_objective_integrity === undefined) input.security_objective_integrity = integrity;
@@ -325,6 +328,7 @@ export const createInformationSystem = async (input, dbName, dataSources, select
                         .replace(/[\u2019\u2019]/g, "\\'")
                         .replace(/[\u201C\u201D]/g, '\\"');
         }
+        if (value === undefined || value === null) continue;
         nestedDefinitions[fieldName]['props'][key] = value;
       }
     }
@@ -765,6 +769,7 @@ export const attachToInformationSystem = async (id, field, entityId, dbName, dat
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
   // check to see if the information system exists
+  let select = ['id','iri','object_type'];
   let iri = `<http://cyio.darklight.ai/information-system--${id}>`;
   sparqlQuery = selectInformationSystemByIriQuery(iri, select);
   let response;
@@ -813,7 +818,9 @@ export const attachToInformationSystem = async (id, field, entityId, dbName, dat
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${entityId}`);
   
   // check to make sure entity to be attached is proper for the field specified
-  if (response[0].object_type !== attachableObjects[field]) throw new UserInputError(`Can not attach object of type '${response[0].object_type}' to field '${field}'`);
+  if (response[0].object_type !== attachableObjects[field]) {
+    if (!objectTypeMapping.hasOwnProperty(response[0].object_type)) throw new UserInputError(`Can not attach object of type '${response[0].object_type}' to field '${field}'`);
+  }
 
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
@@ -840,6 +847,7 @@ export const detachFromInformationSystem = async (id, field, entityId, dbName, d
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
   // check to see if the information system exists
+  let select = ['id','iri','object_type'];
   let iri = `<http://cyio.darklight.ai/information-system--${id}>`;
   sparqlQuery = selectInformationSystemByIriQuery(iri, select);
   let response;
@@ -888,7 +896,9 @@ export const detachFromInformationSystem = async (id, field, entityId, dbName, d
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${entityId}`);
 
   // check to make sure entity to be attached is proper for the field specified
-  if (response[0].object_type !== attachableObjects[field]) throw new UserInputError(`Can not attach object of type '${response[0].object_type}' to field '${field}'`);
+  if (response[0].object_type !== attachableObjects[field]) {
+    if (!objectTypeMapping.hasOwnProperty(response[0].object_type)) throw new UserInputError(`Can not attach object of type '${response[0].object_type}' to field '${field}'`);
+  }
 
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
@@ -932,12 +942,12 @@ export const getInformationSystemSecurityStatus = async (id, dbName, dataSources
   return response[0];
 };
 
-export const addImplementationEntity = async( id, implementationType, entityId, dbName, dataSources) => {
+export const addImplementationEntity = async( id, implementation_type, entityId, dbName, dataSources) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
   let field;
-  switch(implementationType) {
+  switch(implementation_type) {
     case 'component':
       field = 'components';
       break;
@@ -951,19 +961,19 @@ export const addImplementationEntity = async( id, implementationType, entityId, 
       field = 'users';
       break;
     default:
-      throw new UserInputError(`Unknown implementation type '${implementationType}'`);      
+      throw new UserInputError(`Unknown implementation type '${implementation_type}'`);      
   }
 
   let result = await attachToInformationSystem(id, field, entityId, dbName, dataSources);
   return result;
 }
 
-export const removeImplementationEntity = async( id, implementationType, entityId, dbName, dataSources) => {
+export const removeImplementationEntity = async( id, implementation_type, entityId, dbName, dataSources) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
   let field;
-  switch(implementationType) {
+  switch(implementation_type) {
     case 'component':
       field = 'components';
       break;
@@ -977,7 +987,7 @@ export const removeImplementationEntity = async( id, implementationType, entityI
       field = 'users';
       break;
     default:
-      throw new UserInputError(`Unknown implementation type '${implementationType}'`);      
+      throw new UserInputError(`Unknown implementation type '${implementation_type}'`);      
   }
 
   let result = await detachFromInformationSystem(id, field, entityId, dbName, dataSources);
@@ -1002,9 +1012,9 @@ export const computeSecurityObjectives = async ( infoTypes ) => {
   let availability = 'fips-199-low';
 
   if (infoTypes === undefined || infoTypes === null) {
-    confidentiality = conf.get('app:config:default_confidentiality_impact_level') || 'fips-199-low';
-    integrity = conf.get('app:config:default_integrity_impact_level') || 'fips-199-low';
-    availability = conf.get('app:config:default_availability_impact_level') || 'fips-199-low';
+    confidentiality = conf.get('app:config:default_confidentiality_impact') || 'fips-199-low';
+    integrity = conf.get('app:config:default_integrity_impact') || 'fips-199-low';
+    availability = conf.get('app:config:default_availability_impact') || 'fips-199-low';
     return { confidentiality, integrity, availability }
   }
 
@@ -1016,16 +1026,16 @@ export const computeSecurityObjectives = async ( infoTypes ) => {
       let result = await findInformationTypeByIri(item.iri, dbName, dataSources, null);
       let infoType = {
         confidentiality_impact: {
-          base_impact_level: result.confidentiality_base_impact_level,
-          selected_impact_level: result.confidentiality_selected_impact_level
+          base_impact: result.confidentiality_base_impact,
+          selected_impact: result.confidentiality_selected_impact
         },
         integrity_impact: {
-          base_impact_level: result.integrity_base_impact_level,
-          selected_impact_level: result.integrity_selected_impact_level
+          base_impact: result.integrity_base_impact,
+          selected_impact: result.integrity_selected_impact
         },
         availability_impact: {
-          base_impact_level: result.availability_base_impact_level,
-          selected_impact_level: result.availability_selected_impact_level
+          base_impact: result.availability_base_impact,
+          selected_impact: result.availability_selected_impact
         }
       }
       results.push(infoType);
@@ -1035,27 +1045,27 @@ export const computeSecurityObjectives = async ( infoTypes ) => {
 
   for (let infoType of infoTypes) {
     // process confidentiality impact
-    if (impactIsGreater(confidentiality, infoType.confidentiality_impact.base_impact_level))
-      confidentiality = infoType.confidentiality_impact.base_impact_level;
-    if (infoType.confidentiality_impact.selected_impact_level !== undefined) {
-      if (impactIsGreater(confidentiality, infoType.confidentiality_impact.selected_impact_level))
-      confidentiality = infoType.confidentiality_impact.selected_impact_level;
+    if (impactIsGreater(confidentiality, infoType.confidentiality_impact.base_impact))
+      confidentiality = infoType.confidentiality_impact.base_impact;
+    if (infoType.confidentiality_impact.selected_impact !== undefined) {
+      if (impactIsGreater(confidentiality, infoType.confidentiality_impact.selected_impact))
+      confidentiality = infoType.confidentiality_impact.selected_impact;
     }
 
     // process integrity impact
-    if (impactIsGreater(integrity, infoType.integrity_impact.base_impact_level))
-      integrity = infoType.integrity_impact.base_impact_level;
-    if (infoType.integrity_impact.selected_impact_level !== undefined) {
-      if (impactIsGreater(integrity, infoType.integrity_impact.selected_impact_level))
-      integrity = infoType.integrity_impact.selected_impact_level;
+    if (impactIsGreater(integrity, infoType.integrity_impact.base_impact))
+      integrity = infoType.integrity_impact.base_impact;
+    if (infoType.integrity_impact.selected_impact !== undefined) {
+      if (impactIsGreater(integrity, infoType.integrity_impact.selected_impact))
+      integrity = infoType.integrity_impact.selected_impact;
     }
 
     // process availability impact
-    if (impactIsGreater(availability, infoType.availability_impact.base_impact_level))
-      availability = infoType.availability_impact.base_impact_level;
-    if (infoType.availability_impact.selected_impact_level !== undefined) {
-      if (impactIsGreater(availability, infoType.availability_impact.selected_impact_level))
-      availability = infoType.availability_impact.selected_impact_level;
+    if (impactIsGreater(availability, infoType.availability_impact.base_impact))
+      availability = infoType.availability_impact.base_impact;
+    if (infoType.availability_impact.selected_impact !== undefined) {
+      if (impactIsGreater(availability, infoType.availability_impact.selected_impact))
+      availability = infoType.availability_impact.selected_impact;
     }
   }
 

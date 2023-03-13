@@ -11,6 +11,7 @@ import RootLocation from './data/locations/Root';
 import RootResponsibleParty from './data/responsibleParties/Root';
 import RootAssessmentPlatform from './data/assessment_platform/Root';
 import RootExternalReferences from './data/external_references/Root';
+import RootUserTypes from './data/user_types/Root';
 import Entities from './Entities';
 import RolesEntities from './data/roles/RolesEntities';
 import NotesEntities from './data/notes/NotesEntities';
@@ -23,6 +24,7 @@ import ExternalReferencesEntities from './data/external_references/ExternalRefer
 import AssessmentPlatformsEntities from './data/assessment_platform/AssessmentPlatformsEntities';
 import DataSources from './data/data_sources/DataSources';
 import RootDataSource from './data/data_sources/Root';
+import UserTypesEntities from './data/user_types/UserTypesEntities';
 
 class Root extends Component {
   render() {
@@ -85,6 +87,11 @@ class Root extends Component {
           path="/data/entities/responsible_parties"
           component={ResponsiblePartiesEntities}
         />
+        <BoundaryRoute
+          exact
+          path="/data/entities/user_types"
+          component={UserTypesEntities}
+        />
 
         {/* Data Source Section */}
         <BoundaryRoute
@@ -135,6 +142,11 @@ class Root extends Component {
           exact
           path="/data/entities/assessment_platform/:assessmentPlatformId"
           render={(routeProps) => <RootAssessmentPlatform {...routeProps} me={me} />}
+        />
+        <BoundaryRoute
+          exact
+          path="/data/entities/user_types/:userTypeId"
+          render={(routeProps) => <RootUserTypes {...routeProps} me={me} />}
         />
 
         {/* Data Source Root Path Section */}

@@ -169,6 +169,20 @@ class DataEntitiesDropDown extends Component {
               </div>
             </div>
           </MenuItem>
+          <MenuItem
+            component={Link}
+            to="/data/entities/user_types"
+            value="user_types"
+          >
+            <div className={classes.menuItems}>
+              <div className={classes.iconsContainer}>
+                <img src={externalReferenceIcon} alt="" />
+              </div>
+              <div className={classes.menuItemText}>
+                {t('User Types')}
+              </div>
+            </div>
+          </MenuItem>
         </Select>
       </FormControl>
     );

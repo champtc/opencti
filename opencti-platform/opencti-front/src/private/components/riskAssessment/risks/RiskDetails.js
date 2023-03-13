@@ -294,7 +294,10 @@ class RiskDetailsComponent extends Component {
                   <div
                     style={{ display: 'flex', placeItems: 'center' }}
                   >
-                    <IconButton onClick={() => setFieldValue('deadline', null)}>
+                    <IconButton onClick={() => {
+                      setFieldValue('deadline', null);
+                      this.props.handleSubmitField('deadline', null);
+                    }}>
                       <ClearIcon />
                     </IconButton>
                     <Typography

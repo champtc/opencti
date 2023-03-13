@@ -92,7 +92,21 @@ class RiskComponent extends Component {
       .then(() => {
         commitMutation({
           mutation: riskEditMutation,
-          variables: { id: this.props.risk.id, input: { key: name, value } },
+          variables: { 
+            id: this.props.risk.id,
+            ...(value || value !== '' ? { 
+              input: { 
+                key: name, 
+                value,
+              } 
+            } : {
+              input: { 
+                key: name, 
+                value: this.props.risk[name],
+                operation: 'remove'
+              } 
+            } ),
+          },
           onCompleted: () => {
             this.setState({ modelName: '', open: false });
           },

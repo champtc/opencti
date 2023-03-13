@@ -148,8 +148,8 @@ class ResponsiblePartiesField extends Component {
     });
   }
 
-  handleDelete(key) {
-    const newParties = this.state.currentParties.filter((item, index) => index !== key);
+  handleDelete(id) {
+    const newParties = this.state.currentParties.filter((item) => item.id !== id);
     this.setState({
       currentParties: newParties,
     });
@@ -157,7 +157,7 @@ class ResponsiblePartiesField extends Component {
     commitMutation({
       mutation: responsiblePartiesFieldRemoveMutation,
       variables: {
-        toId: this.state.party?.id,
+        toId: id,
         fromId: this.props.id,
         fieldName: 'responsible_parties',
         from_type: this.props.fromType,
@@ -203,7 +203,7 @@ class ResponsiblePartiesField extends Component {
                     <Typography>{party && t(party?.name)}</Typography>
                     <IconButton
                       size="small"
-                      onClick={this.handleDelete.bind(this, key)}
+                      onClick={this.handleDelete.bind(this, party.id)}
                     >
                       <LinkOffIcon />
                     </IconButton>

@@ -65,7 +65,7 @@ const styles = (theme) => ({
 class CyioDomainObjectAssetOverview extends Component {
   render() {
     const {
-      fd, t, fldt, classes, cyioDomainObject, withoutMarking, withPattern, refreshQuery,
+      fd, t, history, classes, cyioDomainObject, withoutMarking, withPattern, refreshQuery,
     } = this.props;
     const objectLabel = { edges: { node: { id: 1, value: 'labels', color: 'red' } } };
     // const otherCyioIds = cyioDomainObject?.x_opencti_cyio_ids || [];
@@ -304,7 +304,8 @@ class CyioDomainObjectAssetOverview extends Component {
             </Grid>
             <Grid item={true} xs={12}>
               <div>
-                <ResponsiblePartiesField                   
+                <ResponsiblePartiesField
+                  history={history}                   
                   id={cyioDomainObject.id}
                   fromType={cyioDomainObject.__typename}
                   toType='OscalResponsibleParty'

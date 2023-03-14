@@ -102,6 +102,7 @@ class CyioDomainObjectAssetEditionOverviewComponent extends Component {
   render() {
     const {
       t,
+      history,
       classes,
       cyioDomainObject,
       context,
@@ -405,6 +406,7 @@ class CyioDomainObjectAssetEditionOverviewComponent extends Component {
                   name='responsible_parties'
                   title='Responsible Parties'
                   data={cyioDomainObject.responsible_parties}
+                  history={history}
                 />
               </div>
             </Grid>

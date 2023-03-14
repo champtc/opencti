@@ -75,7 +75,7 @@ class NetworkComponent extends Component {
             >
               <>
                 <Grid item={true} xs={6}>
-                  <CyioDomainObjectAssetOverview refreshQuery={refreshQuery} cyioDomainObject={network} />
+                  <CyioDomainObjectAssetOverview history={history} refreshQuery={refreshQuery} cyioDomainObject={network} />
                 </Grid>
                 <Grid item={true} xs={6}>
                   <NetworkDetails network={network} history={history}/>
@@ -143,6 +143,10 @@ const Network = createFragmentContainer(NetworkComponent, {
       asset_type
       asset_id
       serial_number
+      responsible_parties {
+        id
+        name
+      }
       labels {
         __typename
         id

@@ -138,6 +138,10 @@ const Software = createFragmentContainer(SoftwareComponent, {
       id
       name
       asset_id
+      responsible_parties {
+        id
+        name
+      }
       labels {
         __typename
         id

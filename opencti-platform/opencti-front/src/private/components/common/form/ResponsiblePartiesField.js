@@ -17,6 +17,8 @@ import graphql from 'babel-plugin-relay/macro';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import Button from '@material-ui/core/Button';
+import Link from '@material-ui/core/Link';
+import LaunchIcon from '@material-ui/icons/Launch';
 import IconButton from '@material-ui/core/IconButton';
 import {
   Dialog, DialogContent, DialogActions,
@@ -50,6 +52,12 @@ const styles = (theme) => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  titleIcon: {
+    display: 'flex',
+  },
+  launchIcon: {
+    marginRight: '10px',
   },
   dialogAction: {
     margin: '15px 20px 15px 0',
@@ -174,6 +182,7 @@ class ResponsiblePartiesField extends Component {
   render() {
     const {
       t,
+      history,
       classes,
       title,
     } = this.props;
@@ -183,7 +192,7 @@ class ResponsiblePartiesField extends Component {
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Typography>{title && t(title)}</Typography>
           <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
-            <Tooltip title={t('Baseline Configuration Name')}>
+            <Tooltip title={t('Responsible Parties')}>
               <Information fontSize="inherit" color="disabled" />
             </Tooltip>
           </div>
@@ -200,7 +209,17 @@ class ResponsiblePartiesField extends Component {
               {this.state.currentParties
                 && this.state.currentParties.map((party, key) => (
                   <div key={key} className={classes.descriptionBox}>
-                    <Typography>{party && t(party?.name)}</Typography>
+                    <div className={classes.titleIcon}>
+                      <Link
+                        key={key}
+                        component="button"
+                        variant="body2"
+                        onClick={() => history.push(`/data/entities/responsible_parties/${party.id}`)}
+                        >
+                          <LaunchIcon fontSize="small" className={classes.launchIcon} />
+                      </Link>
+                      <Typography>{party && t(party?.name)}</Typography>
+                    </div>
                     <IconButton
                       size="small"
                       onClick={this.handleDelete.bind(this, party.id)}
@@ -230,7 +249,7 @@ class ResponsiblePartiesField extends Component {
               }}
               noOptionsText={t('No available options')}
               options={this.state.parties}
-              getOptionLabel={(option) => (option.label ? option.label : option)
+              getOptionLabel={(option) => (option.name ? option.name : option)
               }
               onChange={(event, value) => this.setState({ party: value })}
               selectOnFocus={true}

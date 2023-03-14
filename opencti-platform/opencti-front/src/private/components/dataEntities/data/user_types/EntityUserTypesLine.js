@@ -114,7 +114,7 @@ class EntityUserTypesLineComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: '21%' }}
+                style={{ width: dataColumns.label_name.width }}
               >
                 <CyioCoreObjectLabels
                   variant="inList"
@@ -223,7 +223,7 @@ class EntityUserTypesLineDummyComponent extends Component {
             <div>
               <div
                 className={classes.bodyItem}
-                style={{ width: '12.5%' }}
+                style={{ width: dataColumns.type.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -234,7 +234,7 @@ class EntityUserTypesLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: '10%' }}
+                style={{ width: dataColumns.name.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -245,7 +245,7 @@ class EntityUserTypesLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: '16.5%' }}
+                style={{ width: dataColumns.user_type.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -256,7 +256,7 @@ class EntityUserTypesLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: '20%' }}
+                style={{ width: dataColumns.privilege_level.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -267,7 +267,7 @@ class EntityUserTypesLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: '20%' }}
+                style={{ width: dataColumns.label_name.width }}
               >
                 <Skeleton
                   animation="wave"

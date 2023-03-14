@@ -222,9 +222,6 @@ class EntityUserTypesCardComponent extends Component {
                 >
                   {t('Author')}
                 </Typography>
-                {/* <Typography>
-                  {t('')}
-                </Typography> */}
               </Grid>
             </Grid>
             <Grid container={true} >
@@ -237,10 +234,10 @@ class EntityUserTypesCardComponent extends Component {
                 >
                   {t('Labels')}
                 </Typography>
-                {/* <CyioCoreObjectLabels
-                  labels={node.labels}
+                <CyioCoreObjectLabels
+                  labels={[]}
                   onClick={onLabelClick.bind(this)}
-                /> */}
+                />
               </Grid>
             </Grid>
           </CardContent>

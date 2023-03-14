@@ -13,7 +13,7 @@ import {
 import Loader from '../../../../../components/Loader';
 import ErrorNotFound from '../../../../../components/ErrorNotFound';
 import StixCoreObjectKnowledgeBar from '../../../common/stix_core_objects/StixCoreObjectKnowledgeBar';
-import { toastGenericError } from "../../../../../utils/bakedToast";
+import { toastGenericError } from '../../../../../utils/bakedToast';
 import EntityUserType from './EntityUserType';
 
 const subscription = graphql`
@@ -45,12 +45,12 @@ class RootUserTypes extends Component {
     super(props);
     const {
       match: {
-        params: { locationId },
+        params: { userTypeId },
       },
     } = props;
     this.sub = requestSubscription({
       subscription,
-      variables: { id: locationId },
+      variables: { id: userTypeId },
     });
   }
 
@@ -62,13 +62,13 @@ class RootUserTypes extends Component {
     const {
       me,
       match: {
-        params: { locationId },
+        params: { userTypeId },
       },
     } = this.props;
-    const link = `/data/entities/user_types/${locationId}/knowledge`;
+    const link = `/data/entities/user_types/${userTypeId}/knowledge`;
     return (
       <div>
-        <Route path="/data/entities/user_types/:userTypesId/knowledge">
+        <Route path="/data/entities/user_types/:userTypeId/knowledge">
           <StixCoreObjectKnowledgeBar
             stixCoreObjectLink={link}
             availableSections={[
@@ -89,7 +89,7 @@ class RootUserTypes extends Component {
         </Route>
         <QueryRenderer
           query={locationQuery}
-          variables={{ id: locationId }}
+          variables={{ id: userTypeId }}
           render={({ error, props, retry }) => {
             if (error) {
               console.error(error);
@@ -101,7 +101,7 @@ class RootUserTypes extends Component {
                   <Switch>
                     <Route
                       exact
-                      path="/data/entities/user_types/:userTypesId"
+                      path="/data/entities/user_types/:userTypeId"
                       render={(routeProps) => (
                         <EntityUserType
                           {...routeProps}

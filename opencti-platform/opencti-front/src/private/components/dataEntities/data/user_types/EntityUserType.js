@@ -1,27 +1,26 @@
 /* eslint-disable */
 /* refactor */
-import React, { Component } from "react";
-import PropTypes from "prop-types";
-import { compose } from "ramda";
-import { createFragmentContainer } from "react-relay";
-import graphql from "babel-plugin-relay/macro";
-import { Redirect } from "react-router-dom";
-import { withStyles } from "@material-ui/core/styles";
-import Grid from "@material-ui/core/Grid";
-import inject18n from "../../../../../components/i18n";
-import CyioDomainObjectHeader from "../../../common/stix_domain_objects/CyioDomainObjectHeader";
-import Security, { KNOWLEDGE_KNUPDATE } from "../../../../../utils/Security";
-import CyioCoreObjectOrCyioCoreRelationshipNotes from "../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes";
-import CyioCoreObjectExternalReferences from "../../../analysis/external_references/CyioCoreObjectExternalReferences";
-import EntitiesUserTypesCreation from "./EntitiesUserTypesCreation";
-import UserTypesEntityEditionContainer from "./UserTypeEntityEditionContainer";
-import EntitiesUserTypesPopover from "./EntitiesUserTypesPopover";
-import EntitiesUserTypesDeletion from "./EntitiesUserTypesDeletion";
-import EntityUserTypesDetails from "./EntityUserTypesDetails";
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { compose } from 'ramda';
+import { createFragmentContainer } from 'react-relay';
+import graphql from 'babel-plugin-relay/macro';
+import { withStyles } from '@material-ui/core/styles';
+import Grid from '@material-ui/core/Grid';
+import inject18n from '../../../../../components/i18n';
+import CyioDomainObjectHeader from '../../../common/stix_domain_objects/CyioDomainObjectHeader';
+import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
+import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
+import EntitiesUserTypesCreation from './EntitiesUserTypesCreation';
+import UserTypesEntityEditionContainer from './UserTypeEntityEditionContainer';
+import EntitiesUserTypesPopover from './EntitiesUserTypesPopover';
+import EntitiesUserTypesDeletion from './EntitiesUserTypesDeletion';
+import EntityUserTypesDetails from './EntityUserTypesDetails';
+import EntityUserTypesOverview from './EntityUserTypesOverview';
 
 const styles = () => ({
   container: {
-    margin: "0 0 40px 0",
+    margin: '0 0 40px 0',
   },
   gridContainer: {
     marginBottom: 20,
@@ -46,7 +45,9 @@ class EntityUserTypeComponent extends Component {
   }
 
   render() {
-    const { classes, location, history, refreshQuery } = this.props;
+    const {
+      classes, location, history, refreshQuery,
+    } = this.props;
     return (
       <>
         <div className={classes.container}>
@@ -54,7 +55,7 @@ class EntityUserTypeComponent extends Component {
             history={history}
             name={location.name}
             cyioDomainObject={location}
-            goBack="/data/entities/user_type"
+            goBack="/data/entities/user_types"
             PopoverComponent={<EntitiesUserTypesPopover />}
             OperationsComponent={<EntitiesUserTypesDeletion />}
             handleDisplayEdit={this.handleDisplayEdit.bind(this)}
@@ -65,7 +66,14 @@ class EntityUserTypeComponent extends Component {
             spacing={3}
             classes={{ container: classes.gridContainer }}
           >
-            <Grid item={true} xs={12}>
+             <Grid item={true} xs={6}>
+              <EntityUserTypesOverview
+                location={location}
+                history={history}
+                refreshQuery={refreshQuery}
+              />
+            </Grid>
+            <Grid item={true} xs={6}>
               <EntityUserTypesDetails
                 location={location}
                 history={history}
@@ -160,6 +168,7 @@ const EntityUserType = createFragmentContainer(EntityUserTypeComponent, {
         content
         authors
       }
+      ...EntityUserTypesOverview_userType
       ...EntityUserTypesDetails_userType
     }
   `,

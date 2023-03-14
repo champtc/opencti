@@ -14,6 +14,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import remarkParse from 'remark-parse';
 import inject18n from '../../../../../components/i18n';
+import CyioCoreObjectLabelsView from '../../../common/stix_core_objects/CyioCoreObjectLabelsView';
 
 const styles = (theme) => ({
   paper: {
@@ -66,84 +67,131 @@ const styles = (theme) => ({
   },
 });
 
-class EntityUserTypesDetailsComponent extends Component {
+class EntityUserTypesOverviewComponent extends Component {
   render() {
     const {
-      t,
-      classes,
-      location,
+      t, classes, refreshQuery, location, fldt,
     } = this.props;
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
-          {t('Details')}
+          {t('Basic Information')}
         </Typography>
         <Paper classes={{ root: classes.paper }} elevation={2}>
           <Grid container={true}>
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <div>
                 <Typography
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
                 >
-                  {t('Privilege Level')}
+                  {t('ID')}
+                </Typography>
+                <div className="clearfix" />
+                {location.id && t(location.id)}
+              </div>
+            </Grid>
+            <Grid item xs={6}>
+              <div style={{ marginTop: '20px' }}>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                >
+                  {t('Created')}
+                </Typography>
+                <div className="clearfix" />
+                {location.created && fldt(location.created)}
+              </div>
+            </Grid>
+            <Grid item xs={6}>
+              <div style={{ marginTop: '20px' }}>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                >
+                  {t('Last Modified')}
+                </Typography>
+                <div className="clearfix" />
+                {location.modified && fldt(location.modified)}
+              </div>
+            </Grid>
+            <Grid item xs={6}>
+              <div style={{ marginTop: '20px' }}>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                >
+                  {t('Short Name')}
                 </Typography>
                 <div className="clearfix" />
                 {location.name && t(location.name)}
               </div>
             </Grid>
-            <Grid item={true} xs={12}>
+            <Grid item xs={6}>
               <div style={{ marginTop: '20px' }}>
                 <Typography
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
                 >
-                  {t('Role ID')}
+                  {t('Type')}
                 </Typography>
                 <div className="clearfix" />
-                <div className={classes.scrollBg}>
-                  <div className={classes.scrollDiv}>
-                    <div className={classes.scrollObj}>
-                      <Markdown
-                        remarkPlugins={[remarkGfm, remarkParse]}
-                        rehypePlugins={[rehypeRaw]}
-                        parserOptions={{ commonmark: true }}
-                        className="markdown"
-                      >
-                        {location.description && t(location.description)}
-                      </Markdown>
-                    </div>
-                  </div>
-                </div>
+                {location?.address?.street_address
+                  && t(location?.address?.street_address)}
               </div>
             </Grid>
             <Grid item={true} xs={12}>
-              <div style={{ marginTop: '20px' }}>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  gutterBottom={true}
-                >
-                  {t('Authorized Privileges')}
-                </Typography>
-                <div className="clearfix" />
-                <div className={classes.scrollBg}>
-                  <div className={classes.scrollDiv}>
-                    <div className={classes.scrollObj}>
-                      <Markdown
-                        remarkPlugins={[remarkGfm, remarkParse]}
-                        rehypePlugins={[rehypeRaw]}
-                        parserOptions={{ commonmark: true }}
-                        className="markdown"
-                      >
-                        {location.description && t(location.description)}
-                      </Markdown>
+                <div style={{ marginTop: '20px' }}>
+                        <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                    >
+                        {t('Description')}
+                    </Typography>
+                    <div className="clearfix" />
+                    <div className={classes.scrollBg}>
+                        <div className={classes.scrollDiv}>
+                        <div className={classes.scrollObj}>
+                            <Markdown
+                            remarkPlugins={[remarkGfm, remarkParse]}
+                            rehypePlugins={[rehypeRaw]}
+                            parserOptions={{ commonmark: true }}
+                            className="markdown"
+                            >
+                            {location.description && t(location.description)}
+                            </Markdown>
+                        </div>
+                        </div>
                     </div>
-                  </div>
-                </div>
-              </div>
+                </div>              
+            </Grid>
+            <Grid item={true} xs={12}>
+              <Typography
+                variant="h3"
+                color="textSecondary"
+                gutterBottom={true}
+              >
+                {t('Markings')}
+              </Typography>
+              <div className="clearfix" />
+              {location?.markings && (
+                <p className={classes.markingText}>{t(location?.markings)}</p>
+              )}
+            </Grid>
+            <Grid item={true} xs={6}>
+              <CyioCoreObjectLabelsView
+                labels={location.labels}
+                marginTop={0}
+                refreshQuery={refreshQuery}
+                id={location.id}
+                typename={location.__typename}
+              />
             </Grid>
           </Grid>
         </Paper>
@@ -152,7 +200,7 @@ class EntityUserTypesDetailsComponent extends Component {
   }
 }
 
-EntityUserTypesDetailsComponent.propTypes = {
+EntityUserTypesOverviewComponent.propTypes = {
   location: PropTypes.object,
   classes: PropTypes.object,
   refreshQuery: PropTypes.func,
@@ -160,11 +208,11 @@ EntityUserTypesDetailsComponent.propTypes = {
   fldt: PropTypes.func,
 };
 
-const EntityUserTypesDetails = createFragmentContainer(
-  EntityUserTypesDetailsComponent,
+const EntityUserTypesOverview = createFragmentContainer(
+  EntityUserTypesOverviewComponent,
   {
     location: graphql`
-      fragment EntityUserTypesDetails_userType on OscalLocation {
+      fragment EntityUserTypesOverview_userType on OscalLocation {
         __typename
         id
         entity_type
@@ -189,7 +237,7 @@ const EntityUserTypesDetails = createFragmentContainer(
           usage_type
           phone_number
         }
-        urls 
+        urls
         labels {
           __typename
           id
@@ -203,4 +251,4 @@ const EntityUserTypesDetails = createFragmentContainer(
   },
 );
 
-export default compose(inject18n, withStyles(styles))(EntityUserTypesDetails);
+export default compose(inject18n, withStyles(styles))(EntityUserTypesOverview);

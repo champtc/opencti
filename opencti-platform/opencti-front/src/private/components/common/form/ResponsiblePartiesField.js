@@ -12,6 +12,7 @@ import Typography from '@material-ui/core/Typography';
 import { Information } from 'mdi-material-ui';
 import Tooltip from '@material-ui/core/Tooltip';
 import InsertLinkIcon from '@material-ui/icons/InsertLink';
+import AddIcon from '@material-ui/icons/Add';
 import LinkOffIcon from '@material-ui/icons/LinkOff';
 import graphql from 'babel-plugin-relay/macro';
 import TextField from '@material-ui/core/TextField';
@@ -61,6 +62,10 @@ const styles = (theme) => ({
   },
   dialogAction: {
     margin: '15px 20px 15px 0',
+  },
+  addIcon: {
+    marginRight: '-20px',
+    padding: '5px',
   },
 });
 
@@ -241,7 +246,7 @@ class ResponsiblePartiesField extends Component {
           <DialogContent style={{ overflow: 'hidden' }}>
             <Autocomplete
               size='small'
-              loading={this.state.party || false}
+              loading={this.state.parties === []}
               loadingText='Searching...'
               className={classes.autocomplete}
               classes={{
@@ -249,16 +254,27 @@ class ResponsiblePartiesField extends Component {
               }}
               noOptionsText={t('No available options')}
               options={this.state.parties}
-              getOptionLabel={(option) => (option.name ? option.name : option)
-              }
+              getOptionLabel={(option) => (option.name ? option.name : option)}
               onChange={(event, value) => this.setState({ party: value })}
               selectOnFocus={true}
               autoHighlight={true}
+              forcePopupIcon={true}
               renderInput={(params) => (
                 <TextField
                   variant='outlined'
                   {...params}
-                  label='Responsible Parties'
+                  label='Choose Responsible Party'
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        <IconButton disabled aria-label="open" size="large" className={classes.addIcon}>
+                          <AddIcon />
+                        </IconButton>
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
                 />
               )}
             />

@@ -46,15 +46,15 @@ class EntityUserTypeComponent extends Component {
 
   render() {
     const {
-      classes, location, history, refreshQuery,
+      classes, user, history, refreshQuery,
     } = this.props;
     return (
       <>
         <div className={classes.container}>
           <CyioDomainObjectHeader
             history={history}
-            name={location.name}
-            cyioDomainObject={location}
+            name={user.name}
+            cyioDomainObject={user}
             goBack="/data/entities/user_types"
             PopoverComponent={<EntitiesUserTypesPopover />}
             OperationsComponent={<EntitiesUserTypesDeletion />}
@@ -68,14 +68,14 @@ class EntityUserTypeComponent extends Component {
           >
              <Grid item={true} xs={6}>
               <EntityUserTypesOverview
-                location={location}
+                user={user}
                 history={history}
                 refreshQuery={refreshQuery}
               />
             </Grid>
             <Grid item={true} xs={6}>
               <EntityUserTypesDetails
-                location={location}
+                user={user}
                 history={history}
                 refreshQuery={refreshQuery}
               />
@@ -89,21 +89,21 @@ class EntityUserTypeComponent extends Component {
           >
             <Grid item={true} xs={6}>
               <CyioCoreObjectExternalReferences
-                typename={location.__typename}
-                externalReferences={location.links}
+                typename={user.__typename}
+                externalReferences={user.links}
                 fieldName="links"
-                cyioCoreObjectId={location?.id}
+                cyioCoreObjectId={user?.id}
                 refreshQuery={refreshQuery}
               />
             </Grid>
             <Grid item={true} xs={6}>
               <CyioCoreObjectOrCyioCoreRelationshipNotes
-                typename={location.__typename}
-                notes={location.remarks}
+                typename={user.__typename}
+                notes={user.remarks}
                 refreshQuery={refreshQuery}
                 fieldName="remarks"
                 marginTop="0px"
-                cyioCoreObjectOrCyioCoreRelationshipId={location?.id}
+                cyioCoreObjectOrCyioCoreRelationshipId={user?.id}
               />
             </Grid>
           </Grid>
@@ -112,11 +112,12 @@ class EntityUserTypeComponent extends Component {
           openDataCreation={this.state.openDataCreation}
           handleLocationCreation={this.handleOpenNewCreation.bind(this)}
           history={history}
+          refreshQuery={refreshQuery}
         />
         <UserTypesEntityEditionContainer
           displayEdit={this.state.displayEdit}
           history={history}
-          location={location}
+          user={user}
           handleDisplayEdit={this.handleDisplayEdit.bind(this)}
         />
       </>
@@ -125,28 +126,33 @@ class EntityUserTypeComponent extends Component {
 }
 
 EntityUserTypeComponent.propTypes = {
-  location: PropTypes.object,
+  user: PropTypes.object,
   classes: PropTypes.object,
   t: PropTypes.func,
   refreshQuery: PropTypes.func,
 };
 
 const EntityUserType = createFragmentContainer(EntityUserTypeComponent, {
-  location: graphql`
-    fragment EntityUserType_userType on OscalLocation {
+  user: graphql`
+    fragment EntityUserType_userType on OscalUser {
       __typename
       id
-      created
-      modified
       name
+      modified
+      created
+      short_name
       description
-      labels {
-        __typename
+      user_type
+      authorized_privileges {
         id
         name
+      }
+      labels {
+        id
+        name
+        modified
+        created
         color
-        entity_type
-        description
       }
       links {
         __typename

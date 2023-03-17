@@ -194,7 +194,7 @@ class EntityUserTypesCardComponent extends Component {
                   {t('User Type')}
                 </Typography>
                 <Typography>
-                  {node.created && fsd(node.created)}
+                  {node.user_type && fsd(node.user_type)}
                 </Typography>
               </Grid>
             </Grid>
@@ -206,11 +206,11 @@ class EntityUserTypesCardComponent extends Component {
                   style={{ marginTop: '13px' }}
                   gutterBottom={true}
                 >
-                  {t('Marking')}
+                  {t('Privilege Level')}
                 </Typography>
                 <Typography>
-                  {node?.parent_types
-                    && (node?.parent_types)}
+                  {node?.privilege_level
+                    && (node?.privilege_level)}
                 </Typography>
               </Grid>
               <Grid item={true} xs={6} className={classes.body}>
@@ -220,12 +220,12 @@ class EntityUserTypesCardComponent extends Component {
                   style={{ marginTop: '13px' }}
                   gutterBottom={true}
                 >
-                  {t('Author')}
+                  {t('Roles')}
                 </Typography>
               </Grid>
             </Grid>
             <Grid container={true} >
-              <Grid item={true} xs={12} className={classes.body}>
+              <Grid item={true} xs={6} className={classes.body}>
                 <Typography
                   variant="h3"
                   color="textSecondary"
@@ -238,6 +238,20 @@ class EntityUserTypesCardComponent extends Component {
                   labels={[]}
                   onClick={onLabelClick.bind(this)}
                 />
+              </Grid>
+              <Grid item={true} xs={6} className={classes.body}>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  style={{ marginTop: '13px' }}
+                  gutterBottom={true}
+                >
+                  {t('Marking')}
+                </Typography>
+                <Typography>
+                  {node?.markings
+                    && (node?.markings)}
+                </Typography>
               </Grid>
             </Grid>
           </CardContent>
@@ -262,7 +276,7 @@ const EntityUserTypesCardFragment = createFragmentContainer(
   EntityUserTypesCardComponent,
   {
     node: graphql`
-      fragment EntityUserTypesCard_node on OscalLocation {
+      fragment EntityUserTypesCard_node on OscalUser {
         __typename
         id
         entity_type
@@ -270,6 +284,13 @@ const EntityUserTypesCardFragment = createFragmentContainer(
         name
         created
         modified
+        user_type
+        short_name
+        privilege_level
+        roles {
+          name
+          id
+        }
         labels {
           __typename
           id
@@ -277,26 +298,6 @@ const EntityUserTypesCardFragment = createFragmentContainer(
           color
           entity_type
           description
-        }
-        links {
-          __typename
-          id
-          source_name
-          description
-          entity_type
-          url
-          hashes {
-            value
-          }
-          external_id
-        }
-        remarks {
-          __typename
-          id
-          entity_type
-          abstract
-          content
-          authors
         }
       }
     `,

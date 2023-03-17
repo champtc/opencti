@@ -104,17 +104,17 @@ class EntityUserTypesLineComponent extends Component {
                 className={classes.bodyItem}
                 style={{ width: dataColumns.user_type.width }}
               >
-                {node.name && t(node.name)}
+                {node.user_type && t(node.user_type)}
               </div>
               <div
                 className={classes.bodyItem}
                 style={{ width: dataColumns.privilege_level.width }}
               >
-                {/* {node.entity_type && node.entity_type} */}
+                {node.privilege_level && node.privilege_level}
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.label_name.width }}
+                style={{ width: '22%' }}
               >
                 <CyioCoreObjectLabels
                   variant="inList"
@@ -164,7 +164,7 @@ const EntityUserTypesLineFragment = createFragmentContainer(
   EntityUserTypesLineComponent,
   {
     node: graphql`
-      fragment EntityUserTypesLine_node on OscalLocation {
+      fragment EntityUserTypesLine_node on OscalUser {
         __typename
         id
         entity_type
@@ -172,6 +172,13 @@ const EntityUserTypesLineFragment = createFragmentContainer(
         name
         created
         modified
+        short_name
+        user_type
+        privilege_level
+        roles {
+          name
+          id
+        }
         labels {
           __typename
           id
@@ -179,26 +186,6 @@ const EntityUserTypesLineFragment = createFragmentContainer(
           color
           entity_type
           description
-        }
-        links {
-          __typename
-          id
-          source_name
-          description
-          entity_type
-          url
-          hashes {
-            value
-          }
-          external_id
-        }
-        remarks {
-          __typename
-          id
-          entity_type
-          abstract
-          content
-          authors
         }
       }
     `,

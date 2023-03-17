@@ -52,7 +52,7 @@ Transition.displayName = 'TransitionSlide';
 
 const userTypeEntityEditionQuery = graphql`
   query UserTypeEntityEditionQuery($id: ID!) {
-    oscalLocation(id: $id) {
+    oscalUser(id: $id) {
       id
       created
       modified
@@ -72,13 +72,13 @@ class UserTypeEntityEdition extends Component {
 
   render() {
     const {
-      classes, displayEdit, handleDisplayEdit, history, locationId,
+      classes, displayEdit, handleDisplayEdit, history, userTypeId,
     } = this.props;
     return (
       <div className={classes.container}>
         <QueryRenderer
           query={userTypeEntityEditionQuery}
-          variables={{ id: locationId }}
+          variables={{ id: userTypeId }}
           render={({ error, props }) => {
             if (error) {
               toastGenericError('Failed to edit Location');
@@ -88,7 +88,7 @@ class UserTypeEntityEdition extends Component {
                 <UserTypeEntityEditionContainer
                   displayEdit={displayEdit}
                   history={history}
-                  location={props.oscalLocation}
+                  user={props.oscalUser}
                   handleDisplayEdit={handleDisplayEdit}
                 />
               );

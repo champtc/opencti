@@ -2,7 +2,7 @@
 /* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
-import { compose } from 'ramda';
+import { compose, pathOr } from 'ramda';
 import { createFragmentContainer } from 'react-relay';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
@@ -64,6 +64,10 @@ const styles = (theme) => ({
     textAlign: 'center',
     padding: '3px 0',
   },
+  contentText: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
 });
 
 class EntityUserTypesDetailsComponent extends Component {
@@ -71,8 +75,17 @@ class EntityUserTypesDetailsComponent extends Component {
     const {
       t,
       classes,
-      location,
+      user,
     } = this.props;
+    const roles = pathOr(
+      [],
+      ['roles'],
+    )(user);
+    
+    const authorizedPrivileges = pathOr(
+      [],
+      ['authorized_privileges'],
+    )(user)
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
@@ -90,7 +103,7 @@ class EntityUserTypesDetailsComponent extends Component {
                   {t('Privilege Level')}
                 </Typography>
                 <div className="clearfix" />
-                {location.name && t(location.name)}
+                {user.privilege_level && t(user.privilege_level)}
               </div>
             </Grid>
             <Grid item={true} xs={12}>
@@ -106,14 +119,12 @@ class EntityUserTypesDetailsComponent extends Component {
                 <div className={classes.scrollBg}>
                   <div className={classes.scrollDiv}>
                     <div className={classes.scrollObj}>
-                      <Markdown
-                        remarkPlugins={[remarkGfm, remarkParse]}
-                        rehypePlugins={[rehypeRaw]}
-                        parserOptions={{ commonmark: true }}
-                        className="markdown"
-                      >
-                        {location.description && t(location.description)}
-                      </Markdown>
+                      {roles !== [] && roles.map((item) => (
+                        <>
+                          <p className={classes.contentText}>{item.name}</p>
+                          <br />
+                        </>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -132,14 +143,12 @@ class EntityUserTypesDetailsComponent extends Component {
                 <div className={classes.scrollBg}>
                   <div className={classes.scrollDiv}>
                     <div className={classes.scrollObj}>
-                      <Markdown
-                        remarkPlugins={[remarkGfm, remarkParse]}
-                        rehypePlugins={[rehypeRaw]}
-                        parserOptions={{ commonmark: true }}
-                        className="markdown"
-                      >
-                        {location.description && t(location.description)}
-                      </Markdown>
+                      {authorizedPrivileges !== [] && authorizedPrivileges.map((privilege) => (
+                        <>
+                          <p className={classes.contentText}>{privilege.name}</p>
+                          <br />
+                        </>
+                      ))}  
                     </div>
                   </div>
                 </div>
@@ -153,7 +162,7 @@ class EntityUserTypesDetailsComponent extends Component {
 }
 
 EntityUserTypesDetailsComponent.propTypes = {
-  location: PropTypes.object,
+  user: PropTypes.object,
   classes: PropTypes.object,
   refreshQuery: PropTypes.func,
   t: PropTypes.func,
@@ -163,8 +172,8 @@ EntityUserTypesDetailsComponent.propTypes = {
 const EntityUserTypesDetails = createFragmentContainer(
   EntityUserTypesDetailsComponent,
   {
-    location: graphql`
-      fragment EntityUserTypesDetails_userType on OscalLocation {
+    user: graphql`
+      fragment EntityUserTypesDetails_userType on OscalUser {
         __typename
         id
         entity_type
@@ -172,31 +181,14 @@ const EntityUserTypesDetails = createFragmentContainer(
         modified
         name
         description
-        location_type
-        location_class
-        address {
-          id
-          address_type
-          street_address
-          city
-          administrative_area
-          country_code
-          postal_code
-        }
-        email_addresses
-        telephone_numbers {
-          id
-          usage_type
-          phone_number
-        }
-        urls 
-        labels {
-          __typename
+        privilege_level
+        authorized_privileges {
           id
           name
-          color
-          entity_type
-          description
+        }
+        roles {
+          name
+          id
         }
       }
     `,

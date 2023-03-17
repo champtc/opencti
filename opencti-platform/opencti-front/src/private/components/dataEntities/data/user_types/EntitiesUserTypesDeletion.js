@@ -55,7 +55,7 @@ Transition.displayName = 'TransitionSlide';
 
 const EntitiesUserTypesDeletionDarkLightMutation = graphql`
   mutation EntitiesUserTypesDeletionDarkLightMutation($id: ID!) {
-  deleteOscalLocation(id: $id)
+    deleteOscalUser(id: $id)
 }
 `;
 

@@ -30,9 +30,9 @@ const subscription = graphql`
   }
 `;
 
-const locationQuery = graphql`
+const userQuery = graphql`
   query RootUserTypesQuery($id: ID!) {
-    oscalLocation(id: $id) {
+    oscalUser(id: $id) {
       id
       name
       ...EntityUserType_userType
@@ -88,15 +88,16 @@ class RootUserTypes extends Component {
           />
         </Route>
         <QueryRenderer
-          query={locationQuery}
+          query={userQuery}
           variables={{ id: userTypeId }}
           render={({ error, props, retry }) => {
             if (error) {
               console.error(error);
               toastGenericError('Failed to get location data');
             }
+            console.log(props);
             if (props) {
-              if (props.oscalLocation) {
+              if (props.oscalUser) {
                 return (
                   <Switch>
                     <Route
@@ -106,7 +107,7 @@ class RootUserTypes extends Component {
                         <EntityUserType
                           {...routeProps}
                           refreshQuery={retry}
-                          location={props.oscalLocation}
+                          user={props.oscalUser}
                         />
                       )}
                     />

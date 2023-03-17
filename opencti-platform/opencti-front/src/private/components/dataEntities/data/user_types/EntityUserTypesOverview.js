@@ -70,7 +70,7 @@ const styles = (theme) => ({
 class EntityUserTypesOverviewComponent extends Component {
   render() {
     const {
-      t, classes, refreshQuery, location, fldt,
+      t, classes, refreshQuery, user, fldt,
     } = this.props;
     return (
       <div style={{ height: '100%' }}>
@@ -89,7 +89,7 @@ class EntityUserTypesOverviewComponent extends Component {
                   {t('ID')}
                 </Typography>
                 <div className="clearfix" />
-                {location.id && t(location.id)}
+                {user.id && t(user.id)}
               </div>
             </Grid>
             <Grid item xs={6}>
@@ -102,7 +102,7 @@ class EntityUserTypesOverviewComponent extends Component {
                   {t('Created')}
                 </Typography>
                 <div className="clearfix" />
-                {location.created && fldt(location.created)}
+                {user.created && fldt(user.created)}
               </div>
             </Grid>
             <Grid item xs={6}>
@@ -115,7 +115,7 @@ class EntityUserTypesOverviewComponent extends Component {
                   {t('Last Modified')}
                 </Typography>
                 <div className="clearfix" />
-                {location.modified && fldt(location.modified)}
+                {user.modified && fldt(user.modified)}
               </div>
             </Grid>
             <Grid item xs={6}>
@@ -128,7 +128,7 @@ class EntityUserTypesOverviewComponent extends Component {
                   {t('Short Name')}
                 </Typography>
                 <div className="clearfix" />
-                {location.name && t(location.name)}
+                {user.short_name && t(user.short_name)}
               </div>
             </Grid>
             <Grid item xs={6}>
@@ -141,8 +141,8 @@ class EntityUserTypesOverviewComponent extends Component {
                   {t('Type')}
                 </Typography>
                 <div className="clearfix" />
-                {location?.address?.street_address
-                  && t(location?.address?.street_address)}
+                {user?.user_type
+                  && t(user?.user_type)}
               </div>
             </Grid>
             <Grid item={true} xs={12}>
@@ -164,7 +164,7 @@ class EntityUserTypesOverviewComponent extends Component {
                             parserOptions={{ commonmark: true }}
                             className="markdown"
                             >
-                            {location.description && t(location.description)}
+                            {user.description && t(user.description)}
                             </Markdown>
                         </div>
                         </div>
@@ -180,17 +180,17 @@ class EntityUserTypesOverviewComponent extends Component {
                 {t('Markings')}
               </Typography>
               <div className="clearfix" />
-              {location?.markings && (
-                <p className={classes.markingText}>{t(location?.markings)}</p>
+              {user?.markings && (
+                <p className={classes.markingText}>{t(user?.markings)}</p>
               )}
             </Grid>
             <Grid item={true} xs={6}>
               <CyioCoreObjectLabelsView
-                labels={location.labels}
+                labels={user.labels}
                 marginTop={0}
                 refreshQuery={refreshQuery}
-                id={location.id}
-                typename={location.__typename}
+                id={user.id}
+                typename={user.__typename}
               />
             </Grid>
           </Grid>
@@ -201,7 +201,7 @@ class EntityUserTypesOverviewComponent extends Component {
 }
 
 EntityUserTypesOverviewComponent.propTypes = {
-  location: PropTypes.object,
+  user: PropTypes.object,
   classes: PropTypes.object,
   refreshQuery: PropTypes.func,
   t: PropTypes.func,
@@ -211,40 +211,22 @@ EntityUserTypesOverviewComponent.propTypes = {
 const EntityUserTypesOverview = createFragmentContainer(
   EntityUserTypesOverviewComponent,
   {
-    location: graphql`
-      fragment EntityUserTypesOverview_userType on OscalLocation {
+    user: graphql`
+      fragment EntityUserTypesOverview_userType on OscalUser {
         __typename
         id
-        entity_type
-        created
-        modified
         name
+        modified
+        created
+        short_name
         description
-        location_type
-        location_class
-        address {
-          id
-          address_type
-          street_address
-          city
-          administrative_area
-          country_code
-          postal_code
-        }
-        email_addresses
-        telephone_numbers {
-          id
-          usage_type
-          phone_number
-        }
-        urls
+        user_type
         labels {
-          __typename
           id
           name
+          modified
+          created
           color
-          entity_type
-          description
         }
       }
     `,

@@ -37,11 +37,13 @@ import ResponseType from '../../../common/form/ResponseType';
 import RiskLifeCyclePhase from '../../../common/form/RiskLifeCyclePhase';
 import Source from '../../../common/form/Source';
 import { toastGenericError } from "../../../../../utils/bakedToast";
-import NewAddressField from '../../../common/form/NewAddressField';
-import DataAddressField from '../../../common/form/DataAddressField';
 import EmailAddressField from '../../../common/form/EmailAddressField';
 import { telephoneFormatRegex, emailAddressRegex } from '../../../../../utils/Network';
 import TaskType from '../../../common/form/TaskType';
+import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesField';
+import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
+import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
+import AuthorizedPrivilegesPopover from './AuthorizedPrivilegesPopover';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -80,7 +82,7 @@ const userTypeEntityEditionContainerMutation = graphql`
     $id: ID!,
     $input: [EditInput]!
   ) {
-    editOscalLocation(id: $id, input: $input) {
+    editOscalUser(id: $id, input: $input) {
       id
     }
   }
@@ -167,34 +169,26 @@ class UserTypeEntityEditionContainer extends Component {
     const {
       classes,
       t,
-      disabled,
-      remediation,
-      location,
+      user,
     } = this.props;
     const initialValues = R.pipe(
-      R.assoc('id', location?.id),
-      R.assoc('name', location?.name || ''),
-      R.assoc('description', location?.description || ''),
-      R.assoc('address', location?.address || []),
-      R.assoc('telephone_numbers', location?.telephone_numbers || []),
-      R.assoc('email_addresses', location?.email_addresses || []),
-      R.assoc('created', location?.created || null),
-      R.assoc('modified', location?.modified || null),
-      R.assoc('location_class', location?.location_class || ''),
-      R.assoc('location_type', location?.location_type || ''),
+      R.assoc('id', user?.id),
+      R.assoc('name', user?.name || ''),
+      R.assoc('description', user?.description || ''),
+      R.assoc('created', user?.created || null),
+      R.assoc('modified', user?.modified || null),
+      R.assoc('privilege_level', user?.privilege_level || ''),
+      R.assoc('user_type', user?.user_type || ''),
       R.pick([
         'id',
-        'name',
-        'address',
+        'name',     
         'description',
-        'email_addresses',
-        'telephone_numbers',
         'created',
         'modified',
-        'location_class',
-        'location_type',
+        'privilege_level',
+        'user_type',
       ]),
-    )(remediation);
+    )(user);
     return (
       <>
         <Dialog
@@ -217,7 +211,7 @@ class UserTypeEntityEditionContainer extends Component {
               values,
             }) => (
               <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Location')}</DialogTitle>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('User Type')}</DialogTitle>
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={12}>
@@ -311,7 +305,7 @@ class UserTypeEntityEditionContainer extends Component {
                         />
                       </div>
                     </Grid>
-                    <Grid item={true} xs={12}>
+                    <Grid item={true} xs={6}>
                       <Typography
                         variant="h3"
                         color="textSecondary"
@@ -333,6 +327,80 @@ class UserTypeEntityEditionContainer extends Component {
                         size="small"
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                      />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ float: 'left' }}
+                      >
+                        {t('Short Name')}
+                      </Typography>
+                      <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                        <Tooltip title={t('Name')} >
+                          <Information fontSize="inherit" color="disabled" />
+                        </Tooltip>
+                      </div>
+                      <div className="clearfix" />
+                      <Field
+                        component={TextField}
+                        name="short_name"
+                        fullWidth={true}
+                        size="small"
+                        containerstyle={{ width: '100%' }}
+                        variant='outlined'
+                      />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ float: 'left' }}
+                      >
+                        {t('Type')}
+                      </Typography>
+                      <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                        <Tooltip title={t('Type')} >
+                          <Information fontSize="inherit" color="disabled" />
+                        </Tooltip>
+                      </div>
+                      <div className="clearfix" />
+                      <TaskType
+                        component={SelectField}
+                        variant='outlined'
+                        name="user_type"
+                        taskType='UserType'
+                        fullWidth={true}
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
+                      />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ float: 'left' }}
+                      >
+                        {t('Privilege Level')}
+                      </Typography>
+                      <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                        <Tooltip title={t('Privilege Level')} >
+                          <Information fontSize="inherit" color="disabled" />
+                        </Tooltip>
+                      </div>
+                      <div className="clearfix" />
+                      <TaskType
+                        component={SelectField}
+                        variant='outlined'
+                        name="privilege_level"
+                        taskType='PrivilegeLevel'
+                        fullWidth={true}
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
                       />
                     </Grid>
                     <Grid xs={12} item={true}>
@@ -360,109 +428,29 @@ class UserTypeEntityEditionContainer extends Component {
                         containerstyle={{ width: '100%' }}
                       />
                     </Grid>
-                    <Grid item={true} xs={6}>
-                      <Typography
-                        variant="h3"
-                        color="textSecondary"
-                        gutterBottom={true}
-                        style={{ float: 'left' }}
-                      >
-                        {t('Location Type')}
-                      </Typography>
-                      <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('Location Type')} >
-                          <Information fontSize="inherit" color="disabled" />
-                        </Tooltip>
-                      </div>
-                      <div className="clearfix" />
-                      <TaskType
-                        component={SelectField}
-                        variant='outlined'
-                        name="location_type"
-                        taskType='OscalLocationType'
-                        fullWidth={true}
-                        style={{ height: '38.09px' }}
-                        containerstyle={{ width: '100%' }}
-                      />
-                    </Grid>
-                    <Grid item={true} xs={6}>
-                      <Typography
-                        variant="h3"
-                        color="textSecondary"
-                        gutterBottom={true}
-                        style={{ float: 'left' }}
-                      >
-                        {t('Location Class')}
-                      </Typography>
-                      <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('Location Class')} >
-                          <Information fontSize="inherit" color="disabled" />
-                        </Tooltip>
-                      </div>
-                      <div className="clearfix" />
-                      <TaskType
-                        component={SelectField}
-                        variant='outlined'
-                        name="location_class"
-                        taskType='OscalLocationClass'
-                        fullWidth={true}
-                        style={{ height: '38.09px' }}
-                        containerstyle={{ width: '100%' }}
+                    <Grid item={true} xs={12}>
+                      <ResponsiblePartiesField
+                        title={'Role ID'}
+                        name='role_id'
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
-                      <NewAddressField
-                        setFieldValue={setFieldValue}
-                        values={values}
-                        addressValues={values.address}
-                        title='Address'
-                        name='address'
+                      <AuthorizedPrivilegesPopover
+                        title={'Authorized Privileges'}
+                        name='authorized_privileges'
                       />
                     </Grid>
-                    <Grid item={true} xs={6}>
-                      <DataAddressField
-                        setFieldValue={setFieldValue}
-                        values={values}
-                        addressValues={values.telephone_numbers}
-                        title='Telephone numbers'
-                        name='telephone_numbers'
-                        validation={telephoneFormatRegex}
-                        helperText='Please enter a valid Telephone Number. Example: +1 999 999-9999'
+                    <Grid item={true} xs={12}>
+                      <ResponsiblePartiesField
+                        title={'Markings'}
+                        name='role_id'
                       />
-                      <div style={{ marginTop: '10px' }}>
-                        <Typography
-                          variant="h3"
-                          color="textSecondary"
-                          gutterBottom={true}
-                          style={{ float: 'left' }}
-                        >
-                          {t('Marking')}
-                        </Typography>
-                        <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                          <Tooltip title={t('Marking')} >
-                            <Information fontSize="inherit" color="disabled" />
-                          </Tooltip>
-                        </div>
-                        <div className="clearfix" />
-                        <Field
-                          component={SelectField}
-                          variant='outlined'
-                          name="marking"
-                          fullWidth={true}
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '100%' }}
-                        />
-                      </div>
                     </Grid>
-                    <Grid item={true} xs={6}>
-                      <EmailAddressField
-                        setFieldValue={setFieldValue}
-                        values={values}
-                        addressValues={values.email_addresses}
-                        title='Email Address'
-                        name='email_addresses'
-                        validation={emailAddressRegex}
-                        helperText='Please enter a valid Email Address. Example: support@darklight.ai'
+                    <Grid item={true} xs={12}>
+                      <CyioCoreObjectExternalReferences disableAdd={true}/>
+                    </Grid>
+                    <Grid item={true} xs={12}>
+                      <CyioCoreObjectOrCyioCoreRelationshipNotes disableAdd={true}
                       />
                     </Grid>
                   </Grid>
@@ -506,7 +494,7 @@ UserTypeEntityEditionContainer.propTypes = {
   t: PropTypes.func,
   connectionKey: PropTypes.string,
   enableReferences: PropTypes.bool,
-  location: PropTypes.object,
+  user: PropTypes.object,
 };
 
 export default compose(

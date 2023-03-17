@@ -28,7 +28,7 @@ class EntitiesUserTypesCards extends Component {
     setNumberOfElements(
       prevProps,
       this.props,
-      'oscalLocations',
+      'oscalUsers',
       this.props.setNumberOfElements.bind(this),
     );
   }
@@ -76,10 +76,10 @@ class EntitiesUserTypesCards extends Component {
         handleDecrementedOffsetChange={this.handleDecrementedOffsetChange.bind(this)}
         hasMore={relay.hasMore.bind(this)}
         isLoading={relay.isLoading.bind(this)}
-        dataList={pathOr([], ['oscalLocations', 'edges'], this.props.data)}
+        dataList={pathOr([], ['oscalUsers', 'edges'], this.props.data)}
         globalCount={pathOr(
           nbOfCardsToLoad,
-          ['oscalLocations', 'pageInfo', 'globalCount'],
+          ['oscalUsers', 'pageInfo', 'globalCount'],
           this.props.data,
         )}
         offset={offset}
@@ -113,9 +113,9 @@ export const entitiesUserTypesCardsQuery = graphql`
     $first: Int!
     $offset: Int!
     $cursor: ID
-    $orderedBy: OscalLocationOrdering
+    $orderedBy: OscalUsersOrdering
     $orderMode: OrderingMode
-    $filters: [OscalLocationFiltering]
+    $filters: [OscalUsersFiltering]
     $filterMode: FilterMode
   ) {
     ...EntitiesUserTypesCards_data
@@ -142,12 +142,12 @@ export default createPaginationContainer(
         first: { type: "Int", defaultValue: 50 }
         offset: { type: "Int", defaultValue: 0 }
         cursor: { type: "ID" }
-        orderedBy: { type: "OscalLocationOrdering", defaultValue: created }
+        orderedBy: { type: "OscalUsersOrdering", defaultValue: created }
         orderMode: { type: "OrderingMode", defaultValue: asc }
-        filters: { type: "[OscalLocationFiltering]" }
+        filters: { type: "[OscalUsersFiltering]" }
         filterMode: { type: "FilterMode" }
       ) {
-        oscalLocations(
+        oscalUsers(
           search: $search
           first: $first
           offset: $offset
@@ -155,13 +155,13 @@ export default createPaginationContainer(
           orderMode: $orderMode
           filters: $filters
           filterMode: $filterMode
-        ) @connection(key: "Pagination_oscalLocations") {
+        ) @connection(key: "Pagination_oscalUsers") {
           edges {
             node {
               id
               name
               description
-              ...EntityLocationCard_node
+              ...EntityUserTypesCard_node
             }
           }
           pageInfo {
@@ -176,7 +176,7 @@ export default createPaginationContainer(
   {
     direction: 'forward',
     getConnectionFromProps(props) {
-      return props.data && props.data.oscalLocations;
+      return props.data && props.data.oscalUsers;
     },
     getFragmentVariables(prevVars, totalCount) {
       return {

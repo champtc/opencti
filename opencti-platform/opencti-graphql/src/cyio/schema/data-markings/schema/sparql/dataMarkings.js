@@ -1,10 +1,12 @@
+import { UserInputError } from 'apollo-server-errors';
 import {
   optionalizePredicate,
   parameterizePredicate,
   buildSelectVariables,
+  attachQuery,
+  detachQuery,
   generateId,
   DARKLIGHT_NS,
-  CyioError,
 } from '../../../utils.js';
 
 // Reducer Selection
@@ -13,7 +15,7 @@ export function getReducer(type) {
     case 'DATA-MARKING':
       return dataMarkingReducer;
     default:
-      throw new CyioError(`Unsupported reducer type ' ${type}'`);
+      throw new UserInputError(`Unsupported reducer type ' ${type}'`);
   }
 }
 
@@ -54,8 +56,8 @@ const dataMarkingReducer = (item) => {
     ...(item.created_by_ref && { created_by_ref_iri: item.created_by_ref }),
     ...(item.external_references && { external_references_iri: item.external_references }),
     ...(item.notes && { notes_iri: item.notes }),
-    ...(item.object_marking_refs && { object_marking_ref_iris: item.object_marking_refs }),
-    ...(item.granular_markings && { granular_markings_iri: item.granular_markings_ref }),
+    ...(item.object_markings && { marking_iris: item.object_markings }),
+    ...(item.granular_markings && { granular_marking_iris: item.granular_markings }),
   };
 };
 
@@ -93,7 +95,7 @@ export const insertDataMarkingQuery = (propValues) => {
       iriType = `${propValues.definition_type.toUpperCase()}Marking`;
       break;
     default:
-      throw new CyioError(`Unknown type of Data Marking '${propValues.definition_type}'`);
+      throw new UserInputError(`Unknown type of Data Marking '${propValues.definition_type}'`);
   }
 
   const query = `
@@ -224,45 +226,43 @@ export const deleteMultipleDataMarkingsQuery = (ids) => {
 };
 
 export const attachToDataMarkingQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
-
   if (!dataMarkingPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
   const { predicate } = dataMarkingPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  INSERT DATA {
-      GRAPH ${iri} {
-      ${statements}
-      }
-  }
-  `;
+  return attachQuery(
+    iri, 
+    statements, 
+    dataMarkingPredicateMap, 
+    '<http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition>'
+  );
 };
 
 export const detachFromDataMarkingQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
-
   if (!dataMarkingPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
   const { predicate } = dataMarkingPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  DELETE DATA {
-      GRAPH ${iri} {
-      ${statements}
-      }
-  }
-  `;
+  return detachQuery(
+    iri, 
+    statements, 
+    dataMarkingPredicateMap, 
+    '<http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition>'
+  );
 };
 
 // Data Marking Predicate Map
@@ -389,10 +389,10 @@ export const dataMarkingPredicateMap = {
       return optionalizePredicate(this.binding(iri, value));
     },
   },
-  object_marking_refs: {
-    predicate: '<http://docs.oasis-open.org/ns/cti/data-marking#object_marking_refs>',
+  object_markings: {
+    predicate: '<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>',
     binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'object_marking_refs');
+      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'object_markings');
     },
     optional(iri, value) {
       return optionalizePredicate(this.binding(iri, value));

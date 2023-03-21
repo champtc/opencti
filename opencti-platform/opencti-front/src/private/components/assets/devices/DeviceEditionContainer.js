@@ -267,7 +267,7 @@ class DeviceEditionContainer extends Component {
       R.assoc('fqdn', device?.fqdn || ''),
       R.assoc('ipv4_address', R.pluck('ip_address_value', device?.ipv4_address || [])),
       R.assoc('ipv6_address', R.pluck('ip_address_value', device?.ipv6_address || [])),
-      R.assoc('responsible_parties', ''),
+      R.assoc('responsible_parties', device?.responsible_parties || []),
       R.assoc('implementation_point', device?.implementation_point),
       R.pick([
         'id',
@@ -490,6 +490,10 @@ const DeviceEditionFragment = createFragmentContainer(
         __typename
         id
         name
+        responsible_parties {
+          id
+          name
+        }
         labels {
           __typename
           id

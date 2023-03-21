@@ -12,11 +12,14 @@ import Typography from '@material-ui/core/Typography';
 import { Information } from 'mdi-material-ui';
 import Tooltip from '@material-ui/core/Tooltip';
 import InsertLinkIcon from '@material-ui/icons/InsertLink';
+import AddIcon from '@material-ui/icons/Add';
 import LinkOffIcon from '@material-ui/icons/LinkOff';
 import graphql from 'babel-plugin-relay/macro';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import Button from '@material-ui/core/Button';
+import Link from '@material-ui/core/Link';
+import LaunchIcon from '@material-ui/icons/Launch';
 import IconButton from '@material-ui/core/IconButton';
 import {
   Dialog, DialogContent, DialogActions,
@@ -51,8 +54,18 @@ const styles = (theme) => ({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  titleIcon: {
+    display: 'flex',
+  },
+  launchIcon: {
+    marginRight: '10px',
+  },
   dialogAction: {
     margin: '15px 20px 15px 0',
+  },
+  addIcon: {
+    marginRight: '-20px',
+    padding: '5px',
   },
 });
 
@@ -122,8 +135,8 @@ class ResponsiblePartiesField extends Component {
         const transformLabels = pipe(
           pathOr([], ['oscalResponsibleParties', 'edges']),
           map((n) => ({
-            label: n.node.name,
-            value: n.node.id,
+            name: n.node.name,
+            id: n.node.id,
           })),
         )(data);
         this.setState({ parties: [...transformLabels] });
@@ -139,7 +152,7 @@ class ResponsiblePartiesField extends Component {
     commitMutation({
       mutation: responsiblePartiesFieldAddMutation,
       variables: {
-        toId: this.state.party?.value,
+        toId: this.state.party?.id,
         fromId: this.props.id,
         fieldName: 'responsible_parties',
         from_type: this.props.fromType,
@@ -148,8 +161,8 @@ class ResponsiblePartiesField extends Component {
     });
   }
 
-  handleDelete(key) {
-    const newParties = this.state.currentParties.filter((item, index) => index !== key);
+  handleDelete(id) {
+    const newParties = this.state.currentParties.filter((item) => item.id !== id);
     this.setState({
       currentParties: newParties,
     });
@@ -157,7 +170,7 @@ class ResponsiblePartiesField extends Component {
     commitMutation({
       mutation: responsiblePartiesFieldRemoveMutation,
       variables: {
-        toId: this.state.party?.value,
+        toId: id,
         fromId: this.props.id,
         fieldName: 'responsible_parties',
         from_type: this.props.fromType,
@@ -174,6 +187,7 @@ class ResponsiblePartiesField extends Component {
   render() {
     const {
       t,
+      history,
       classes,
       title,
     } = this.props;
@@ -183,7 +197,7 @@ class ResponsiblePartiesField extends Component {
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Typography>{title && t(title)}</Typography>
           <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
-            <Tooltip title={t('Baseline Configuration Name')}>
+            <Tooltip title={t('Responsible Parties')}>
               <Information fontSize="inherit" color="disabled" />
             </Tooltip>
           </div>
@@ -200,10 +214,20 @@ class ResponsiblePartiesField extends Component {
               {this.state.currentParties
                 && this.state.currentParties.map((party, key) => (
                   <div key={key} className={classes.descriptionBox}>
-                    <Typography>{party && t(party?.label)}</Typography>
+                    <div className={classes.titleIcon}>
+                      <Link
+                        key={key}
+                        component="button"
+                        variant="body2"
+                        onClick={() => history.push(`/data/entities/responsible_parties/${party.id}`)}
+                        >
+                          <LaunchIcon fontSize="small" className={classes.launchIcon} />
+                      </Link>
+                      <Typography>{party && t(party?.name)}</Typography>
+                    </div>
                     <IconButton
                       size="small"
-                      onClick={this.handleDelete.bind(this, key)}
+                      onClick={this.handleDelete.bind(this, party.id)}
                     >
                       <LinkOffIcon />
                     </IconButton>
@@ -222,7 +246,7 @@ class ResponsiblePartiesField extends Component {
           <DialogContent style={{ overflow: 'hidden' }}>
             <Autocomplete
               size='small'
-              loading={this.state.party || false}
+              loading={this.state.parties === []}
               loadingText='Searching...'
               className={classes.autocomplete}
               classes={{
@@ -230,16 +254,27 @@ class ResponsiblePartiesField extends Component {
               }}
               noOptionsText={t('No available options')}
               options={this.state.parties}
-              getOptionLabel={(option) => (option.label ? option.label : option)
-              }
+              getOptionLabel={(option) => (option.name ? option.name : option)}
               onChange={(event, value) => this.setState({ party: value })}
               selectOnFocus={true}
               autoHighlight={true}
+              forcePopupIcon={true}
               renderInput={(params) => (
                 <TextField
                   variant='outlined'
                   {...params}
-                  label='Responsible Parties'
+                  label='Choose Responsible Party'
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        <IconButton disabled aria-label="open" size="large" className={classes.addIcon}>
+                          <AddIcon />
+                        </IconButton>
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
                 />
               )}
             />

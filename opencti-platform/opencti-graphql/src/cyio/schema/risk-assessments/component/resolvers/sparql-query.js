@@ -1,8 +1,10 @@
-import { UserInputError } from 'apollo-server-express';
+import { UserInputError } from 'apollo-server-errors';
 import {
   optionalizePredicate,
   parameterizePredicate,
   buildSelectVariables,
+  attachQuery,
+  detachQuery,
   generateId,
   OSCAL_NS,
 } from '../../../utils.js';
@@ -13,7 +15,7 @@ export function getReducer(type) {
     case 'COMPONENT':
       return componentReducer;
     default:
-      throw new Error(`Unsupported reducer type ' ${type}'`);
+      throw new UserInputError(`Unsupported reducer type ' ${type}'`);
   }
 }
 
@@ -54,9 +56,6 @@ export const componentReducer = (item) => {
     ...(item.object_type && { object_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
-    ...(item.labels && { labels_iri: item.labels }),
-    ...(item.links && { links_iri: item.links }),
-    ...(item.remarks && { remarks_iri: item.remarks }),
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
     // component
@@ -98,6 +97,11 @@ export const componentReducer = (item) => {
     ...(item.isa_title && { isa_title: item.isa_title }),
     ...(item.isa_date && { isa_date: item.isa_date }),
     ...(item.isa_remote_system_name && { isa_remote_system_name: item.isa_remote_system_name }),
+    // hints for general lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
+    ...(item.labels && { labels_iri: item.labels }),
+    ...(item.links && { links_iri: item.links }),
+    ...(item.remarks && { remarks_iri: item.remarks }),
   };
 };
 
@@ -240,42 +244,44 @@ export const deleteComponentByIriQuery = (iri) => {
   `;
 };
 export const attachToComponentQuery = (id, field, itemIris) => {
+  if (!componentPredicateMap.hasOwnProperty(field)) return null;
   const iri = `<http://csrc.nist.gov/ns/oscal/common#Component-${id}>`;
-  if (!activityPredicateMap.hasOwnProperty(field)) return null;
-  const { predicate } = activityPredicateMap[field];
+  const { predicate } = componentPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  INSERT DATA {
-    GRAPH ${iri} {
-      ${statements}
-    }
-  }
-  `;
+
+  return attachQuery(
+    iri, 
+    statements, 
+    componentPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#Component>'
+  );
 };
 export const detachFromComponentQuery = (id, field, itemIris) => {
-  const iri = `<http://csrc.nist.gov/ns/oscal/common#Component-${id}>`;
   if (!componentPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://csrc.nist.gov/ns/oscal/common#Component-${id}>`;
   const { predicate } = componentPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  DELETE DATA {
-    GRAPH ${iri} {
-      ${statements}
-    }
-  }
-  `;
+
+  return detachQuery(
+    iri, 
+    statements, 
+    componentPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#Component>'
+  );
 };
 
 // Predicate Maps
@@ -362,7 +368,7 @@ export const componentPredicateMap = {
     },
   },
   name: {
-    predicate: '<http://scap.nist.gov/ns/asset-identification#name>',
+    predicate: '<http://scap.nist.gov/ns/asset-identification#name>|<http://csrc.nist.gov/ns/oscal/info-system#system_name>',
     binding(iri, value) {
       return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'name');
     },
@@ -396,6 +402,11 @@ export const componentPredicateMap = {
     optional(iri, value) {
       return optionalizePredicate(this.binding(iri, value));
     },
+  },
+  object_markings: {
+    predicate: "<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "object_markings");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   inherited_uuid: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#inherited_uuid>',

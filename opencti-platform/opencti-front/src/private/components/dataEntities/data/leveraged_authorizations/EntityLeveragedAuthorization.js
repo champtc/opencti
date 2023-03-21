@@ -16,6 +16,7 @@ import EntitiesLeveragedAuthorizationsDeletion from './EntitiesLeveragedAuthoriz
 import EntityLeveragedAuthorizationDetails from './EntityLeveragedAuthorizationDetails';
 import EntitiesLeveragedAuthorizationsCreation from './EntitiesLeveragedAuthorizationsCreation';
 import LeveragedAuthorizationEntityEditionContainer from './LeveragedAuthorizationEntityEditionContainer';
+import EntityLeveragedAuthorizationOverview from './EntityLeveragedAuthorizationOverview';
 
 const styles = () => ({
   container: {
@@ -54,7 +55,7 @@ class EntityLeveragedAuthorizationComponent extends Component {
             history={history}
             name={leveragedAuthorization.name}
             cyioDomainObject={leveragedAuthorization}
-            goBack="/data/entities/leveraged_authorizations/"
+            goBack="/data/entities/leveraged_authorizations"
             PopoverComponent={<EntitiesLeveragedAuthorizationsPopover />}
             OperationsComponent={<EntitiesLeveragedAuthorizationsDeletion />}
             handleDisplayEdit={this.handleDisplayEdit.bind(this)}
@@ -65,7 +66,14 @@ class EntityLeveragedAuthorizationComponent extends Component {
             spacing={3}
             classes={{ container: classes.gridContainer }}
           >
-            <Grid item={true} xs={12}>
+            <Grid item={true} xs={6}>
+              <EntityLeveragedAuthorizationOverview
+                leveragedAuthorization={leveragedAuthorization}
+                history={history}
+                refreshQuery={refreshQuery}
+              />
+            </Grid>
+            <Grid item={true} xs={6}>
               <EntityLeveragedAuthorizationDetails
                 leveragedAuthorization={leveragedAuthorization}
                 history={history}
@@ -161,6 +169,7 @@ const EntityLeveragedAuthorization = createFragmentContainer(
           content
           authors
         }
+        ...EntityLeveragedAuthorizationOverview_leveragedAuthorization
         ...EntityLeveragedAuthorizationDetails_leveragedAuthorization
       }
     `,

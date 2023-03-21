@@ -95,7 +95,7 @@ class RootLeveragedAuthorization extends Component {
               toastGenericError('Failed to get leveraged authorization data');
             }
             if (props) {
-              if (props.oscalLeveragedAuthorization) {
+              if (props.leveragedAuthorization) {
                 return (
                   <Switch>
                     <Route
@@ -105,7 +105,7 @@ class RootLeveragedAuthorization extends Component {
                         <EntityLeveragedAuthorization
                           {...routeProps}
                           refreshQuery={retry}
-                          leveragedAuthorization={props.oscalLeveragedAuthorization}
+                          leveragedAuthorization={props.leveragedAuthorization}
                         />
                       )}
                     />

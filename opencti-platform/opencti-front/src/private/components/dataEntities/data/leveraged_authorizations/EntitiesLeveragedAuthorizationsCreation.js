@@ -17,16 +17,12 @@ import DialogActions from '@material-ui/core/DialogActions';
 import graphql from 'babel-plugin-relay/macro';
 import { commitMutation } from '../../../../../relay/environment';
 import inject18n from '../../../../../components/i18n';
-import SelectField from '../../../../../components/SelectField';
 import TextField from '../../../../../components/TextField';
 import DatePickerField from '../../../../../components/DatePickerField';
 import MarkDownField from '../../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
-import NewAddressField from '../../../common/form/NewAddressField';
 import TaskType from '../../../common/form/TaskType';
-import DataAddressField from '../../../common/form/DataAddressField';
-import EmailAddressField from '../../../common/form/EmailAddressField';
-import { telephoneFormatRegex, emailAddressRegex } from '../../../../../utils/Network';
+import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesField';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -155,15 +151,12 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
           <Formik
             enableReinitialize={true}
             initialValues={{
-              name: '',
+              title: '',
               created: null,
               modified: null,
               description: '',
-              address: [],
-              location_type: null,
-              location_class: null,
-              email_addresses: [],
-              telephone_numbers: [],
+              markings: [],
+              date_authorized: null,
             }}
             validationSchema={LeveragedAuthorizationCreationValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
@@ -271,7 +264,7 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                         />
                       </div>
                     </Grid>
-                    <Grid item={true} xs={12}>
+                    <Grid item={true} xs={6}>
                       <Typography
                         variant="h3"
                         color="textSecondary"
@@ -288,12 +281,42 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                       <div className="clearfix" />
                       <Field
                         component={TextField}
-                        name="name"
+                        name="title"
                         fullWidth={true}
                         size="small"
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
                       />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <div>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ float: 'left' }}
+                        >
+                          {t('Date Authorized')}
+                        </Typography>
+                        <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                          <Tooltip title={t('Date Authorized')} >
+                            <Information fontSize="inherit" color="disabled" />
+                          </Tooltip>
+                        </div>
+                        <div className="clearfix" />
+                        <Field
+                          component={DatePickerField}
+                          name="date_authorized"
+                          fullWidth={true}
+                          size="small"
+                          variant='outlined'
+                          invalidDateMessage={t(
+                            'The value must be a date (YYYY-MM-DD)',
+                          )}
+                          style={{ height: '38.09px' }}
+                          containerstyle={{ width: '100%' }}
+                        />
+                      </div>
                     </Grid>
                     <Grid xs={12} item={true}>
                       <Typography
@@ -327,41 +350,17 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                         gutterBottom={true}
                         style={{ float: 'left' }}
                       >
-                        {t('Location Type')}
+                        {t('Party')}
                       </Typography>
                       <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('Location Type')} >
+                        <Tooltip title={t('Party')} >
                           <Information fontSize="inherit" color="disabled" />
                         </Tooltip>
                       </div>
                       <div className="clearfix" />
                       <TaskType
-                        name='location_type'
-                        taskType='OscalLocationType'
-                        fullWidth={true}
-                        variant='outlined'
-                        style={{ height: '38.09px' }}
-                        containerstyle={{ width: '100%' }}
-                      />
-                    </Grid>
-                    <Grid item={true} xs={6}>
-                      <Typography
-                        variant="h3"
-                        color="textSecondary"
-                        gutterBottom={true}
-                        style={{ float: 'left' }}
-                      >
-                        {t('Location Class')}
-                      </Typography>
-                      <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('Location Class')} >
-                          <Information fontSize="inherit" color="disabled" />
-                        </Tooltip>
-                      </div>
-                      <div className="clearfix" />
-                      <TaskType
-                        name='location_class'
-                        taskType='OscalLocationClass'
+                        name='party'
+                        taskType='OscalPartyType'
                         fullWidth={true}
                         variant='outlined'
                         style={{ height: '38.09px' }}
@@ -369,24 +368,6 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
-                      <NewAddressField
-                        setFieldValue={setFieldValue}
-                        values={values}
-                        addressValues={values.address}
-                        title='Address'
-                        name='address'
-                      />
-                    </Grid>
-                    <Grid item={true} xs={6}>
-                      <DataAddressField
-                        setFieldValue={setFieldValue}
-                        values={values}
-                        addressValues={values.telephone_numbers}
-                        title='Telephone numbers'
-                        name='telephone_numbers'
-                        validation={telephoneFormatRegex}
-                        helperText='Please enter a valid Telephone Number. Example: +17895551234 (10-15 digits)'
-                      />
                       <div style={{ marginTop: '10px' }}>
                         <Typography
                           variant="h3"
@@ -402,8 +383,8 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                           </Tooltip>
                         </div>
                         <div className="clearfix" />
-                        <Field
-                          component={SelectField}
+                        <ResponsiblePartiesField
+                          title='Markings'
                           variant='outlined'
                           name="marking"
                           fullWidth={true}
@@ -411,17 +392,6 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                           containerstyle={{ width: '100%' }}
                         />
                       </div>
-                    </Grid>
-                    <Grid item={true} xs={6}>
-                      <EmailAddressField
-                        setFieldValue={setFieldValue}
-                        values={values}
-                        addressValues={values.email_addresses}
-                        title='Email Address'
-                        name='email_addresses'
-                        validation={emailAddressRegex}
-                        helperText='Please enter a valid Email Address. Example: support@darklight.ai'
-                      />
                     </Grid>
                   </Grid>
                 </DialogContent>

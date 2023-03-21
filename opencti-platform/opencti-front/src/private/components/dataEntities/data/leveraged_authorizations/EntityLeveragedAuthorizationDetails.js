@@ -67,15 +67,13 @@ class EntityLeveragedAuthorizationDetailsComponent extends Component {
     const {
       t,
       classes,
-      refreshQuery,
       leveragedAuthorization,
-      fldt,
-      history,
+      fd,
     } = this.props;
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
-          {t('Basic Information')}
+          {t('Details')}
         </Typography>
         <Paper classes={{ root: classes.paper }} elevation={2}>
         <Grid container={true}>
@@ -88,10 +86,10 @@ class EntityLeveragedAuthorizationDetailsComponent extends Component {
                     color="textSecondary"
                     gutterBottom={true}
                   >
-                    {t('Name')}
+                    {t('Date Authorized')}
                   </Typography>
                   <div className="clearfix" />
-                  {leveragedAuthorization.name && t(leveragedAuthorization.name)}
+                  {leveragedAuthorization.date_authorized && fd(leveragedAuthorization.date_authorized)}
                 </div>
               </Grid>
               <Grid item xs={6}>
@@ -101,10 +99,10 @@ class EntityLeveragedAuthorizationDetailsComponent extends Component {
                     color="textSecondary"
                     gutterBottom={true}
                   >
-                    {t('ID')}
+                    {t('Party')}
                   </Typography>
                   <div className="clearfix" />
-                  {leveragedAuthorization.id && t(leveragedAuthorization.id)}
+                  {leveragedAuthorization.party.name && t(leveragedAuthorization.party.name)}
                 </div>
               </Grid>
             </Grid>

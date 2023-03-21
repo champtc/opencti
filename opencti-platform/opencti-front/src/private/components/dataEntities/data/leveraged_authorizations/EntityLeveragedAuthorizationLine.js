@@ -107,7 +107,7 @@ class EntityLeveragedAuthorizationLineComponent extends Component {
                 className={classes.bodyItem}
                 style={{ width: dataColumns.date_authorized.width }}
               >
-                {/* {node.date_authorized && fd(node.date_authorized)} */}
+                {node.date_authorized && fd(node.date_authorized)}
               </div>
               <div className={classes.bodyItem} style={{ width: '21%' }}>
                 <CyioCoreObjectLabels

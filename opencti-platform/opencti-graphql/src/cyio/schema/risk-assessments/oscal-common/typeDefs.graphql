@@ -444,7 +444,7 @@ type OscalParty {
   office: String
   "Identifies that the party object is a member of this organization."
   member_of_organizations: [OscalParty]
-  "Identifes the formal job title of this person"
+  "Identifies the formal job title of this person"
   job_title: String
 }
 input OscalPartyAddInput {
@@ -473,7 +473,7 @@ input OscalPartyAddInput {
   office: String
   "Identifies that the party object is a member of the organization."
   member_of_organizations: [ID]
-  "Identifes the formal job title of this person"
+  "Identifies the formal job title of this person"
   job_title: String
 }
 # Ordering Type

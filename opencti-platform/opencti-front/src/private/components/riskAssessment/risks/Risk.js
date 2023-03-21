@@ -92,7 +92,21 @@ class RiskComponent extends Component {
       .then(() => {
         commitMutation({
           mutation: riskEditMutation,
-          variables: { id: this.props.risk.id, input: { key: name, value } },
+          variables: { 
+            id: this.props.risk.id,
+            ...(value || value !== '' ? { 
+              input: { 
+                key: name, 
+                value,
+              } 
+            } : {
+              input: { 
+                key: name, 
+                value: this.props.risk[name],
+                operation: 'remove'
+              } 
+            } ),
+          },
           onCompleted: () => {
             this.setState({ modelName: '', open: false });
           },
@@ -176,6 +190,7 @@ class RiskComponent extends Component {
             enableReinitialize={true}
             initialValues={initialValues}
           >
+          {({ setFieldValue, values }) => (
             <Form>
             <div className={classes.container}>
             <CyioDomainObjectHeader
@@ -213,6 +228,8 @@ class RiskComponent extends Component {
                   handleEditOpen={this.handleEditOpen.bind(this)}
                   open={open}
                   modelName={modelName}
+                  setFieldValue={setFieldValue} 
+                  values={values}
                 />
                 <RiskObservation risk={risk} history={history}/>
               </Grid>
@@ -248,6 +265,7 @@ class RiskComponent extends Component {
               </Security> */}
           </div>
             </Form>
+          )}
           </Formik>
           
         ) : (

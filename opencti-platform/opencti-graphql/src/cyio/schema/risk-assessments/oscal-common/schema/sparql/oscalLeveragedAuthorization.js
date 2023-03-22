@@ -36,10 +36,12 @@ const oscalLeveragedAuthorizationReducer = (item) => {
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
     ...(item.title && { title: item.title }),
+    ...(item.description && { description: item.description }),
     ...(item.date_authorized && { date_authorized: item.date_authorized }),
     // hints for field-level resolver queries
     ...(item.party && { party_iri: item.party }),
     // hints for general lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
     ...(item.labels && { label_iris: item.labels }),
     ...(item.links && { link_iris: item.links }),
     ...(item.remarks && { remark_iris: item.remarks }),
@@ -50,7 +52,7 @@ const oscalLeveragedAuthorizationReducer = (item) => {
 // Query Builders
 //
 export const selectOscalLeveragedAuthorizationQuery = (id, select) => {
-  return selectOscalLeveragedAuthorizationByIriQuery(`http://cyio.darklight.ai/oscal-leveraged-authorization${id}`, select);
+  return selectOscalLeveragedAuthorizationByIriQuery(`http://cyio.darklight.ai/oscal-leveraged-authorization--${id}`, select);
 }
 
 export const selectOscalLeveragedAuthorizationByIriQuery = (iri, select) => {
@@ -107,13 +109,13 @@ export const selectAllOscalLeveragedAuthorizationsQuery = (select, args, parent)
 
 export const insertOscalLeveragedAuthorizationQuery = (propValues) => {
   const id_material = {
-    ...(propValues.name && {"name": propValues.name}),
+    ...(propValues.title && {"title": propValues.title}),
   } ;
   const id = generateId( id_material, DARKLIGHT_NS );
   const timestamp = new Date().toISOString();
 
   // determine the appropriate ontology class type
-  const iri = `<http://cyio.darklight.ai/oscal-leveraged-authorization${id}>`;
+  const iri = `<http://cyio.darklight.ai/oscal-leveraged-authorization--${id}>`;
   const insertPredicates = [];
   Object.entries(propValues).forEach((propPair) => {
     if (oscalLeveragedAuthorizationPredicateMap.hasOwnProperty(propPair[0])) {
@@ -145,7 +147,7 @@ export const insertOscalLeveragedAuthorizationQuery = (propValues) => {
 }
     
 export const deleteOscalLeveragedAuthorizationQuery = (id) => {
-  const iri = `http://cyio.darklight.ai/oscal-leveraged-authorization${id}`;
+  const iri = `http://cyio.darklight.ai/oscal-leveraged-authorization--${id}`;
   return deleteOscalLeveragedAuthorizationByIriQuery(iri);
 }
 
@@ -185,7 +187,7 @@ export const deleteMultipleOscalLeveragedAuthorizationsQuery = (ids) =>{
 
 export const attachToOscalLeveragedAuthorizationQuery = (id, field, itemIris) => {
   if (!oscalLeveragedAuthorizationPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/oscal-leveraged-authorization${id}>`;
+  const iri = `<http://cyio.darklight.ai/oscal-leveraged-authorization--${id}>`;
   const predicate = oscalLeveragedAuthorizationPredicateMap[field].predicate;
 
   let statements;
@@ -209,7 +211,7 @@ export const attachToOscalLeveragedAuthorizationQuery = (id, field, itemIris) =>
 
 export const detachFromOscalLeveragedAuthorizationQuery = (id, field, itemIris) => {
   if (!oscalLeveragedAuthorizationPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/oscal-leveraged-authorization${id}>`;
+  const iri = `<http://cyio.darklight.ai/oscal-leveraged-authorization--${id}>`;
   const predicate = oscalLeveragedAuthorizationPredicateMap[field].predicate;
 
   let statements;
@@ -265,6 +267,11 @@ export const oscalLeveragedAuthorizationPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "title");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
+  description: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#description>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "description");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
   party: {
     predicate: "<http://darklight.ai/ns/common#party>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "party");},
@@ -273,6 +280,11 @@ export const oscalLeveragedAuthorizationPredicateMap = {
   date_authorized: {
     predicate: "<http://darklight.ai/ns/common#date_authorized>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:date` : null,  this.predicate, "date_authorized");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  object_markings: {
+    predicate: "<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "object_markings");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   labels: {
@@ -311,6 +323,7 @@ export const singularizeOscalLeveragedAuthorizationSchema = {
     "modified": true,
     "title": true,
     "party": true,
-    "data_authorized": true,
+    "description": true,
+    "date_authorized": true,
   }
 };

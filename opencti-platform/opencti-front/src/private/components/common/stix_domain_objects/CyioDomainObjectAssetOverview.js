@@ -65,7 +65,7 @@ const styles = (theme) => ({
 class CyioDomainObjectAssetOverview extends Component {
   render() {
     const {
-      fd, t, fldt, classes, cyioDomainObject, withoutMarking, withPattern, refreshQuery,
+      fd, t, history, classes, cyioDomainObject, withoutMarking, withPattern, refreshQuery,
     } = this.props;
     const objectLabel = { edges: { node: { id: 1, value: 'labels', color: 'red' } } };
     // const otherCyioIds = cyioDomainObject?.x_opencti_cyio_ids || [];
@@ -302,38 +302,17 @@ class CyioDomainObjectAssetOverview extends Component {
                   fd(cyioDomainObject.release_date)}
               </div>
             </Grid>
-            <Grid item={true} xs={6}>
+            <Grid item={true} xs={12}>
               <div>
-                {/* <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  gutterBottom={true}
-                  style={{ float: "left", marginTop: 20 }}
-                >
-                  {t("Responsible Parties")}
-                </Typography>
-                <div style={{ float: "left", margin: "21px 0 0 5px" }}>
-                  <Tooltip title={t("Responsible Parties")}>
-                    <Information fontSize="inherit" color="disabled" />
-                  </Tooltip>
-                </div>
-                <div className="clearfix" />
-                {cyioDomainObject?.responsible_parties &&
-                  cyioDomainObject?.responsible_parties.map((data, key) => (
-                    <Chip
-                      key={key}
-                      classes={{ root: classes.chip }}
-                      label={t(data)}
-                      color="primary"
-                    />
-                  ))} */}
-                  <ResponsiblePartiesField                   
-                    id={cyioDomainObject.id}
-                    fromType={cyioDomainObject.__typename}
-                    toType='OscalResponsibleParty'
-                    name='responsible_parties'
-                    title='Responsible Parties'
-                  />
+                <ResponsiblePartiesField
+                  history={history}                   
+                  id={cyioDomainObject.id}
+                  fromType={cyioDomainObject.__typename}
+                  toType='OscalResponsibleParty'
+                  name='responsible_parties'
+                  title='Responsible Parties'
+                  data={cyioDomainObject.responsible_parties}
+                />
               </div>
             </Grid>
             <Grid item={true} xs={6}>

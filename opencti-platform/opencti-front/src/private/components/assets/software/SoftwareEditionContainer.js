@@ -453,6 +453,10 @@ const SoftwareEditionFragment = createFragmentContainer(
         version
         vendor_name
         asset_tag
+        responsible_parties {
+          id
+          name
+        }
         labels {
           __typename
           id

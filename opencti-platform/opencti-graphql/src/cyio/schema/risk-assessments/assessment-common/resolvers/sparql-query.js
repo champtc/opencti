@@ -2517,6 +2517,7 @@ export const selectObservationByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
   if (select === undefined || select === null) select = Object.keys(observationPredicateMap);
   if (!select.includes('id')) select.push('id');
+  if (!select.includes('entity_type')) select.push('entity_type');
   const { selectionClause, predicates } = buildSelectVariables(observationPredicateMap, select);
   return `
   SELECT ?iri ${selectionClause}
@@ -2532,6 +2533,7 @@ export const selectAllObservations = (select, args, parent) => {
   let constraintClause = '';
   if (select === undefined || select === null) select = Object.keys(observationPredicateMap);
   if (!select.includes('id')) select.push('id');
+  if (!select.includes('entity_type')) select.push('entity_type');
 
   if (args !== undefined) {
     if (args.filters !== undefined) {
@@ -3915,15 +3917,15 @@ export const selectAllSubjects = (select, args, parent) => {
   if (parent !== undefined && parent.iri !== undefined) {
     let classTypeIri;
     let predicate;
-    if (parent.entity_type === 'observation') {
+    if (parent.entity_type === 'observation' || parent.iri.includes('Observation')) {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#Observation>';
       predicate = '<http://csrc.nist.gov/ns/oscal/assessment/common#subjects>';
     }
-    if (parent.entity_type === 'mitigating-factor') {
+    if (parent.entity_type === 'mitigating-factor' || parent.iri.includes('MitigatingFactor')) {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#MitigatingFactor>';
       predicate = '<http://csrc.nist.gov/ns/oscal/assessment/common#subjects>';
     }
-    if (parent.entity_type === 'required-asset') {
+    if (parent.entity_type === 'required-asset' || parent.iri.includes('RequiredAsset')) {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#RequiredAsset>';
       predicate = '<http://csrc.nist.gov/ns/oscal/assessment/common#subjects>';
     }

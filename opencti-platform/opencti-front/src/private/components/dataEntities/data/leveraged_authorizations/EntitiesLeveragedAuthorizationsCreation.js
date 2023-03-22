@@ -21,8 +21,10 @@ import TextField from '../../../../../components/TextField';
 import DatePickerField from '../../../../../components/DatePickerField';
 import MarkDownField from '../../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
-import TaskType from '../../../common/form/TaskType';
 import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesField';
+import LoggedBy from '../../../common/form/LoggedBy';
+import { parse } from '../../../../../utils/Time';
+import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -66,6 +68,8 @@ const entitiesLeveragedAuthorizationsCreationMutation = graphql`
 
 const LeveragedAuthorizationCreationValidation = (t) => Yup.object().shape({
   title: Yup.string().required(t('This field is required')),
+  party: Yup.string().required(t('This field is required')),
+  date_authorized: Yup.string().nullable().required(t('This field is required')),
 });
 const Transition = React.forwardRef((props, ref) => (
   <Slide direction="up" ref={ref} {...props} />
@@ -96,7 +100,9 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
   onSubmit(values, { setSubmitting, resetForm }) {
     const adaptedValues = R.evolve(
       {
-        address: () => values.address[0],
+        date_authorized: () => (values.date_authorized === null
+          ? null
+          : parse(values.date_authorized).format('YYYY-MM-DD')),
       },
       values,
     );
@@ -110,15 +116,15 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
         input: finalValues,
       },
       setSubmitting,
-      pathname: '/data/entities/notes',
+      pathname: '/data/entities/leveraged_authorizations',
       onCompleted: () => {
         setSubmitting(false);
         resetForm();
         this.props.handleLeveragedAuthorizationCreation();
-        this.props.history.push('/data/entities/leveragedAuthorizations');
+        this.props.history.push('/data/entities/leveraged_authorizations');
       },
       onError: () => {
-        toastGenericError('Failed to create location');
+        toastGenericError('Failed to create leveraged authorization');
       },
     });
   }
@@ -155,8 +161,9 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
               created: null,
               modified: null,
               description: '',
-              markings: [],
+              // markings: [],
               date_authorized: null,
+              party: '',
             }}
             validationSchema={LeveragedAuthorizationCreationValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
@@ -166,11 +173,9 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
               handleReset,
               submitForm,
               isSubmitting,
-              setFieldValue,
-              values,
             }) => (
               <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Location')}</DialogTitle>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Leveraged Authorization')}</DialogTitle>
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={12}>
@@ -358,13 +363,14 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                         </Tooltip>
                       </div>
                       <div className="clearfix" />
-                      <TaskType
-                        name='party'
-                        taskType='OscalPartyType'
-                        fullWidth={true}
+                      <LoggedBy
                         variant='outlined'
-                        style={{ height: '38.09px' }}
-                        containerstyle={{ width: '100%' }}
+                        name='party'
+                        size='small'
+                        fullWidth={true}
+                        multiple={false}
+                        style={{ height: '38.09px', marginBottom: '3px' }}
+                        containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
@@ -392,6 +398,9 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                           containerstyle={{ width: '100%' }}
                         />
                       </div>
+                    </Grid>
+                    <Grid item={true} xs={12}>
+                      <CyioCoreObjectOrCyioCoreRelationshipNotes disableAdd={true} />
                     </Grid>
                   </Grid>
                 </DialogContent>

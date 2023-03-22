@@ -57,6 +57,12 @@ const leveragedAuthorizationEntityEditionQuery = graphql`
       created
       modified
       title
+      description
+      date_authorized
+      party {
+        id
+        name
+      }
     }
   }
 `;
@@ -87,7 +93,7 @@ class LeveragedAuthorizationEntityEdition extends Component {
                 <LeveragedAuthorizationEntityEditionContainer
                   displayEdit={displayEdit}
                   history={history}
-                  leveragedAuthorization={props.oscalLeveragedAuthorization}
+                  leveragedAuthorization={props.leveragedAuthorization}
                   handleDisplayEdit={handleDisplayEdit}
                 />
               );

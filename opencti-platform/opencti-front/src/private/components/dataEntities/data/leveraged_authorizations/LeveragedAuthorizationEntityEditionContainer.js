@@ -1,9 +1,9 @@
-/* eslint-disable */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import * as R from 'ramda';
 import * as Yup from 'yup';
 import { compose } from 'ramda';
+import { withRouter } from 'react-router-dom';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles/index';
 import { Formik, Form, Field } from 'formik';
@@ -20,11 +20,14 @@ import Slide from '@material-ui/core/Slide';
 import inject18n from '../../../../../components/i18n';
 import { commitMutation } from '../../../../../relay/environment';
 import { adaptFieldValue } from '../../../../../utils/String';
-import SelectField from '../../../../../components/SelectField';
 import TextField from '../../../../../components/TextField';
 import DatePickerField from '../../../../../components/DatePickerField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
-import TaskType from '../../../common/form/TaskType';
+import LoggedBy from '../../../common/form/LoggedBy';
+import MarkDownField from '../../../../../components/MarkDownField';
+import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesField';
+import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
+import { parse } from '../../../../../utils/Time';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -111,20 +114,21 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    // const adaptedValues = R.evolve(
-    //   {
-    //     modified: () => values.modified === null ? null : parse(values.modified).format(),
-    //     created: () => values.created === null ? null : parse(values.created).format(),
-    //   },
-    //   values,
-    // );
+    const adaptedValues = R.evolve(
+      {
+        date_authorized: () => (values.date_authorized === null
+          ? null
+          : parse(values.date_authorized).format('YYYY-MM-DD')),
+      },
+      values,
+    );
     const finalValues = R.pipe(
       R.toPairs,
       R.map((n) => ({
         key: n[0],
         value: adaptFieldValue(n[1]),
       })),
-    )(values);
+    )(adaptedValues);
     commitMutation({
       mutation: leveragedAuthorizationEntityEditionContainerMutation,
       variables: {
@@ -132,15 +136,15 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
         input: finalValues,
       },
       setSubmitting,
-      onCompleted: (data) => {
+      pathName: `/data/entities/leveraged_authorizations/${this.props.leveragedAuthorization.id}`,
+      onCompleted: () => {
         setSubmitting(false);
         resetForm();
         this.handleClose();
-        this.props.history.push(`/data/entities/leveragedAuthorizations/${this.props.leveragedAuthorization.id}`);
+        this.props.history.push(`/data/entities/leveraged_authorizations/${this.props.leveragedAuthorization.id}`);
       },
-      onError: (err) => {
-        console.error(err);
-        toastGenericError('Request Failed');
+      onError: () => {
+        toastGenericError('Failed to edit leveraged authorization');
       },
     });
     this.setState({ onSubmit: true });
@@ -150,7 +154,6 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
     const {
       classes,
       t,
-      disabled,
       leveragedAuthorization,
     } = this.props;
     const initialValues = R.pipe(
@@ -158,13 +161,15 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
       R.assoc('created', leveragedAuthorization?.created || null),
       R.assoc('modified', leveragedAuthorization?.modified || null),
       R.assoc('title', leveragedAuthorization?.title || ''),
-      R.assoc('date_authorized', leveragedAuthorization?.date_authorized || []),
-      R.assoc('party', leveragedAuthorization?.party || []),
+      R.assoc('date_authorized', leveragedAuthorization?.date_authorized || null),
+      R.assoc('party', leveragedAuthorization?.party?.id || ''),
       R.pick([
         'id',
+        'title',
         'created',
         'modified',
-        'title',
+        'description',
+        // markings,
         'date_authorized',
         'party',
       ]),
@@ -185,10 +190,7 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
           >
             {({
               submitForm,
-              handleReset,
               isSubmitting,
-              setFieldValue,
-              values,
             }) => (
               <Form>
                 <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Leveraged Authorizations')}</DialogTitle>
@@ -285,7 +287,7 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
                         />
                       </div>
                     </Grid>
-                    <Grid item={true} xs={12}>
+                    <Grid item={true} xs={6}>
                       <Typography
                         variant="h3"
                         color="textSecondary"
@@ -325,18 +327,42 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
                       </div>
                       <div className="clearfix" />
                       <Field
-                          component={DatePickerField}
-                          name="date_authorized"
-                          fullWidth={true}
-                          disabled={true}
-                          size="small"
-                          variant='outlined'
-                          invalidDateMessage={t(
-                            'The value must be a date (YYYY-MM-DD)',
-                          )}
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '100%' }}
-                        />
+                        component={DatePickerField}
+                        name="date_authorized"
+                        fullWidth={true}
+                        size="small"
+                        variant='outlined'
+                        invalidDateMessage={t(
+                          'The value must be a date (YYYY-MM-DD)',
+                        )}
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
+                      />
+                    </Grid>
+                    <Grid xs={12} item={true}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ float: 'left' }}
+                      >
+                        {t('Description')}
+                      </Typography>
+                      <div style={{ float: 'left', margin: '-1px 0 0 4px' }}>
+                        <Tooltip title={t('Description')}>
+                          <Information fontSize="inherit" color="disabled" />
+                        </Tooltip>
+                      </div>
+                      <div className="clearfix" />
+                      <Field
+                        component={MarkDownField}
+                        name='description'
+                        fullWidth={true}
+                        multiline={true}
+                        rows='3'
+                        variant='outlined'
+                        containerstyle={{ width: '100%' }}
+                      />
                     </Grid>
                     <Grid item={true} xs={6}>
                       <Typography
@@ -353,17 +379,17 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
                         </Tooltip>
                       </div>
                       <div className="clearfix" />
-                      <TaskType
-                        component={SelectField}
+                      <LoggedBy
                         variant='outlined'
-                        name="party"
-                        taskType='OscalParty'
+                        name='party'
+                        size='small'
                         fullWidth={true}
-                        style={{ height: '38.09px' }}
-                        containerstyle={{ width: '100%' }}
+                        multiple={false}
+                        style={{ height: '38.09px', marginBottom: '3px' }}
+                        containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
                       />
                     </Grid>
-                    <Grid item={true} xs={6}>
+                    <Grid item={true} xs={12}>
                       <div style={{ marginTop: '10px' }}>
                         <Typography
                           variant="h3"
@@ -379,8 +405,8 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
                           </Tooltip>
                         </div>
                         <div className="clearfix" />
-                        <Field
-                          component={SelectField}
+                        <ResponsiblePartiesField
+                          title='Markings'
                           variant='outlined'
                           name="marking"
                           fullWidth={true}
@@ -388,6 +414,9 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
                           containerstyle={{ width: '100%' }}
                         />
                       </div>
+                    </Grid>
+                    <Grid item={true} xs={12}>
+                      <CyioCoreObjectOrCyioCoreRelationshipNotes disableAdd={true} />
                     </Grid>
                   </Grid>
                 </DialogContent>
@@ -435,5 +464,6 @@ LeveragedAuthorizationEntityEditionContainer.propTypes = {
 
 export default compose(
   inject18n,
+  withRouter,
   withStyles(styles),
 )(LeveragedAuthorizationEntityEditionContainer);

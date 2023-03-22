@@ -267,6 +267,10 @@ const EntityLeveragedAuthorizationCardFragment = createFragmentContainer(
         created
         entity_type
         modified
+        party {
+          id
+          name
+        }
         labels {
           __typename
           id

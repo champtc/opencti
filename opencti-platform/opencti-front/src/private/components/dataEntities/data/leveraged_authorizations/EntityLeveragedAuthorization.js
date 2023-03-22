@@ -53,7 +53,7 @@ class EntityLeveragedAuthorizationComponent extends Component {
         <div className={classes.container}>
           <CyioDomainObjectHeader
             history={history}
-            name={leveragedAuthorization.name}
+            name={leveragedAuthorization.title}
             cyioDomainObject={leveragedAuthorization}
             goBack="/data/entities/leveraged_authorizations"
             PopoverComponent={<EntitiesLeveragedAuthorizationsPopover />}
@@ -141,6 +141,14 @@ const EntityLeveragedAuthorization = createFragmentContainer(
         created
         modified
         title
+        description
+        date_authorized
+        party {
+          id
+          name
+          short_name
+          entity_type
+        }
         labels {
           __typename
           id

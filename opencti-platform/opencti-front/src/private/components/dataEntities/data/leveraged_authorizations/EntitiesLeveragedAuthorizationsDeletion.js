@@ -109,29 +109,12 @@ class EntitiesLeveragedAuthorizationsDeletion extends Component {
       onCompleted: () => {
         this.setState({ deleting: false });
         this.handleClose();
-        this.props.history.push('/data/entities/leveragedAuthorizations');
+        this.props.history.push('/data/entities/leveraged_authorizations');
       },
       onError: () => {
         toastGenericError('Failed to delete leveraged authorization');
       },
     });
-    // commitMutation({
-    //   mutation: EntitiesLocationsDeletionDarkLightMutation,
-    //   variables: {
-    //     id: this.props.id,
-    //   },
-    //   config: [
-    //     {
-    //       type: 'NODE_DELETE',
-    //       deletedIDFieldName: 'id',
-    //     },
-    //   ],
-    //   onCompleted: () => {
-    //     this.setState({ deleting: false });
-    //     this.handleClose();
-    //     this.props.history.push('/activities/risk_assessment/risks');
-    //   },
-    // });
   }
 
   render() {
@@ -169,7 +152,7 @@ class EntitiesLeveragedAuthorizationsDeletion extends Component {
               lineHeight: '24px',
               color: 'white',
             }} >
-              {t('Are you sure you’d like to delete this Location?')}
+              {t('Are you sure you’d like to delete this Leveraged Authorization(s)?')}
             </Typography>
             <DialogContentText>
               {t('This action can’t be undone')}

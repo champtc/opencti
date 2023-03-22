@@ -1,5 +1,3 @@
-/* eslint-disable */
-/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { compose } from 'ramda';
@@ -8,7 +6,8 @@ import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import { Grid } from '@material-ui/core';
+import { Grid, Tooltip } from '@material-ui/core';
+import { Information } from 'mdi-material-ui';
 import inject18n from '../../../../../components/i18n';
 
 const styles = (theme) => ({
@@ -60,6 +59,7 @@ const styles = (theme) => ({
     textAlign: 'center',
     padding: '3px 0',
   },
+  tooltip: { float: 'left', margin: '2px 0 0 5px' },
 });
 
 class EntityLeveragedAuthorizationDetailsComponent extends Component {
@@ -85,11 +85,18 @@ class EntityLeveragedAuthorizationDetailsComponent extends Component {
                     variant="h3"
                     color="textSecondary"
                     gutterBottom={true}
+                    style={{ float: 'left' }}
                   >
                     {t('Date Authorized')}
                   </Typography>
+                  <div className={classes.tooltip}>
+                    <Tooltip title={t('Date Authorized')}>
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
                   <div className="clearfix" />
-                  {leveragedAuthorization.date_authorized && fd(leveragedAuthorization.date_authorized)}
+                  {leveragedAuthorization.date_authorized
+                  && fd(leveragedAuthorization.date_authorized)}
                 </div>
               </Grid>
               <Grid item xs={6}>
@@ -98,9 +105,15 @@ class EntityLeveragedAuthorizationDetailsComponent extends Component {
                     variant="h3"
                     color="textSecondary"
                     gutterBottom={true}
+                    style={{ float: 'left' }}
                   >
                     {t('Party')}
                   </Typography>
+                  <div className={classes.tooltip}>
+                    <Tooltip title={t('Party')}>
+                      <Information fontSize="inherit" color="disabled" />
+                    </Tooltip>
+                  </div>
                   <div className="clearfix" />
                   {leveragedAuthorization.party.name && t(leveragedAuthorization.party.name)}
                 </div>

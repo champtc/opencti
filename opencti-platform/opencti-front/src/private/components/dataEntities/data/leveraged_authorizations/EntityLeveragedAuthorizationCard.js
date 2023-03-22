@@ -205,7 +205,7 @@ class EntityLeveragedAuthorizationCardComponent extends Component {
                 >
                   {t('Date Authorized')}
                 </Typography>
-                <Typography>{node.created && fsd(node.created)}</Typography>
+                <Typography>{node.date_authorized && fsd(node.date_authorized)}</Typography>
               </Grid>
               <Grid item={true} xs={6} className={classes.body}>
                 <Typography

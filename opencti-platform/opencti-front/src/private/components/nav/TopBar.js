@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter, Link } from 'react-router-dom';
 import { compose } from 'ramda';
@@ -73,6 +73,7 @@ import { commitMutation } from '../../../relay/environment';
 import Security, {
   KNOWLEDGE,
   EXPLORE,
+  LeftBarContext,
 } from '../../../utils/Security';
 import AboutModal from '../../../components/AboutModal';
 import TopMenuCourseOfAction from './TopMenuCourseOfAction';
@@ -164,9 +165,10 @@ const logoutMutation = graphql`
 `;
 
 const TopBar = ({
-  t, classes, location, history, theme, drawer, dashboard, handleChangeDashboard,
+  t, classes, location, history, theme, dashboard, handleChangeDashboard,
 }) => {
   const [menuOpen, setMenuOpen] = useState({ open: false, anchorEl: null });
+  const { drawer } = useContext(LeftBarContext);
   const handleOpenMenu = (event) => {
     event.preventDefault();
     setMenuOpen({ open: true, anchorEl: event.currentTarget });
@@ -192,12 +194,7 @@ const TopBar = ({
       style={{ backgroundColor: theme.palette.header.background }}
     >
       <Toolbar>
-        {/* <div className={classes.logoContainer}>
-          <Link to="/dashboard">
-            <img src={theme.logo} alt="logo" className={classes.logo} />
-          </Link>
-        </div> */}
-        <div className={drawer ? classes.menuContainerClose : classes.menuContainer}>
+        <div className={drawer ? classes.menuContainer : classes.menuContainerClose}>
           {(location.pathname === '/dashboard'
             || location.pathname === '/dashboard/import')
             && <TopMenuDashboard
@@ -279,8 +276,8 @@ const TopBar = ({
             && (
               <TopMenuVsacCompare />
             )} */}
-          {(location.pathname.includes('/defender HQ/assets')
-            || location.pathname.match('/defender HQ/assets/[a-z_]+$')) && <TopMenuAssets />}
+          {(location.pathname.includes('/defender_hq/assets')
+            || location.pathname.match('/defender_hq/assets/[a-z_]+$')) && <TopMenuAssets />}
           {(location.pathname === ('/activities/risk_assessment')
             || location.pathname.match('/activities/risk_assessment/[a-z_]+$')) && <TopMenuRiskAssessment />}
           {(location.pathname.includes('/activities/risk_assessment/risks/')) && <TopMenuRisk />}
@@ -496,7 +493,6 @@ const TopBar = ({
 
 TopBar.propTypes = {
   dashboard: PropTypes.string,
-  drawer: PropTypes.bool,
   keyword: PropTypes.string,
   theme: PropTypes.object,
   classes: PropTypes.object,

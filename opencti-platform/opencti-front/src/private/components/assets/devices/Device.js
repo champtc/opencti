@@ -41,7 +41,7 @@ class DeviceComponent extends Component {
 
   handleOpenNewCreation() {
     this.props.history.push({
-      pathname: '/defender HQ/assets/devices',
+      pathname: '/defender_hq/assets/devices',
       openNewCreation: true,
     });
   }
@@ -64,7 +64,7 @@ class DeviceComponent extends Component {
               cyioDomainObject={device}
               PopoverComponent={<DevicePopover />}
               OperationsComponent={<DeviceDeletion />}
-              goBack='/defender HQ/assets/devices'
+              goBack='/defender_hq/assets/devices'
               handleDisplayEdit={this.handleDisplayEdit.bind(this)}
               handleOpenNewCreation={this.handleOpenNewCreation.bind(this)}
             />
@@ -147,6 +147,10 @@ const Device = createFragmentContainer(DeviceComponent, {
       vendor_name
       serial_number
       release_date
+      responsible_parties {
+        id
+        name
+      }
       labels {
         __typename
         id

@@ -124,6 +124,7 @@ class RiskCardComponent extends Component {
   render() {
     const {
       t,
+      fd,
       classes,
       node,
       history,
@@ -308,7 +309,7 @@ class RiskCardComponent extends Component {
                   {t('Deadline')}
                 </Typography>
                 <Typography>
-                  {node.deadline && t(node.deadline)}
+                  {node.deadline && fd(node.deadline)}
                 </Typography>
               </Grid>
             </Grid>
@@ -342,7 +343,7 @@ const RiskCardFragment = createFragmentContainer(
         response_type
         lifecycle
         occurrences
-         
+        deadline 
       }
     `,
   },

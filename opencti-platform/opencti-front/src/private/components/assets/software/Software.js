@@ -41,7 +41,7 @@ class SoftwareComponent extends Component {
 
   handleOpenNewCreation() {
     this.props.history.push({
-      pathname: '/defender HQ/assets/software',
+      pathname: '/defender_hq/assets/software',
       openNewCreation: true,
     });
   }
@@ -63,7 +63,7 @@ class SoftwareComponent extends Component {
               name={software.name}
               cyioDomainObject={software}
               PopoverComponent={<SoftwarePopover />}
-              goBack='/defender HQ/assets/software'
+              goBack='/defender_hq/assets/software'
               OperationsComponent={<SoftwareDeletion />}
               handleDisplayEdit={this.handleDisplayEdit.bind(this)}
               handleOpenNewCreation={this.handleOpenNewCreation.bind(this)}
@@ -138,6 +138,10 @@ const Software = createFragmentContainer(SoftwareComponent, {
       id
       name
       asset_id
+      responsible_parties {
+        id
+        name
+      }
       labels {
         __typename
         id

@@ -57,8 +57,6 @@ type InventoryItem implements BasicObject & LifecycleObject & OscalObject {
   "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
   object_markings: [DataMarking]
   # Inventory Item
-  "Indicates the inventory item's function, such as Router, Storage Array, DNS Server."
-  asset_type: AssetType
   "Identifies the name of the inventory item."
   name: String!
   "Identifies a description of the Inventory Item, including information about its function."
@@ -66,50 +64,50 @@ type InventoryItem implements BasicObject & LifecycleObject & OscalObject {
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
   # --- props ---
-  # "Indicates the inventory item's function, such as Router, Storage Array, DNS Server."
-  # asset_type: AssetType
-  # "Identifies an organizationally specific identifier that is used to uniquely identify a logical or tangible item by the organization that owns the invenotry item."
-  # asset_id: String
-  # "Identifies an asset tag assigned by the organization responsible for maintaining the logical or tangible invenotry item."
-  # asset_tag: String
-  # "Indicates the serial number for the inventory item."
-  # serial_number: String
-  # "Identifies the model of the Inventory Item."
-  # model: String
-  # "Identifies the name of the company or organization that manufactured the inventory item"
-  # vendor_name: String
-  # "Identifies whether the inventory item can be check with an authenticated scan"
-  # allows_authenticated_scans: Boolean
-  # "Identifies whether the inventory item is publicly accessible"
-  # is_publicly_accessible: Boolean
-  # "Indicates if the inventory item is subjected to network scans"
-  # is_scanned: Boolean
-  # "Identifies whether the inventory item is virtualized"
-  # is_virtual: Boolean
-  # "Indicates the Internet Protocol v4 Addresses of the inventory item"
-  # ipv4_address: [IpV4Address]
-  # "Indicates the Internet Protocol v4 Addresses of the inventory item"
-  # ipv6_address: [IpV6Address]
-  # "Indicates the media access control (MAC) address for the inventory item."
-  # mac_address: [MAC]
-  # "Indicates the full-qualified domain name (FQDN) of the inventory item."
-  # fqdn: String
-  # "Indicates the NetBIOS name for the inventory item."
-  # netbios_name: String
-  # "Indicates the Uniform Resource Identifier (URI) for the inventory item."
-  # uri: URL
-  # "Identifies the network identifier of the inventory item."
-  # network_id: String
-  # "Identifies the Virtual LAN identifier of the inventory item."
-  # vlan_id: String
-  # "Identifies The name of the baseline configuration for the inventory item."
-  # baseline_configuration_name: String
-  # "Identifies the function provided by the inventory item for the system."
-  # function: String
-  # "Indicates the physical location of the inventory item's hardware (e.g., Data Center ID, Cage#, Rack#, or other meaningful location identifiers)."
-  # physical_location: [OscalLocation]
-  # "Identifies the CPE identifier for a hardware device"
-  # cpe_identifier: String
+  "Indicates the inventory item's function, such as Router, Storage Array, DNS Server."
+  asset_type: AssetType
+  "Identifies an organizationally specific identifier that is used to uniquely identify a logical or tangible item by the organization that owns the invenotry item."
+  asset_id: String
+  "Identifies an asset tag assigned by the organization responsible for maintaining the logical or tangible invenotry item."
+  asset_tag: String
+  "Indicates the serial number for the inventory item."
+  serial_number: String
+  "Identifies the model of the Inventory Item."
+  model: String
+  "Identifies the name of the company or organization that manufactured the inventory item"
+  vendor_name: String
+  "Identifies whether the inventory item can be check with an authenticated scan"
+  allows_authenticated_scans: Boolean
+  "Identifies whether the inventory item is publicly accessible"
+  is_publicly_accessible: Boolean
+  "Indicates if the inventory item is subjected to network scans"
+  is_scanned: Boolean
+  "Identifies whether the inventory item is virtualized"
+  is_virtual: Boolean
+  "Indicates the Internet Protocol v4 Addresses of the inventory item"
+  ipv4_address: [IpV4Address]
+  "Indicates the Internet Protocol v4 Addresses of the inventory item"
+  ipv6_address: [IpV6Address]
+  "Indicates the media access control (MAC) address for the inventory item."
+  mac_address: [MAC]
+  "Indicates the full-qualified domain name (FQDN) of the inventory item."
+  fqdn: String
+  "Indicates the NetBIOS name for the inventory item."
+  netbios_name: String
+  "Indicates the Uniform Resource Identifier (URI) for the inventory item."
+  uri: URL
+  "Identifies the network identifier of the inventory item."
+  network_id: String
+  "Identifies the Virtual LAN identifier of the inventory item."
+  vlan_id: String
+  "Identifies The name of the baseline configuration for the inventory item."
+  baseline_configuration_name: String
+  "Identifies the function provided by the inventory item for the system."
+  function: String
+  "Indicates the physical location of the inventory item's hardware (e.g., Data Center ID, Cage#, Rack#, or other meaningful location identifiers)."
+  physical_location: [OscalLocation]
+  "Identifies the CPE identifier for a hardware device"
+  cpe_identifier: String
   # -- end props
   "Identifies a reference to one or more roles with responsibility for performing a function relative to the containing object."
   responsible_parties: [OscalResponsibleParty]

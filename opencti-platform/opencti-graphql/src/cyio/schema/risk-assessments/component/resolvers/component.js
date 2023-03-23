@@ -19,7 +19,10 @@ import { findDataMarkingByIri } from '../../../data-markings/domain/dataMarkings
 const componentResolvers = {
   Query: {
     componentList: async (_, args, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectAllComponents(null, args);
+      let select = selectMap.getNode('node');
+      let reducer = getReducer("COMPONENT");
+
+      const sparqlQuery = selectAllComponents(select, args);
       let response;
       try {
         response = await dataSources.Stardog.queryAll({
@@ -138,7 +141,11 @@ const componentResolvers = {
           }
 
           // convert the asset into a component
-          component = convertAssetToComponent(component);
+          if (select.includes('props')) {
+            component = convertAssetToComponent(component);
+          } else {
+            component = reducer(response[0]);
+          }
 
           // if haven't reached limit to be returned
           if (limit) {
@@ -180,7 +187,8 @@ const componentResolvers = {
       }
     },
     component: async (_, { id }, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectComponentQuery(id, selectMap.getNode('component'));
+      let select = selectMap.getNode('component');
+      const sparqlQuery = selectComponentQuery(id, select);
       let response;
       try {
         response = await dataSources.Stardog.queryById({
@@ -205,10 +213,9 @@ const componentResolvers = {
 
       if (Array.isArray(response) && response.length > 0) {
         // convert the asset into a component
-        const component = convertAssetToComponent(response[0]);
-        return component;
-        // const reducer = getReducer("COMPONENT");
-        // return reducer(response[0]);
+        if (select.includes('props')) return convertAssetToComponent(response[0]);
+        const reducer = getReducer("COMPONENT");
+        return reducer(response[0]);
       }
     },
   },

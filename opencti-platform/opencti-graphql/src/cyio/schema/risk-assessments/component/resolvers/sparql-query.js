@@ -143,10 +143,52 @@ export const insertComponentQuery = (propValues) => {
   return { iri, id, query };
 };
 export const selectComponentQuery = (id, select) => {
-  return selectComponentByIriQuery(`http://csrc.nist.gov/ns/oscal/common#Component-${id}`, select);
+  // This query building function is unusual because the IRI for Components can be
+  // different since there are different types of objects.  Thus we build a query that 
+  // looks up components with a specific id instead of with a specific IRI
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'component_type','name','description','purpose','operational_status',
+      'responsible_roles','protocols'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(componentPredicateMap);
+  }
+  if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
+  const { selectionClause, predicates } = buildSelectVariables(componentPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#Component> .
+    ?iri <http://darklight.ai/ns/common#id> "${id}" .
+    ${predicates}
+    {
+      SELECT DISTINCT ?iri
+      WHERE {
+          ?inventory a <http://csrc.nist.gov/ns/oscal/common#AssetInventory> ;
+              <http://csrc.nist.gov/ns/oscal/common#assets> ?iri .
+      }
+    }
+  }
+  `;
 };
 export const selectComponentByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'component_type','name','description','purpose','operational_status',
+      'responsible_roles','protocols'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(componentPredicateMap);
+  }
   if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
   if (!select.includes('component_type')) select.push('component_type');
   if (!select.includes('asset_type')) select.push('asset_type');
@@ -164,8 +206,18 @@ export const selectComponentByIriQuery = (iri, select) => {
 };
 export const selectAllComponents = (select, args, parent) => {
   let constraintClause = '';
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'component_type','name','description','purpose','operational_status',
+      'responsible_roles','protocols'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(componentPredicateMap);
+  }
   if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
-  if (select.includes('props')) select = Object.keys(componentPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('component_type')) select.push('component_type');
   if (!select.includes('asset_type')) select.push('asset_type');

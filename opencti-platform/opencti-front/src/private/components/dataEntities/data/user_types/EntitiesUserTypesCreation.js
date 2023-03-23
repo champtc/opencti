@@ -21,13 +21,13 @@ import TextField from '../../../../../components/TextField';
 import DatePickerField from '../../../../../components/DatePickerField';
 import MarkDownField from '../../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
-import { emailAddressRegex } from '../../../../../utils/Network';
 import TaskType from '../../../common/form/TaskType';
-import EmailAddressField from '../../../common/form/EmailAddressField';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
 import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesField';
 import AuthorizedPrivilegesPopover from './AuthorizedPrivilegesPopover';
+import ResponsibilityField from '../../../common/form/ResponsibilityField';
+import SelectField from '../../../../../components/SelectField';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -69,10 +69,10 @@ const entitiesUserTypesCreationMutation = graphql`
   }
 `;
 
-const UserTypeCreationValidation = (t) => Yup.object().shape({
+const userTypeCreationValidation = (t) => Yup.object().shape({
   name: Yup.string().required(t('This field is required')),
   privilege_level: Yup.string().required(t('This field is required')),
-  roles: Yup.string().required(t('This field is required')),
+  user_type: Yup.string().required(t('This field is required')),
 });
 const Transition = React.forwardRef((props, ref) => (
   <Slide direction="up" ref={ref} {...props} />
@@ -101,28 +101,29 @@ class EntitiesUserTypesCreation extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    const adaptedValues = R.evolve(
-      {
-        address: () => values.address[0],
-      },
-      values,
-    );
+    // const adaptedValues = R.evolve(
+    //   {
+    //     address: () => values.address[0],
+    //   },
+    //   values,
+    // );
+    console.log(values);
     const finalValues = R.pipe(
       R.dissoc('created'),
       R.dissoc('modified'),
-    )(adaptedValues);
+    )(values);
     commitMutation({
       mutation: entitiesUserTypesCreationMutation,
       variables: {
         input: finalValues,
       },
       setSubmitting,
-      pathname: '/data/entities/notes',
+      // pathname: '/data/entities/notes',
       onCompleted: () => {
         setSubmitting(false);
         resetForm();
-        this.props.handleLocationCreation();
-        this.props.history.push('/data/entities/locations');
+        this.props.handleUserTypeCreation();
+        this.props.history.push('/data/entities/user_types');
       },
       onError: () => {
         toastGenericError('Failed to create location');
@@ -139,7 +140,7 @@ class EntitiesUserTypesCreation extends Component {
   }
 
   onReset() {
-    this.props.handleLocationCreation();
+    this.props.handleUserTypeCreation();
   }
 
   render() {
@@ -166,7 +167,7 @@ class EntitiesUserTypesCreation extends Component {
               roles: [],
               authorized_privileges: [],
             }}
-            validationSchema={UserTypeCreationValidation(t)}
+            validationSchema={userTypeCreationValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.onReset.bind(this)}
           >
@@ -303,9 +304,17 @@ class EntitiesUserTypesCreation extends Component {
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
-                      <ResponsiblePartiesField
+                      <ResponsibilityField
                         title={'Role ID'}
                         name='role_id'
+                        variant='outlined'
+                        size='small'
+                        multiple={true}
+                        fullWidth={true}
+                        style={{ height: '38.09px', marginBottom: '3px' }}
+                        containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
+                        setFieldValue={setFieldValue}
+                        values={values}
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
@@ -358,7 +367,7 @@ class EntitiesUserTypesCreation extends Component {
 
 EntitiesUserTypesCreation.propTypes = {
   openDataCreation: PropTypes.bool,
-  handleLocationCreation: PropTypes.func,
+  handleUserTypeCreation: PropTypes.func,
   classes: PropTypes.object,
   theme: PropTypes.object,
   t: PropTypes.func,

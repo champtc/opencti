@@ -95,7 +95,6 @@ class RootUserTypes extends Component {
               console.error(error);
               toastGenericError('Failed to get location data');
             }
-            console.log(props);
             if (props) {
               if (props.oscalUser) {
                 return (

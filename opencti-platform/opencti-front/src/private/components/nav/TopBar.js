@@ -38,6 +38,7 @@ import TopMenuDataPartiesEntities from './TopMenuDataPartiesEntities';
 import TopMenuDataTasksEntities from './TopMenuDataTasksEntities';
 import TopMenuDataNotesEntities from './TopMenuDataNotesEntities';
 import TopMenuDataLocationsEntities from './TopMenuDataLocationsEntities';
+import TopMenuDataUserTypesEntities from './TopMenuDataUserTypesEntities';
 import TopMenuObservations from './TopMenuObservations';
 import TopMenuIndicator from './TopMenuIndicator';
 import TopMenuInfrastructure from './TopMenuInfrastructure';
@@ -302,6 +303,8 @@ const TopBar = ({
             || location.pathname === '/data/data_source/assessment_platform') && <TopMenuDataAssessmentPlatformsEntities />}
           {(location.pathname === '/data/entities/responsible_parties'
             || location.pathname === '/data/data_source/responsible_parties') && <TopMenuDataResponsiblePartiesEntities />}
+          {(location.pathname === '/data/entities/user_types'
+            || location.pathname === '/data/data_source/user_types') && <TopMenuDataUserTypesEntities />}
           {(location.pathname === '/data/entities/external_references'
             || location.pathname === '/data/data_source/external_references') && <TopMenuDataExternalReferenceEntities />}
           {(location.pathname === '/dashboard/arsenal'

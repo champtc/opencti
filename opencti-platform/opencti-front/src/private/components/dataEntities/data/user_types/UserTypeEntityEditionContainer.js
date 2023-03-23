@@ -44,6 +44,7 @@ import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesFiel
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
 import AuthorizedPrivilegesPopover from './AuthorizedPrivilegesPopover';
+import ResponsibilityField from '../../../common/form/ResponsibilityField';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -137,32 +138,36 @@ class UserTypeEntityEditionContainer extends Component {
     //   },
     //   values,
     // );
-    const finalValues = R.pipe(
-      R.toPairs,
-      R.map((n) => ({
-        'key': n[0],
-        'value': adaptFieldValue(n[1]),
-      })),
-    )(values);
-    commitMutation({
-      mutation: userTypeEntityEditionContainerMutation,
-      variables: {
-        id: this.props.location.id,
-        input: finalValues,
-      },
-      setSubmitting,
-      onCompleted: (data) => {
-        setSubmitting(false);
-        resetForm();
-        this.handleClose();
-        this.props.history.push(`/data/entities/user_types/${this.props.location.id}`);
-      },
-      onError: (err) => {
-        console.error(err);
-        toastGenericError('Request Failed');
-      }
-    });
-    this.setState({ onSubmit: true });
+    console.log(values)
+      const finalValues = R.pipe(
+        R.dissoc('id'),
+        R.dissoc('created'),
+        R.dissoc('modified'),
+        R.toPairs,
+        R.map((n) => ({
+          'key': n[0],
+          'value': adaptFieldValue(n[1]),
+        })),
+      )(values);
+      commitMutation({
+        mutation: userTypeEntityEditionContainerMutation,
+        variables: {
+          id: this.props.user.id,
+          input: finalValues,
+        },
+        setSubmitting,
+        onCompleted: () => {
+          setSubmitting(false);
+          resetForm();
+          this.handleClose();
+          this.props.history.push(`/data/entities/user_types/${this.props.user.id}`);
+        },
+        onError: (err) => {
+          console.error(err);
+          toastGenericError('Request Failed');
+        }
+      });
+      this.setState({ onSubmit: true });
   }
 
   render() {
@@ -174,21 +179,26 @@ class UserTypeEntityEditionContainer extends Component {
     const initialValues = R.pipe(
       R.assoc('id', user?.id),
       R.assoc('name', user?.name || ''),
+      R.assoc('short_name', user?.short_name || ''),
       R.assoc('description', user?.description || ''),
       R.assoc('created', user?.created || null),
       R.assoc('modified', user?.modified || null),
       R.assoc('privilege_level', user?.privilege_level || ''),
       R.assoc('user_type', user?.user_type || ''),
+      R.assoc('roles', user?.roles || []),
       R.pick([
         'id',
-        'name',     
+        'name',
+        'short_name',        
         'description',
         'created',
         'modified',
         'privilege_level',
         'user_type',
+        'roles',
       ]),
     )(user);
+    const selectedRoles = R.map((n) => n.id)(user?.roles);
     return (
       <>
         <Dialog
@@ -429,9 +439,18 @@ class UserTypeEntityEditionContainer extends Component {
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
-                      <ResponsiblePartiesField
+                      <ResponsibilityField
                         title={'Role ID'}
-                        name='role_id'
+                        name='roles'
+                        variant='outlined'
+                        size='small'
+                        multiple={true}
+                        fullWidth={true}
+                        style={{ height: '38.09px', marginBottom: '3px' }}
+                        containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
+                        setFieldValue={setFieldValue}
+                        data={user?.roles}
+                        selectedRoles={selectedRoles}
                       />
                     </Grid>
                     <Grid item={true} xs={12}>

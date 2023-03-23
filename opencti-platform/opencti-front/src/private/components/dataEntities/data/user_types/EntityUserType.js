@@ -110,7 +110,7 @@ class EntityUserTypeComponent extends Component {
         </div>
         <EntitiesUserTypesCreation
           openDataCreation={this.state.openDataCreation}
-          handleLocationCreation={this.handleOpenNewCreation.bind(this)}
+          handleUserTypeCreation={this.handleOpenNewCreation.bind(this)}
           history={history}
           refreshQuery={refreshQuery}
         />
@@ -143,6 +143,11 @@ const EntityUserType = createFragmentContainer(EntityUserTypeComponent, {
       short_name
       description
       user_type
+      privilege_level
+      roles {
+        name
+        id
+      }
       authorized_privileges {
         id
         name

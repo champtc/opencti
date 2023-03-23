@@ -97,20 +97,20 @@ class EntitiesUserTypesDeletion extends Component {
   }
 
   submitDelete() {
-    const locationIds = this.props.id.map((value) => (Array.isArray(value) ? value[0] : value));
+    const userTypesIds = this.props.id.map((value) => (Array.isArray(value) ? value[0] : value));
     this.setState({ deleting: true });
     commitMutation({
       mutation: EntitiesUserTypesDeletionDarkLightMutation,
       variables: {
-        id: locationIds[0],
+        id: userTypesIds[0],
       },
       onCompleted: () => {
         this.setState({ deleting: false });
         this.handleClose();
-        this.props.history.push('/data/entities/locations');
+        this.props.history.push('/data/entities/user_types');
       },
       onError: () => {
-        toastGenericError('Failed to delete location');
+        toastGenericError('Failed to delete user type(s)');
       },
     });
   }
@@ -150,7 +150,7 @@ class EntitiesUserTypesDeletion extends Component {
               lineHeight: '24px',
               color: 'white',
             }} >
-              {t('Are you sure you’d like to delete this Location?')}
+              {t('Are you sure you’d like to delete this User Type(s)?')}
             </Typography>
             <DialogContentText>
               {t('This action can’t be undone')}

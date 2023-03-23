@@ -98,7 +98,7 @@ class UserTypesEntities extends Component {
     this.setState({ selectAll: false, selectedElements: null });
   }
 
-  handleLocationCreation() {
+  handleUserTypeCreation() {
     this.setState({ openDataCreation: !this.state.openDataCreation });
   }
 
@@ -219,7 +219,7 @@ class UserTypesEntities extends Component {
         handleAddFilter={this.handleAddFilter.bind(this)}
         handleRemoveFilter={this.handleRemoveFilter.bind(this)}
         handleToggleExports={this.handleToggleExports.bind(this)}
-        handleNewCreation={this.handleLocationCreation.bind(this)}
+        handleNewCreation={this.handleUserTypeCreation.bind(this)}
         handleClearSelectedElements={this.handleClearSelectedElements.bind(this)}
         handleDisplayEdit={this.handleDisplayEdit.bind(this)}
         selectedElements={selectedElements}
@@ -330,7 +330,7 @@ class UserTypesEntities extends Component {
         handleToggleExports={this.handleToggleExports.bind(this)}
         handleToggleSelectAll={this.handleToggleSelectAll.bind(this)}
         handleClearSelectedElements={this.handleClearSelectedElements.bind(this)}
-        handleNewCreation={this.handleLocationCreation.bind(this)}
+        handleNewCreation={this.handleUserTypeCreation.bind(this)}
         handleDisplayEdit={this.handleDisplayEdit.bind(this)}
         selectedElements={selectedElements}
         CreateItemComponent={<EntitiesUserTypesCreation />}
@@ -399,7 +399,7 @@ class UserTypesEntities extends Component {
         {view === 'lines' && this.renderLines(paginationOptions)}
         <EntitiesUserTypesCreation
           openDataCreation={openDataCreation}
-          handleLocationCreation={this.handleLocationCreation.bind(this)}
+          handleUserTypeCreation={this.handleUserTypeCreation.bind(this)}
           history={this.props.history}
         />
         {this.state.selectedLocationId && (

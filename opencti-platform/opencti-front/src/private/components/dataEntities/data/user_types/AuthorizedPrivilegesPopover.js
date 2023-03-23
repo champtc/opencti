@@ -12,7 +12,6 @@ import Edit from '@material-ui/icons/Edit';
 import Typography from '@material-ui/core/Typography';
 import { Information } from 'mdi-material-ui';
 import Tooltip from '@material-ui/core/Tooltip';
-import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import { Dialog, DialogContent, DialogActions, DialogTitle, Grid, InputAdornment } from '@material-ui/core';
@@ -21,6 +20,7 @@ import inject18n from '../../../../../components/i18n';
 import DataAddressField from '../../../common/form/DataAddressField';
 import { commitMutation } from '../../../../../relay/environment';
 import MarkDownField from '../../../../../components/MarkDownField';
+import TextField from '../../../../../components/TextField';
 
 const styles = (theme) => ({
   paper: {
@@ -48,7 +48,7 @@ const styles = (theme) => ({
   scrollDiv: {
     width: '100%',
     background: theme.palette.header.background,
-    height: '85px',
+    height: '65px',
     overflow: 'hidden',
     overflowY: 'scroll',
   },
@@ -79,7 +79,7 @@ const authorizedPrivilegesPopoverMutation = graphql`
 
 const  AuthorizedPrivilegeCreationValidation = (t) => Yup.object().shape({
   name: Yup.string().required(t('This field is required')),
-  functions_performed: Yup.string().nullable(),
+  // functions_performed: Yup.string().nullable(),
 });
 
 class AuthorizedPrivilegesPopover extends Component {
@@ -94,21 +94,22 @@ class AuthorizedPrivilegesPopover extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    commitMutation({
-      mutation: authorizedPrivilegesPopoverMutation,
-      variables: {
-        input: values,
-      },
-      setSubmitting,
-      onCompleted: (data) => {
-        setSubmitting(false);
-        resetForm();
-        this.handleClose();
-      },
-      onError: () => {
-        toastGenericError("Failed to Authorized Privilege");
-      }
-    });
+    console.log(values)
+    // commitMutation({
+    //   mutation: authorizedPrivilegesPopoverMutation,
+    //   variables: {
+    //     input: values,
+    //   },
+    //   setSubmitting,
+    //   onCompleted: (data) => {
+    //     setSubmitting(false);
+    //     resetForm();
+    //     this.handleClose();
+    //   },
+    //   onError: () => {
+    //     toastGenericError("Failed to Authorized Privilege");
+    //   }
+    // });
   }
 
   handleClose() {
@@ -121,7 +122,7 @@ class AuthorizedPrivilegesPopover extends Component {
     this.setState({
       fArray: [...this.state.fArray, this.state.fperform],
       fperform: '',
-    })
+    })    
   }
 
   handleChange(event) {
@@ -192,7 +193,7 @@ class AuthorizedPrivilegesPopover extends Component {
               description: '',
               functions_performed: [],
             }}
-            validationSchema={AuthorizedPrivilegeCreationValidation(t)}
+            // validationSchema={AuthorizedPrivilegeCreationValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.handleClose.bind(this)}
           >
@@ -263,17 +264,17 @@ class AuthorizedPrivilegesPopover extends Component {
                         gutterBottom={true}
                         style={{ float: 'left' }}
                       >
-                        {t('Name')}
+                        {t('Functions Performed')}
                       </Typography>
                       <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('Name')} >
+                        <Tooltip title={t('Functions Performed')} >
                           <Information fontSize="inherit" color="disabled" />
                         </Tooltip>
                       </div>
                       <div className="clearfix" />
                       <Field
                         component={TextField}
-                        name="name"
+                        name="functions_performed"
                         fullWidth={true}
                         size="small"
                         containerstyle={{ width: '100%' }}
@@ -291,15 +292,17 @@ class AuthorizedPrivilegesPopover extends Component {
                         onChange={this.handleChange.bind(this)}
                       />
                       <div className="clearfix" />
-                      <div className={classes.scrollBg}>
-                        <div className={classes.scrollDiv}>
-                          <div className={classes.scrollObj}>
-                            {this.state.fArray !== [] && this.state.fArray.map((item) => (
-                              <>
-                                <p className={classes.contentText}>{item}</p>
-                                <br />
-                              </>
-                            ))}
+                      <div style={{ marginTop: '20px' }}>
+                        <div className={classes.scrollBg}>
+                          <div className={classes.scrollDiv}>
+                            <div className={classes.scrollObj}>
+                              {this.state.fArray !== [] && this.state.fArray.map((item) => (
+                                <>
+                                  <p className={classes.contentText}>{item}</p>
+                                  <br />
+                                </>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>

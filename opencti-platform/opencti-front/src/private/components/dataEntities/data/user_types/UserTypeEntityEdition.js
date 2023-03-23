@@ -58,6 +58,12 @@ const userTypeEntityEditionQuery = graphql`
       modified
       name
       description
+      short_name
+      privilege_level
+      roles {
+        name
+        id
+      }
     }
   }
 `;

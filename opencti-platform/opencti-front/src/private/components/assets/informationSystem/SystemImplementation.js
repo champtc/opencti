@@ -49,7 +49,7 @@ const systemImplementationAttachMutation = graphql`
   mutation SystemImplementationAttachMutation(
     $id: ID!,
     $entityId: ID!,
-    $implementation_type: ImplementationType!,
+    $implementation_type: String!,
     
   ) {
     addInformationSystemImplementationEntity(id: $id, entityId: $entityId, implementation_type: $implementation_type)
@@ -60,7 +60,7 @@ const systemImplementationRemoveMutation = graphql`
   mutation SystemImplementationRemoveMutation(
     $id: ID!,
     $entityId: ID!,
-    $implementation_type: ImplementationType!,
+    $implementation_type: String!,
     
   ) {
     removeInformationSystemImplementationEntity(id: $id, entityId: $entityId, implementation_type: $implementation_type)

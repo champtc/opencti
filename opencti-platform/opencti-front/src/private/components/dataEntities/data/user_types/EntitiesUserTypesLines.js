@@ -28,22 +28,22 @@ class EntitiesUserTypesLines extends Component {
 
   handleIncrementedOffsetChange() {
     const incrementedOffset = this.state.offset += nbOfRowsToLoad;
-    this.setState({ offset: incrementedOffset })
+    this.setState({ offset: incrementedOffset });
     this.props.relay.refetchConnection(nbOfRowsToLoad, null, {
       offset: this.state.offset,
       first: nbOfRowsToLoad,
       ...this.props.paginationOptions,
-    })
+    });
   }
 
   handleDecrementedOffsetChange() {
     const decrementedOffset = this.state.offset -= nbOfRowsToLoad;
-    this.setState({ offset: decrementedOffset })
+    this.setState({ offset: decrementedOffset });
     this.props.relay.refetchConnection(nbOfRowsToLoad, null, {
       offset: this.state.offset,
       first: nbOfRowsToLoad,
       ...this.props.paginationOptions,
-    })
+    });
   }
 
   render() {

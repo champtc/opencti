@@ -18,16 +18,13 @@ import graphql from 'babel-plugin-relay/macro';
 import { commitMutation } from '../../../../../relay/environment';
 import inject18n from '../../../../../components/i18n';
 import TextField from '../../../../../components/TextField';
-import DatePickerField from '../../../../../components/DatePickerField';
 import MarkDownField from '../../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
 import TaskType from '../../../common/form/TaskType';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
 import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesField';
-import AuthorizedPrivilegesPopover from './AuthorizedPrivilegesPopover';
 import ResponsibilityField from '../../../common/form/ResponsibilityField';
-import SelectField from '../../../../../components/SelectField';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -101,13 +98,6 @@ class EntitiesUserTypesCreation extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    // const adaptedValues = R.evolve(
-    //   {
-    //     address: () => values.address[0],
-    //   },
-    //   values,
-    // );
-    console.log(values);
     const finalValues = R.pipe(
       R.dissoc('created'),
       R.dissoc('modified'),
@@ -165,7 +155,6 @@ class EntitiesUserTypesCreation extends Component {
               privilege_level: '',
               description: '',
               roles: [],
-              authorized_privileges: [],
             }}
             validationSchema={userTypeCreationValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
@@ -179,7 +168,7 @@ class EntitiesUserTypesCreation extends Component {
               values,
             }) => (
               <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('User Type')}</DialogTitle>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Create User Type')}</DialogTitle>
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={6}>
@@ -315,13 +304,6 @@ class EntitiesUserTypesCreation extends Component {
                         containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
                         setFieldValue={setFieldValue}
                         values={values}
-                      />
-                    </Grid>
-                    <Grid item={true} xs={12}>
-                      <AuthorizedPrivilegesPopover
-                        title={'Authorized Privileges'}
-                        name='authorized_privileges'
-                        setFieldValue={setFieldValue}
                       />
                     </Grid>
                     <Grid item={true} xs={12}>

@@ -7,10 +7,6 @@ import graphql from 'babel-plugin-relay/macro';
 import { pathOr } from 'ramda';
 import CyioListCardsContent from '../../../../../components/list_cards/CyioListCardsContent';
 import { setNumberOfElements } from '../../../../../utils/Number';
-import StixDomainObjectBookmarks, {
-  stixDomainObjectBookmarksQuery,
-} from '../../../common/stix_domain_objects/StixDomainObjectBookmarks';
-import { QueryRenderer } from '../../../../../relay/environment';
 import { EntityUserTypesCard, EntityUserTypesCardDummy } from './EntityUserTypesCard';
 
 const nbOfCardsToLoad = 50;
@@ -39,22 +35,22 @@ class EntitiesUserTypesCards extends Component {
 
   handleIncrementedOffsetChange() {
     const incrementedOffset = this.state.offset += nbOfCardsToLoad;
-    this.setState({ offset: incrementedOffset })
+    this.setState({ offset: incrementedOffset });
     this.props.relay.refetchConnection(nbOfCardsToLoad, null, {
       offset: this.state.offset,
       first: nbOfCardsToLoad,
-       ...this.props.paginationOptions,
-    })
+      ...this.props.paginationOptions,
+    });
   }
 
   handleDecrementedOffsetChange() {
     const decrementedOffset = this.state.offset -= nbOfCardsToLoad;
-    this.setState({ offset: decrementedOffset })
+    this.setState({ offset: decrementedOffset });
     this.props.relay.refetchConnection(nbOfCardsToLoad, null, {
       offset: this.state.offset,
       first: nbOfCardsToLoad,
-       ...this.props.paginationOptions,
-    })
+      ...this.props.paginationOptions,
+    });
   }
 
   render() {
@@ -133,7 +129,7 @@ export const entitiesUserTypesCardsQuery = graphql`
 `;
 
 export default createPaginationContainer(
-    EntitiesUserTypesCards,
+  EntitiesUserTypesCards,
   {
     data: graphql`
       fragment EntitiesUserTypesCards_data on Query

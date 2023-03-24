@@ -288,7 +288,7 @@ class UserTypesEntities extends Component {
       },
       name: {
         label: 'Name',
-        width: '10%',
+        width: '16%',
         isSortable: true,
       },
       user_type: {

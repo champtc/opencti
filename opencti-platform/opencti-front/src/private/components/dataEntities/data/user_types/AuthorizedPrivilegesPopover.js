@@ -1,8 +1,7 @@
-/* eslint-disable */
-/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { compose } from 'ramda';
+import * as R from 'ramda';
 import * as Yup from 'yup';
 import { Formik, Form, Field } from 'formik';
 import { withStyles } from '@material-ui/core/styles';
@@ -14,15 +13,17 @@ import { Information } from 'mdi-material-ui';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
-import { Dialog, DialogContent, DialogActions, DialogTitle, Grid, InputAdornment } from '@material-ui/core';
+import {
+  Dialog, DialogContent, DialogActions, DialogTitle, Grid,
+} from '@material-ui/core';
 import graphql from 'babel-plugin-relay/macro';
 import inject18n from '../../../../../components/i18n';
-import DataAddressField from '../../../common/form/DataAddressField';
 import { commitMutation } from '../../../../../relay/environment';
 import MarkDownField from '../../../../../components/MarkDownField';
 import TextField from '../../../../../components/TextField';
 import FunctionsPerformedField from '../../../common/form/FunctionsPerformedField';
 import { adaptFieldValue } from '../../../../../utils/String';
+import { toastGenericError } from '../../../../../utils/bakedToast';
 
 const styles = (theme) => ({
   paper: {
@@ -71,20 +72,60 @@ const styles = (theme) => ({
   },
 });
 
-const authorizedPrivilegesPopoverMutation = graphql`
-  mutation AuthorizedPrivilegesPopoverMutation(
+const authorizedPrivilegesPopoverAddMutation = graphql`
+  mutation AuthorizedPrivilegesPopoverAddMutation($input: AuthorizedPrivilegeInput!) {
+    createAuthorizedPrivilege(input: $input) {
+      id
+      name
+      description
+      functions_performed
+    }
+  }
+`;
+
+const authorizedPrivilegesPopoverEditMutation = graphql`
+  mutation AuthorizedPrivilegesPopoverEditMutation(
     $id: ID!,
     $input: [EditInput]!
   ) {
     editAuthorizedPrivilege(id: $id, input: $input) {
       id
+      name
+      description
+      functions_performed
     }
   }
 `;
 
-const  AuthorizedPrivilegeCreationValidation = (t) => Yup.object().shape({
+const authorizedPrivilegesPopoverDeleteMutation = graphql`
+  mutation AuthorizedPrivilegesPopoverDeleteMutation($id: ID!) {
+    deleteAuthorizedPrivilege(id: $id)
+  }
+`;
+
+const authorizedPrivilegesPopoverAttachToOscalUserMutation = graphql`
+  mutation AuthorizedPrivilegesPopoverAttachToOscalUserMutation(
+    $id: ID!
+    $field: String!
+    $entityId: ID!
+  ) {
+    attachToOscalUser( id: $id, field: $field, entityId: $entityId )
+  }
+`;
+
+const authorizedPrivilegesPopoverDetachToOscalUserMutation = graphql`
+  mutation AuthorizedPrivilegesPopoverDetachToOscalUserMutation(
+    $id: ID!
+    $field: String!
+    $entityId: ID!
+  ) {
+    detachFromOscalUser( id: $id, field: $field, entityId: $entityId )
+  }
+`;
+
+const AuthorizedPrivilegeCreationValidation = (t) => Yup.object().shape({
   name: Yup.string().required(t('This field is required')),
-  // functions_performed: Yup.string().nullable(),
+  // functions_performed: Yup.array().min(1).required(t('This field is required')),
 });
 
 class AuthorizedPrivilegesPopover extends Component {
@@ -98,90 +139,148 @@ class AuthorizedPrivilegesPopover extends Component {
       name: '',
       description: '',
       functionsPerformed: null,
-      editIndex: null
+      editIndex: null,
     };
-  }
-
-  onSubmit(values, { setSubmitting, resetForm }) {
-    const authorizedPrivilege = {
-      name: values.name || '',
-      description: values.description || '',
-      functions_performed: values.functions_performed || [],
-    }
-    this.setState({ 
-      authorizedPrivileges: [...this.state.authorizedPrivileges, authorizedPrivilege],
-      open: false,
-    }, () => this.props.setFieldValue(this.props.name, this.state.authorizedPrivileges))
-    resetForm();
   }
 
   handleClose() {
     this.setState({
       open: false,
-    })
+    });
   }
-  
+
   handleEditClose() {
     this.setState({
       openEdit: false,
-    })
+    });
+  }
+
+  onSubmit(values, { setSubmitting, resetForm }) {
+    commitMutation({
+      mutation: authorizedPrivilegesPopoverAddMutation,
+      variables: {
+        input: values,
+      },
+      setSubmitting,
+      onCompleted: (data) => {
+        this.setState({
+          authorizedPrivileges: [
+            ...this.state.authorizedPrivileges,
+            data.createAuthorizedPrivilege,
+          ],
+        });
+        commitMutation({
+          mutation: authorizedPrivilegesPopoverAttachToOscalUserMutation,
+          variables: {
+            id: this.props.userTypeId,
+            field: 'authorized_privileges',
+            entityId: data.createAuthorizedPrivilege.id,
+          },
+          onCompleted: () => {
+            setSubmitting(false);
+            resetForm();
+            this.handleClose();
+          },
+          onError: () => {
+            toastGenericError('Failed to create authorized privilege');
+          },
+        });
+      },
+      onError: () => {
+        toastGenericError('Failed to create authorized privilege');
+      },
+    });
   }
 
   handleEditSubmit(values, { setSubmitting, resetForm }) {
     const finalValues = R.pipe(
       R.toPairs,
       R.map((n) => ({
-        'key': n[0],
-        'value': adaptFieldValue(n[1]),
+        key: n[0],
+        value: adaptFieldValue(n[1]),
       })),
     )(values);
 
-    this.state.id !== '' && commitMutation({
-      mutation: authorizedPrivilegesPopoverMutation,
+    commitMutation({
+      mutation: authorizedPrivilegesPopoverEditMutation,
       variables: {
+        id: this.state.id,
         input: finalValues,
       },
       setSubmitting,
-      // pathname: '/data/entities/notes',
-      onCompleted: () => {
+      onCompleted: (data) => {
         setSubmitting(false);
         resetForm();
+        const updatedPrivileges = [...this.state.authorizedPrivileges];
+        updatedPrivileges[this.state.editIndex] = {
+          name: data.editAuthorizedPrivilege.name,
+          description: data.editAuthorizedPrivilege.description,
+          functions_performed: data.editAuthorizedPrivilege.functions_performed,
+        };
         this.setState({
+          authorizedPrivileges: updatedPrivileges,
+          id: '',
+          name: '',
+          description: '',
+          functions_performed: [],
           openEdit: false,
-        })
+          editIndex: null,
+        });
       },
       onError: () => {
-        toastGenericError('Failed to create location');
+        toastGenericError('Failed to create authorized privilege');
       },
     });
-
-    const updatedPrivileges = [...this.state.authorizedPrivileges];
-      updatedPrivileges[editIndex] = { name: this.state.name, description: this.state.description, functions_performed: this.state.functionsPerformed };
-      this.setState({ authorizedPrivileges: updatedPrivileges, name: "", description: "", openEdit: false, editIndex: null });
   }
 
-  handleEdit(index, id) {
+  handleEdit(index) {
     const authorizedPrivilege = this.state.authorizedPrivileges[index];
-    console.log(authorizedPrivilege);
     this.setState({
       openEdit: true,
+      editIndex: index,
       id: authorizedPrivilege?.id || '',
       name: authorizedPrivilege.name,
       description: authorizedPrivilege.description,
       functionsPerformed: authorizedPrivilege.functions_performed,
-    })
+    });
+  }
+
+  handleDelete(id) {
+    this.setState({
+      authorizedPrivileges: R.filter((n) => n.id !== id)(this.state.authorizedPrivileges),
+    });
+    commitMutation({
+      mutation: authorizedPrivilegesPopoverDetachToOscalUserMutation,
+      variables: {
+        id: this.props.userTypeId,
+        field: 'authorized_privileges',
+        entityId: id,
+      },
+      onCompleted: () => {
+        commitMutation({
+          mutation: authorizedPrivilegesPopoverDeleteMutation,
+          variables: {
+            id,
+          },
+          onError: () => {
+            toastGenericError('Failed to delete authorized privilege');
+          },
+        });
+      },
+      onError: () => {
+        toastGenericError('Failed to delete authorized privilege');
+      },
+    });
   }
 
   render() {
     const {
-      t, fldt, classes, name, title, helperText,
+      t, classes, title,
     } = this.props;
-    const {
-      error,
-    } = this.state;
+
     return (
       <>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginTop: '20px' }}>
           <Typography color='textSecondary'>
             {title && t(title)}
           </Typography>
@@ -204,16 +303,16 @@ class AuthorizedPrivilegesPopover extends Component {
                       {(privilege.name && t(privilege.name))}
                     </Typography>
                   </div>
-                  <div style={{ display: 'flex' }}>
+                  <div style={{ display: 'flex', justifyContent: 'end ' }}>
                     <IconButton
                       size='small'
-                      onClick={this.handleEdit.bind(this, key, privilege.id)}
+                      onClick={this.handleEdit.bind(this, key)}
                     >
                       <Edit />
                     </IconButton>
                     <IconButton
                       size='small'
-                      // onClick={this.handleDelete.bind(this, key)}
+                      onClick={this.handleDelete.bind(this, privilege.id)}
                     >
                       <Delete />
                     </IconButton>
@@ -234,9 +333,9 @@ class AuthorizedPrivilegesPopover extends Component {
             initialValues={{
               name: '',
               description: '',
-              functions_performed: [],
+              functions_performed: '',
             }}
-            // validationSchema={AuthorizedPrivilegeCreationValidation(t)}
+            validationSchema={AuthorizedPrivilegeCreationValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.handleClose.bind(this)}
           >
@@ -245,7 +344,6 @@ class AuthorizedPrivilegesPopover extends Component {
               submitForm,
               isSubmitting,
               setFieldValue,
-              values,
             }) => (
               <Form>
                 <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Create an authorized privilege')}</DialogTitle>
@@ -301,8 +399,8 @@ class AuthorizedPrivilegesPopover extends Component {
                       />
                     </Grid>
                     <Grid xs={12} item={true}>
-                      <FunctionsPerformedField 
-                        title='Functions Performed' 
+                      <FunctionsPerformedField
+                        title='Functions Performed'
                         name='functions_performed'
                         setFieldValue={setFieldValue}
                       />
@@ -345,7 +443,7 @@ class AuthorizedPrivilegesPopover extends Component {
               description: this.state.description,
               functions_performed: this.state.functionsPerformed,
             }}
-            // validationSchema={AuthorizedPrivilegeCreationValidation(t)}
+            validationSchema={AuthorizedPrivilegeCreationValidation(t)}
             onSubmit={this.handleEditSubmit.bind(this)}
             onReset={this.handleEditClose.bind(this)}
           >
@@ -354,7 +452,6 @@ class AuthorizedPrivilegesPopover extends Component {
               submitForm,
               isSubmitting,
               setFieldValue,
-              values,
             }) => (
               <Form>
                 <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Edit an authorized privilege')}</DialogTitle>
@@ -410,8 +507,8 @@ class AuthorizedPrivilegesPopover extends Component {
                       />
                     </Grid>
                     <Grid xs={12} item={true}>
-                      <FunctionsPerformedField 
-                        title='Functions Performed' 
+                      <FunctionsPerformedField
+                        title='Functions Performed'
                         name='functions_performed'
                         setFieldValue={setFieldValue}
                         data={this.state.functionsPerformed}
@@ -447,11 +544,9 @@ class AuthorizedPrivilegesPopover extends Component {
 }
 
 AuthorizedPrivilegesPopover.propTypes = {
-  name: PropTypes.string,
-  device: PropTypes.object,
+  title: PropTypes.string,
   classes: PropTypes.object,
   t: PropTypes.func,
-  fldt: PropTypes.func,
 };
 
 export default compose(inject18n, withStyles(styles))(AuthorizedPrivilegesPopover);

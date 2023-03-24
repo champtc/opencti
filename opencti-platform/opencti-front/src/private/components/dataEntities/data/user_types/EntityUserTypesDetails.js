@@ -8,12 +8,10 @@ import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import { Grid } from '@material-ui/core';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import remarkParse from 'remark-parse';
+import { Grid, Tooltip } from '@material-ui/core';
 import inject18n from '../../../../../components/i18n';
+import AuthorizedPrivilegesPopover from './AuthorizedPrivilegesPopover';
+import { Information } from 'mdi-material-ui';
 
 const styles = (theme) => ({
   paper: {
@@ -68,6 +66,7 @@ const styles = (theme) => ({
     marginTop: 0,
     marginBottom: 0,
   },
+  tooltip: { float: 'left', margin: '2px 0 0 5px' },
 });
 
 class EntityUserTypesDetailsComponent extends Component {
@@ -81,11 +80,6 @@ class EntityUserTypesDetailsComponent extends Component {
       [],
       ['roles'],
     )(user);
-    
-    const authorizedPrivileges = pathOr(
-      [],
-      ['authorized_privileges'],
-    )(user)
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
@@ -99,9 +93,15 @@ class EntityUserTypesDetailsComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
                   {t('Privilege Level')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Privilege Level')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
                 {user.privilege_level && t(user.privilege_level)}
               </div>
@@ -112,18 +112,21 @@ class EntityUserTypesDetailsComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
                   {t('Role ID')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Role ID')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
                 <div className={classes.scrollBg}>
                   <div className={classes.scrollDiv}>
                     <div className={classes.scrollObj}>
                       {roles !== [] && roles.map((item) => (
-                        <>
-                          <p className={classes.contentText}>{item.name}</p>
-                          <br />
-                        </>
+                        <Typography>{t(item.name)}</Typography>
                       ))}
                     </div>
                   </div>
@@ -131,28 +134,12 @@ class EntityUserTypesDetailsComponent extends Component {
               </div>
             </Grid>
             <Grid item={true} xs={12}>
-              <div style={{ marginTop: '20px' }}>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  gutterBottom={true}
-                >
-                  {t('Authorized Privileges')}
-                </Typography>
-                <div className="clearfix" />
-                <div className={classes.scrollBg}>
-                  <div className={classes.scrollDiv}>
-                    <div className={classes.scrollObj}>
-                      {authorizedPrivileges !== [] && authorizedPrivileges.map((privilege) => (
-                        <>
-                          <p className={classes.contentText}>{privilege.name}</p>
-                          <br />
-                        </>
-                      ))}  
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <AuthorizedPrivilegesPopover
+                title={'Authorized Privileges'}
+                name='authorized_privileges'
+                userTypeId={user?.id}
+                data={user.authorized_privileges}
+              />
             </Grid>
           </Grid>
         </Paper>

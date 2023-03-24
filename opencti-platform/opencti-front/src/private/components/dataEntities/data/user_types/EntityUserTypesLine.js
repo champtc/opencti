@@ -95,13 +95,13 @@ class EntityUserTypesLineComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.name.width }}
+                style={{ width: '17%' }}
               >
                 {node.name && t(node.name)}
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.user_type.width }}
+                style={{ width: '17%' }}
               >
                 {node.user_type && t(node.user_type)}
               </div>

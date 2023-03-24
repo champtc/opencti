@@ -22,8 +22,8 @@ extend type Mutation {
   attachToInformationSystem(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Asset:update")
   detachFromInformationSystem(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Asset:update")
   #
-  addInformationSystemImplementationEntity( id: ID!, implementation_type: ImplementationType!, entityId: ID!): Boolean @hasPermission(resources: "Asset:update")
-  removeInformationSystemImplementationEntity( id: ID!, implementation_type: ImplementationType!, entityId: ID!): Boolean @hasPermission(resources: "Asset:update")
+  addInformationSystemImplementationEntity( id: ID!, implementation_type: String!, entityId: ID!): OscalRelationship @hasPermission(resources: "Asset:update")
+  removeInformationSystemImplementationEntity( id: ID!, implementation_type: String!, entityId: ID!): Boolean @hasPermission(resources: "Asset:update")
 }
 
 
@@ -353,14 +353,4 @@ enum FIPS199 {
   fips_199_high
 }
 
-enum ImplementationType {
-  "Identifies the implementation as a component."
-  component
-  "Identifies the implementation as an inventory item."
-  inventory_item
-  "Identifies the implementation as a leveraged authorization."
-  leveraged_authorization
-  "Identifies the implementation as a type of user."
-  user_type
-}
 ## -----------

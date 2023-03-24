@@ -160,20 +160,17 @@ class FunctionsPerformedField extends Component {
               <div className={classes.scrollDiv}>
                 <div className={classes.scrollObj}>
                   {this.state.allFunctions !== [] && this.state.allFunctions.map((item, index) => (
-                    <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <p className={classes.contentText}>{item}</p>
-                        <div>
-                          <IconButton aria-label="open" size="medium" onClick={() => this.handleEdit(index)}>
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton aria-label="open" size="medium" onClick={() => this.handleDelete(index)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        </div>
+                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <p className={classes.contentText}>{item}</p>
+                      <div>
+                        <IconButton aria-label="open" size="medium" onClick={() => this.handleEdit(index)}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton aria-label="open" size="medium" onClick={() => this.handleDelete(index)}>
+                          <DeleteIcon />
+                        </IconButton>
                       </div>
-                      <br />
-                    </>
+                    </div>
                   ))}
                 </div>
               </div>

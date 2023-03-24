@@ -10,40 +10,25 @@ import { Formik, Form, Field } from 'formik';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import NoteAddIcon from '@material-ui/icons/NoteAdd';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import IconButton from '@material-ui/core/IconButton';
 import { Information } from 'mdi-material-ui';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Tooltip from '@material-ui/core/Tooltip';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
-import AddIcon from '@material-ui/icons/Add';
-import { MoreVertOutlined } from '@material-ui/icons';
-import { ConnectionHandler } from 'relay-runtime';
 import inject18n from '../../../../../components/i18n';
 import { commitMutation } from '../../../../../relay/environment';
-import { dateFormat, parse } from '../../../../../utils/Time';
 import { adaptFieldValue } from '../../../../../utils/String';
 import SelectField from '../../../../../components/SelectField';
 import TextField from '../../../../../components/TextField';
 import DatePickerField from '../../../../../components/DatePickerField';
 import MarkDownField from '../../../../../components/MarkDownField';
-import ResponseType from '../../../common/form/ResponseType';
-import RiskLifeCyclePhase from '../../../common/form/RiskLifeCyclePhase';
-import Source from '../../../common/form/Source';
-import { toastGenericError } from "../../../../../utils/bakedToast";
-import EmailAddressField from '../../../common/form/EmailAddressField';
-import { telephoneFormatRegex, emailAddressRegex } from '../../../../../utils/Network';
+import { toastGenericError } from '../../../../../utils/bakedToast';
 import TaskType from '../../../common/form/TaskType';
 import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesField';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
-import AuthorizedPrivilegesPopover from './AuthorizedPrivilegesPopover';
 import ResponsibilityField from '../../../common/form/ResponsibilityField';
 
 const styles = (theme) => ({
@@ -131,43 +116,41 @@ class UserTypeEntityEditionContainer extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    // const adaptedValues = R.evolve(
-    //   {
-    //     modified: () => values.modified === null ? null : parse(values.modified).format(),
-    //     created: () => values.created === null ? null : parse(values.created).format(),
-    //   },
-    //   values,
-    // );
-    console.log(values)
-      const finalValues = R.pipe(
-        R.dissoc('id'),
-        R.dissoc('created'),
-        R.dissoc('modified'),
-        R.toPairs,
-        R.map((n) => ({
-          'key': n[0],
-          'value': adaptFieldValue(n[1]),
-        })),
-      )(values);
-      commitMutation({
-        mutation: userTypeEntityEditionContainerMutation,
-        variables: {
-          id: this.props.user.id,
-          input: finalValues,
-        },
-        setSubmitting,
-        onCompleted: () => {
-          setSubmitting(false);
-          resetForm();
-          this.handleClose();
-          this.props.history.push(`/data/entities/user_types/${this.props.user.id}`);
-        },
-        onError: (err) => {
-          console.error(err);
-          toastGenericError('Request Failed');
-        }
-      });
-      this.setState({ onSubmit: true });
+    const adaptedValues = R.evolve(
+      {
+        roles: () => (values.roles === null ? null : R.map((n) => n.id)(values.roles)),
+      },
+      values,
+    );
+    const finalValues = R.pipe(
+      R.dissoc('id'),
+      R.dissoc('created'),
+      R.dissoc('modified'),
+      R.toPairs,
+      R.map((n) => ({
+        key: n[0],
+        value: adaptFieldValue(n[1]),
+      })),
+    )(adaptedValues);
+    commitMutation({
+      mutation: userTypeEntityEditionContainerMutation,
+      variables: {
+        id: this.props.user.id,
+        input: finalValues,
+      },
+      setSubmitting,
+      onCompleted: () => {
+        setSubmitting(false);
+        resetForm();
+        this.handleClose();
+        this.props.history.push(`/data/entities/user_types/${this.props.user.id}`);
+      },
+      onError: (err) => {
+        console.error(err);
+        toastGenericError('Request Failed');
+      },
+    });
+    this.setState({ onSubmit: true });
   }
 
   render() {
@@ -190,7 +173,7 @@ class UserTypeEntityEditionContainer extends Component {
       R.pick([
         'id',
         'name',
-        'short_name',        
+        'short_name',
         'description',
         'created',
         'modified',
@@ -217,13 +200,11 @@ class UserTypeEntityEditionContainer extends Component {
           >
             {({
               submitForm,
-              handleReset,
               isSubmitting,
               setFieldValue,
-              values,
             }) => (
               <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('User Type')}</DialogTitle>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Edit User Type')}</DialogTitle>
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={12}>
@@ -453,14 +434,6 @@ class UserTypeEntityEditionContainer extends Component {
                         setFieldValue={setFieldValue}
                         data={user?.roles}
                         selectedRoles={selectedRoles}
-                      />
-                    </Grid>
-                    <Grid item={true} xs={12}>
-                      <AuthorizedPrivilegesPopover
-                        title={'Authorized Privileges'}
-                        name='authorized_privileges'
-                        setFieldValue={setFieldValue}
-                        data={user?.authorized_privileges}
                       />
                     </Grid>
                     <Grid item={true} xs={12}>

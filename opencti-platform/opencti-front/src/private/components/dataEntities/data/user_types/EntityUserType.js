@@ -114,12 +114,12 @@ class EntityUserTypeComponent extends Component {
           history={history}
           refreshQuery={refreshQuery}
         />
-        <UserTypeEntityEditionContainer
+        {this.state.displayEdit && <UserTypeEntityEditionContainer
           displayEdit={this.state.displayEdit}
           history={history}
           user={user}
           handleDisplayEdit={this.handleDisplayEdit.bind(this)}
-        />
+        />}
       </>
     );
   }

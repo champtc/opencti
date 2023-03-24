@@ -8,10 +8,11 @@ import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import { Grid } from '@material-ui/core';
+import { Grid, Tooltip } from '@material-ui/core';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { Information } from 'mdi-material-ui';
 import remarkParse from 'remark-parse';
 import inject18n from '../../../../../components/i18n';
 import CyioCoreObjectLabelsView from '../../../common/stix_core_objects/CyioCoreObjectLabelsView';
@@ -65,6 +66,7 @@ const styles = (theme) => ({
     textAlign: 'center',
     padding: '3px 0',
   },
+  tooltip: { float: 'left', margin: '2px 0 0 5px' },
 });
 
 class EntityUserTypesOverviewComponent extends Component {
@@ -85,9 +87,15 @@ class EntityUserTypesOverviewComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
                   {t('ID')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Uniquely identifies this object')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
                 {user.id && t(user.id)}
               </div>
@@ -98,9 +106,15 @@ class EntityUserTypesOverviewComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
                   {t('Created')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Created')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
                 {user.created && fldt(user.created)}
               </div>
@@ -111,9 +125,15 @@ class EntityUserTypesOverviewComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
                   {t('Last Modified')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Last Modified')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
                 {user.modified && fldt(user.modified)}
               </div>
@@ -124,9 +144,15 @@ class EntityUserTypesOverviewComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
                   {t('Short Name')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Short Name')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
                 {user.short_name && t(user.short_name)}
               </div>
@@ -137,54 +163,71 @@ class EntityUserTypesOverviewComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
                   {t('Type')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Type')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
-                {user?.user_type
-                  && t(user?.user_type)}
+                {user?.user_type && t(user?.user_type)}
               </div>
             </Grid>
             <Grid item={true} xs={12}>
-                <div style={{ marginTop: '20px' }}>
-                        <Typography
-                        variant="h3"
-                        color="textSecondary"
-                        gutterBottom={true}
-                    >
-                        {t('Description')}
-                    </Typography>
-                    <div className="clearfix" />
-                    <div className={classes.scrollBg}>
-                        <div className={classes.scrollDiv}>
-                        <div className={classes.scrollObj}>
-                            <Markdown
-                            remarkPlugins={[remarkGfm, remarkParse]}
-                            rehypePlugins={[rehypeRaw]}
-                            parserOptions={{ commonmark: true }}
-                            className="markdown"
-                            >
-                            {user.description && t(user.description)}
-                            </Markdown>
-                        </div>
-                        </div>
+              <div style={{ marginTop: '20px' }}>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Description')}
+                </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Description')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
+                <div className="clearfix" />
+                <div className={classes.scrollBg}>
+                  <div className={classes.scrollDiv}>
+                    <div className={classes.scrollObj}>
+                      <Markdown
+                        remarkPlugins={[remarkGfm, remarkParse]}
+                        rehypePlugins={[rehypeRaw]}
+                        parserOptions={{ commonmark: true }}
+                        className="markdown"
+                      >
+                        {user.description && t(user.description)}
+                      </Markdown>
                     </div>
-                </div>              
+                  </div>
+                </div>
+              </div>
             </Grid>
-            <Grid item={true} xs={12}>
+            <Grid item={true} xs={12} style={{ marginTop: '20px' }}>
               <Typography
                 variant="h3"
                 color="textSecondary"
                 gutterBottom={true}
+                style={{ float: 'left' }}
               >
                 {t('Markings')}
               </Typography>
+              <div className={classes.tooltip}>
+                  <Tooltip title={t('Markings')}>
+                    <Information fontSize="inherit" color="disabled" />
+                  </Tooltip>
+                </div>
               <div className="clearfix" />
               {user?.markings && (
                 <p className={classes.markingText}>{t(user?.markings)}</p>
               )}
             </Grid>
-            <Grid item={true} xs={6}>
+            <Grid item={true} xs={6} style={{ marginTop: '20px' }}>
               <CyioCoreObjectLabelsView
                 labels={user.labels}
                 marginTop={0}

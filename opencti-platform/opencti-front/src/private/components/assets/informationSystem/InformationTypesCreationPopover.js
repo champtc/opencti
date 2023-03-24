@@ -5,16 +5,13 @@ import * as PropTypes from 'prop-types';
 import * as R from 'ramda';
 import { compose } from 'ramda';
 import * as Yup from 'yup';
-import { createFragmentContainer } from 'react-relay';
 import { withStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
 import { Formik, Form, Field } from 'formik';
 import Typography from '@material-ui/core/Typography';
 import { Information } from 'mdi-material-ui';
 import Tooltip from '@material-ui/core/Tooltip';
 import graphql from 'babel-plugin-relay/macro';
 import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +27,7 @@ import { commitMutation } from '../../../../relay/environment';
 import SearchTextField from '../../common/form/SearchTextField';
 import TaskType from '../../common/form/TaskType';
 import SecurityCategorization from './SecurityCategorization';
+import RiskLevel from '../../common/form/RiskLevel';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -76,6 +74,8 @@ const styles = (theme) => ({
     fontFamily: 'sans-serif',
     padding: '0px',
     textAlign: 'left',
+    display: 'grid',
+    gridTemplateColumns: '40% 1fr 1fr 1fr',
   },
   popoverDialog: {
     fontSize: '18px',
@@ -89,13 +89,21 @@ const styles = (theme) => ({
   },
 });
 
-const informationTypeEditionMutation = graphql`
-  mutation InformationTypeEditionMutation(
+const informationTypesCreationPopoverMutation = graphql`
+  mutation InformationTypesCreationPopoverMutation(
     $input: InformationTypeInput!
   ) {
     createInformationType(input: $input) {
       id
     }
+  }
+`;
+
+const informationTypesDeletePopoverMutation = graphql`
+  mutation InformationTypesCreationPopoverDeleteMutation(
+    $id: ID!
+  ) {
+    deleteInformationType(id: $id)
   }
 `;
 
@@ -111,11 +119,10 @@ const Transition = React.forwardRef((props, ref) => (
 ));
 Transition.displayName = 'TransitionSlide';
 
-class InformationTypeEditionComponent extends Component {
+class InformationTypesCreationPopover extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: false,
       selectedProduct: {},
     };
   }
@@ -160,7 +167,7 @@ class InformationTypeEditionComponent extends Component {
       R.assoc('confidentiality_impact', confidentialityImpact),
     )(values);
     commitMutation({
-      mutation: informationTypeEditionMutation,
+      mutation: informationTypesCreationPopoverMutation,
       variables: {
         input: finalValues,
       },
@@ -179,7 +186,7 @@ class InformationTypeEditionComponent extends Component {
 
   onReset() {
     this.setState({ selectedProduct: {} });
-    this.props.handleEditInfoType();
+    this.props.handleChangeDialog();
   }
 
   handleSetFieldValues(selectedInfoType, setFieldValue, type) {
@@ -215,67 +222,61 @@ class InformationTypeEditionComponent extends Component {
     this.setState({ selectedProduct: infoType }, () => this.handleSetFieldValues(infoType, setFieldValue, 'select'));
   }
 
+  handleDeleteInfoType(infoTypeId) {
+    commitMutation({
+      mutation: informationTypesDeletePopoverMutation,
+      variables: {
+        id: infoTypeId,
+      },
+      setSubmitting,
+      pathname: '/defender_hq/assets/information_systems',
+      onCompleted: (data) => {
+        setSubmitting(false);
+        resetForm();
+      },
+      onError: (err) => {
+        console.error(err);
+        toastGenericError('Failed to delete Information Type');
+      },
+    });
+  }
+
   render() {
+    const { t, open, classes } = this.props;
     const {
-      t,
-      classes,
       openEdit,
-      informationType,
-    } = this.props;
-    const {
       selectedProduct,
     } = this.state;
     const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedProduct);
     const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedProduct);
     const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedProduct);
-    const characterizations = R.pipe(
-      R.pathOr([], ['characterizations']),
-      R.mergeAll,
-    )(informationType);
-    const initialValues = R.pipe(
-      R.assoc('id', informationType?.id || ''),
-      R.assoc('title', informationType?.title || ''),
-      R.assoc('system', characterizations?.id || ''),
-      R.assoc('catalog', characterizations?.system || ''),
-      R.assoc('description', informationType?.description || ''),
-      R.assoc('information_type', characterizations?.imformation_type?.id || ''),
-      R.assoc('integrity_impact_base', informationType?.integrity_impact?.base_impact || ''),
-      R.assoc('availability_impact_base', informationType?.availability_impact?.base_impact || ''),
-      R.assoc('integrity_impact_selected', informationType?.integrity_impact?.selected_impact || ''),
-      R.assoc('confidentiality_impact_base', informationType?.confidentiality_impact?.base_impact || ''),
-      R.assoc('availability_impact_selected', informationType?.availability_impact?.selected_impact || ''),
-      R.assoc('integrity_impact_justification', informationType?.integrity_impact?.adjustment_justification || ''),
-      R.assoc('confidentiality_impact_selected', informationType?.confidentiality_impact?.selected_impact || ''),
-      R.assoc('availability_impact_justification', informationType?.availability_impact?.adjustment_justification || ''),
-      R.assoc('confidentiality_impact_justification', informationType?.confidentiality_impact?.adjustment_justification || ''),
-      R.pick([
-        'title',
-        'system',
-        'catalog',
-        'description',
-        'information_type',
-        'integrity_impact_base',
-        'availability_impact_base',
-        'integrity_impact_selected',
-        'confidentiality_impact_base',
-        'availability_impact_selected',
-        'integrity_impact_justification',
-        'confidentiality_impact_selected',
-        'availability_impact_justification',
-        'confidentiality_impact_justification',
-      ]),
-    )(informationType);
     return (
-      <>
+      <div>
         <Dialog
-          open={openEdit}
+          open={open}
           maxWidth='md'
           keepMounted={false}
           className={classes.dialogMain}
         >
           <Formik
             enableReinitialize
-            initialValues={initialValues}
+            initialValues={{
+              title: '',
+              system: '',
+              catalog: '',
+              description: '',
+              information_type: '',
+              integrity_impact_base: '',
+              availability_impact_base: '',
+              integrity_impact_selected: '',
+              confidentiality_impact_base: '',
+              availability_impact_selected: '',
+              integrity_impact_justification: '',
+              confidentiality_impact_selected: '',
+              availability_impact_justification: '',
+              confidentiality_impact_justification: '',
+
+            }}
             validationSchema={InformationTypeValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.onReset.bind(this)}
@@ -389,7 +390,7 @@ class InformationTypeEditionComponent extends Component {
                       </div>
                       <div className='clearfix' />
                       {selectedProduct.confidentiality_impact
-                        && t(selectedProduct.confidentiality_impact.base_impact)}
+                        && <RiskLevel risk={selectedProduct.confidentiality_impact.base_impact} />}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -484,7 +485,7 @@ class InformationTypeEditionComponent extends Component {
                       </div>
                       <div className='clearfix' />
                       {selectedProduct.integrity_impact
-                        && t(selectedProduct.integrity_impact.base_impact)}
+                        && <RiskLevel risk={selectedProduct.integrity_impact.base_impact} />}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -579,7 +580,7 @@ class InformationTypeEditionComponent extends Component {
                       </div>
                       <div className='clearfix' />
                       {selectedProduct.availability_impact
-                        && t(selectedProduct.availability_impact.base_impact)}
+                        && <RiskLevel risk={selectedProduct.availability_impact.base_impact} />}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -663,71 +664,17 @@ class InformationTypeEditionComponent extends Component {
             )}
           </Formik>
         </Dialog>
-      </>
+      </div>
     );
   }
 }
 
-InformationTypeEditionComponent.propTypes = {
+InformationTypesCreationPopover.propTypes = {
   t: PropTypes.func,
+  open: PropTypes.bool,
   name: PropTypes.string,
-  openEdit: PropTypes.bool,
   classes: PropTypes.object,
-  handleEditInfoType: PropTypes.func,
-  renderSecurityImpact: PropTypes.func,
-  informationType: PropTypes.object,
+  handleChangeDialog: PropTypes.func,
 };
 
-export const InformationTypeEditionQuery = graphql`
-  query InformationTypeEditionQuery($id: ID!) {
-    ...InformationTypeEdition_information
-      @arguments(id: $id)
-  }
-`;
-
-const InformationTypeEdition = createFragmentContainer(InformationTypeEditionComponent, {
-  informationType: graphql`
-    fragment InformationTypeEdition_information on Query
-    @argumentDefinitions(
-      id: { type: "ID!" }
-    ) {
-      informationType(id: $id) {
-        id
-        entity_type
-        title
-        description
-        categorizations {
-          id
-          entity_type
-          system
-          information_type {
-            id
-            entity_type
-            identifier
-            category
-          }
-        }
-        confidentiality_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
-        integrity_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
-        availability_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
-      }
-    }
-  `,
-});
-
-export default compose(inject18n, withStyles(styles))(InformationTypeEdition);
+export default compose(inject18n, withStyles(styles))(InformationTypesCreationPopover);

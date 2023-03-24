@@ -182,6 +182,11 @@ class DataEntitiesDropDown extends Component {
               </div>
               <div className={classes.menuItemText}>
                 {t('User Types')}
+              </div>
+            </div>
+          </MenuItem>
+          <MenuItem
+            component={Link}
             to="/data/entities/leveraged_authorizations"
             value="leveraged_authorizations"
           >

@@ -12,6 +12,7 @@ import RootResponsibleParty from './data/responsibleParties/Root';
 import RootAssessmentPlatform from './data/assessment_platform/Root';
 import RootExternalReferences from './data/external_references/Root';
 import RootUserTypes from './data/user_types/Root';
+import RootLeveragedAuthorization from './data/leveraged_authorizations/Root';
 import Entities from './Entities';
 import RolesEntities from './data/roles/RolesEntities';
 import NotesEntities from './data/notes/NotesEntities';
@@ -25,6 +26,7 @@ import AssessmentPlatformsEntities from './data/assessment_platform/AssessmentPl
 import DataSources from './data/data_sources/DataSources';
 import RootDataSource from './data/data_sources/Root';
 import UserTypesEntities from './data/user_types/UserTypesEntities';
+import LeveragedAuthorizationsEntities from './data/leveraged_authorizations/LeveragedAuthorizationsEntities';
 
 class Root extends Component {
   render() {
@@ -93,6 +95,12 @@ class Root extends Component {
           component={UserTypesEntities}
         />
 
+        <BoundaryRoute
+          exact
+          path="/data/entities/leveraged_authorizations"
+          component={LeveragedAuthorizationsEntities}
+        />
+
         {/* Data Source Section */}
         <BoundaryRoute
           exact
@@ -147,6 +155,11 @@ class Root extends Component {
           exact
           path="/data/entities/user_types/:userTypeId"
           render={(routeProps) => <RootUserTypes {...routeProps} me={me} />}
+        />
+        <BoundaryRoute
+          exact
+          path="/data/entities/leveraged_authorizations/:leveragedAuthorizationId"
+          render={(routeProps) => <RootLeveragedAuthorization {...routeProps} me={me} />}
         />
 
         {/* Data Source Root Path Section */}

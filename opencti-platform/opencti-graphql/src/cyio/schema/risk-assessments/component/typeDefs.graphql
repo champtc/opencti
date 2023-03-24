@@ -68,40 +68,40 @@ type Component implements BasicObject & LifecycleObject & OscalObject {
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
   # --- props ---
-  # "Identifies an organizationally specific identifier that is used to uniquely identify a logical or tangible item by the organization that owns the item."
-  # asset_id: String
-  # "Identifies an asset tag assigned by the organization responsible for maintaining the logical or tangible item."
-  # asset_tag: String
-  # "Indicates the asset's function, such as Router, Storage Array, DNS Server."
-  # asset_type: AssetType
-  # "Identifies the  model of the component."
-  # model: String
-  # "Identifies the name of the company or organization"
-  # vendor_name: String
-  # "Indicates the version of the component."
-  # version: String
-  # "Identifies date the component was released, such as a software release date or policy publication date."
-  # release_date: Timestamp
-  # "Indicates relative placement of component ('internal' or 'external') to the system."
-  # implementation_point: ImplementationPoint!
-  # "Identifies whether the asset can be check with an authenticated scan"
-  # allows_authenticated_scans: Boolean
-  # "Identifies whether the asset is publicly accessible"
-  # is_publicly_accessible: Boolean
-  # "Identifies whether the asset is virtualized"
-  # is_virtual: Boolean
-  # "Identifies the network identifier of the asset."
-  # network_id: String
-  # "Identifies the Virtual LAN identifier of the asset."
-  # vlan_id: String
-  # "Identifies The name of the baseline configuration for the asset."
-  # baseline_configuration_name: String
-  # "Identifies the function provided by the asset for the system."
-  # function: String
-  # "Identifies the related leveraged-authorization assembly in this SSP."
-  # leveraged_authorization: String
-  # "Identifies the component as it was assigned in the leveraged system's SSP."
-  # inherited_identifier: String
+  "Identifies an organizationally specific identifier that is used to uniquely identify a logical or tangible item by the organization that owns the item."
+  asset_id: String
+  "Identifies an asset tag assigned by the organization responsible for maintaining the logical or tangible item."
+  asset_tag: String
+  "Indicates the asset's function, such as Router, Storage Array, DNS Server."
+  asset_type: AssetType
+  "Identifies the  model of the component."
+  model: String
+  "Identifies the name of the company or organization"
+  vendor_name: String
+  "Indicates the version of the component."
+  version: String
+  "Identifies date the component was released, such as a software release date or policy publication date."
+  release_date: Timestamp
+  "Indicates relative placement of component ('internal' or 'external') to the system."
+  implementation_point: ImplementationPoint!
+  "Identifies whether the asset can be check with an authenticated scan"
+  allows_authenticated_scans: Boolean
+  "Identifies whether the asset is publicly accessible"
+  is_publicly_accessible: Boolean
+  "Identifies whether the asset is virtualized"
+  is_virtual: Boolean
+  "Identifies the network identifier of the asset."
+  network_id: String
+  "Identifies the Virtual LAN identifier of the asset."
+  vlan_id: String
+  "Identifies The name of the baseline configuration for the asset."
+  baseline_configuration_name: String
+  "Identifies the function provided by the asset for the system."
+  function: String
+  "Identifies the related leveraged-authorization assembly in this SSP."
+  leveraged_authorization: String
+  "Identifies the component as it was assigned in the leveraged system's SSP."
+  inherited_identifier: String
   # -- end props ---
   "Indicates the operational status of the system component."
   operational_status: OperationalStatus!

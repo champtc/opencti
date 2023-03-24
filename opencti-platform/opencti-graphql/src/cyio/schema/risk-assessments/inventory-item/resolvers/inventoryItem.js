@@ -19,7 +19,10 @@ import { findResponsiblePartyByIri } from '../../oscal-common/domain/oscalRespon
 const inventoryItemResolvers = {
   Query: {
     inventoryItemList: async (_, args, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectAllInventoryItems(selectMap.getNode('node'), args);
+      let select = selectMap.getNode('node');
+      let reducer = getReducer("INVENTORY-ITEM");
+
+      const sparqlQuery = selectAllInventoryItems(select, args);
       let response;
       try {
         response = await dataSources.Stardog.queryAll({
@@ -83,7 +86,11 @@ const inventoryItemResolvers = {
           }
 
           // convert the asset into a component
-          inventoryItem = convertAssetToInventoryItem(inventoryItem);
+          if (select.includes('props')) {
+            inventoryItem = convertAssetToInventoryItem(inventoryItem);
+          } else {
+            inventoryItem = reducer(response[0]);
+          }
 
           // if haven't reached limit to be returned
           if (limit) {
@@ -125,7 +132,8 @@ const inventoryItemResolvers = {
       }
     },
     inventoryItem: async (_, { id }, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectInventoryItemQuery(id, selectMap.getNode('inventoryItem'));
+      let select = selectMap.getNode('inventoryItem');
+      const sparqlQuery = selectInventoryItemQuery(id, select);
       let response;
       try {
         response = await dataSources.Stardog.queryById({
@@ -150,7 +158,9 @@ const inventoryItemResolvers = {
 
       if (Array.isArray(response) && response.length > 0) {
         // convert the asset into a component
-        return convertAssetToInventoryItem(response[0]);
+        if (select.includes('props')) return convertAssetToInventoryItem(response[0]);
+        const reducer = getReducer("INVENTORY-ITEM");
+        return reducer(response[0]);
       }
     },
   },

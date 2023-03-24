@@ -82,6 +82,7 @@ import Export from '../../../components/Export';
 import ExportPoam from '../../../components/ExportPoam';
 import TopMenuRiskAssessment from './TopMenuRiskAssessment';
 import TopMenuRisk from './TopMenuRisk';
+import TopMenuDataLeveragedAuthorizationEntities from './TopMenuDataLeveragedAuthorizationEntities';
 
 const styles = (theme) => ({
   appBar: {
@@ -301,6 +302,8 @@ const TopBar = ({
             || location.pathname === '/data/data_source/responsible_parties') && <TopMenuDataResponsiblePartiesEntities />}
           {(location.pathname === '/data/entities/external_references'
             || location.pathname === '/data/data_source/external_references') && <TopMenuDataExternalReferenceEntities />}
+          {(location.pathname === '/data/entities/leveraged_authorizations'
+            || location.pathname === '/data/data_source/leveraged_authorizations') && <TopMenuDataLeveragedAuthorizationEntities />}
           {(location.pathname === '/dashboard/arsenal'
             || location.pathname.match('/dashboard/arsenal/[a-z_]+$')) && <TopMenuArsenal />}
           {location.pathname.includes('/dashboard/arsenal/malwares/') && <TopMenuMalware />}

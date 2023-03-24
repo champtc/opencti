@@ -2737,16 +2737,16 @@ export const selectAllOrigins = (select, args, parent) => {
   // add constraint clause to limit to those that are referenced by the specified object
   if (parent !== undefined && parent.iri !== undefined) {
     let classTypeIri;
-    if (parent.entity_type === 'characterization') {
+    if (parent.entity_type === 'characterization' || parent.iri.includes('Characterization')) {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#Characterization>';
     }
-    if (parent.entity_type === 'observation') {
+    if (parent.entity_type === 'observation' || parent.iri.includes('Observation')) {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#Observation>';
     }
-    if (parent.entity_type === 'risk') {
+    if (parent.entity_type === 'risk' || parent.iri.includes('Risk')) {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#Risk>';
     }
-    if (parent.entity_type === 'risk-response') {
+    if (parent.entity_type === 'risk-response' || parent.iri.includes('RiskResponse')) {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#RiskResponse>';
     }
     // define a constraint to limit retrieval to only those referenced by the parent
@@ -3674,7 +3674,9 @@ export const selectRiskResponseQuery = (id, select) => {
 export const selectRiskResponseByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
   if (select === undefined || select === null) select = Object.keys(riskResponsePredicateMap);
-
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('entity_type')) select.push('entity_type');
+  
   // extension properties
   if (select.includes('props')) {
     if (!select.includes('response_type')) select.push('response_type');

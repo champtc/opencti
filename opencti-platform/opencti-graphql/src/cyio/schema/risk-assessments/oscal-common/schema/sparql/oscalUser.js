@@ -92,7 +92,7 @@ export const selectOscalUserByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalUser> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#User> .
     ${predicates}
   }`
 }
@@ -123,7 +123,7 @@ export const selectAllOscalUsersQuery = (select, args, parent) => {
   SELECT DISTINCT ?iri ${selectionClause} 
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalUser> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#User> . 
     ${predicates}
     ${constraintClause}
   }
@@ -155,7 +155,7 @@ export const insertOscalUserQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/common#OscalUser> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/common#User> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Object> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
@@ -183,7 +183,7 @@ export const deleteOscalUserByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalUser> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/common#User> .
       ?iri ?p ?o
     }
   }
@@ -199,7 +199,7 @@ export const deleteMultipleOscalUsersQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalUser> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/common#User> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -228,7 +228,7 @@ export const attachToOscalUserQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     oscalUserPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/common#OscalUser>'
+    '<http://csrc.nist.gov/ns/oscal/common#User>'
   );
 }
 
@@ -252,7 +252,7 @@ export const detachFromOscalUserQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     oscalUserPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/common#OscalUser>'
+    '<http://csrc.nist.gov/ns/oscal/common#User>'
   );
 }
 

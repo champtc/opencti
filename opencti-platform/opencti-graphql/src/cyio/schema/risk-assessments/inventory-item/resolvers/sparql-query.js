@@ -32,6 +32,7 @@ export const inventoryItemReducer = (item) => {
     standard_id: item.id,
     entity_type: 'inventory-item',
     ...(item.iri && { parent_iri: item.iri }),
+    ...(item.object_type && { object_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
     ...(item.name && { name: item.name }),
@@ -126,10 +127,64 @@ export const insertInventoryItemQuery = (propValues) => {
   return { iri, id, query };
 };
 export const selectInventoryItemQuery = (id, select) => {
-  return selectInventoryItemByIriQuery(`http://csrc.nist.gov/ns/oscal/common#InventoryItem-${id}`, select);
+  // This query building function is unusual because the IRI for InventoryItems can be
+  // different since there are different types of objects.  Thus we build a query that 
+  // looks up inventory items with a specific id instead of with a specific IRI
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'name','description','responsible_parties','implemented_components'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(inventoryItemPredicateMap);
+    if (select.includes('label_name')) select = select.filter((i) => i !== 'label_name');
+    if (select.includes('locations')) select = select.filter((i) => i !== 'locations');
+    if (select.includes('installed_operating_system')) select = select.filter((i) => i !== 'installed_operating_system');
+    if (select.includes('installed_software')) select = select.filter((i) => i !== 'installed_software');
+    if (select.includes('ip_address')) select = select.filter((i) => i !== 'ip_address');
+    if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
+    // if (select.includes('implemented_components')) delete select.implemented_components;
+  }
+  if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
+  const { selectionClause, predicates } = buildSelectVariables(inventoryItemPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#InventoryItem> .
+    ?iri <http://darklight.ai/ns/common#id> "${id}" .
+    ${predicates}
+    {
+      SELECT DISTINCT ?iri
+      WHERE {
+          ?inventory a <http://csrc.nist.gov/ns/oscal/common#AssetInventory> ;
+              <http://csrc.nist.gov/ns/oscal/common#assets> ?iri .
+      }
+    }
+  }
+  `;
 };
 export const selectInventoryItemByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'name','description','responsible_parties','implemented_components'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(inventoryItemPredicateMap);
+    if (select.includes('label_name')) select = select.filter((i) => i !== 'label_name');
+    if (select.includes('locations')) select = select.filter((i) => i !== 'locations');
+    if (select.includes('installed_operating_system')) select = select.filter((i) => i !== 'installed_operating_system');
+    if (select.includes('installed_software')) select = select.filter((i) => i !== 'installed_software');
+    if (select.includes('ip_address')) select = select.filter((i) => i !== 'ip_address');
+    if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
+    // if (select.includes('implemented_components')) delete select.implemented_components;
+  }
   if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(inventoryItemPredicateMap, select);
   return `
@@ -143,8 +198,14 @@ export const selectInventoryItemByIriQuery = (iri, select) => {
   `;
 };
 export const selectAllInventoryItems = (select, args) => {
-  if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
-  if (select.includes('props')) {
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'name','description','responsible_parties','implemented_components'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
     select = Object.keys(inventoryItemPredicateMap);
     if (select.includes('label_name')) select = select.filter((i) => i !== 'label_name');
     if (select.includes('locations')) select = select.filter((i) => i !== 'locations');
@@ -155,7 +216,9 @@ export const selectAllInventoryItems = (select, args) => {
     if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
     // if (select.includes('implemented_components')) delete select.implemented_components;
   }
+  if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
   if (!select.includes('id')) select.push('id');
+  if (!select.includes('entity_type')) select.push('entity_type');
   if (!select.includes('asset_type')) select.push('asset_type');
 
   if (args !== undefined) {

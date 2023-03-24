@@ -194,7 +194,7 @@ class EntityUserTypesCardComponent extends Component {
                   {t('User Type')}
                 </Typography>
                 <Typography>
-                  {node.user_type && fsd(node.user_type)}
+                  {node.user_type && t(node.user_type)}
                 </Typography>
               </Grid>
             </Grid>

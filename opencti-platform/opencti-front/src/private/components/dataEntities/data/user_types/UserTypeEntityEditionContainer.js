@@ -186,6 +186,7 @@ class UserTypeEntityEditionContainer extends Component {
       R.assoc('privilege_level', user?.privilege_level || ''),
       R.assoc('user_type', user?.user_type || ''),
       R.assoc('roles', user?.roles || []),
+      R.assoc('authorized_privileges', user?.authorized_privileges || []),
       R.pick([
         'id',
         'name',
@@ -196,6 +197,7 @@ class UserTypeEntityEditionContainer extends Component {
         'privilege_level',
         'user_type',
         'roles',
+        'authorized_privileges',
       ]),
     )(user);
     const selectedRoles = R.map((n) => n.id)(user?.roles);
@@ -457,6 +459,8 @@ class UserTypeEntityEditionContainer extends Component {
                       <AuthorizedPrivilegesPopover
                         title={'Authorized Privileges'}
                         name='authorized_privileges'
+                        setFieldValue={setFieldValue}
+                        data={user?.authorized_privileges}
                       />
                     </Grid>
                     <Grid item={true} xs={12}>

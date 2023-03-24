@@ -54,7 +54,6 @@ class EntityUserTypesLineComponent extends Component {
   render() {
     const {
       t,
-      fd,
       classes,
       history,
       node,
@@ -121,12 +120,6 @@ class EntityUserTypesLineComponent extends Component {
                   labels={node.labels}
                   onClick={onLabelClick.bind(this)}
                 />
-              </div>
-              <div
-                className={classes.bodyItem}
-                style={{ width: dataColumns.roles.width }}
-              >
-                {node.name && fd(node.name)}
               </div>
               <div
                 className={classes.bodyItem}
@@ -255,17 +248,6 @@ class EntityUserTypesLineDummyComponent extends Component {
               <div
                 className={classes.bodyItem}
                 style={{ width: dataColumns.label_name.width }}
-              >
-                <Skeleton
-                  animation="wave"
-                  variant="rect"
-                  width="90%"
-                  height="100%"
-                />
-              </div>
-              <div
-                className={classes.bodyItem}
-                style={{ width: dataColumns.roles.width }}
               >
                 <Skeleton
                   animation="wave"

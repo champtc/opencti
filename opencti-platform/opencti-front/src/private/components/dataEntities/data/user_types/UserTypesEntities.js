@@ -39,7 +39,7 @@ class UserTypesEntities extends Component {
       selectAll: false,
       openDataCreation: false,
       displayEdit: false,
-      selectedLocationId: '',
+      selectedUserTypeId: '',
     };
   }
 
@@ -107,11 +107,11 @@ class UserTypesEntities extends Component {
   }
 
   handleDisplayEdit(selectedElements) {
-    let locationId = '';
+    let userTypeId = '';
     if (selectedElements) {
-      locationId = (Object.entries(selectedElements)[0][1])?.id;
+      userTypeId = (Object.entries(selectedElements)[0][1])?.id;
     }
-    this.setState({ displayEdit: !this.state.displayEdit, selectedLocationId: locationId });
+    this.setState({ displayEdit: !this.state.displayEdit, selectedUserTypeId: userTypeId });
   }
 
   handleToggleSelectEntity(entity, event) {
@@ -306,11 +306,6 @@ class UserTypesEntities extends Component {
         width: '20%',
         isSortable: true,
       },
-      roles: {
-        label: 'Roles',
-        width: '12%',
-        isSortable: true,
-      },
       marking: {
         label: 'Marking',
         width: '12%',
@@ -402,11 +397,11 @@ class UserTypesEntities extends Component {
           handleUserTypeCreation={this.handleUserTypeCreation.bind(this)}
           history={this.props.history}
         />
-        {this.state.selectedLocationId && (
+        {this.state.selectedUserTypeId && (
           <UserTypeEntityEdition
             displayEdit={this.state.displayEdit}
             history={this.props.history}
-            locationId={this.state.selectedLocationId}
+            userTypeId={this.state.selectedUserTypeId}
             handleDisplayEdit={this.handleDisplayEdit.bind(this)}
           />
         )}

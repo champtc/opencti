@@ -213,16 +213,6 @@ class EntityUserTypesCardComponent extends Component {
                     && (node?.privilege_level)}
                 </Typography>
               </Grid>
-              <Grid item={true} xs={6} className={classes.body}>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  style={{ marginTop: '13px' }}
-                  gutterBottom={true}
-                >
-                  {t('Roles')}
-                </Typography>
-              </Grid>
             </Grid>
             <Grid container={true} >
               <Grid item={true} xs={6} className={classes.body}>

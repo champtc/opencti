@@ -21,6 +21,8 @@ import DataAddressField from '../../../common/form/DataAddressField';
 import { commitMutation } from '../../../../../relay/environment';
 import MarkDownField from '../../../../../components/MarkDownField';
 import TextField from '../../../../../components/TextField';
+import FunctionsPerformedField from '../../../common/form/FunctionsPerformedField';
+import { adaptFieldValue } from '../../../../../utils/String';
 
 const styles = (theme) => ({
   paper: {
@@ -70,8 +72,11 @@ const styles = (theme) => ({
 });
 
 const authorizedPrivilegesPopoverMutation = graphql`
-  mutation AuthorizedPrivilegesPopoverMutation($input: AuthorizedPrivilegeInput!) {
-    createAuthorizedPrivilege (input: $input) {
+  mutation AuthorizedPrivilegesPopoverMutation(
+    $id: ID!,
+    $input: [EditInput]!
+  ) {
+    editAuthorizedPrivilege(id: $id, input: $input) {
       id
     }
   }
@@ -87,29 +92,27 @@ class AuthorizedPrivilegesPopover extends Component {
     super(props);
     this.state = {
       open: false,
-      authorizedPrivileges: [],
-      fperform: '',
-      fArray: [],
+      openEdit: false,
+      authorizedPrivileges: this.props.data ? [...this.props.data] : [],
+      id: '',
+      name: '',
+      description: '',
+      functionsPerformed: null,
+      editIndex: null
     };
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    console.log(values)
-    // commitMutation({
-    //   mutation: authorizedPrivilegesPopoverMutation,
-    //   variables: {
-    //     input: values,
-    //   },
-    //   setSubmitting,
-    //   onCompleted: (data) => {
-    //     setSubmitting(false);
-    //     resetForm();
-    //     this.handleClose();
-    //   },
-    //   onError: () => {
-    //     toastGenericError("Failed to Authorized Privilege");
-    //   }
-    // });
+    const authorizedPrivilege = {
+      name: values.name || '',
+      description: values.description || '',
+      functions_performed: values.functions_performed || [],
+    }
+    this.setState({ 
+      authorizedPrivileges: [...this.state.authorizedPrivileges, authorizedPrivilege],
+      open: false,
+    }, () => this.props.setFieldValue(this.props.name, this.state.authorizedPrivileges))
+    resetForm();
   }
 
   handleClose() {
@@ -117,16 +120,56 @@ class AuthorizedPrivilegesPopover extends Component {
       open: false,
     })
   }
-
-  handleAddFunctionPerformed() {
+  
+  handleEditClose() {
     this.setState({
-      fArray: [...this.state.fArray, this.state.fperform],
-      fperform: '',
-    })    
+      openEdit: false,
+    })
   }
 
-  handleChange(event) {
-    this.setState({fperform: event.target.value});
+  handleEditSubmit(values, { setSubmitting, resetForm }) {
+    const finalValues = R.pipe(
+      R.toPairs,
+      R.map((n) => ({
+        'key': n[0],
+        'value': adaptFieldValue(n[1]),
+      })),
+    )(values);
+
+    this.state.id !== '' && commitMutation({
+      mutation: authorizedPrivilegesPopoverMutation,
+      variables: {
+        input: finalValues,
+      },
+      setSubmitting,
+      // pathname: '/data/entities/notes',
+      onCompleted: () => {
+        setSubmitting(false);
+        resetForm();
+        this.setState({
+          openEdit: false,
+        })
+      },
+      onError: () => {
+        toastGenericError('Failed to create location');
+      },
+    });
+
+    const updatedPrivileges = [...this.state.authorizedPrivileges];
+      updatedPrivileges[editIndex] = { name: this.state.name, description: this.state.description, functions_performed: this.state.functionsPerformed };
+      this.setState({ authorizedPrivileges: updatedPrivileges, name: "", description: "", openEdit: false, editIndex: null });
+  }
+
+  handleEdit(index, id) {
+    const authorizedPrivilege = this.state.authorizedPrivileges[index];
+    console.log(authorizedPrivilege);
+    this.setState({
+      openEdit: true,
+      id: authorizedPrivilege?.id || '',
+      name: authorizedPrivilege.name,
+      description: authorizedPrivilege.description,
+      functionsPerformed: authorizedPrivilege.functions_performed,
+    })
   }
 
   render() {
@@ -158,19 +201,19 @@ class AuthorizedPrivilegesPopover extends Component {
                 <div key={key} style={{ display: 'grid', gridTemplateColumns: '75% 1fr' }}>
                   <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                     <Typography>
-                      {(privilege && t(privilege))}
+                      {(privilege.name && t(privilege.name))}
                     </Typography>
                   </div>
                   <div style={{ display: 'flex' }}>
                     <IconButton
                       size='small'
-                      onClick={this.handleEditionAddress.bind(this, key)}
+                      onClick={this.handleEdit.bind(this, key, privilege.id)}
                     >
                       <Edit />
                     </IconButton>
                     <IconButton
                       size='small'
-                      onClick={this.handleDeleteAddress.bind(this, key)}
+                      // onClick={this.handleDelete.bind(this, key)}
                     >
                       <Delete />
                     </IconButton>
@@ -257,55 +300,122 @@ class AuthorizedPrivilegesPopover extends Component {
                         containerstyle={{ width: '100%' }}
                       />
                     </Grid>
+                    <Grid xs={12} item={true}>
+                      <FunctionsPerformedField 
+                        title='Functions Performed' 
+                        name='functions_performed'
+                        setFieldValue={setFieldValue}
+                      />
+                    </Grid>
+                  </Grid>
+                </DialogContent>
+                <DialogActions classes={{ root: classes.dialogClosebutton }}>
+                  <Button
+                    variant="outlined"
+                    onClick={handleReset}
+                    classes={{ root: classes.buttonPopover }}
+                  >
+                    {t('Cancel')}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={submitForm}
+                    disabled={isSubmitting}
+                    classes={{ root: classes.buttonPopover }}
+                  >
+                    {t('Submit')}
+                  </Button>
+                </DialogActions>
+              </Form>
+            )}
+          </Formik>
+        </Dialog>
+        <Dialog
+          open={this.state.openEdit}
+          onClose={() => this.setState({ openEdit: false })}
+          fullWidth={true}
+          maxWidth='sm'
+        >
+          <Formik
+            enableReinitialize={true}
+            initialValues={{
+              id: this.state.id,
+              name: this.state.name,
+              description: this.state.description,
+              functions_performed: this.state.functionsPerformed,
+            }}
+            // validationSchema={AuthorizedPrivilegeCreationValidation(t)}
+            onSubmit={this.handleEditSubmit.bind(this)}
+            onReset={this.handleEditClose.bind(this)}
+          >
+            {({
+              handleReset,
+              submitForm,
+              isSubmitting,
+              setFieldValue,
+              values,
+            }) => (
+              <Form>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Edit an authorized privilege')}</DialogTitle>
+                <DialogContent classes={{ root: classes.dialogContent }}>
+                  <Grid container={true} spacing={3}>
                     <Grid item={true} xs={12}>
-                    <Typography
+                      <Typography
                         variant="h3"
                         color="textSecondary"
                         gutterBottom={true}
                         style={{ float: 'left' }}
                       >
-                        {t('Functions Performed')}
+                        {t('Name')}
                       </Typography>
                       <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('Functions Performed')} >
+                        <Tooltip title={t('Name')} >
                           <Information fontSize="inherit" color="disabled" />
                         </Tooltip>
                       </div>
                       <div className="clearfix" />
                       <Field
                         component={TextField}
-                        name="functions_performed"
+                        name="name"
                         fullWidth={true}
                         size="small"
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
-                        value={this.state.fperform}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton aria-label="open" size="large">
-                                <AddIcon onClick={this.handleAddFunctionPerformed.bind(this)}/>
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                        onChange={this.handleChange.bind(this)}
                       />
-                      <div className="clearfix" />
-                      <div style={{ marginTop: '20px' }}>
-                        <div className={classes.scrollBg}>
-                          <div className={classes.scrollDiv}>
-                            <div className={classes.scrollObj}>
-                              {this.state.fArray !== [] && this.state.fArray.map((item) => (
-                                <>
-                                  <p className={classes.contentText}>{item}</p>
-                                  <br />
-                                </>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
+                    </Grid>
+                    <Grid xs={12} item={true}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ float: 'left' }}
+                      >
+                        {t('Description')}
+                      </Typography>
+                      <div style={{ float: 'left', margin: '-1px 0 0 4px' }}>
+                        <Tooltip title={t('Description')}>
+                          <Information fontSize="inherit" color="disabled" />
+                        </Tooltip>
                       </div>
+                      <div className="clearfix" />
+                      <Field
+                        component={MarkDownField}
+                        name='description'
+                        fullWidth={true}
+                        multiline={true}
+                        rows='3'
+                        variant='outlined'
+                        containerstyle={{ width: '100%' }}
+                      />
+                    </Grid>
+                    <Grid xs={12} item={true}>
+                      <FunctionsPerformedField 
+                        title='Functions Performed' 
+                        name='functions_performed'
+                        setFieldValue={setFieldValue}
+                        data={this.state.functionsPerformed}
+                      />
                     </Grid>
                   </Grid>
                 </DialogContent>

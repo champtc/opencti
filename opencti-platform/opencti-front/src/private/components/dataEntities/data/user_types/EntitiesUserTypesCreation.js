@@ -321,6 +321,7 @@ class EntitiesUserTypesCreation extends Component {
                       <AuthorizedPrivilegesPopover
                         title={'Authorized Privileges'}
                         name='authorized_privileges'
+                        setFieldValue={setFieldValue}
                       />
                     </Grid>
                     <Grid item={true} xs={12}>

@@ -59,10 +59,17 @@ const userTypeEntityEditionQuery = graphql`
       name
       description
       short_name
+      user_type
       privilege_level
       roles {
         name
         id
+      }
+      authorized_privileges {
+        id
+        name
+        description
+        functions_performed
       }
     }
   }

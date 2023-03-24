@@ -185,6 +185,8 @@ const EntityUserTypesDetails = createFragmentContainer(
         authorized_privileges {
           id
           name
+          description
+          functions_performed
         }
         roles {
           name

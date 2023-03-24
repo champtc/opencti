@@ -12,7 +12,7 @@ import CyioDomainObjectHeader from '../../../common/stix_domain_objects/CyioDoma
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
 import EntitiesUserTypesCreation from './EntitiesUserTypesCreation';
-import UserTypesEntityEditionContainer from './UserTypeEntityEditionContainer';
+import UserTypeEntityEditionContainer from './UserTypeEntityEditionContainer';
 import EntitiesUserTypesPopover from './EntitiesUserTypesPopover';
 import EntitiesUserTypesDeletion from './EntitiesUserTypesDeletion';
 import EntityUserTypesDetails from './EntityUserTypesDetails';
@@ -114,7 +114,7 @@ class EntityUserTypeComponent extends Component {
           history={history}
           refreshQuery={refreshQuery}
         />
-        <UserTypesEntityEditionContainer
+        <UserTypeEntityEditionContainer
           displayEdit={this.state.displayEdit}
           history={history}
           user={user}
@@ -151,6 +151,8 @@ const EntityUserType = createFragmentContainer(EntityUserTypeComponent, {
       authorized_privileges {
         id
         name
+        description
+        functions_performed
       }
       labels {
         id

@@ -1,0 +1,436 @@
+
+type CVSSv3 implements CVSS & BasicObject & LifecycleObject {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  "Identities the date and time at which the object was originally created."
+  created: Timestamp
+  "Identifies the date and time at which the object was last modified."
+  modified: Timestamp
+  # Core Object
+  labels: [CyioLabel]
+  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  external_references: [CyioExternalReference]
+  "Identifies one or more references to additional commentary on the Model."
+  notes: [CyioNote]
+  # CVSS
+  "Indicates the version of the CVSS record."
+  version: String
+  # CVSS v3.*
+  "Identifies a text representation of a set of CVSS metrics."
+  vector_string: String
+  "Indicates the context by which vulnerability exploitation is possible. This metric value (and consequently the Base Score) will be larger the more remote (logically, and physically) an attacker can be in order to exploit the vulnerable component."
+  attack_vector: AttackVectorType
+  "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
+  attack_complexity: AttackComplexityType
+  "Indicates the level of privileges an attacker must possess before successfully exploiting the vulnerability."
+  privileges_required: PrivilegesRequiredType
+  "Indicates the requirement for a human user, other than the attacker, to participate in the successful compromise of the vulnerable component."
+  user_interaction: UserInteractionType
+  "Indicates whether a vulnerability in one vulnerable component impacts resources in components beyond its security scope."
+  scope: ScopeType
+  "Indicates the impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability."
+  confidentiality_impact: CiaType
+  "Indicates the impact to integrity of a successfully exploited vulnerability."
+  integrity_impact: CiaType
+  "Indicates the impact to the availability of the impacted component resulting from a successfully exploited vulnerability."
+  availability_impact: CiaType
+  "Indicates the severity, as numeric score, of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
+  base_score: Float
+  "Indicates the severity of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
+  base_severity: SeverityType
+  "Indicates the likelihood of the vulnerability being attacked, and is typically based on the current state of exploit techniques, exploit code availability, or active, \"in-the-wild\" exploitation."
+  exploit_code_maturity: ExploitCodeMaturityType
+  "Indicates the level of remediation."
+  remediation_level: RemediationLevelType
+  "Indicates the degree of confidence in the existence of the vulnerability and the credibility of the known technical details."
+  report_confidence: ConfidenceType
+  "Indicates the current exploitability of the vulnerability, as a numeric score, according to its intrinsic characteristics which change over time and assumes the reasonable worst case impact across different deployed environments."
+  temporal_score: Float
+  "Indicates the current exploitability of the vulnerability according to its intrinsic characteristics which change over time and assumes the reasonable worst case impact across different deployed environments."
+  temporal_severity: SeverityType
+  "Indicates an analyst-specified confidentiality requirement based on business function support by the IT asset."
+  confidentiality_requirement: CiaRequirementType
+  "Indicates an analyst-specified integrity requirement based on business function support by the IT asset."
+  integrity_requirement: CiaRequirementType
+  "Indicates an analyst-specified integrity requirement based on business function support by the IT asset."
+  availability_requirement: CiaRequirementType
+  "Indicates an analysis overridden context by which vulnerability exploitation is possible."
+  modified_attack_vector: ModifiedAttackVectorType
+  "Indicates an analysis overridden the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
+  modified_attack_complexity: ModifiedAttackComplexityType
+  "Indicates an analysis overridden the level of privileges an attacker must possess before successfully exploiting the vulnerability."
+  modified_privileges_required: ModifiedPrivilegesRequiredType
+  "Indicates an analysis overridden requirement for a human user, other than the attacker, to participate in the successful compromise of the vulnerable component."
+  modified_user_interaction: ModifiedUserInteractionType
+  "Indicates an analysis overridden whether a vulnerability in one vulnerable component impacts resources in components beyond its security scope."
+  modified_scope: ModifiedScopeType
+  "Indicates an analysis overridden impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability."
+  modified_confidentiality_impact: ModifiedCiaType
+  "Indicates an analysis overridden impact to integrity of a successfully exploited vulnerability."
+  modified_integrity_impact: ModifiedCiaType
+  "Indicates an analysis overridden impact to the availability of the impacted component resulting from a successfully exploited vulnerability."
+  modified_availability_impact: ModifiedCiaType
+  "Indicates the severity of the vulnerability, as a numeric score, based on an end-user's organization specific environment."
+  environmental_score: Float
+  "Indicates the severity of the vulnerability based on an end-user's organization specific environment."
+  environmental_severity: SeverityType
+}
+
+input CVSSv3Input {
+  # CVSS
+  "Indicates the version of the CVSS record."
+  version: String
+  # CVSS v3.*
+  "Identifies a text representation of a set of CVSS metrics."
+  vector_string: String
+  "Indicates the context by which vulnerability exploitation is possible. This metric value (and consequently the Base Score) will be larger the more remote (logically, and physically) an attacker can be in order to exploit the vulnerable component."
+  attack_vector: AttackVectorType
+  "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
+  attack_complexity: AttackComplexityType
+  "Indicates the level of privileges an attacker must possess before successfully exploiting the vulnerability."
+  privileges_required: PrivilegesRequiredType
+  "Indicates the requirement for a human user, other than the attacker, to participate in the successful compromise of the vulnerable component."
+  user_interaction: UserInteractionType
+  "Indicates whether a vulnerability in one vulnerable component impacts resources in components beyond its security scope."
+  scope: ScopeType
+  "Indicates the impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability."
+  confidentiality_impact: CiaType
+  "Indicates the impact to integrity of a successfully exploited vulnerability."
+  integrity_impact: CiaType
+  "Indicates the impact to the availability of the impacted component resulting from a successfully exploited vulnerability."
+  availability_impact: CiaType
+  "Indicates the severity, as numeric score, of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
+  base_score: Float
+  "Indicates the severity of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
+  base_severity: SeverityType
+  "Indicates the likelihood of the vulnerability being attacked, and is typically based on the current state of exploit techniques, exploit code availability, or active, \"in-the-wild\" exploitation."
+  exploit_code_maturity: ExploitCodeMaturityType
+  "Indicates the level of remediation."
+  remediation_level: RemediationLevelType
+  "Indicates the degree of confidence in the existence of the vulnerability and the credibility of the known technical details."
+  report_confidence: ConfidenceType
+  "Indicates the current exploitability of the vulnerability, as a numeric score, according to its intrinsic characteristics which change over time and assumes the reasonable worst case impact across different deployed environments."
+  temporal_score: Float
+  "Indicates the current exploitability of the vulnerability according to its intrinsic characteristics which change over time and assumes the reasonable worst case impact across different deployed environments."
+  temporal_severity: SeverityType
+  "Indicates an analyst-specified confidentiality requirement based on business function support by the IT asset."
+  confidentiality_requirement: CiaRequirementType
+  "Indicates an analyst-specified integrity requirement based on business function support by the IT asset."
+  integrity_requirement: CiaRequirementType
+  "Indicates an analyst-specified integrity requirement based on business function support by the IT asset."
+  availability_requirement: CiaRequirementType
+  "Indicates an analysis overridden context by which vulnerability exploitation is possible."
+  modified_attack_vector: ModifiedAttackVectorType
+  "Indicates an analysis overridden the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
+  modified_attack_complexity: ModifiedAttackComplexityType
+  "Indicates an analysis overridden the level of privileges an attacker must possess before successfully exploiting the vulnerability."
+  modified_privileges_required: ModifiedPrivilegesRequiredType
+  "Indicates an analysis overridden requirement for a human user, other than the attacker, to participate in the successful compromise of the vulnerable component."
+  modified_user_interaction: ModifiedUserInteractionType
+  "Indicates an analysis overridden whether a vulnerability in one vulnerable component impacts resources in components beyond its security scope."
+  modified_scope: ModifiedScopeType
+  "Indicates an analysis overridden impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability."
+  modified_confidentiality_impact: ModifiedCiaType
+  "Indicates an analysis overridden impact to integrity of a successfully exploited vulnerability."
+  modified_integrity_impact: ModifiedCiaType
+  "Indicates an analysis overridden impact to the availability of the impacted component resulting from a successfully exploited vulnerability."
+  modified_availability_impact: ModifiedCiaType
+  "Indicates the severity of the vulnerability, as a numeric score, based on an end-user's organization specific environment."
+  environmental_score: Float
+  "Indicates the severity of the vulnerability based on an end-user's organization specific environment."
+  environmental_severity: SeverityType
+}
+
+"""
+AttackComplexityType - 
+
+  Describes the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability.
+"""
+enum AttackComplexityType {
+  "A successful attack depends on conditions beyond the attacker's control. That is, a successful attack cannot be accomplished at will, but requires the attacker to invest in some measurable amount of effort in preparation or execution against the vulnerable component before a successful attack can be expected."
+  HIGH
+  "Specialized access conditions or extenuating circumstances do not exist. An attacker can expect repeatable success when attacking the vulnerable component."
+  LOW
+}
+
+"""
+AttackVector -
+
+  Reflects the context by which vulnerability exploitation is possible. 
+  This metric value (and consequently the Base Score) will be larger the 
+  more remote (logically, and physically) an attacker can be in order to 
+  exploit the vulnerable component. 
+
+  When deciding between Network and Adjacent, if an attack can be launched 
+  over a wide area network or from outside the logically adjacent administrative 
+  network domain, use Network. 
+
+  Network should be used even if the attacker is required to be on the same 
+  intranet to exploit the vulnerable system (e.g., the attacker can only exploit 
+  the vulnerability from inside a corporate network).
+"""
+enum AttackVectorType {
+  "The vulnerable component is bound to the network stack and the set of possible attackers extends beyond the other options listed below, up to and including the entire Internet.  Such a vulnerability is often termed “remotely exploitable” and can be thought of as an attack being exploitable at the protocol level one or more network hops away (e.g., across one or more routers)."
+  NETWORK
+  "The vulnerable component is bound to the network stack, but the attack is limited at the protocol level to a logically adjacent topology. This can mean an attack must be launched from the same shared physical (e.g., Bluetooth or IEEE 802.11) or logical (e.g., local IP subnet) network, or from within a secure or otherwise limited administrative domain (e.g., MPLS, secure VPN to an administrative network zone)."
+  ADJACENT_NETWORK
+  "The vulnerable component is not bound to the network stack and the attacker’s path is via read/write/execute capabilities. "
+  LOCAL
+  "The attack requires the attacker to physically touch or manipulate the vulnerable component."
+  PHYSICAL
+}
+
+"""
+CiaType - 
+
+  Captures the effects of a successfully exploited vulnerability on the component 
+  that suffers the worst outcome that is most directly and predictably associated 
+  with the attack.
+"""
+enum CiaType {
+  "There is no loss of [Confidentiality | Integrity | Availability] within the impacted component."
+  NONE
+  "There is some loss of [Confidentiality | Integrity | Availability]. "
+  LOW
+  "There is a total loss of [Confidentiality | Integrity | Availability]."
+  HIGH
+}
+
+"""
+CiaRequirementType -
+
+  Enables analysts to customize the CVSS score depending on the importance of 
+  the affected IT asset to a user’s organization, measured in terms of Confidentiality, 
+  Integrity, and Availability. That is, if an IT asset supports a business function for 
+  which Availability is most important, the analyst can assign a greater value to 
+  Availability relative to Confidentiality and Integrity. Each Security Requirement has 
+  three possible values: Low, Medium, or High.
+"""
+enum CiaRequirementType {
+  "Loss of [Confidentiality | Integrity | Availability] is likely to have only a limited adverse effect on the organization or individuals associated with the organization (e.g., employees, customers)."
+  LOW
+  "Loss of [Confidentiality | Integrity | Availability] is likely to have a serious adverse effect on the organization or individuals associated with the organization (e.g., employees, customers)."
+  MEDIUM
+  "Loss of [Confidentiality | Integrity | Availability] is likely to have a catastrophic adverse effect on the organization or individuals associated with the organization (e.g., employees, customers)."
+  HIGH
+  "Assigning this value indicates there is insufficient information to choose one of the other values, and has no impact on the overall Environmental Score, i.e., it has the same effect on scoring as assigning Medium."
+  NOT_DEFINED
+}
+
+"""
+ConfidenceType -
+
+  Measures the degree of confidence in the existence of the vulnerability and the credibility of the known technical details.
+"""
+enum ConfidenceType {
+  "There are reports of impacts that indicate a vulnerability is present. The reports indicate that the cause of the vulnerability is unknown, or reports may differ on the cause or impacts of the vulnerability."
+  UNKNOWN
+  "Significant details are published, but researchers either do not have full confidence in the root cause, or do not have access to source code to fully confirm all of the interactions that may lead to the result."
+  REASONABLE
+  "Detailed reports exist, or functional reproduction is possible (functional exploits may provide this). Source code is available to independently verify the assertions of the research, or the author or vendor of the affected code has confirmed the presence of the vulnerability."
+  CONFIRMED
+  "Assigning this value indicates there is insufficient information to choose one of the other values, and has no impact on the overall Temporal Score, i.e., it has the same effect on scoring as assigning Confirmed."
+  NOT_DEFINED
+}
+
+"""
+ExploitCodeMaturityType -
+
+  Measures the likelihood of the vulnerability being attacked, and is typically based on 
+  the current state of exploit techniques, exploit code availability, or active, “in-the-wild” 
+  exploitation.
+"""
+enum ExploitCodeMaturityType {
+  "No exploit code is available, or an exploit is theoretical."
+  UNPROVEN
+  "Proof-of-concept exploit code is available, or an attack demonstration is not practical for most systems. The code or technique is not functional in all situations and may require substantial modification by a skilled attacker."
+  PROOF_OF_CONCEPT
+  "Functional exploit code is available. The code works in most situations where the vulnerability exists."
+  FUNCTIONAL
+  "Functional autonomous code exists, or no exploit is required (manual trigger) and details are widely available. Exploit code works in every situation, or is actively being delivered via an autonomous agent (such as a worm or virus)."
+  HIGH
+  "Assigning this value indicates there is insufficient information to choose one of the other values, and has no impact on the overall Temporal Score, i.e., it has the same effect on scoring as assigning High."
+  NOT_DEFINED
+}
+
+"""
+PrivilegesRequiredType -
+
+  Privileges Required is usually None for hard-coded credential vulnerabilities or 
+  vulnerabilities requiring social engineering (e.g., reflected cross-site scripting, 
+  cross-site request forgery, or file parsing vulnerability in a PDF reader).
+"""
+enum PrivilegesRequiredType {
+  "The attacker requires privileges that provide significant (e.g., administrative) control over the vulnerable component allowing access to component-wide settings and files."
+  HIGH
+  "The attacker requires privileges that provide basic user capabilities that could normally affect only settings and files owned by a user. Alternatively, an attacker with Low privileges has the ability to access only non-sensitive resources."
+  LOW
+  "The attacker is unauthorized prior to attack, and therefore does not require any access to settings or files of the vulnerable system to carry out an attack."
+  NONE
+}
+
+"""
+RemediationLevelType -
+
+  Indicates the level of remediation for a vulnerability
+"""
+enum RemediationLevelType {
+  "A complete vendor solution is available. Either the vendor has issued an official patch, or an upgrade is available."
+  OFFICIAL_FIX
+  "There is an official but temporary fix available. This includes instances where the vendor issues a temporary hotfix, tool, or workaround."
+  TEMPORARY_FIX
+  "There is an unofficial, non-vendor solution available. In some cases, users of the affected technology will create a patch of their own or provide steps to work around or otherwise mitigate the vulnerability."
+  WORKAROUND
+  "There is either no solution available or it is impossible to apply."
+  UNAVAILABLE
+  "Assigning this value indicates there is insufficient information to choose one of the other values, and has no impact on the overall Temporal Score, i.e., it has the same effect on scoring as assigning Unavailable."
+  NOT_DEFINED
+}
+
+"""
+ScopeType -
+
+  Captures whether a vulnerability in one vulnerable component impacts resources 
+  in components beyond its security scope.
+"""
+enum ScopeType {
+  "An exploited vulnerability can only affect resources managed by the same security authority. In this case, the vulnerable component and the impacted component are either the same, or both are managed by the same security authority."
+  UNCHANGED
+  "An exploited vulnerability can affect resources beyond the security scope managed by the security authority of the vulnerable component. In this case, the vulnerable component and the impacted component are different and managed by different security authorities."
+  CHANGED
+}
+
+"""
+SeverityType -
+
+  Indicates the severity of a vulnerability according to its intrinsic characteristics 
+  and assumes the reasonable worst case impact across different deployed environments.
+"""
+enum SeverityType {
+  "CVSS [Base | Temporal | Environmental] Score of 0.0 "
+  NONE
+  "CVSS [Base | Temporal | Environmental] Score between 0.1 - 3.9"
+  LOW
+  "CVSS [Base | Temporal | Environmental] Score between 4.0 - 6.9"
+  MEDIUM
+  "CVSS [Base | Temporal | Environmental] Score between 7.0 - 8.9"
+  HIGH
+  "CVSS [Base | Temporal | Environmental] Score between 9.0 - 10.0"
+  CRITICAL
+}
+
+"""
+UserInteractionType -
+
+  Captures the requirement for a human user, other than the attacker, to participate in 
+  the successful compromise of the vulnerable component. This metric determines whether 
+  the vulnerability can be exploited solely at the will of the attacker, or whether a 
+  separate user (or user-initiated process) must participate in some manner.
+"""
+enum UserInteractionType {
+  "The vulnerable system can be exploited without interaction from any user."
+  NONE
+  "Successful exploitation of this vulnerability requires a user to take some action before the vulnerability can be exploited."
+  REQUIRED
+}
+
+"""
+ModifiedAttackComplexityType -
+
+  Enables analyst to override Attack Complexity Base metrics based on specific characteristics of a user’s environment.
+"""
+enum ModifiedAttackComplexityType {
+  "A successful attack depends on conditions beyond the attacker's control. That is, a successful attack cannot be accomplished at will, but requires the attacker to invest in some measurable amount of effort in preparation or execution against the vulnerable component before a successful attack can be expected."
+  HIGH
+  "Specialized access conditions or extenuating circumstances do not exist. An attacker can expect repeatable success when attacking the vulnerable component."
+  LOW
+  "Use the metric value of the associated Base metric."
+  NOT_DEFINED
+}
+
+"""
+ModifiedAttackVectorType -
+
+  Enables analyst to override Attack Vector Base metrics based on specific characteristics of a user’s environment.
+"""
+enum ModifiedAttackVectorType {
+  "The vulnerable component is bound to the network stack and the set of possible attackers extends beyond the other options listed below, up to and including the entire Internet.  Such a vulnerability is often termed “remotely exploitable” and can be thought of as an attack being exploitable at the protocol level one or more network hops away (e.g., across one or more routers)."
+  NETWORK
+  "The vulnerable component is bound to the network stack, but the attack is limited at the protocol level to a logically adjacent topology. This can mean an attack must be launched from the same shared physical (e.g., Bluetooth or IEEE 802.11) or logical (e.g., local IP subnet) network, or from within a secure or otherwise limited administrative domain (e.g., MPLS, secure VPN to an administrative network zone)."
+  ADJACENT_NETWORK
+  "The vulnerable component is not bound to the network stack and the attacker’s path is via read/write/execute capabilities. "
+  LOCAL
+  "The attack requires the attacker to physically touch or manipulate the vulnerable component."
+  PHYSICAL
+  "Use the metric value of the associated Base metric."
+  NOT_DEFINED
+}
+
+"""
+ModifiedCiaType - 
+
+     Enables analyst to override [Confidentiality impact | Integrity impact | Availablity impact] 
+     Base metrics based on specific characteristics of a user’s environment.
+"""
+enum ModifiedCiaType {
+  "There is no loss of [Confidentiality | Integrity | Availability] within the impacted component."
+  NONE
+  "There is some loss of [Confidentiality | Integrity | Availability]. "
+  LOW
+  "There is a total loss of [Confidentiality | Integrity | Availability]."
+  HIGH
+  "Use the metric value of the associated Base metric."
+  NOT_DEFINED
+}
+
+"""
+ModifiedPrivilegesRequiredType -
+
+  Enables analyst to override Privileges Required Base metrics based on specific characteristics of a user’s environment.
+"""
+enum ModifiedPrivilegesRequiredType {
+  "The attacker requires privileges that provide significant (e.g., administrative) control over the vulnerable component allowing access to component-wide settings and files."
+  HIGH
+  "The attacker requires privileges that provide basic user capabilities that could normally affect only settings and files owned by a user. Alternatively, an attacker with Low privileges has the ability to access only non-sensitive resources."
+  LOW
+  "The attacker is unauthorized prior to attack, and therefore does not require any access to settings or files of the vulnerable system to carry out an attack."
+  NONE
+  "Use the metric value of the associated Base metric."
+  NOT_DEFINED
+}
+
+"""
+ModifiedScopeType - 
+
+  Enables analyst to override Scope Base metrics based on specific characteristics of a user’s environment.
+"""
+enum ModifiedScopeType {
+  "An exploited vulnerability can only affect resources managed by the same security authority. In this case, the vulnerable component and the impacted component are either the same, or both are managed by the same security authority."
+  UNCHANGED
+  "An exploited vulnerability can affect resources beyond the security scope managed by the security authority of the vulnerable component. In this case, the vulnerable component and the impacted component are different and managed by different security authorities."
+  CHANGED
+  "Use the metric value of the associated Base metric."
+  NOT_DEFINED
+}
+
+"""
+ModifiedUserInteractionType -
+
+  Enables analyst to override User Interaction Base metrics based on specific characteristics of a user’s environment.
+"""
+enum ModifiedUserInteractionType {
+  "The vulnerable system can be exploited without interaction from any user."
+  NONE
+  "Successful exploitation of this vulnerability requires a user to take some action before the vulnerability can be exploited."
+  REQUIRED
+  "Use the metric value of the associated Base metric."
+  NOT_DEFINED
+}

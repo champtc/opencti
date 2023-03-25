@@ -4836,138 +4836,6 @@ input ToolAddInput {
 }
 
 ############## Vulnerabilities
-enum VulnerabilitiesOrdering {
-  name
-  x_opencti_base_score
-  x_opencti_base_severity
-  x_opencti_attack_vector
-  created
-  modified
-  created_at
-  updated_at
-  status_id
-}
-enum VulnerabilitiesFilter {
-  name
-  x_opencti_base_score
-  x_opencti_base_severity
-  x_opencti_attack_vector
-  created
-  modified
-  created_at
-  createdBy
-  markedBy
-  labelledBy
-  status_id
-}
-input VulnerabilitiesFiltering {
-  key: VulnerabilitiesFilter!
-  values: [String]
-  operator: String
-  filterMode: FilterMode
-}
-type VulnerabilityConnection {
-  pageInfo: PageInfo!
-  edges: [VulnerabilityEdge]
-}
-type VulnerabilityEdge {
-  cursor: String!
-  node: Vulnerability!
-}
-type Vulnerability implements StixDomainObject & StixCoreObject & StixObject & BasicObject {
-  id: ID! # internal_id
-  standard_id: String!
-  entity_type: String!
-  parent_types: [String]!
-  # StixObject
-  x_opencti_stix_ids: [String]
-  is_inferred: Boolean!
-  spec_version: String!
-  created_at: DateTime!
-  updated_at: DateTime!
-  # inferences
-  x_opencti_inferences: [Inference]
-  # StixCoreObject
-  createdBy: Identity
-  objectMarking: MarkingDefinitionConnection
-  objectLabel: LabelConnection
-  externalReferences(first: Int): ExternalReferenceConnection
-  reports(first: Int): ReportConnection
-  notes(first: Int): NoteConnection
-  opinions(first: Int): OpinionConnection
-  stixCoreRelationships(
-    first: Int
-    after: ID
-    orderBy: StixCoreRelationshipsOrdering
-    orderMode: OrderingMode
-    fromId: String
-    toId: String
-    fromTypes: [String]
-    toTypes: [String]
-    relationship_type: String
-    startTimeStart: DateTime
-    startTimeStop: DateTime
-    stopTimeStart: DateTime
-    stopTimeStop: DateTime
-    firstSeenStart: DateTime
-    firstSeenStop: DateTime
-    lastSeenStart: DateTime
-    lastSeenStop: DateTime
-    confidences: [Int]
-    search: String
-    filters: [StixCoreRelationshipsFiltering]
-    filterMode: FilterMode
-  ): StixCoreRelationshipConnection
-  # StixDomainObject
-  revoked: Boolean!
-  confidence: Int
-  lang: String
-  created: DateTime
-  modified: DateTime
-  x_opencti_graph_data: String
-  # Vulnerability
-  name: String!
-  description: String
-  x_opencti_base_score: Float
-  x_opencti_base_severity: String
-  x_opencti_attack_vector: String
-  x_opencti_integrity_impact: String
-  x_opencti_availability_impact: String
-  x_opencti_confidentiality_impact: String
-  # Technical
-  creator: User
-  importFiles(first: Int): FileConnection
-  exportFiles(first: Int): FileConnection
-  toStix: String
-  editContext: [EditUserContext]
-  connectors(onlyAlive: Boolean): [Connector]
-  jobs(first: Int): [Work]
-  status: Status
-  workflowEnabled: Boolean
-}
-input VulnerabilityAddInput {
-  stix_id: String
-  x_opencti_stix_ids: [String]
-  name: String! @constraint(minLength: 2)
-  description: String!
-  x_opencti_base_score: Float
-  x_opencti_base_severity: String
-  x_opencti_attack_vector: String
-  x_opencti_integrity_impact: String
-  x_opencti_availability_impact: String
-  x_opencti_confidentiality_impact: String
-  confidence: Int
-  revoked: Boolean
-  lang: String
-  createdBy: String
-  objectMarking: [String]
-  objectLabel: [String]
-  externalReferences: [String]
-  created: DateTime
-  modified: DateTime
-  clientMutationId: String
-  update: Boolean
-}
 
 ############## Incident
 enum IncidentsOrdering {
@@ -8944,17 +8812,6 @@ type Query {
     search: String
     toStix: Boolean
   ): ToolConnection @hasPermission(resources:"Knowledge:view")
-  vulnerability(id: String): Vulnerability @hasPermission(resources:"Knowledge:view")
-  vulnerabilities(
-    first: Int
-    after: ID
-    orderBy: VulnerabilitiesOrdering
-    orderMode: OrderingMode
-    filters: [VulnerabilitiesFiltering]
-    filterMode: FilterMode
-    search: String
-    toStix: Boolean
-  ): VulnerabilityConnection @hasPermission(resources:"Knowledge:view")
   incident(id: String): Incident @hasPermission(resources:"Knowledge:view")
   incidents(
     first: Int
@@ -9594,14 +9451,6 @@ type ToolEditMutations {
   relationAdd(input: StixMetaRelationshipAddInput): StixMetaRelationship @hasPermission(resources: "Knowledge:update")
   relationDelete(toId: String!, relationship_type: String!): Tool @hasPermission(resources: "Knowledge:update")
 }
-type VulnerabilityEditMutations {
-  delete: ID @hasPermission(resources: "Knowledge:delete")
-  fieldPatch(input: [EditInput]!, commitMessage: String): Vulnerability @hasPermission(resources: "Knowledge:update")
-  contextPatch(input: EditContext): Vulnerability @hasPermission(resources: "Knowledge:update")
-  contextClean: Vulnerability @hasPermission(resources: "Knowledge:update")
-  relationAdd(input: StixMetaRelationshipAddInput): StixMetaRelationship @hasPermission(resources: "Knowledge:update")
-  relationDelete(toId: String!, relationship_type: String!): Vulnerability @hasPermission(resources: "Knowledge:update")
-}
 type IncidentEditMutations {
   delete: ID @hasPermission(resources: "Knowledge:delete")
   fieldPatch(input: [EditInput]!, commitMessage: String): Incident @hasPermission(resources: "Knowledge:update")
@@ -9804,8 +9653,6 @@ type Mutation {
   threatActorEdit(id: ID!): ThreatActorEditMutations
   toolAdd(input: ToolAddInput): Tool @hasPermission(resources: "Knowledge:update")
   toolEdit(id: ID!): ToolEditMutations
-  vulnerabilityAdd(input: VulnerabilityAddInput): Vulnerability @hasPermission(resources: "Knowledge:update")
-  vulnerabilityEdit(id: ID!): VulnerabilityEditMutations
   incidentAdd(input: IncidentAddInput): Incident @hasPermission(resources: "Knowledge:update")
   incidentEdit(id: ID!): IncidentEditMutations
 

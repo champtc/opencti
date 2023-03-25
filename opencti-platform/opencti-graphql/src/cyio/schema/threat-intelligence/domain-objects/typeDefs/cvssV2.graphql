@@ -1,4 +1,8 @@
-
+"""
+Common Vulnerability Scoring System (CVSS) v2 Metric that provides a way to 
+capture the principal characteristics of a vulnerability and produce a 
+numerical score reflecting its severity.
+"""
 type CVSSv2 implements CVSS & BasicObject & LifecycleObject {
   # BasicObject
   "Uniquely identifies this object."
@@ -61,14 +65,13 @@ type CVSSv2 implements CVSS & BasicObject & LifecycleObject {
   "Indicates the severity of the vulnerability, as a numeric score, based on an end-user's organization specific environment."
   environmental_score: Float
 }
-
 input CVSSv2Input {
   # CVSS
   "Indicates the version of the CVSS record."
-  version: String
+  version: String!
   # CVSS v2
   "Identifies a text representation of a set of CVSS metrics."
-  vector_string: String
+  vector_string: String!
   "Indicates the how the vulnerability is exploited."
   access_vector: AccessVectorType
   "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
@@ -82,7 +85,7 @@ input CVSSv2Input {
   "Indicates the impact to the availability of the impacted component resulting from a successfully exploited vulnerability."
   availability_impact: CiaTypeV2
   "Indicates the severity, as numeric score, of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
-  base_score: Float
+  base_score: Float!
   "Indicates current state of exploit techniques or code availability."
   exploitability: ExploitabilityType
   "Indicates the level of remediation."

@@ -1,3 +1,8 @@
+"""
+Common Vulnerability Scoring System (CVSS) v4 Metric that provides a way to 
+capture the principal characteristics of a vulnerability and produce a 
+numerical score reflecting its severity.
+"""
 type CVSSv4 implements CVSS & BasicObject & LifecycleObject {
   # BasicObject
   "Uniquely identifies this object."
@@ -30,8 +35,8 @@ type CVSSv4 implements CVSS & BasicObject & LifecycleObject {
 input CVSSv4Input {
   # CVSS
   "Indicates the version of the CVSS record."
-  version: String
+  version: String!
   # CVSS v4.*
   "Identifies a text representation of a set of CVSS metrics."
-  vector_string: String
+  vector_string: String!
 }

@@ -1,4 +1,9 @@
 
+"""
+Common Vulnerability Scoring System (CVSS) v3 Metric that provides a way to 
+capture the principal characteristics of a vulnerability and produce a 
+numerical score reflecting its severity.
+"""
 type CVSSv3 implements CVSS & BasicObject & LifecycleObject {
   # BasicObject
   "Uniquely identifies this object."
@@ -83,14 +88,13 @@ type CVSSv3 implements CVSS & BasicObject & LifecycleObject {
   "Indicates the severity of the vulnerability based on an end-user's organization specific environment."
   environmental_severity: SeverityType
 }
-
 input CVSSv3Input {
   # CVSS
   "Indicates the version of the CVSS record."
-  version: String
+  version: String!
   # CVSS v3.*
   "Identifies a text representation of a set of CVSS metrics."
-  vector_string: String
+  vector_string: String!
   "Indicates the context by which vulnerability exploitation is possible. This metric value (and consequently the Base Score) will be larger the more remote (logically, and physically) an attacker can be in order to exploit the vulnerable component."
   attack_vector: AttackVectorType
   "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
@@ -108,9 +112,9 @@ input CVSSv3Input {
   "Indicates the impact to the availability of the impacted component resulting from a successfully exploited vulnerability."
   availability_impact: CiaType
   "Indicates the severity, as numeric score, of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
-  base_score: Float
+  base_score: Float!
   "Indicates the severity of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
-  base_severity: SeverityType
+  base_severity: SeverityType!
   "Indicates the likelihood of the vulnerability being attacked, and is typically based on the current state of exploit techniques, exploit code availability, or active, \"in-the-wild\" exploitation."
   exploit_code_maturity: ExploitCodeMaturityType
   "Indicates the level of remediation."

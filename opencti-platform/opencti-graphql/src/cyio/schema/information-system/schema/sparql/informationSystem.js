@@ -50,6 +50,7 @@ const informationSystemReducer = (item) => {
       ...(item.date_authorized && { date_authorized: item.date_authorized }),
       ...(item.security_sensitivity_level && { security_sensitivity_level: item.security_sensitivity_level }),
       ...(item.privacy_designation !== undefined && {privacy_designation: item.privacy_designation }),
+      ...(item.critical_system_designation !== undefined && {critical_system_designation: item.critical_system_designation}),
       ...(item.security_objective_confidentiality && { security_objective_confidentiality: item.security_objective_confidentiality }),
       ...(item.security_objective_integrity && { security_objective_integrity: item.security_objective_integrity }),
       ...(item.security_objective_availability && { security_objective_availability: item.security_objective_availability }),
@@ -477,6 +478,11 @@ export const informationSystemPredicateMap = {
   security_objective_availability: {
     predicate: "<http://csrc.nist.gov/ns/oscal/info-system#security_objective_availability>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "security_objective_availability");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  critical_system_designation: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#critical_system_designation>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value !== undefined ? `"${value}"^^xsd:boolean`: null, this.predicate, "critical_system_designation");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   privacy_designation: {

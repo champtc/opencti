@@ -1,0 +1,232 @@
+
+type CVSSv2 implements CVSS & BasicObject & LifecycleObject {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  "Identities the date and time at which the object was originally created."
+  created: Timestamp
+  "Identifies the date and time at which the object was last modified."
+  modified: Timestamp
+  # Core Object
+  labels: [CyioLabel]
+  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  external_references: [CyioExternalReference]
+  "Identifies one or more references to additional commentary on the Model."
+  notes: [CyioNote]
+  # CVSS
+  "Indicates the version of the CVSS record."
+  version: String
+  # CVSS v2
+  "Identifies a text representation of a set of CVSS metrics."
+  vector_string: String
+  "Indicates the how the vulnerability is exploited."
+  access_vector: AccessVectorType
+  "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
+  access_complexity: AccessComplexityType
+  "Indicates the number of times an attacker must authenticate to a target in order to exploit a vulnerability."
+  authentication: AuthenticationType
+  "Indicates the impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability."
+  confidentiality_impact: CiaTypeV2
+  "Indicates the impact to integrity of a successfully exploited vulnerability."
+  integrity_impact: CiaTypeV2
+  "Indicates the impact to the availability of the impacted component resulting from a successfully exploited vulnerability."
+  availability_impact: CiaTypeV2
+  "Indicates the severity, as numeric score, of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
+  base_score: Float
+  "Indicates current state of exploit techniques or code availability."
+  exploitability: ExploitabilityType
+  "Indicates the level of remediation."
+  remediation_level: RemediationLevelType
+  "Indicates the degree of confidence in the existence of the vulnerability and the credibility of the known technical details."
+  report_confidence: ConfidenceTypeV2
+  "Indicates the current exploitability of the vulnerability, as a numeric score, according to its intrinsic characteristics which change over time and assumes the reasonable worst case impact across different deployed environments."
+  temporal_score: Float
+  "Indicates the the potential for loss of life or physical assets through damage or theft of property or equipment."
+  collateral_damage_potential: CollateralDamagePotentialType
+  "Indicates the proportion of vulnerable systems."
+  target_distribution: TargetDistributionType
+  "Indicates an analyst-specified confidentiality requirement based on business function support by the IT asset."
+  confidentiality_requirement: CiaRequirementTypeV2
+  "Indicates an analyst-specified integrity requirement based on business function support by the IT asset."
+  integrity_requirement: CiaRequirementTypeV2
+  "Indicates an analyst-specified integrity requirement based on business function support by the IT asset."
+  availability_requirement: CiaRequirementTypeV2
+  "Indicates the severity of the vulnerability, as a numeric score, based on an end-user's organization specific environment."
+  environmental_score: Float
+}
+
+input CVSSv2Input {
+  # CVSS
+  "Indicates the version of the CVSS record."
+  version: String
+  # CVSS v2
+  "Identifies a text representation of a set of CVSS metrics."
+  vector_string: String
+  "Indicates the how the vulnerability is exploited."
+  access_vector: AccessVectorType
+  "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
+  access_complexity: AccessComplexityType
+  "Indicates the number of times an attacker must authenticate to a target in order to exploit a vulnerability."
+  authentication: AuthenticationType
+  "Indicates the impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability."
+  confidentiality_impact: CiaTypeV2
+  "Indicates the impact to integrity of a successfully exploited vulnerability."
+  integrity_impact: CiaTypeV2
+  "Indicates the impact to the availability of the impacted component resulting from a successfully exploited vulnerability."
+  availability_impact: CiaTypeV2
+  "Indicates the severity, as numeric score, of a vulnerability according to its intrinsic characteristics which are constant over time and assumes the reasonable worst case impact across different deployed environments."
+  base_score: Float
+  "Indicates current state of exploit techniques or code availability."
+  exploitability: ExploitabilityType
+  "Indicates the level of remediation."
+  remediation_level: RemediationLevelType
+  "Indicates the degree of confidence in the existence of the vulnerability and the credibility of the known technical details."
+  report_confidence: ConfidenceTypeV2
+  "Indicates the current exploitability of the vulnerability, as a numeric score, according to its intrinsic characteristics which change over time and assumes the reasonable worst case impact across different deployed environments."
+  temporal_score: Float
+  "Indicates the the potential for loss of life or physical assets through damage or theft of property or equipment."
+  collateral_damage_potential: CollateralDamagePotentialType
+  "Indicates the proportion of vulnerable systems."
+  target_distribution: TargetDistributionType
+  "Indicates an analyst-specified confidentiality requirement based on business function support by the IT asset."
+  confidentiality_requirement: CiaRequirementTypeV2
+  "Indicates an analyst-specified integrity requirement based on business function support by the IT asset."
+  integrity_requirement: CiaRequirementTypeV2
+  "Indicates an analyst-specified integrity requirement based on business function support by the IT asset."
+  availability_requirement: CiaRequirementTypeV2
+  "Indicates the severity of the vulnerability, as a numeric score, based on an end-user's organization specific environment."
+  environmental_score: Float
+}
+
+"""
+AccessVectorType -
+"""
+enum AccessVectorType {
+  "A vulnerability exploitable with network access means the vulnerable software is bound to the network stack and the attacker does not require local network access or local access. Such a vulnerability is often termed "remotely exploitable"."
+  NETWORK
+  "A vulnerability exploitable with adjacent network access requires the attacker to have access to either the broadcast or collision domain of the vulnerable software."
+  ADJACENT_NETWORK
+  "A vulnerability exploitable with only local access requires the attacker to have either physical access to the vulnerable system or a local (shell) account."
+  LOCAL
+}
+
+"""
+AccessComplexityType -
+"""
+enum AccessComplexityType {
+  "Specialized access conditions exist."
+  HIGH
+  "The access conditions are somewhat specialized"
+  MEDIUM
+  "Specialized access conditions or extenuating circumstances do not exist. "
+  LOW
+}
+
+"""
+AuthenticationType -
+"""
+enum AuthenticationType {
+  "Exploiting the vulnerability requires that the attacker authenticate two or more times, even if the same credentials are used each time."
+  MULTIPLE
+  "The vulnerability requires an attacker to be logged into the system (such as at a command line or via a desktop session or web interface)."
+  SINGE
+  "Authentication is not required to exploit the vulnerability."
+  NONE
+}
+
+"""
+CiaTypeV2 -
+"""
+enum CiaTypeV2 {
+  "There is no impact to the [Confidentiality | Integrity | Availability] of the system."
+  NONE
+  "There is [considerable informational disclosure | modification of some system files or information is possible, but the attacker does not have control over what can be modified, or the scope of what the attacker can affect is limited | reduced performance or interruptions in resource availability] . "
+  PARTIAL
+  "There is a [total information disclosure, resulting in all system files being revealed | total compromise of system integrity | total shutdown of the affected resource]."
+  COMPLETE
+}
+
+"""
+ExploitabilityType -
+"""
+enum ExploitabilityType {
+  "No exploit code is available, or an exploit is theoretical."
+  UNPROVEN
+  "Proof-of-concept exploit code is available, or an attack demonstration is not practical for most systems. The code or technique is not functional in all situations and may require substantial modification by a skilled attacker."
+  PROOF_OF_CONCEPT
+  "Functional exploit code is available. The code works in most situations where the vulnerability exists."
+  FUNCTIONAL
+  "Functional autonomous code exists, or no exploit is required (manual trigger) and details are widely available. Exploit code works in every situation, or is actively being delivered via an autonomous agent (such as a worm or virus)."
+  HIGH
+  "Assigning this value indicates there is insufficient information to choose one of the other values, and has no impact on the overall Temporal Score, i.e., it has the same effect on scoring as assigning High."
+  NOT_DEFINED  
+}
+
+"""
+ConfidenceTypeV2
+"""
+enum ConfidenceTypeV2 {
+  "There is a single unconfirmed source or possibly multiple conflicting reports. There is little confidence in the validity of the reports."
+  UNCONFIRMED
+  "There are multiple non-official sources, possibly including independent security companies or research organizations."
+  UNCORROBORATED
+  "The vulnerability has been acknowledged by the vendor or author of the affected technology."
+  CONFIRMED
+  "Assigning this value to the metric will not influence the score. It is a signal to the equation to skip this metric."
+  NOT_DEFINED
+}
+
+"""
+CollateralDamagePotentialType
+"""
+enum CollateralDamagePotentialType {
+  "There is no potential for loss of life, physical assets, productivity or revenue."
+  NONE
+  "A successful exploit of this vulnerability may result in slight physical or property damage. Or, there may be a slight loss of revenue or productivity to the organization."
+  LOW
+  "A successful exploit of this vulnerability may result in moderate physical or property damage. Or, there may be a moderate loss of revenue or productivity to the organization."
+  LOW_MEDIUM
+  "A successful exploit of this vulnerability may result in significant physical or property damage or loss. Or, there may be a significant loss of revenue or productivity."
+  MEDIUM_HIGH
+  "A successful exploit of this vulnerability may result in catastrophic physical or property damage and loss. Or, there may be a catastrophic loss of revenue or productivity."
+  HIGH
+  "Assigning this value to the metric will not influence the score. It is a signal to the equation to skip this metric."
+  NOT_DEFINED
+}
+
+"""
+TargetDistributionType
+"""
+enum TargetDistributionType {
+  "No target systems exist, or targets are so highly specialized that they only exist in a laboratory setting. Effectively 0% of the environment is at risk."
+  NONE
+  "Targets exist inside the environment, but on a small scale. Between 1% - 25% of the total environment is at risk."
+  LOW
+  "Targets exist inside the environment, but on a medium scale. Between 26% - 75% of the total environment is at risk."
+  MEDIUM
+  "Targets exist inside the environment on a considerable scale. Between 76% - 100% of the total environment is considered at risk."
+  HIGH
+  "Assigning this value to the metric will not influence the score. It is a signal to the equation to skip this metric."
+  NOT_DEFINED
+}
+
+"""
+CiaRequirementTypeV2
+"""
+enum CiaRequirementTypeV2 {
+  "Loss of [confidentiality / integrity / availability] is likely to have only a limited adverse effect on the organization or individuals associated with the organization (e.g., employees, customers)."
+  LOW
+  "Loss of [confidentiality / integrity / availability] is likely to have a serious adverse effect on the organization or individuals associated with the organization (e.g., employees, customers)."
+  MEDIUM
+  "Loss of [confidentiality / integrity / availability] is likely to have a catastrophic adverse effect on the organization or individuals associated with the organization (e.g., employees, customers)."
+  HIGH
+  "Assigning this value to the metric will not influence the score. It is a signal to the equation to skip this metric."
+  NOT_DEFINED
+}

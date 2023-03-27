@@ -1,0 +1,76 @@
+extend type Query {
+  cvssMetrics(
+    first: Int
+    offset: Int
+    orderedBy: CvssOrdering
+    orderMode: OrderingMode
+    filters: [CvssFiltering]
+    filterMode: FilterMode
+    search: String
+  ): CVSSMetricConnection @hasPermission(resources: "Context:view")
+  cvssMetric(id: ID!): CVSSMetric @hasPermission(resources: "Context:view")
+}
+extend type Mutation {
+  # CVSS
+  createCVSSv2Metric(input: CVSSv2Input!): CVSSv2 @hasPermission(resources: "Context:update")
+  createCVSSv3Metric(input: CVSSv3Input!): CVSSv3 @hasPermission(resources: "Context:update")
+  deleteCVSSMetric(id: ID!): ID @hasPermission(resources: "Context:delete")
+  deleteCVSSMetrics(ids: [ID!]!): [ID] @hasPermission(resources: "Context:delete")
+  editCVSSMetric(id: ID!, input: [EditInput]!, commitMessage: String): CVSSMetric @hasPermission(resources: "Context:update")
+  attachToCVSSMetric(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Context:update")
+  detachFromCVSSMetric(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Context:update")
+
+}
+
+interface CVSS {
+  "Indicates the version of the CVSS record."
+  version: String
+  "Identifies a text representation of a set of CVSS metrics."
+  vector_string: String
+}
+
+union CVSSMetric = CVSSv4 | CVSSv3 | CVSSv2
+
+# Vulnerability Connection
+"Defines a list of CVSS Metrics with counts and in a form that makes pagination possible."
+type CVSSMetricConnection {
+  pageInfo: PageInfo!
+  edges: [CVSSMetricEdge]
+}
+type CVSSMetricEdge {
+  cursor: String,
+  node: CVSSMetric!
+}
+
+# slicing types
+"Defines the list of fields that can be used to order by for a CVSS Metric"
+enum CvssOrdering {
+    "Created"
+    created
+    "Modified"
+    modified
+    "Title"
+    title
+    "Label"
+    label_name
+}
+# Filtering types
+input CvssFiltering {
+  key: CvssFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
+}
+
+"Defines the list of fields that can be filtered upon for CVSS Metric."
+enum CvssFilter {
+    "Created"
+    created
+    "Modified"
+    modified
+    "Title"
+    title
+    "Label"
+    label_name
+}
+

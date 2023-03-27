@@ -954,6 +954,19 @@ export const getInformationSystemSecurityStatus = async (id, dbName, dataSources
     throw e
   }
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+  
+  // if not specified, supply default for privacy designation
+  if (response[0].privacy_designation === undefined) {
+    response[0].privacy_designation = false;
+  }
+
+  // if not specified, determine if system is deemed critical
+  if (response[0].critical_system_designation === undefined) {
+    response[0].critical_system_designation = await determineCriticalSystemDesignation(
+                                                  response[0].security_sensitivity_level, 
+                                                  response[0].privacy_designation );
+  }
+
   return response[0];
 };
 
@@ -964,15 +977,22 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
   let field;
   switch(implementation_type) {
     case 'component':
+    case 'Component':
       field = 'components';
       break;
     case 'inventory_item':
+    case 'inventory-item':
+    case 'InventoryItem':
       field = 'inventory_items';
       break;
     case 'leveraged_authorization':
+    case 'oscal-leveraged-authorization':
+    case 'OscalLeveragedAuthorization':
       field = 'leveraged_authorizations';
       break;
     case 'user_type':
+    case 'oscal-user':
+    case 'OscalUser':
       field = 'users';
       break;
     default:
@@ -980,7 +1000,21 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
   }
 
   let result = await attachToInformationSystem(id, field, entityId, dbName, dataSources);
-  return result;
+  if (result === true) {
+    let timestamp = new Date().toISOString();
+    let relationship = {
+      id: generateId(),
+      entity_type: 'oscal-relationship',
+      created: timestamp,
+      modified: timestamp,
+      relationship_type: 'consists-of',
+      source: id,
+      target: entityId,
+      valid_from: timestamp,
+    };
+    return relationship;
+  }
+  return null;
 }
 
 export const removeImplementationEntity = async( id, implementation_type, entityId, dbName, dataSources) => {
@@ -990,15 +1024,22 @@ export const removeImplementationEntity = async( id, implementation_type, entity
   let field;
   switch(implementation_type) {
     case 'component':
+    case 'Component':
       field = 'components';
       break;
     case 'inventory_item':
+    case 'inventory-item':
+    case 'InventoryItem':
       field = 'inventory_items';
       break;
     case 'leveraged_authorization':
+    case 'oscal-leveraged-authorization':
+    case 'OscalLeveragedAuthorization':
       field = 'leveraged_authorizations';
       break;
     case 'user_type':
+    case 'oscal-user':
+    case 'OscalUser':
       field = 'users';
       break;
     default:

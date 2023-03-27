@@ -22,7 +22,7 @@ const cyioInformationSystemResolvers = {
     // Information System
     informationSystems: async (_, args, { user, token, kauth, clientId, dbName, dataSources, selectMap }) => findAllInformationSystems(args, dbName, dataSources, selectMap.getNode('node')),
     informationSystem: async (_, { id }, { user, token, kauth, clientId, dbName, dataSources, selectMap }) => findInformationSystemById(id, dbName, dataSources, selectMap.getNode('informationSystem')),
-    informationSystemSecurityStatus: async (_, { id }, {dbName, dataSources, selectMap }) => getInformationSystemSecurityStatus( id,dbName, dataSources, selectMap.getNode('node')),
+    informationSystemSecurityStatus: async (_, { id }, {dbName, dataSources, selectMap }) => getInformationSystemSecurityStatus( id,dbName, dataSources, selectMap.getNode('informationSystemSecurityStatus')),
   },
   Mutation: {
     // Information System

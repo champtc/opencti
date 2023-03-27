@@ -9,17 +9,30 @@
     entity_type: String!
     "Identifies the parent types of this object."
     parent_types: [String]!
-    # CoreObject
+    # LifecycleObject
     created: Timestamp
     modified: Timestamp
+    # CoreObject
+    "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
     labels: [CyioLabel]
+    "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+    external_references: [CyioExternalReference]
+    "Identifies one or more references to additional commentary on the Model."
+    notes: [CyioNote]
+    relationships(
+      first: Int
+      offset: Int
+      orderedBy: OscalRelationshipsOrdering
+      orderMode: OrderingMode
+      filters: [OscalRelationshipsFiltering]
+      filterMode: FilterMode
+      search: String
+    ): CyioRelationshipConnection
     # Asset
     asset_id: String
     name: String!
     description: String
     locations: [AssetLocation]
-    external_references: [CyioExternalReference]
-    notes: [CyioNote]
     # ItAsset
     asset_tag: String
     asset_type: AssetType!
@@ -43,17 +56,30 @@
     entity_type: String!
     "Identifies the parent types of this object."
     parent_types: [String]!
-    # CoreObject
+    # LifecycleObject
     created: Timestamp
     modified: Timestamp
+    # CoreObject
+    "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
     labels: [CyioLabel]
+    "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+    external_references: [CyioExternalReference]
+    "Identifies one or more references to additional commentary on the Model."
+    notes: [CyioNote]
+    relationships(
+      first: Int
+      offset: Int
+      orderedBy: OscalRelationshipsOrdering
+      orderMode: OrderingMode
+      filters: [OscalRelationshipsFiltering]
+      filterMode: FilterMode
+      search: String
+    ): CyioRelationshipConnection
     # Asset
     asset_id: String
     name: String!
     description: String
     locations: [AssetLocation]
-    external_references: [CyioExternalReference]
-    notes: [CyioNote]
     # ItAsset
     asset_tag: String
     asset_type: AssetType!
@@ -77,17 +103,30 @@
     entity_type: String!
     "Identifies the parent types of this object."
     parent_types: [String]!
-    # CoreObject
+    # LifecycleObject
     created: Timestamp
     modified: Timestamp
+    # CoreObject
+    "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
     labels: [CyioLabel]
+    "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+    external_references: [CyioExternalReference]
+    "Identifies one or more references to additional commentary on the Model."
+    notes: [CyioNote]
+    relationships(
+      first: Int
+      offset: Int
+      orderedBy: OscalRelationshipsOrdering
+      orderMode: OrderingMode
+      filters: [OscalRelationshipsFiltering]
+      filterMode: FilterMode
+      search: String
+    ): CyioRelationshipConnection
     # Asset
     asset_id: String
     name: String!
     description: String
     locations: [AssetLocation]
-    external_references: [CyioExternalReference]
-    notes: [CyioNote]
     # ItAsset
     asset_tag: String
     asset_type: AssetType!
@@ -111,17 +150,30 @@
     entity_type: String!
     "Identifies the parent types of this object."
     parent_types: [String]!
-    # CoreObject
+    # LifecycleObject
     created: Timestamp
     modified: Timestamp
+    # CoreObject
+    "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
     labels: [CyioLabel]
+    "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+    external_references: [CyioExternalReference]
+    "Identifies one or more references to additional commentary on the Model."
+    notes: [CyioNote]
+    relationships(
+      first: Int
+      offset: Int
+      orderedBy: OscalRelationshipsOrdering
+      orderMode: OrderingMode
+      filters: [OscalRelationshipsFiltering]
+      filterMode: FilterMode
+      search: String
+    ): CyioRelationshipConnection
     # Asset
     asset_id: String
     name: String!
     description: String
     locations: [AssetLocation]
-    external_references: [CyioExternalReference]
-    notes: [CyioNote]
     # ItAsset
     asset_tag: String
     asset_type: AssetType!

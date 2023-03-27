@@ -954,6 +954,19 @@ export const getInformationSystemSecurityStatus = async (id, dbName, dataSources
     throw e
   }
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+  
+  // if not specified, supply default for privacy designation
+  if (response[0].privacy_designation === undefined) {
+    response[0].privacy_designation = false;
+  }
+
+  // if not specified, determine if system is deemed critical
+  if (response[0].critical_system_designation === undefined) {
+    response[0].critical_system_designation = await determineCriticalSystemDesignation(
+                                                  response[0].security_sensitivity_level, 
+                                                  response[0].privacy_designation );
+  }
+
   return response[0];
 };
 

@@ -31,6 +31,7 @@ interface ObjectContainer {
   created: Timestamp
   "Identifies the date and time at which the object was last modified."
   modified: Timestamp
+  # ObjectContainer
   "Identifies graph-based data"
   graph_data: String
   "Identifies objects contained within this container"

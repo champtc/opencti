@@ -88,8 +88,8 @@ enum InformationTypeCatalogOrdering {
     created
     "Modified"
     modified
-    "Name"
-    name
+    "Title"
+    title
     "Label"
     label_name
 }

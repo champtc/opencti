@@ -261,9 +261,6 @@ const stixCoreRelationshipCreationFromRelationQuery = graphql`
         ... on Tool {
           name
         }
-        ... on Vulnerability {
-          name
-        }
         ... on Incident {
           name
         }
@@ -329,9 +326,6 @@ const stixCoreRelationshipCreationFromRelationQuery = graphql`
           name
         }
         ... on Tool {
-          name
-        }
-        ... on Vulnerability {
           name
         }
         ... on Incident {

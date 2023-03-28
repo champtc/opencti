@@ -61,16 +61,16 @@ export const vulnerabilitiesLinesQuery = graphql`
     $search: String
     $count: Int!
     $cursor: ID
-    $orderBy: VulnerabilitiesOrdering
+    $orderedBy: VulnerabilityOrdering
     $orderMode: OrderingMode
-    $filters: [VulnerabilitiesFiltering]
+    $filters: [VulnerabilityFiltering]
   ) {
     ...VulnerabilitiesLines_data
       @arguments(
         search: $search
         count: $count
         cursor: $cursor
-        orderBy: $orderBy
+        orderedBy: $orderedBy
         orderMode: $orderMode
         filters: $filters
       )
@@ -86,22 +86,22 @@ export default createPaginationContainer(
         search: { type: "String" }
         count: { type: "Int", defaultValue: 25 }
         cursor: { type: "ID" }
-        orderBy: { type: "VulnerabilitiesOrdering", defaultValue: name }
+        orderedBy: { type: "VulnerabilityOrdering", defaultValue: title }
         orderMode: { type: "OrderingMode", defaultValue: asc }
-        filters: { type: "[VulnerabilitiesFiltering]" }
+        filters: { type: "[VulnerabilityFiltering]" }
       ) {
         vulnerabilities(
           search: $search
           first: $count
-          after: $cursor
-          orderBy: $orderBy
+          # after: $cursor
+          orderedBy: $orderedBy
           orderMode: $orderMode
           filters: $filters
         ) @connection(key: "Pagination_vulnerabilities") {
           edges {
             node {
               id
-              name
+              title
               description
               ...VulnerabilityLine_node
             }

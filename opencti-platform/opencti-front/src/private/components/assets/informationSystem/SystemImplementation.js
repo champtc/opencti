@@ -52,7 +52,9 @@ const systemImplementationAttachMutation = graphql`
     $implementation_type: String!,
     
   ) {
-    addInformationSystemImplementationEntity(id: $id, entityId: $entityId, implementation_type: $implementation_type)
+    addInformationSystemImplementationEntity(id: $id, entityId: $entityId, implementation_type: $implementation_type) {
+      id
+    }
   }
 `;
 

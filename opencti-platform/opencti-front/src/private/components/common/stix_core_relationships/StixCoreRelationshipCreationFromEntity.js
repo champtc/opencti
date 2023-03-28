@@ -248,9 +248,6 @@ const stixCoreRelationshipCreationFromEntityQuery = graphql`
       ... on Tool {
         name
       }
-      ... on Vulnerability {
-        name
-      }
       ... on Incident {
         name
       }

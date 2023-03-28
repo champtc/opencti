@@ -561,9 +561,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
             ... on Tool {
               name
             }
-            ... on Vulnerability {
-              name
-            }
             ... on Incident {
               name
             }
@@ -637,9 +634,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                   name
                 }
                 ... on Tool {
-                  name
-                }
-                ... on Vulnerability {
                   name
                 }
                 ... on Incident {
@@ -766,10 +760,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                           name
                           description
                         }
-                        ... on Vulnerability {
-                          name
-                          description
-                        }
                         ... on Incident {
                           name
                           description
@@ -854,9 +844,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                     ... on Tool {
                       name
                     }
-                    ... on Vulnerability {
-                      name
-                    }
                     ... on Incident {
                       name
                     }
@@ -925,9 +912,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                       name
                     }
                     ... on Tool {
-                      name
-                    }
-                    ... on Vulnerability {
                       name
                     }
                     ... on Incident {
@@ -1048,10 +1032,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                               last_seen
                             }
                             ... on Tool {
-                              name
-                              description
-                            }
-                            ... on Vulnerability {
                               name
                               description
                             }
@@ -1141,9 +1121,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                 ... on Tool {
                   name
                 }
-                ... on Vulnerability {
-                  name
-                }
                 ... on Incident {
                   name
                 }
@@ -1268,10 +1245,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                           name
                           description
                         }
-                        ... on Vulnerability {
-                          name
-                          description
-                        }
                         ... on Incident {
                           name
                           description
@@ -1358,9 +1331,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                     ... on Tool {
                       name
                     }
-                    ... on Vulnerability {
-                      name
-                    }
                     ... on Incident {
                       name
                     }
@@ -1482,10 +1452,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                               last_seen
                             }
                             ... on Tool {
-                              name
-                              description
-                            }
-                            ... on Vulnerability {
                               name
                               description
                             }
@@ -1572,9 +1538,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                     ... on Tool {
                       name
                     }
-                    ... on Vulnerability {
-                      name
-                    }
                     ... on Incident {
                       name
                     }
@@ -1696,10 +1659,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                               last_seen
                             }
                             ... on Tool {
-                              name
-                              description
-                            }
-                            ... on Vulnerability {
                               name
                               description
                             }
@@ -1807,9 +1766,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
           ... on Tool {
             name
           }
-          ... on Vulnerability {
-            name
-          }
           ... on Incident {
             name
           }
@@ -1934,10 +1890,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                     name
                     description
                   }
-                  ... on Vulnerability {
-                    name
-                    description
-                  }
                   ... on Incident {
                     name
                     description
@@ -2022,9 +1974,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
               ... on Tool {
                 name
               }
-              ... on Vulnerability {
-                name
-              }
               ... on Incident {
                 name
               }
@@ -2093,9 +2042,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                 name
               }
               ... on Tool {
-                name
-              }
-              ... on Vulnerability {
                 name
               }
               ... on Incident {
@@ -2172,9 +2118,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
           ... on Tool {
             name
           }
-          ... on Vulnerability {
-            name
-          }
           ... on Incident {
             name
           }
@@ -2299,10 +2242,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                     name
                     description
                   }
-                  ... on Vulnerability {
-                    name
-                    description
-                  }
                   ... on Incident {
                     name
                     description
@@ -2383,9 +2322,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
               ... on Tool {
                 name
               }
-              ... on Vulnerability {
-                name
-              }
               ... on Incident {
                 name
               }
@@ -2453,9 +2389,6 @@ const StixCoreRelationshipOverview = createFragmentContainer(
                 name
               }
               ... on Tool {
-                name
-              }
-              ... on Vulnerability {
                 name
               }
               ... on Incident {

@@ -135,9 +135,6 @@ const reportKnowledgeCorrelationStixCoreObjectQuery = graphql`
       ... on Tool {
         name
       }
-      ... on Vulnerability {
-        name
-      }
       ... on Incident {
         name
         first_seen
@@ -1087,9 +1084,6 @@ const ReportKnowledgeCorrelation = createFragmentContainer(
                 last_seen
               }
               ... on Tool {
-                name
-              }
-              ... on Vulnerability {
                 name
               }
               ... on Incident {

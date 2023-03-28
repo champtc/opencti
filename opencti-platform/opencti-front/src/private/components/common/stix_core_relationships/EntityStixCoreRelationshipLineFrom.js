@@ -283,10 +283,6 @@ const EntityStixCoreRelationshipLineFromFragment = createFragmentContainer(
             name
             description
           }
-          ... on Vulnerability {
-            name
-            description
-          }
           ... on Incident {
             name
             description
@@ -458,10 +454,6 @@ const EntityStixCoreRelationshipLineFromFragment = createFragmentContainer(
                     last_seen
                   }
                   ... on Tool {
-                    name
-                    description
-                  }
-                  ... on Vulnerability {
                     name
                     description
                   }

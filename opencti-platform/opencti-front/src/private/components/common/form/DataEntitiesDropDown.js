@@ -18,6 +18,7 @@ import notes from '../../../../resources/images/entities/Notes.svg';
 import parties from '../../../../resources/images/entities/parties.svg';
 import assessmentPlatform from '../../../../resources/images/entities/assessment_platform.svg';
 import externalReferenceIcon from '../../../../resources/images/entities/externalReferenceIcon.svg';
+import userTypesIcon from '../../../../resources/images/entities/user_types.svg';
 import leveragedAuthorizationIcon from '../../../../resources/images/entities/leveragedAuthorizationIcon.svg';
 
 const styles = () => ({
@@ -167,6 +168,20 @@ class DataEntitiesDropDown extends Component {
               </div>
               <div className={classes.menuItemText}>
                 {t('External References')}
+              </div>
+            </div>
+          </MenuItem>
+          <MenuItem
+            component={Link}
+            to="/data/entities/user_types"
+            value="user_types"
+          >
+            <div className={classes.menuItems}>
+              <div className={classes.iconsContainer}>
+                <img src={userTypesIcon} alt="" />
+              </div>
+              <div className={classes.menuItemText}>
+                {t('User Types')}
               </div>
             </div>
           </MenuItem>

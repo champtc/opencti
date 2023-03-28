@@ -206,10 +206,6 @@ export const entitiesStixDomainObjectsLinesSearchQuery = graphql`
             aliases
             description
           }
-          ... on Vulnerability {
-            name
-            description
-          }
           ... on Incident {
             name
             aliases

@@ -273,10 +273,6 @@ const EntityStixCoreRelationshipLineToFragment = createFragmentContainer(
             name
             description
           }
-          ... on Vulnerability {
-            name
-            description
-          }
           ... on Incident {
             name
             description

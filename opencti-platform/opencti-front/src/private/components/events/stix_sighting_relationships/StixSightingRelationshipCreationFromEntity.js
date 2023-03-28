@@ -237,9 +237,6 @@ const stixSightingRelationshipCreationFromEntityQuery = graphql`
       ... on Tool {
         name
       }
-      ... on Vulnerability {
-        name
-      }
       ... on Incident {
         name
       }

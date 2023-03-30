@@ -334,8 +334,8 @@ type Activity implements BasicObject & LifecycleObject & OscalObject {
   methods: [MethodTypes!]!
   # "Identifies one or more steps related to an activity."
   # steps: [Step]
-  # "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
-  # related_controls: [ControlReview]
+  "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
+  related_controls: ControlSet
   "Identifies the person or organization responsible for performing a specific role related to the task."
   responsible_roles: [OscalResponsibleParty]
 }
@@ -346,11 +346,12 @@ input ActivityAddInput {
   description: String!
   "Identifies the assessment method used."
   methods: [MethodTypes!]!
-  # "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
-  # related_controls: [ControlReview]
+  "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
+  related_controls: [ControlSetInput]
   "Identifies the person or organization responsible for performing a specific role related to the task."
   responsible_roles: [OscalResponsibleRoleAddInput]
 }
+
 # Ordering Types
 enum ActivityOrdering {
   "Created"

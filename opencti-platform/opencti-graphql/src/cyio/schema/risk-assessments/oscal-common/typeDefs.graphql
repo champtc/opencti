@@ -572,15 +572,15 @@ type OscalRelationship implements BasicObject & LifecycleObject & OscalObject & 
   relationship_type: String!
   "Identifies a human-readable description about the relationship"
   description: String
-  "Identifies the source of the relationship"
-  source: ID
-  "Identifies the target of the relationship"
-  target: ID
-  # OscalRelationship
   "Indicates the time and date when the relationship was first established"
   valid_from: Timestamp
   "Indicates the time and date when the relationship was terminated."
   valid_until: Timestamp
+  # OscalRelationship
+  "Identifies the source of the relationship"
+  source: OscalObject
+  "Identifies the target of the relationship"
+  target: OscalObject
 }
 input OscalRelationshipAddInput {
   # OscalRelationship

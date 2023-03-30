@@ -143,5 +143,13 @@ type ControlObjective {
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
   "Identifies a partition of a control's definition or a child of another part."
-  parts: [AssessmentPart]
+  parts: [AssessmentPart!]
+}
+input ControlObjectiveInput {
+  "Identifies a reference to a control. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference)."
+  control: ID!
+  "Identifies a human-readable description of this control objective"
+  description: String
+  "Identifies a partition of a control's definition or a child of another part."
+  parts: [ID!]
 }

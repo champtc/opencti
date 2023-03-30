@@ -9,9 +9,6 @@ import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Slide from '@material-ui/core/Slide';
 import {
-  Add,
-  Close,
-  Delete,
   Edit,
   ArrowBack,
   AddCircleOutline,
@@ -102,6 +99,7 @@ class CyioDomainObjectAssetHeader extends Component {
       disabled,
       disablePopover,
       cyioDomainObject,
+      handleCreateGraph,
       handleDisplayEdit,
       OperationsComponent,
       handleOpenNewCreation,
@@ -125,12 +123,11 @@ class CyioDomainObjectAssetHeader extends Component {
           {goBack === '/defender_hq/assets/information_systems' && (
             <Tooltip title={t('Graph')}>
               <Button
-                variant="contained"
-                // onClick={handleDisplayEdit?.bind(this)}
-                className={classes.iconButton}
-                disabled={true}
-                color="primary"
                 size="large"
+                color="primary"
+                variant="contained"
+                className={classes.iconButton}
+                onClick={handleCreateGraph?.bind(this)}
               >
                 <img src={InfoGraphImg} alt='' />
               </Button>
@@ -220,6 +217,7 @@ class CyioDomainObjectAssetHeader extends Component {
 CyioDomainObjectAssetHeader.propTypes = {
   cyioDomainObject: PropTypes.object,
   PopoverComponent: PropTypes.object,
+  handleCreateGraph: PropTypes.func,
   name: PropTypes.string,
   variant: PropTypes.string,
   classes: PropTypes.object,

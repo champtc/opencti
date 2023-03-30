@@ -25,6 +25,7 @@ import {
   attachToCategorization,
   detachFromCategorization,
 } from '../domain/informationType.js';
+import { findInformationTypeCatalogByIri } from '../domain/informationTypeCatalog';
 import { findDataMarkingByIri } from '../../data-markings/domain/dataMarkings';
 
 const cyioInformationTypeResolvers = {
@@ -129,10 +130,17 @@ const cyioInformationTypeResolvers = {
     },
 	},
   Categorization: {
+    catalog: async (parent, _, { dataSources, selectMap }) => {
+      if (parent.catalog_iri === undefined) return null;
+      let dbName = conf.get('app:database:context') || 'cyber-context';
+      let catalog = await findInformationTypeCatalogByIri(parent.catalog_iri, dbName, dataSources, selectMap.getNode('catalog'));
+      if (catalog === undefined || catalog === null) return null;
+      return catalog;
+    },
     information_type: async (parent, _, { dataSources, selectMap }) => {
       if (parent.information_type_iri === undefined) return null;
       let dbName = conf.get('app:database:context') || 'cyber-context';
-      let infoType = findInformationTypeByIri(parent.information_type_iri, dbName, dataSources, selectMap.getNode('information_type'));
+      let infoType = await findInformationTypeByIri(parent.information_type_iri, dbName, dataSources, selectMap.getNode('information_type'));
       if (infoType === undefined || infoType === null) return null;
       return infoType;
     },

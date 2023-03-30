@@ -332,8 +332,11 @@ enum POAMItemsFilter {
 ## POAM Local Definition
 #
 type POAMLocalDefinitions {
+  "Identifies defined component that can be part of an implemented system."
   components(first: Int, offset: Int): ComponentConnection
+  "Identifies managed inventory items within the system."
   inventory_items(first: Int, offset: Int): InventoryItemConnection
+  "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
   assessment_assets: AssessmentAsset
   remarks: [CyioNote]
 }

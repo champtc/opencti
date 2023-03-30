@@ -28,7 +28,7 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
   # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  "Identifies a list of references to a local or remote resource."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
   remarks: [CyioNote]
@@ -226,8 +226,8 @@ type ControlSelection implements ComplexDatatype {
   description: String
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
   "Identifies one or more references to additional commentary on the Model."
   remarks: [CyioNote]
   "Indicates to include all controls from the imported catalog or profile resources."
@@ -304,7 +304,7 @@ input ControlObjectiveSelectionInput {
   exclude_objectives: [ControlObjectiveInput]
 }
 
-type AssessmentPart implements BasicObject & LifecycleObject & OscalObject {
+type AssessmentPart implements BasicObject & LifecycleObject & OscalPart {
   # BasicObject
   "Uniquely identifies this object."
   id: ID!
@@ -319,26 +319,7 @@ type AssessmentPart implements BasicObject & LifecycleObject & OscalObject {
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
-  # OscalObject
-  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-  "Identifies one or more relationships to other entities."
-  relationships(
-    first: Int
-    offset: Int
-    orderedBy: OscalRelationshipsOrdering
-    orderMode: OrderingMode
-    filters: [OscalRelationshipsFiltering]
-    filterMode: FilterMode
-    search: String
-  ): OscalRelationshipConnection
-  #AssessmentPart
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: AssessmentPartName!
+  # OscalPart
   "Identifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
   ns: URL
   "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
@@ -350,7 +331,12 @@ type AssessmentPart implements BasicObject & LifecycleObject & OscalObject {
   "Identifies multiple paragraphs, lists, tables etc."
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
-  parts: [AssessmentPart]
+  parts: [GeneralPart]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
+  # AssessmentPart
+  "Identifies a textual label that uniquely identifies the part's semantic type."
+  name: AssessmentPartName!
 }
 input AssessmentPartInput {
   "Identifies a textual label that uniquely identifies the part's semantic type."
@@ -364,7 +350,7 @@ input AssessmentPartInput {
   "Identifies multiple paragraphs, lists, tables etc."
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
-  parts: [ID]
+  parts: [GeneralPartInput]
 }
 
 enum AssessmentPartName {

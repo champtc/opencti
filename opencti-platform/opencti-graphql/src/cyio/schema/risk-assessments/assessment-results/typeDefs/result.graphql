@@ -1,14 +1,69 @@
 # declares the query entry-points for this type
-# extend type Query {
-# }
+extend type Query {
+  result(id: ID!): Result  @hasPermission(resources: "AssessmentResults:view")
+  results(
+    first: Int
+    offset: Int
+    orderedBy: ResultOrdering
+    orderMode: OrderingMode
+    filters: [ResultFiltering]
+    filterMode: FilterMode
+    search: String @constraint(minLength: 2)
+  ): ResultConnection @hasPermission(resources: "AssessmentResults:view")
+}
 
 # declares the mutation entry-points for this type
-# extend type Mutation {
-# }
+extend type Mutation {
+  # Result
+  createResult(input: ResultInput!): Result @hasPermission(resources: "AssessmentResults:update")
+  deleteResult(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editResult(id: ID!, input: [EditInput]!, commitMessage: String): Result @hasPermission(resources: "AssessmentResults:update")
+  attachToResult(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromResult(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # ResultLocalDefinitions
+  attachToResultLocalDefinitions(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromResultLocalDefinitions(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # Attestation
+  createAttestation(input: AttestationInput!): Attestation @hasPermission(resources: "AssessmentResults:update")
+  deleteAttestation(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editAttestation(id: ID!, input: [EditInput]!, commitMessage: String): Attestation @hasPermission(resources: "AssessmentResults:update")
+  attachToAttestation(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromAttestation(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # ControlSet
+  createControlSet(input: ControlSetInput!): ControlSet @hasPermission(resources: "AssessmentResults:update")
+  deleteControlSet(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editControlSet(id: ID!, input: [EditInput]!, commitMessage: String): ControlSet @hasPermission(resources: "AssessmentResults:update")
+  attachToControlSet(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromControlSet(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # ControlSelection
+  createControlSelection(input: ControlSelectionInput!): ControlSelection @hasPermission(resources: "AssessmentResults:update")
+  deleteControlSelection(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editControlSelection(id: ID!, input: [EditInput]!, commitMessage: String): ControlSelection @hasPermission(resources: "AssessmentResults:update")
+  attachToControlSelection(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromControlSelection(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # SelectedControl
+  createSelectedControl(input: SelectedControlInput!): SelectedControl @hasPermission(resources: "AssessmentResults:update")
+  deleteSelectedControl(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editSelectedControl(id: ID!, input: [EditInput]!, commitMessage: String): SelectedControl @hasPermission(resources: "AssessmentResults:update")
+  attachToSelectedControl(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromSelectedControl(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # ControlObjectiveSelection
+  createControlObjectiveSelection(input: ControlObjectiveSelectionInput!): ControlObjectiveSelection @hasPermission(resources: "AssessmentResults:update")
+  deleteControlObjectiveSelection(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editControlObjectiveSelection(id: ID!, input: [EditInput]!, commitMessage: String): ControlObjectiveSelection @hasPermission(resources: "AssessmentResults:update")
+  attachToControlObjectiveSelection(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromControlObjectiveSelection(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # AssessmentPart
+  createAssessmentPart(input: AssessmentPartInput!): AssessmentPart @hasPermission(resources: "AssessmentResults:update")
+  deleteAssessmentPart(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editAssessmentPart(id: ID!, input: [EditInput]!, commitMessage: String): AssessmentPart @hasPermission(resources: "AssessmentResults:update")
+  attachToAssessmentPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromAssessmentPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+}
 
 # ================== Types ==============
 """
-Result
+Defines all of the assessment observations and findings, initial and residual risks, deviations, and disposition.
 """
 type Result implements BasicObject & LifecycleObject & OscalObject {
   # BasicObject
@@ -28,7 +83,7 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
   # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  "Identifies a list of references to a local or remote resource."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
   remarks: [CyioNote]
@@ -56,7 +111,7 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
   "Identifies data objects that are used in the assessment plan, that do not appear in the referenced SSP."
   local_definitions: ResultLocalDefinitions
   "Identifies the controls being assessed and their control objectives."
-  reviewed_controls: [ControlsReview]
+  reviewed_controls: ControlSet
   "Identifies a set of textual statements, typically written by the assessor."
   attestations: [Attestation]
   "Identifies a log of all assessment-related actions taken."
@@ -67,9 +122,21 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
   risks(first: Int, offset: Int, orderedBy: RisksOrdering orderMode: OrderingMode): RiskConnection
   "Identifies one ore more POAM Items that bind a specific Risk to the associated Observations."
   findings(first: Int, offset: Int): FindingConnection
-  # Backmatter
-  "Identifies one or more Resources that are associated with this POAM."
-  resources(first: Int, offset: Int): OscalResourceConnection
+}
+
+input ResultInput {
+  "Identifies a title for this set of results."
+  name: String!
+  "Identifies a human-readable description of this set of test results."
+  description: String
+  "Identifies the date/time stamp identifying the start of the evidence collection reflected in these results."
+  start: Timestamp!
+  "Identifies the date/time stamp identifying the end of the evidence collection reflected in these results. In a continuous motoring scenario, this may contain the same value as start if appropriate."
+  end: Timestamp!
+  "Identifies the controls being assessed and their control objectives."
+  reviewed_controls: ControlSetInput
+  "Identifies a set of textual statements, typically written by the assessor."
+  attestations: [AttestationInput]
 }
 
 # Pagination Types
@@ -119,29 +186,49 @@ enum ResultOrdering {
 }
 
 """
-ResultLocalDefinitions are used to define data objects that are used in the assessment plan, that do not appear in the referenced SSP.
+Defines data objects that are used in the assessment plan, that do not appear in the referenced SSP.
 """
-type ResultLocalDefinitions {
-  # Local Definitions
+type ResultLocalDefinitions implements ComplexDatatype {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
   entity_type: String!
+  # Local Definitions
+  "Identifies components that are not "
   components(first: Int, offset: Int): ComponentConnection
+  "Identifies a managed inventory item within the system."
   inventory_items(first: Int, offset: Int): InventoryItemConnection
+  "Identifies a type of user that interacts with the system based on an associated role."
   users(first: Int, offset: Int): UserConnection
+  "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
   assessment_assets: AssessmentAsset
+  "Identifies a scheduled event or milestone, which may be associated with a series of assessment actions."
   tasks(first: Int, offset: Int): TaskConnection
 }
 
 """
-Attestion defines identifying information about an attestation statement, typically written by the assessor.
+Defines identifying information about an attestation statement, typically written by the assessor.
 """
-type Attestation {
+type Attestation implements ComplexDatatype {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  # Attestation
   "Identifies a reference to one or more roles with responsibility for performing a function relative to the containing object."
   responsible_parties: [OscalResponsibleParty]
+  "Identifies a reference to a partition of an assessment plan or results or a child of another part."
   parts: [OscalPart]
+}
+input AttestationInput {
+  "Identifies a reference to one or more roles with responsibility for performing a function relative to the containing object."
+  responsible_parties: [ID]
+  "Identifies a reference to a partition of an assessment plan or results or a child of another part."
+  parts: [ID!]!
 }
 
 """
-ControlsReview defines identifying information about Controls being assessed 
+ControlSet defines identifying information about Controls being assessed 
 and their control objectives.
 
 In the context of an assessment plan, this construct is used to identify the 
@@ -168,19 +255,32 @@ do not need to be re-defined in the Assessment Results local-definitions; howeve
 if they were explicitly referenced with an Assessment Plan control-objective-selection, 
 they need to be selected again in the Assessment Results control-objective-selection.
 """
-type ControlsReview {
+type ControlSet implements ComplexDatatype {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  # ControlSet
   "Identifies a human-readable description of control objectives."
   description: String
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
   "Identifies the controls being assessed. In the assessment plan, these are the planned controls. In the assessment results, these are the actual controls, and reflects any changes from the plan."
-  control_selections: [AssessedControls]
+  control_selections: [ControlSelection]
   "Identifies the control objectives of the assessment. In the assessment plan, these are the planned objectives. In the assessment results, these are the assessed objectives, and reflects any changes from the plan."
-  control_objective_selections: [ReferencedControlObjective]
+  control_objective_selections: [ControlObjectiveSelection]
+}
+input ControlSetInput {
+  "Identifies a human-readable description of control objectives."
+  description: String
+  "Identifies the controls being assessed. In the assessment plan, these are the planned controls. In the assessment results, these are the actual controls, and reflects any changes from the plan."
+  control_selections: [ControlSelectionInput]
+  "Identifies the control objectives of the assessment. In the assessment plan, these are the planned objectives. In the assessment results, these are the assessed objectives, and reflects any changes from the plan."
+  control_objective_selections: [ControlObjectiveSelectionInput]
 }
 
 """
-AssessedControls identifies the controls being assessed. In the assessment plan, 
+ControlSelection identifies the controls being assessed. In the assessment plan, 
 these are the planned controls. In the assessment results, these are the actual 
 controls, and reflects any changes from the plan.
 
@@ -191,65 +291,110 @@ within the linked SSP.
 Any control specified within exclude-controls must first be within a range of 
 explicitly included controls, via include-controls or include-all.
 """
-type AssessedControls {
+type ControlSelection implements ComplexDatatype {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  # ControlSelection
   "Identifies a human-readable description of in-scope controls specified for assessment."
   description: String
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
   "Identifies one or more references to additional commentary on the Model."
   remarks: [CyioNote]
   "Indicates to include all controls from the imported catalog or profile resources."
   include_all_controls: Boolean
   "Used to select a control for inclusion by the control's identifier. Specific control statements can be selected by their statement identifier."
-  include_controls: [SelectControl]
+  include_controls: [SelectedControl]
   "Used to select a control for exclusion by the control's identifier. Specific control statements can be excluded by their statement identifier."
-  exclude_controls: [SelectControl]
+  exclude_controls: [SelectedControl]
+}
+input ControlSelectionInput {
+  "Identifies a human-readable description of in-scope controls specified for assessment."
+  description: String
+  "Indicates to include all controls from the imported catalog or profile resources."
+  include_all_controls: Boolean
+  "Used to select a control for inclusion by the control's identifier. Specific control statements can be selected by their statement identifier."
+  include_controls: [SelectedControlInput]
+  "Used to select a control for exclusion by the control's identifier. Specific control statements can be excluded by their statement identifier."
+  exclude_controls: [SelectedControlInput]
 }
 
-
 """
-SelectControl defines a means to select a control for inclusion/exclusion based 
+SelectedControl defines a means to select a control for inclusion/exclusion based 
 on one or more control identifiers. A set of statement identifiers can be used 
 to target the inclusion/exclusion to only specific control statements providing
- more granularity over the specific statements that are within the asessment scope.
+ more granularity over the specific statements that are within the assessment scope.
 """
-type SelectControl {
+type SelectedControl implements ComplexDatatype {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
   "Identifies a reference to a control. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference)."
   control: Control!
   "Identifies Statements of a control to constrain the selection to only specificity identified statements."
   statements: [ControlStatement]
 }
+input SelectedControlInput {
+  "Identifies a reference to a control. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference)."
+  control: ID!
+  "Identifies Statements of a control to constrain the selection to only specificity identified statements."
+  statements: [ID]
+}
 
 """
-ReferencedControlObjective identifies the control objectives of the assessment. 
+ControlObjectiveSelection identifies the control objectives of the assessment. 
 In the assessment plan, these are the planned objectives. In the assessment 
 results, these are the assessed objectives, and reflects any changes from the plan.
 """
-type ReferencedControlObjective {
+type ControlObjectiveSelection implements ComplexDatatype {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  # ControlObjectiveSelection
   "Identifies a human-readable description of this collection of control objectives."
   description: String
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
   "Indicates to include all controls from the imported catalog or profile resources."
-  include_all_controls: Boolean
+  include_all_objectives: Boolean
   "Used to select a control objective for inclusion/exclusion based on the control objective's identifier."
-  include_objectives: [SelectObjective]
+  include_objectives: [ControlObjective]
   "Used to select a control objective for exclusion by the control objective's identifier."
-  exclude_objectives: [SelectObjective]
+  exclude_objectives: [ControlObjective]
+}
+input ControlObjectiveSelectionInput {
+  "Identifies a human-readable description of this collection of control objectives."
+  description: String
+  "Indicates to include all controls from the imported catalog or profile resources."
+  include_all_objectives: Boolean
+  "Used to select a control objective for inclusion/exclusion based on the control objective's identifier."
+  include_objectives: [ControlObjectiveInput]
+  "Used to select a control objective for exclusion by the control objective's identifier."
+  exclude_objectives: [ControlObjectiveInput]
 }
 
-type SelectObjective {
-  "Identifies a reference to a control. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference)."
-  objective: ReferencedControlObjective!
-}
-
-type AssessmentPart {
+type AssessmentPart implements BasicObject & LifecycleObject & OscalPart {
+  # BasicObject
   "Uniquely identifies this object."
   id: ID!
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: AssessmentPartName!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  "Indicates the date and time at which the object was originally created."
+  created: Timestamp
+  "Indicates the date and time that this particular version of the object was last modified."
+  modified: Timestamp
+  # OscalPart
   "Identifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
   ns: URL
   "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
@@ -261,9 +406,26 @@ type AssessmentPart {
   "Identifies multiple paragraphs, lists, tables etc."
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
-  parts: [AssessmentPart]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  parts: [GeneralPart]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
+  # AssessmentPart
+  "Identifies a textual label that uniquely identifies the part's semantic type."
+  name: AssessmentPartName!
+}
+input AssessmentPartInput {
+  "Identifies a textual label that uniquely identifies the part's semantic type."
+  name: AssessmentPartName!
+  "Identifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
+  ns: URL
+  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
+  class: String
+  "Identifies A name given to the part, which may be used by a tool for display and navigation."
+  title: String!
+  "Identifies multiple paragraphs, lists, tables etc."
+  prose: String
+  "Identifies a partition of a control's definition or a child of another part."
+  parts: [GeneralPartInput]
 }
 
 enum AssessmentPartName {

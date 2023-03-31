@@ -3,47 +3,39 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import * as R from 'ramda';
-import { compose } from 'ramda';
 import * as Yup from 'yup';
-import { createFragmentContainer } from 'react-relay';
-import { withStyles } from '@material-ui/core/styles';
+import { compose } from 'ramda';
+import { withRouter } from 'react-router-dom';
+import graphql from 'babel-plugin-relay/macro';
+import { withStyles } from '@material-ui/core/styles/index';
 import { Formik, Form, Field } from 'formik';
+import Grid from '@material-ui/core/Grid';
+import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { Information } from 'mdi-material-ui';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import Tooltip from '@material-ui/core/Tooltip';
-import graphql from 'babel-plugin-relay/macro';
-import Button from '@material-ui/core/Button';
-import {
-  Dialog,
-  DialogContent,
-  DialogActions,
-  DialogTitle,
-  Grid,
-  Slide,
-} from '@material-ui/core';
-import inject18n from '../../../../components/i18n';
-import MarkDownField from '../../../../components/MarkDownField';
-import { toastGenericError } from '../../../../utils/bakedToast';
-import { commitMutation } from '../../../../relay/environment';
-import SearchTextField from '../../common/form/SearchTextField';
-import TaskType from '../../common/form/TaskType';
-import SecurityCategorization from './SecurityCategorization';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import Slide from '@material-ui/core/Slide';
+import inject18n from '../../../../../components/i18n';
+import { commitMutation } from '../../../../../relay/environment';
+import { adaptFieldValue } from '../../../../../utils/String';
+import TextField from '../../../../../components/TextField';
+import { toastGenericError } from '../../../../../utils/bakedToast';
+import MarkDownField from '../../../../../components/MarkDownField';
+import TaskType from '../../../common/form/TaskType';
+import RiskLevel from '../../../common/form/RiskLevel';
+import SearchTextField from '../../../common/form/SearchTextField';
+import SecurityCategorization from '../../../assets/informationSystem/SecurityCategorization';
 
 const styles = (theme) => ({
   dialogMain: {
-    overflow: 'hidden',
-  },
-  dialogClosebutton: {
-    float: 'left',
-    marginLeft: '15px',
-    marginBottom: '20px',
+    overflowY: 'hidden',
   },
   dialogTitle: {
     padding: '24px 0 16px 24px',
-  },
-  dialogActions: {
-    justifyContent: 'flex-start',
-    padding: '10px 0 20px 22px',
   },
   dialogContent: {
     padding: '0 24px',
@@ -51,65 +43,46 @@ const styles = (theme) => ({
     overflowY: 'scroll',
     height: '650px',
   },
+  dialogClosebutton: {
+    float: 'left',
+    marginLeft: '15px',
+    marginBottom: '20px',
+  },
+  dialogActions: {
+    justifyContent: 'flex-start',
+    padding: '10px 0 20px 22px',
+  },
   buttonPopover: {
     textTransform: 'capitalize',
-  },
-  scrollBg: {
-    background: theme.palette.header.background,
-    width: '100%',
-    color: 'white',
-    padding: '10px 5px 10px 15px',
-    borderRadius: '5px',
-    lineHeight: '20px',
-  },
-  scrollDiv: {
-    width: '100%',
-    background: theme.palette.header.background,
-    height: '78px',
-    overflow: 'hidden',
-    overflowY: 'scroll',
-  },
-  scrollObj: {
-    color: theme.palette.header.text,
-    fontFamily: 'sans-serif',
-    padding: '0px',
-    textAlign: 'left',
   },
   popoverDialog: {
     fontSize: '18px',
     lineHeight: '24px',
     color: theme.palette.header.text,
   },
-  textBase: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
 });
 
-const informationTypeEditionMutation = graphql`
-  mutation InformationTypeEditionMutation(
-    $input: InformationTypeInput!
+const informationTypeEntityEditionContainerMutation = graphql`
+  mutation InformationTypeEntityEditionContainerMutation(
+    $id: ID!,
+    $input: [EditInput]!
   ) {
-    createInformationType(input: $input) {
+    editInformationType(id: $id, input: $input) {
       id
     }
   }
 `;
 
-const InformationTypeValidation = (t) => Yup.object().shape({
+const InformationTypeEntityEditionValidation = (t) => Yup.object().shape({
   title: Yup.string().required(t('This field is required')),
-  system: Yup.string().required(t('This field is required')),
-  catalog: Yup.string().required(t('This field is required')),
-  description: Yup.string().required(t('This field is required')),
-  information_type: Yup.string().required(t('This field is required')),
 });
+
 const Transition = React.forwardRef((props, ref) => (
-  <Slide direction='up' ref={ref} {...props} />
+  <Slide direction="up" ref={ref} {...props} />
 ));
 Transition.displayName = 'TransitionSlide';
 
-class InformationTypeEditionComponent extends Component {
+class InformationTypeEntityEditionContainer extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -139,11 +112,13 @@ class InformationTypeEditionComponent extends Component {
       selected_impact: values.integrity_impact_selected,
       adjustment_justification: values.integrity_impact_justification || '',
     };
-    const finalValues = R.pipe(
+    const adaptedValues = R.pipe(
+      R.dissoc('id'),
       R.dissoc('system'),
       R.dissoc('catalog'),
       R.dissoc('information_type'),
       R.dissoc('integrity_impact_base'),
+      R.dissoc('categorization_system'),
       R.dissoc('availability_impact_base'),
       R.dissoc('integrity_impact_selected'),
       R.dissoc('confidentiality_impact_base'),
@@ -157,13 +132,22 @@ class InformationTypeEditionComponent extends Component {
       R.assoc('availability_impact', availabilityImpact),
       R.assoc('confidentiality_impact', confidentialityImpact),
     )(values);
+    const finalValues = R.pipe(
+      R.toPairs,
+      R.map((n) => ({
+        'key': n[0],
+        'value': n[1],           // adaptFieldValue(),
+      })),
+    )(adaptedValues);
+    console.log(finalValues);
     commitMutation({
-      mutation: informationTypeEditionMutation,
+      mutation: informationTypeEntityEditionContainerMutation,
       variables: {
+        id: this.props.informationType.id,
         input: finalValues,
       },
       setSubmitting,
-      pathname: '/defender_hq/assets/information_systems',
+      pathname: '/data/entities/information_types',
       onCompleted: (data) => {
         setSubmitting(false);
         resetForm();
@@ -177,10 +161,11 @@ class InformationTypeEditionComponent extends Component {
 
   onReset() {
     this.setState({ selectedProduct: {} });
-    this.props.handleEditInfoType();
+    this.props.handleDisplayEdit();
   }
 
   handleSetFieldValues(selectedInfoType, setFieldValue, type) {
+    console.log(selectedInfoType);
     const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedInfoType);
     const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedInfoType);
     const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedInfoType);
@@ -188,9 +173,13 @@ class InformationTypeEditionComponent extends Component {
       R.pathOr([], ['categorizations']),
       R.mergeAll,
     )(selectedInfoType);
+    if (type === 'select') {
+      setFieldValue('system', selectedInfoType?.system);
+      setFieldValue('information_type', selectedInfoType?.id);
+    }
     if (type === 'search') {
-      setFieldValue('catalog', categorization?.id);
-      setFieldValue('system', categorization?.system);
+      setFieldValue('catalog', categorization?.catalog?.id);
+      setFieldValue('system', categorization?.catalog?.system);
       setFieldValue('information_type', categorization?.information_type?.id);
       setFieldValue('description', selectedInfoType?.description);
     }
@@ -215,9 +204,9 @@ class InformationTypeEditionComponent extends Component {
 
   render() {
     const {
-      t,
       classes,
-      openEdit,
+      t,
+      open,
       informationType,
     } = this.props;
     const {
@@ -226,17 +215,18 @@ class InformationTypeEditionComponent extends Component {
     const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedProduct);
     const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedProduct);
     const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedProduct);
-    const characterizations = R.pipe(
-      R.pathOr([], ['characterizations']),
+    const categorizations = R.pipe(
+      R.pathOr([], ['categorizations']),
       R.mergeAll,
     )(informationType);
     const initialValues = R.pipe(
       R.assoc('id', informationType?.id || ''),
       R.assoc('title', informationType?.title || ''),
-      R.assoc('system', characterizations?.id || ''),
-      R.assoc('catalog', characterizations?.system || ''),
+      R.assoc('system', categorizations?.catalog?.system || ''),
+      R.assoc('categorization_system', categorizations?.information_type?.category || ''),
+      R.assoc('catalog', categorizations?.catalog?.id || ''),
       R.assoc('description', informationType?.description || ''),
-      R.assoc('information_type', characterizations?.information_type?.id || ''),
+      R.assoc('information_type', categorizations?.information_type?.id || ''),
       R.assoc('integrity_impact_base', informationType.integrity_impact?.base_impact || ''),
       R.assoc('availability_impact_base', informationType?.availability_impact?.base_impact || ''),
       R.assoc('integrity_impact_selected', informationType?.integrity_impact?.selected_impact || ''),
@@ -247,12 +237,14 @@ class InformationTypeEditionComponent extends Component {
       R.assoc('availability_impact_justification', informationType?.availability_impact?.adjustment_justification || ''),
       R.assoc('confidentiality_impact_justification', informationType?.confidentiality_impact?.adjustment_justification || ''),
       R.pick([
+        'id',
         'title',
         'system',
         'catalog',
         'description',
         'information_type',
         'integrity_impact_base',
+        'categorization_system',
         'availability_impact_base',
         'integrity_impact_selected',
         'confidentiality_impact_base',
@@ -264,9 +256,8 @@ class InformationTypeEditionComponent extends Component {
       ]),
     )(informationType);
     return (
-      <>
         <Dialog
-          open={openEdit}
+          open={open}
           maxWidth='md'
           keepMounted={false}
           className={classes.dialogMain}
@@ -274,7 +265,7 @@ class InformationTypeEditionComponent extends Component {
           <Formik
             enableReinitialize
             initialValues={initialValues}
-            validationSchema={InformationTypeValidation(t)}
+            validationSchema={InformationTypeEntityEditionValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.onReset.bind(this)}
           >
@@ -293,12 +284,39 @@ class InformationTypeEditionComponent extends Component {
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={12}>
+                      <div style={{ marginBottom: '10px' }}>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ float: 'left' }}
+                        >
+                          {t('Id')}
+                        </Typography>
+                        <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                          <Tooltip title={t('Id')} >
+                            <Information fontSize="inherit" color="disabled" />
+                          </Tooltip>
+                        </div>
+                        <div className="clearfix" />
+                        <Field
+                          component={TextField}
+                          name="id"
+                          fullWidth={true}
+                          disabled={true}
+                          size="small"
+                          containerstyle={{ width: '100%' }}
+                          variant='outlined'
+                        />
+                      </div>
+                    </Grid>
+                    <Grid item={true} xs={12}>
                       <div className={classes.textBase}>
                         <Typography
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Name')}
                         </Typography>
@@ -313,6 +331,7 @@ class InformationTypeEditionComponent extends Component {
                       <div className='clearfix' />
                       <SearchTextField
                         name='title'
+                        data={informationType?.title}
                         errors={errors.title}
                         setFieldValue={setFieldValue}
                         handleSearchTextField={this.handleSearchTextField.bind(this)}
@@ -324,7 +343,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Description')}
                         </Typography>
@@ -358,7 +377,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Confidentiality Impact')}
                         </Typography>
@@ -375,7 +394,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Base')}
                         </Typography>
@@ -386,8 +405,8 @@ class InformationTypeEditionComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className='clearfix' />
-                      {selectedProduct.confidentiality_impact
-                        && t(selectedProduct.confidentiality_impact.base_impact)}
+                      {informationType.confidentiality_impact
+                        && <RiskLevel risk={informationType.confidentiality_impact.base_impact} />}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -395,7 +414,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Selected')}
                         </Typography>
@@ -424,7 +443,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Justification')}
                         </Typography>
@@ -453,7 +472,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Integrity Impact')}
                         </Typography>
@@ -470,7 +489,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Base')}
                         </Typography>
@@ -481,8 +500,8 @@ class InformationTypeEditionComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className='clearfix' />
-                      {selectedProduct.integrity_impact
-                        && t(selectedProduct.integrity_impact.base_impact)}
+                      {informationType.integrity_impact
+                        && <RiskLevel risk={informationType.integrity_impact.base_impact} />}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -490,7 +509,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Selected')}
                         </Typography>
@@ -519,7 +538,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Justification')}
                         </Typography>
@@ -548,7 +567,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Availability Impact')}
                         </Typography>
@@ -565,7 +584,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Base')}
                         </Typography>
@@ -576,8 +595,8 @@ class InformationTypeEditionComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className='clearfix' />
-                      {selectedProduct.availability_impact
-                        && t(selectedProduct.availability_impact.base_impact)}
+                      {informationType.availability_impact
+                        && <RiskLevel risk={informationType.availability_impact.base_impact} />}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -585,7 +604,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Selected')}
                         </Typography>
@@ -614,7 +633,7 @@ class InformationTypeEditionComponent extends Component {
                           variant='h3'
                           color='textSecondary'
                           gutterBottom={true}
-                          style={{ margin: 0 }}
+                          style={{ margin: 0 , float: 'left' }}
                         >
                           {t('Justification')}
                         </Typography>
@@ -661,71 +680,26 @@ class InformationTypeEditionComponent extends Component {
             )}
           </Formik>
         </Dialog>
-      </>
     );
   }
 }
 
-InformationTypeEditionComponent.propTypes = {
-  t: PropTypes.func,
-  name: PropTypes.string,
-  openEdit: PropTypes.bool,
+InformationTypeEntityEditionContainer.propTypes = {
+  handleDisplayEdit: PropTypes.func,
+  refreshQuery: PropTypes.func,
+  displayEdit: PropTypes.bool,
+  history: PropTypes.object,
+  disabled: PropTypes.bool,
+  paginationOptions: PropTypes.object,
   classes: PropTypes.object,
-  handleEditInfoType: PropTypes.func,
-  renderSecurityImpact: PropTypes.func,
-  informationType: PropTypes.object,
+  t: PropTypes.func,
+  connectionKey: PropTypes.string,
+  enableReferences: PropTypes.bool,
+  leveragedAuthorization: PropTypes.object,
 };
 
-export const InformationTypeEditionQuery = graphql`
-  query InformationTypeEditionQuery($id: ID!) {
-    ...InformationTypeEdition_information
-      @arguments(id: $id)
-  }
-`;
-
-const InformationTypeEdition = createFragmentContainer(InformationTypeEditionComponent, {
-  informationType: graphql`
-    fragment InformationTypeEdition_information on Query
-    @argumentDefinitions(
-      id: { type: "ID!" }
-    ) {
-      informationType(id: $id) {
-        id
-        entity_type
-        title
-        description
-        categorizations {
-          id
-          entity_type
-          system
-          information_type {
-            id
-            entity_type
-            identifier
-            category
-          }
-        }
-        confidentiality_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
-        integrity_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
-        availability_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
-      }
-    }
-  `,
-});
-
-export default compose(inject18n, withStyles(styles))(InformationTypeEdition);
+export default compose(
+  inject18n,
+  withRouter,
+  withStyles(styles),
+)(InformationTypeEntityEditionContainer);

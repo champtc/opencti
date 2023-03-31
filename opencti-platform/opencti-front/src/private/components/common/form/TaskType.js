@@ -3,6 +3,7 @@
 import React, { Component } from 'react';
 import { Field } from 'formik';
 import * as R from 'ramda';
+import * as _ from 'lodash';
 import MenuItem from '@material-ui/core/MenuItem';
 import { Information } from 'mdi-material-ui';
 import graphql from 'babel-plugin-relay/macro';
@@ -97,7 +98,7 @@ class TaskType extends Component {
           {TaskTypeList.map(
             (et, key) =>
               et.value && (
-                <MenuItem key={key} value={et.value}>{et.value}</MenuItem>
+                <MenuItem key={key} value={et.value}>{_.startCase(et.value)}</MenuItem>
               )
           )}
         </Field>

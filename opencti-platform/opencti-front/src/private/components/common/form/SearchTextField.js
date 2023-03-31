@@ -46,6 +46,11 @@ const searchTextFieldIdQuery = graphql`
         id
         entity_type
         system
+        catalog {
+          id
+          system
+          title
+        }
         information_type {
           id
           entity_type
@@ -107,7 +112,7 @@ class SearchTextField extends Component {
       open: false,
       openAutocomplete: false,
       products: [],
-      productName: '',
+      productName: this.props.data || '',
       onSubmit: false,
       selectedProduct: {},
       displayCancel: false,
@@ -173,7 +178,7 @@ class SearchTextField extends Component {
           freeSolo
           loadingText="Searching..."
           className={classes.autocomplete}
-          inputValue={productName}
+          value={productName}
           classes={{
             popupIndicatorOpen: classes.popupIndicator,
           }}

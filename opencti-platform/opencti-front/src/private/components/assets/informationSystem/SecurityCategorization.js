@@ -75,8 +75,8 @@ class SecurityCategorization extends Component {
     if (values.catalog) {
       this.handleCategoryChange('catalog', values.catalog);
     }
-    if (values.system) {
-      this.handleCategoryChange('system', values.system);
+    if (values.categorization_system) {
+      this.handleCategoryChange('categorization_system', values.categorization_system);
     }
   }
 
@@ -93,7 +93,7 @@ class SecurityCategorization extends Component {
           });
         });
     }
-    if (name === 'system') {
+    if (name === 'categorization_system') {
       fetchQuery(securityCategorizationInformationTypeQuery, {
         id: this.state.selectedCategorization || this.props.values.catalog,
         categoryName: value,
@@ -139,6 +139,7 @@ class SecurityCategorization extends Component {
             name='catalog'
             style={{ height: '38.09px' }}
             containerstyle={{ width: '100%' }}
+            defaultValue={values.catalog}
             onChange={this.handleCategoryChange.bind(this)}
           />
         </Grid>
@@ -159,11 +160,12 @@ class SecurityCategorization extends Component {
           <div className='clearfix' />
           <SecurityCategorizationField
             values={values}
-            name='system'
+            name='categorization_system'
             fullWidth={true}
             variant='outlined'
             style={{ height: '38.09px' }}
             containerstyle={{ width: '100%' }}
+            defaultValue={values.categorization_system}
             categoryField={this.state.categoryField}
             onChange={this.handleCategoryChange.bind(this)}
           />
@@ -194,6 +196,7 @@ class SecurityCategorization extends Component {
             name='information_type'
             style={{ height: '38.09px' }}
             containerstyle={{ width: '100%' }}
+            defaultValue={values.information_type}
             onChange={this.handleCategoryChange.bind(this)}
             informationTypeField={this.state.informationTypeField}
           />

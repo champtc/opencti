@@ -15,6 +15,7 @@ query SecurityCategorizationFieldCategorizationQuery {
         id
         title
         description
+        system
       }
     }
   }
@@ -39,6 +40,7 @@ class SecurityCategorizationField extends Component {
             id: n.node.id,
             label: n.node.description,
             value: n.node.title,
+            url: n.node.system,
           })),
         )(data);
         this.setState({
@@ -57,15 +59,14 @@ class SecurityCategorizationField extends Component {
       size,
       label,
       style,
-      onFocus,
       variant,
       required,
       onChange,
       disabled,
-      editContext,
       categoryField,
       containerstyle,
       informationTypeField,
+      defaultValue,
     } = this.props;
     const categorizationSystemField = R.pathOr(
       [],
@@ -86,6 +87,7 @@ class SecurityCategorizationField extends Component {
           disabled={disabled || false}
           size={size}
           style={style}
+          defaultValue={defaultValue}
         >
           {!required && <MenuItem value={''}>
             <em>None</em>
@@ -97,7 +99,7 @@ class SecurityCategorizationField extends Component {
               </MenuItem>
             ),
           )}
-          {name === 'system' && categoryField.map(
+          {name === 'categorization_system' && categoryField.map(
             (category, key) => category && (
               <MenuItem key={key} value={category}>
                 {category && t(category)}

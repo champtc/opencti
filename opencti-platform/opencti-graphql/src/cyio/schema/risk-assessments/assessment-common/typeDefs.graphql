@@ -919,32 +919,6 @@ type FacetEdge {
   node: Facet!
 }
 
-## Finding Target
-#
-"Defines identifying information about the target of a finding."
-type FindingTarget {
-  # "Identifies the type of the finding target."
-  # target_type: FindingTargetType!
-  # "Identifies the specific target."
-  # target: StatementOrObjective!
-  "Identifies a name for this objective status."
-  name: String
-  "Identifies a human-readable description of the assessor's conclusions regarding the degree to which an objective is satisfied."
-  description: String
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies whether the objective is satisfied or not within a given system."
-  objective_status_state: ObjectiveStatusState!
-  "Identifies the reason the objective was given it's status."
-  objective_status_reason: ObjectiveStatusReason
-  "Identifies an explanation as to why the objective was not satisfied."
-  objective_status_explanation: String
-  "Indicates the degree to which the given control was implemented."
-  implementation_status: ImplementationStatus
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-}
-
 ## LogEntry
 #
 "Defines an abstract interface for identifying information about a log entry for actions taken."
@@ -2163,7 +2137,6 @@ type ThreatReference {
 
 ## Unions
 #
-# union StatementOrObjects = ControlStatement | ControlObjective
 union ActorTarget = OscalParty | AssessmentPlatform | Component
 # union PartyOrComponent =
 #     OscalParty

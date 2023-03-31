@@ -1,14 +1,69 @@
 # declares the query entry-points for this type
-# extend type Query {
-# }
+extend type Query {
+  result(id: ID!): Result  @hasPermission(resources: "AssessmentResults:view")
+  results(
+    first: Int
+    offset: Int
+    orderedBy: ResultOrdering
+    orderMode: OrderingMode
+    filters: [ResultFiltering]
+    filterMode: FilterMode
+    search: String @constraint(minLength: 2)
+  ): ResultConnection @hasPermission(resources: "AssessmentResults:view")
+}
 
 # declares the mutation entry-points for this type
-# extend type Mutation {
-# }
+extend type Mutation {
+  # Result
+  createResult(input: ResultInput!): Result @hasPermission(resources: "AssessmentResults:update")
+  deleteResult(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editResult(id: ID!, input: [EditInput]!, commitMessage: String): Result @hasPermission(resources: "AssessmentResults:update")
+  attachToResult(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromResult(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # ResultLocalDefinitions
+  attachToResultLocalDefinitions(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromResultLocalDefinitions(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # Attestation
+  createAttestation(input: AttestationInput!): Attestation @hasPermission(resources: "AssessmentResults:update")
+  deleteAttestation(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editAttestation(id: ID!, input: [EditInput]!, commitMessage: String): Attestation @hasPermission(resources: "AssessmentResults:update")
+  attachToAttestation(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromAttestation(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # ControlSet
+  createControlSet(input: ControlSetInput!): ControlSet @hasPermission(resources: "AssessmentResults:update")
+  deleteControlSet(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editControlSet(id: ID!, input: [EditInput]!, commitMessage: String): ControlSet @hasPermission(resources: "AssessmentResults:update")
+  attachToControlSet(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromControlSet(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # ControlSelection
+  createControlSelection(input: ControlSelectionInput!): ControlSelection @hasPermission(resources: "AssessmentResults:update")
+  deleteControlSelection(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editControlSelection(id: ID!, input: [EditInput]!, commitMessage: String): ControlSelection @hasPermission(resources: "AssessmentResults:update")
+  attachToControlSelection(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromControlSelection(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # SelectedControl
+  createSelectedControl(input: SelectedControlInput!): SelectedControl @hasPermission(resources: "AssessmentResults:update")
+  deleteSelectedControl(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editSelectedControl(id: ID!, input: [EditInput]!, commitMessage: String): SelectedControl @hasPermission(resources: "AssessmentResults:update")
+  attachToSelectedControl(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromSelectedControl(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # ControlObjectiveSelection
+  createControlObjectiveSelection(input: ControlObjectiveSelectionInput!): ControlObjectiveSelection @hasPermission(resources: "AssessmentResults:update")
+  deleteControlObjectiveSelection(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editControlObjectiveSelection(id: ID!, input: [EditInput]!, commitMessage: String): ControlObjectiveSelection @hasPermission(resources: "AssessmentResults:update")
+  attachToControlObjectiveSelection(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromControlObjectiveSelection(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # AssessmentPart
+  createAssessmentPart(input: AssessmentPartInput!): AssessmentPart @hasPermission(resources: "AssessmentResults:update")
+  deleteAssessmentPart(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editAssessmentPart(id: ID!, input: [EditInput]!, commitMessage: String): AssessmentPart @hasPermission(resources: "AssessmentResults:update")
+  attachToAssessmentPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromAssessmentPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+}
 
 # ================== Types ==============
 """
-Result
+Defines all of the assessment observations and findings, initial and residual risks, deviations, and disposition.
 """
 type Result implements BasicObject & LifecycleObject & OscalObject {
   # BasicObject
@@ -69,6 +124,21 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
   findings(first: Int, offset: Int): FindingConnection
 }
 
+input ResultInput {
+  "Identifies a title for this set of results."
+  name: String!
+  "Identifies a human-readable description of this set of test results."
+  description: String
+  "Identifies the date/time stamp identifying the start of the evidence collection reflected in these results."
+  start: Timestamp!
+  "Identifies the date/time stamp identifying the end of the evidence collection reflected in these results. In a continuous motoring scenario, this may contain the same value as start if appropriate."
+  end: Timestamp!
+  "Identifies the controls being assessed and their control objectives."
+  reviewed_controls: ControlSetInput
+  "Identifies a set of textual statements, typically written by the assessor."
+  attestations: [AttestationInput]
+}
+
 # Pagination Types
 type ResultConnection {
   pageInfo: PageInfo!
@@ -116,7 +186,7 @@ enum ResultOrdering {
 }
 
 """
-ResultLocalDefinitions are used to define data objects that are used in the assessment plan, that do not appear in the referenced SSP.
+Defines data objects that are used in the assessment plan, that do not appear in the referenced SSP.
 """
 type ResultLocalDefinitions implements ComplexDatatype {
   "Uniquely identifies this object."
@@ -124,15 +194,20 @@ type ResultLocalDefinitions implements ComplexDatatype {
   "Identifies the type of the Object."
   entity_type: String!
   # Local Definitions
+  "Identifies components that are not "
   components(first: Int, offset: Int): ComponentConnection
+  "Identifies a managed inventory item within the system."
   inventory_items(first: Int, offset: Int): InventoryItemConnection
+  "Identifies a type of user that interacts with the system based on an associated role."
   users(first: Int, offset: Int): UserConnection
+  "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
   assessment_assets: AssessmentAsset
+  "Identifies a scheduled event or milestone, which may be associated with a series of assessment actions."
   tasks(first: Int, offset: Int): TaskConnection
 }
 
 """
-Attestation defines identifying information about an attestation statement, typically written by the assessor.
+Defines identifying information about an attestation statement, typically written by the assessor.
 """
 type Attestation implements ComplexDatatype {
   "Uniquely identifies this object."
@@ -198,10 +273,10 @@ type ControlSet implements ComplexDatatype {
 input ControlSetInput {
   "Identifies a human-readable description of control objectives."
   description: String
-  # "Identifies the controls being assessed. In the assessment plan, these are the planned controls. In the assessment results, these are the actual controls, and reflects any changes from the plan."
-  # control_selections: [ControlSelectionInput]
-  # "Identifies the control objectives of the assessment. In the assessment plan, these are the planned objectives. In the assessment results, these are the assessed objectives, and reflects any changes from the plan."
-  # control_objective_selections: [ControlObjectiveSelectionInput]
+  "Identifies the controls being assessed. In the assessment plan, these are the planned controls. In the assessment results, these are the actual controls, and reflects any changes from the plan."
+  control_selections: [ControlSelectionInput]
+  "Identifies the control objectives of the assessment. In the assessment plan, these are the planned objectives. In the assessment results, these are the assessed objectives, and reflects any changes from the plan."
+  control_objective_selections: [ControlObjectiveSelectionInput]
 }
 
 """

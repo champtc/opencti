@@ -23,9 +23,9 @@ extend type Mutation {
 
 # ================== Types ==============
 """
-AssessmentResults provides a representation of a security assessment results, 
+Defines a representation of a security assessment results, 
 such as those provided by a FedRAMP assessor in the FedRAMP Security Assessment 
-Report for an information system.
+Report (SAR) for an information system.
 """
 type AssessmentResults implements BasicObject & LifecycleObject & OscalModel {
   # BasicObject

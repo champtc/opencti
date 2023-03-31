@@ -1,7 +1,7 @@
 # declares the query entry-points for this type
 extend type Query {
   controlCatalog(id: ID = "22f2ad37-4f07-5182-bf4e-59ea197a73dc"): ControlCatalog  @hasPermission(resources:"ControlCatalog:view")
-  listControlCatalogs(
+  controlCatalogs(
     first: Int
     offset: Int
     orderedBy: ControlCatalogOrdering
@@ -16,8 +16,14 @@ extend type Query {
 }
 
 # =========== declares the mutation entry-points for this type ====================
-# extend type Mutation {
-# }
+extend type Mutation {
+  # GeneralPart
+  createGeneralPart(input: GeneralPartInput!): GeneralPart @hasPermission(resources: "AssessmentResults:update")
+  deleteGeneralPart(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editGeneralPart(id: ID!, input: [EditInput]!, commitMessage: String): GeneralPart @hasPermission(resources: "AssessmentResults:update")
+  attachToGeneralPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromGeneralPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+}
 
 # ================== Types ==============
 """

@@ -71,7 +71,7 @@ type AssessmentPlan implements BasicObject & LifecycleObject & OscalModel {
   "Identifies system elements being assessed, such as components, inventory items, and locations. In the assessment plan, this identifies a planned assessment subject."
   assessment_subjects: [AssessmentSubject]
   "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
-  assessment_assets: [AssessmentAsset]
+  assessment_assets: AssessmentAsset
   # Back-matter
   "Identifies one or more Resources that are associated with this POAM."
   resources(first: Int, offset: Int): OscalResourceConnection

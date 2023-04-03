@@ -185,9 +185,9 @@ const InformationSystem = createFragmentContainer(InformationSystemComponent, {
         authors
         entity_type
       }
-      ...InformationSystemOverview_information
-      ...InformationSystemDetails_information
       ...InformationSystemGraph_information
+      ...InformationSystemDetails_information
+      ...InformationSystemOverview_information
     }
   `,
 });

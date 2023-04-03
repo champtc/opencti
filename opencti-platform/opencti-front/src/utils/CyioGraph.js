@@ -1,35 +1,6 @@
 import * as R from 'ramda';
 import SpriteText from 'three-spritetext';
 import { truncate } from './String';
-import KillChainPhase from '../resources/images/entities/kill-chain-phase_dark.svg';
-import MarkingDefinition from '../resources/images/entities/marking-definition_dark.svg';
-import Label from '../resources/images/entities/label_dark.svg';
-import ExternalReference from '../resources/images/entities/external-reference_dark.svg';
-import AttackPattern from '../resources/images/entities/attack-pattern_dark.svg';
-import Campaign from '../resources/images/entities/campaign_dark.svg';
-import Note from '../resources/images/entities/note_dark.svg';
-import ObservedData from '../resources/images/entities/observed-data_dark.svg';
-import Opinion from '../resources/images/entities/opinion_dark.svg';
-import Report from '../resources/images/entities/report_dark.svg';
-import CourseOfAction from '../resources/images/entities/course-of-action_dark.svg';
-import Individual from '../resources/images/entities/individual_dark.svg';
-import Organization from '../resources/images/entities/organization_dark.svg';
-import Sector from '../resources/images/entities/sector_dark.svg';
-import System from '../resources/images/entities/system_dark.svg';
-import Indicator from '../resources/images/entities/indicator_dark.svg';
-import Infrastructure from '../resources/images/entities/infrastructure_dark.svg';
-import IntrusionSet from '../resources/images/entities/intrusion-set_dark.svg';
-import City from '../resources/images/entities/city_dark.svg';
-import Country from '../resources/images/entities/country_dark.svg';
-import Region from '../resources/images/entities/region_dark.svg';
-import Position from '../resources/images/entities/position_dark.svg';
-import Malware from '../resources/images/entities/malware_dark.svg';
-import ThreatActor from '../resources/images/entities/threat-actor_dark.svg';
-import Tool from '../resources/images/entities/tool_dark.svg';
-import Vulnerability from '../resources/images/entities/vulnerability_dark.svg';
-import Incident from '../resources/images/entities/incident_dark.svg';
-import StixCyberObservable from '../resources/images/entities/stix-cyber-observable_dark.svg';
-import relationship from '../resources/images/entities/relationship_dark.svg';
 import { itemColor } from './Colors';
 import themeDark from '../components/ThemeDark';
 import {
@@ -43,6 +14,95 @@ import {
   timestamp,
 } from './Time';
 import { isNone } from '../components/i18n';
+import informationSystem from '../resources/images/entities/graph-information-system.svg';
+import adversaryIdentity from '../resources/images/entities/graph-adversary-identity.svg';
+import appliance from '../resources/images/entities/graph-appliance.svg';
+import applicationSoftware from '../resources/images/entities/graph-application-software.svg';
+import attackPattern from '../resources/images/entities/graph-attack-pattern.svg';
+import autonomousSystem from '../resources/images/entities/graph-autonomous-system.svg';
+import bundle from '../resources/images/entities/graph-bundle.svg';
+import campaign from '../resources/images/entities/graph-campaign.svg';
+import coa from '../resources/images/entities/graph-coa.svg';
+import component from '../resources/images/entities/graph-component.svg';
+import computeDevice from '../resources/images/entities/graph-compute-device.svg';
+import database from '../resources/images/entities/graph-database.svg';
+import directoryServer from '../resources/images/entities/graph-directory-server.svg';
+import dnsServer from '../resources/images/entities/graph-dns-server.svg';
+import documentIcon from '../resources/images/entities/graph-document.svg';
+import domainName from '../resources/images/entities/graph-domain-name.svg';
+import emailAddress from '../resources/images/entities/graph-email-address.svg';
+import emailMessage from '../resources/images/entities/graph-email-message.svg';
+import emailServer from '../resources/images/entities/graph-email-server.svg';
+import embeddedDevice from '../resources/images/entities/graph-embedded-device.svg';
+import externalReferences from '../resources/images/entities/graph-external-references.svg';
+import firewall from '../resources/images/entities/graph-firewall.svg';
+import groupingRound from '../resources/images/entities/graph-grouping-round.svg';
+import guidance from '../resources/images/entities/graph-guidance.svg';
+import hardware from '../resources/images/entities/graph-hardware.svg';
+import http from '../resources/images/entities/graph-http.svg';
+import hypervisor from '../resources/images/entities/graph-hypervisor.svg';
+import identity from '../resources/images/entities/graph-identity.svg';
+import indicator from '../resources/images/entities/graph-indicator.svg';
+import informationType from '../resources/images/entities/graph-information-type.svg';
+import interconnection from '../resources/images/entities/graph-interconnection.svg';
+import intrusionSet from '../resources/images/entities/graph-intrusion-set.svg';
+import inventoryItem from '../resources/images/entities/graph-inventory-item.svg';
+import ipAddress from '../resources/images/entities/graph-ip-address.svg';
+import ipv4Address from '../resources/images/entities/graph-ipv4-address.svg';
+import ipv6Address from '../resources/images/entities/graph-ipv6-address.svg';
+import labels from '../resources/images/entities/graph-labels.svg';
+import language from '../resources/images/entities/graph-language.svg';
+import laptop from '../resources/images/entities/graph-laptop.svg';
+import loadBalancer from '../resources/images/entities/graph-load-balancer.svg';
+import location from '../resources/images/entities/graph-location.svg';
+import macAddress from '../resources/images/entities/graph-mac-address.svg';
+import malwareAnalysis from '../resources/images/entities/graph-malware-analysis.svg';
+import malware from '../resources/images/entities/graph-malware.svg';
+import mobileDevice from '../resources/images/entities/graph-mobile-device.svg';
+import networkDevice from '../resources/images/entities/graph-network-device.svg';
+import network from '../resources/images/entities/graph-network.svg';
+import note from '../resources/images/entities/graph-note.svg';
+import notes from '../resources/images/entities/graph-notes.svg';
+import observedData from '../resources/images/entities/graph-observed-data.svg';
+import operatingSystem from '../resources/images/entities/graph-operating-system.svg';
+import opinion from '../resources/images/entities/graph-opinion.svg';
+import pbx from '../resources/images/entities/graph-pbx.svg';
+import plan from '../resources/images/entities/graph-plan.svg';
+import policy from '../resources/images/entities/graph-policy.svg';
+import printer from '../resources/images/entities/graph-printer.svg';
+import procedure from '../resources/images/entities/graph-procedure.svg';
+import relationship from '../resources/images/entities/graph-relationship.svg';
+import report from '../resources/images/entities/graph-report.svg';
+import resource from '../resources/images/entities/graph-resource.svg';
+import router from '../resources/images/entities/graph-router.svg';
+import server from '../resources/images/entities/graph-server.svg';
+import services from '../resources/images/entities/graph-services.svg';
+import sighting from '../resources/images/entities/graph-sighting.svg';
+import software from '../resources/images/entities/graph-software.svg';
+import source from '../resources/images/entities/graph-source.svg';
+import standard from '../resources/images/entities/graph-standard.svg';
+import storageArray from '../resources/images/entities/graph-storage-array.svg';
+import subjectTypes from '../resources/images/entities/graph-subject-types.svg';
+import system from '../resources/images/entities/graph-system.svg';
+import threatActor from '../resources/images/entities/graph-threat-actor.svg';
+import tlpAmber from '../resources/images/entities/graph-tlp-amber.svg';
+import tlpGreen from '../resources/images/entities/graph-tlp-green.svg';
+import tlpRestricted from '../resources/images/entities/graph-tlp-restricted.svg';
+import tlpWhite from '../resources/images/entities/graph-tlp-white.svg';
+import tool from '../resources/images/entities/graph-tool.svg';
+import userAccount from '../resources/images/entities/graph-user-account.svg';
+import validation from '../resources/images/entities/graph-validation.svg';
+import victimTarget from '../resources/images/entities/graph-victim-target.svg';
+import victim from '../resources/images/entities/graph-victim.svg';
+import voipDevice from '../resources/images/entities/graph-voip-device.svg';
+import voipHandset from '../resources/images/entities/graph-voip-handset.svg';
+import voipRouter from '../resources/images/entities/graph-voip-router.svg';
+import vulnerabilities from '../resources/images/entities/graph-vulnerabilities.svg';
+import vulnerability from '../resources/images/entities/graph-vulnerability.svg';
+import webServer from '../resources/images/entities/graph-web-server.svg';
+import wirelessAccessPoint from '../resources/images/entities/graph-wireless-access-point.svg';
+import workstation from '../resources/images/entities/graph-workstation.svg';
+import switchIcon from '../resources/images/entities/graph-switch.svg';
 
 const genImage = (src) => {
   const img = new Image();
@@ -51,60 +111,189 @@ const genImage = (src) => {
 };
 
 export const graphImages = {
-  'Kill-Chain-Phase': genImage(KillChainPhase),
-  'Marking-Definition': genImage(MarkingDefinition),
-  'External-Reference': genImage(ExternalReference),
-  Label: genImage(Label),
-  'Attack-Pattern': genImage(AttackPattern),
-  Campaign: genImage(Campaign),
-  Note: genImage(Note),
-  'Observed-Data': genImage(ObservedData),
-  Opinion: genImage(Opinion),
-  Report: genImage(Report),
-  'Course-Of-Action': genImage(CourseOfAction),
-  Individual: genImage(Individual),
-  Organization: genImage(Organization),
-  Sector: genImage(Sector),
-  System: genImage(System),
-  Indicator: genImage(Indicator),
-  Infrastructure: genImage(Infrastructure),
-  'Intrusion-Set': genImage(IntrusionSet),
-  City: genImage(City),
-  Country: genImage(Country),
-  Region: genImage(Region),
-  Position: genImage(Position),
-  Malware: genImage(Malware),
-  'Threat-Actor': genImage(ThreatActor),
-  Tool: genImage(Tool),
-  Vulnerability: genImage(Vulnerability),
-  Incident: genImage(Incident),
-  'Autonomous-System': genImage(StixCyberObservable),
-  Directory: genImage(StixCyberObservable),
-  'Domain-Name': genImage(StixCyberObservable),
-  'Email-Addr': genImage(StixCyberObservable),
-  'Email-Message': genImage(StixCyberObservable),
-  'Email-Mime-Part-Type': genImage(StixCyberObservable),
-  Artifact: genImage(StixCyberObservable),
-  StixFile: genImage(StixCyberObservable),
-  'X509-Certificate': genImage(StixCyberObservable),
-  'IPv4-Addr': genImage(StixCyberObservable),
-  'IPv6-Addr': genImage(StixCyberObservable),
-  'Mac-Addr': genImage(StixCyberObservable),
-  Mutex: genImage(StixCyberObservable),
-  'Network-Traffic': genImage(StixCyberObservable),
-  Process: genImage(StixCyberObservable),
-  Software: genImage(StixCyberObservable),
-  'User-Account': genImage(StixCyberObservable),
-  Url: genImage(StixCyberObservable),
-  'Windows-Registry-Key': genImage(StixCyberObservable),
-  'Windows-Registry-Value-Type': genImage(StixCyberObservable),
-  'X509-V3-Extensions-Type': genImage(StixCyberObservable),
-  'X-OpenCTI-Cryptographic-Key': genImage(StixCyberObservable),
-  'X-OpenCTI-Cryptocurrency-Wallet': genImage(StixCyberObservable),
-  'X-OpenCTI-Hostname': genImage(StixCyberObservable),
-  'X-OpenCTI-User-Agent': genImage(StixCyberObservable),
-  'X-OpenCTI-Text': genImage(StixCyberObservable),
+  'information-system': genImage(informationSystem),
+  'adversary-identity': genImage(adversaryIdentity),
+  appliance: genImage(appliance),
+  'application-software': genImage(applicationSoftware),
+  'attack-pattern': genImage(attackPattern),
+  'autonomous-system': genImage(autonomousSystem),
+  bundle: genImage(bundle),
+  campaign: genImage(campaign),
+  coa: genImage(coa),
+  'compute-device': genImage(computeDevice),
+  database: genImage(database),
+  'directory-server': genImage(directoryServer),
+  'dns-server': genImage(dnsServer),
+  document: genImage(documentIcon),
+  'domain-name': genImage(domainName),
+  'email-address': genImage(emailAddress),
+  'email-message': genImage(emailMessage),
+  'email-server': genImage(emailServer),
+  'embedded-device': genImage(embeddedDevice),
+  'external-references': genImage(externalReferences),
+  firewall: genImage(firewall),
+  'grouping-round': genImage(groupingRound),
+  guidance: genImage(guidance),
+  hardware: genImage(hardware),
+  http: genImage(http),
+  hypervisor: genImage(hypervisor),
+  identity: genImage(identity),
+  indicator: genImage(indicator),
+  'information-type': genImage(informationType),
+  interconnection: genImage(interconnection),
+  'intrusion-set': genImage(intrusionSet),
+  'ip-address': genImage(ipAddress),
+  'ipv4-address': genImage(ipv4Address),
+  'ipv6-address': genImage(ipv6Address),
+  labels: genImage(labels),
+  language: genImage(language),
+  laptop: genImage(laptop),
+  component: genImage(component),
+  'load-balancer': genImage(loadBalancer),
+  location: genImage(location),
+  'mac-address': genImage(macAddress),
+  'malware-analysis': genImage(malwareAnalysis),
+  malware: genImage(malware),
+  'mobile-device': genImage(mobileDevice),
+  'network-device': genImage(networkDevice),
+  network: genImage(network),
+  note: genImage(note),
+  notes: genImage(notes),
+  'observed-data': genImage(observedData),
+  'operating-system': genImage(operatingSystem),
+  opinion: genImage(opinion),
+  pbx: genImage(pbx),
+  plan: genImage(plan),
+  policy: genImage(policy),
+  printer: genImage(printer),
+  procedure: genImage(procedure),
   relationship: genImage(relationship),
+  report: genImage(report),
+  resource: genImage(resource),
+  router: genImage(router),
+  server: genImage(server),
+  services: genImage(services),
+  sighting: genImage(sighting),
+  software: genImage(software),
+  source: genImage(source),
+  standard: genImage(standard),
+  'storage-array': genImage(storageArray),
+  'subject-types': genImage(subjectTypes),
+  'oscal-leveraged-authorization': genImage(software),
+  system: genImage(system),
+  'threat-actor': genImage(threatActor),
+  'tlp-amber': genImage(tlpAmber),
+  'tlp-green': genImage(tlpGreen),
+  'tlp-restricted': genImage(tlpRestricted),
+  'tlp-white': genImage(tlpWhite),
+  tool: genImage(tool),
+  'user-account': genImage(userAccount),
+  validation: genImage(validation),
+  'victim-target': genImage(victimTarget),
+  victim: genImage(victim),
+  'voip-device': genImage(voipDevice),
+  'voip-handset': genImage(voipHandset),
+  'voip-router': genImage(voipRouter),
+  vulnerabilities: genImage(vulnerabilities),
+  'web-server': genImage(webServer),
+  vulnerability: genImage(vulnerability),
+  'wireless-access-point': genImage(wirelessAccessPoint),
+  workstation: genImage(workstation),
+  switch: genImage(switchIcon),
+  'inventory-item': genImage(inventoryItem),
+};
+
+export const graphRawImages = {
+  appliance,
+  bundle,
+  campaign,
+  coa,
+  database,
+  firewall,
+  guidance,
+  hardware,
+  http,
+  hypervisor,
+  identity,
+  indicator,
+  opinion,
+  pbx,
+  plan,
+  policy,
+  printer,
+  component,
+  procedure,
+  relationship,
+  report,
+  resource,
+  router,
+  system,
+  server,
+  services,
+  sighting,
+  software,
+  labels,
+  tool,
+  language,
+  validation,
+  laptop,
+  victim,
+  source,
+  standard,
+  location,
+  malware,
+  network,
+  note,
+  notes,
+  workstation,
+  vulnerability,
+  interconnection,
+  vulnerabilities,
+  switch: switchIcon,
+  document: documentIcon,
+  'oscal-leveraged-authorization': software,
+  'information-type': informationType,
+  'intrusion-set': intrusionSet,
+  'ip-address': ipAddress,
+  'ipv4-address': ipv4Address,
+  'ipv6-address': ipv6Address,
+  'load-balancer': loadBalancer,
+  'mac-address': macAddress,
+  'adversary-identity': adversaryIdentity,
+  'information-system': informationSystem,
+  'application-software': applicationSoftware,
+  'attack-pattern': attackPattern,
+  'autonomous-system': autonomousSystem,
+  'compute-device': computeDevice,
+  'directory-server': directoryServer,
+  'dns-server': dnsServer,
+  'domain-name': domainName,
+  'email-address': emailAddress,
+  'email-message': emailMessage,
+  'email-server': emailServer,
+  'embedded-device': embeddedDevice,
+  'external-references': externalReferences,
+  'grouping-round': groupingRound,
+  'malware-analysis': malwareAnalysis,
+  'mobile-device': mobileDevice,
+  'network-device': networkDevice,
+  'observed-data': observedData,
+  'operating-system': operatingSystem,
+  'storage-array': storageArray,
+  'subject-types': subjectTypes,
+  'threat-actor': threatActor,
+  'tlp-amber': tlpAmber,
+  'tlp-green': tlpGreen,
+  'tlp-restricted': tlpRestricted,
+  'tlp-white': tlpWhite,
+  'user-account': userAccount,
+  'victim-target': victimTarget,
+  'voip-device': voipDevice,
+  'voip-handset': voipHandset,
+  'voip-router': voipRouter,
+  'web-server': webServer,
+  'wireless-access-point': wirelessAccessPoint,
+  'inventory-item': inventoryItem,
 };
 
 export const graphLevel = {
@@ -159,62 +348,6 @@ export const graphLevel = {
   'X-OpenCTI-User-Agent': 1,
   'X-OpenCTI-Text': 1,
   relationship: 1,
-};
-
-export const graphRawImages = {
-  'Kill-Chain-Phase': KillChainPhase,
-  'Marking-Definition': MarkingDefinition,
-  'External-Reference': ExternalReference,
-  Label,
-  'Attack-Pattern': AttackPattern,
-  Campaign,
-  Note,
-  'Observed-Data': ObservedData,
-  Opinion,
-  Report,
-  'Course-Of-Action': CourseOfAction,
-  Individual,
-  Organization,
-  Sector,
-  System,
-  Indicator,
-  Infrastructure,
-  'Intrusion-Set': IntrusionSet,
-  City,
-  Country,
-  Region,
-  Position,
-  Malware,
-  'Threat-Actor': ThreatActor,
-  Tool,
-  Vulnerability,
-  Incident,
-  'Autonomous-System': StixCyberObservable,
-  Directory: StixCyberObservable,
-  'Domain-Name': StixCyberObservable,
-  'Email-Addr': StixCyberObservable,
-  'Email-Message': StixCyberObservable,
-  'Email-Mime-Part-Type': StixCyberObservable,
-  Artifact: StixCyberObservable,
-  StixFile: StixCyberObservable,
-  'X509-Certificate': StixCyberObservable,
-  'IPv4-Addr': StixCyberObservable,
-  'IPv6-Addr': StixCyberObservable,
-  'Mac-Addr': StixCyberObservable,
-  Mutex: StixCyberObservable,
-  'Network-Traffic': StixCyberObservable,
-  Process: StixCyberObservable,
-  Software: StixCyberObservable,
-  'User-Account': StixCyberObservable,
-  Url: StixCyberObservable,
-  'Windows-Registry-Key': StixCyberObservable,
-  'Windows-Registry-Value-Type': StixCyberObservable,
-  'X509-V3-Extensions-Type': StixCyberObservable,
-  'X-OpenCTI-Cryptographic-Key': StixCyberObservable,
-  'X-OpenCTI-Cryptocurrency-Wallet': StixCyberObservable,
-  'X-OpenCTI-Hostname': StixCyberObservable,
-  'X-OpenCTI-User-Agent': StixCyberObservable,
-  'X-OpenCTI-Text': StixCyberObservable,
 };
 
 export const encodeGraphData = (graphData) => Buffer.from(JSON.stringify(graphData), 'ascii').toString('base64');
@@ -273,8 +406,7 @@ export const defaultValue = (n, tooltip = false) => {
       || n.system_name
       || n.phase_name
       || defaultValue(R.head(R.pathOr([], ['objects', 'edges'], n))?.node)
-      || 'Unknown'
-    }`;
+      || 'Unknown'}`;
   }
   return `${n.x_mitre_id ? `[${n.x_mitre_id}] ` : ''}${n.name
     || n.label
@@ -290,8 +422,7 @@ export const defaultValue = (n, tooltip = false) => {
     || n.source_name
     || n.phase_name
     || defaultValue(R.head(R.pathOr([], ['objects', 'edges'], n))?.node)
-    || 'Unknown'
-  }`;
+    || 'Unknown'}`;
 };
 
 export const computeTimeRangeInterval = (objects) => {
@@ -503,8 +634,7 @@ export const buildGraphData = (objects, graphData, t) => {
       val: graphLevel[n.entity_type] || 1,
       name: `${n.relationship_type
         ? `<strong>${t(`relationship_${n.relationship_type}`)}</strong>}`
-        : defaultValue(n, true)
-      }`,
+        : defaultValue(n, true)}`,
       defaultDate: jsDate(defaultDate(n)),
       label: n.relationship_type
         ? t(`relationship_${n.relationship_type}`)
@@ -514,7 +644,7 @@ export const buildGraphData = (objects, graphData, t) => {
         ),
       img: graphImages[n.entity_type],
       rawImg: graphRawImages[n.entity_type],
-      // color: itemColor(n.entity_type, false),
+      color: itemColor(n.entity_type, false),
       entity_type: n.entity_type,
       markedBy: R.map(
         (m) => ({ id: m.node.id }),
@@ -539,12 +669,12 @@ export const buildGraphData = (objects, graphData, t) => {
       // parent_types: n.parent_types,
       entity_type: n.entity_type,
       relationship_type: n.relationship_type,
-      source: n.source,
-      target: n.target,
+      source: n.source.id,
+      target: n.target.id,
       label: n.relationship_type,
       name: n.relationship_type,
-      source_id: n.source,
-      target_id: n.target,
+      source_id: n.source.id,
+      target_id: n.target.id,
       // inferred: n.inferred,
       defaultDate: jsDate(defaultDate(n)),
     })),

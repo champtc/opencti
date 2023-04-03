@@ -1,5 +1,3 @@
-/* eslint-disable */
-/* refactor */
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { compose } from 'ramda';
@@ -11,6 +9,11 @@ import inject18n from '../../../../../components/i18n';
 import InformationSystemPopover from '../InformationSystemPopover';
 import InformationSystemDeletion from '../InformationSystemDeletion';
 import CyioDomainObjectHeader from '../../../common/stix_domain_objects/CyioDomainObjectHeader';
+import InformationSystemGraphTool, {
+  informationSystemGraphToolQuery,
+} from './InformationSystemGraphTool';
+import { QueryRenderer } from '../../../../../relay/environment';
+import Loader from '../../../../../components/Loader';
 
 const styles = () => ({
   container: {
@@ -57,6 +60,21 @@ class AnalysisComponent extends Component {
             OperationsComponent={<InformationSystemDeletion />}
             handleDisplayEdit={this.handleDisplayEdit.bind(this)}
             handleOpenNewCreation={this.handleOpenNewCreation.bind(this)}
+          />
+          <QueryRenderer
+            query={informationSystemGraphToolQuery}
+            variables={{ id: informationSystem.id }}
+            render={({ props }) => {
+              if (props && props.informationSystem) {
+                return (
+                  <InformationSystemGraphTool
+                    overview={true}
+                    informationSystem={props.informationSystem}
+                  />
+                );
+              }
+              return <Loader />;
+            }}
           />
         </div>
       </>

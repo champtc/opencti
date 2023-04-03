@@ -19,6 +19,7 @@ import {
   computeTimeRangeValues,
   decodeGraphData,
   linkPaint,
+  nodePaint,
   nodeAreaPaint,
   nodeThreePaint,
 } from '../../../../../utils/CyioGraph';
@@ -472,7 +473,7 @@ class InformationSystemGraphToolComponent extends Component {
 
   render() {
     const {
-      informationSystem, theme, t, classes,
+      informationSystem, theme, t, classes, overview,
     } = this.props;
     const {
       mode3D,
@@ -501,7 +502,7 @@ class InformationSystemGraphToolComponent extends Component {
       R.prop('id'),
       R.map((n) => n.createdBy, this.graphData.nodes),
     );
-    const selectedEntities = [...this.selectedLinks, ...this.selectedNodes];
+    const selectedEntities = [...this.selectedNodes];
     const timeRangeInterval = computeTimeRangeInterval(this.graphObjects);
     const timeRangeValues = computeTimeRangeValues(
       timeRangeInterval,
@@ -511,14 +512,15 @@ class InformationSystemGraphToolComponent extends Component {
     return (
       <div>
         <InformationSystemGraphToolBar
-          handleToggle3DMode={this.handleToggle3DMode.bind(this)}
+          overview={overview}
           currentMode3D={mode3D}
-          currentModeFixed={modeFixed}
-          handleToggleTreeMode={this.handleToggleTreeMode.bind(this)}
           currentModeTree={modeTree}
-          handleToggleFixedMode={this.handleToggleFixedMode.bind(this)}
+          currentModeFixed={modeFixed}
           handleZoomToFit={this.handleZoomToFit.bind(this)}
+          handleToggle3DMode={this.handleToggle3DMode.bind(this)}
+          handleToggleTreeMode={this.handleToggleTreeMode.bind(this)}
           handleToggleCreatedBy={this.handleToggleCreateBy.bind(this)}
+          handleToggleFixedMode={this.handleToggleFixedMode.bind(this)}
           handleToggleCyioCoreObjectType={this.handleToggleCyioCoreObjectType.bind(
             this,
           )}
@@ -568,7 +570,7 @@ class InformationSystemGraphToolComponent extends Component {
             }
             linkColor={(link) => (this.selectedLinks.has(link)
               ? theme.palette.secondary.main
-              : theme.palette.primary.main)
+              : theme.palette.link)
             }
             linkWidth={0.2}
             linkDirectionalArrowLength={3}
@@ -658,9 +660,9 @@ class InformationSystemGraphToolComponent extends Component {
             onZoomEnd={this.handleZoomEnd.bind(this)}
             backgroundColor={theme.palette.background.default}
             nodeRelSize={4}
-            // nodeCanvasObject={
-            //   (node, ctx) => nodePaint(node, node.color, ctx, this.selectedNodes.has(node))
-            // }
+            nodeCanvasObject={
+              (node, ctx) => nodePaint(node, node.color, ctx, this.selectedNodes.has(node))
+            }
             nodePointerAreaPaint={nodeAreaPaint}
             // linkDirectionalParticles={(link) => (this.selectedLinks.has(link) ? 20 : 0)}
             // linkDirectionalParticleWidth={1}
@@ -672,7 +674,7 @@ class InformationSystemGraphToolComponent extends Component {
             }
             linkColor={(link) => (this.selectedLinks.has(link)
               ? theme.palette.secondary.main
-              : theme.palette.primary.main)
+              : theme.palette.link)
             }
             linkDirectionalArrowLength={3}
             linkDirectionalArrowRelPos={0.99}
@@ -740,6 +742,7 @@ class InformationSystemGraphToolComponent extends Component {
 
 InformationSystemGraphToolComponent.propTypes = {
   informationSystem: PropTypes.object,
+  overview: PropTypes.bool,
   classes: PropTypes.object,
   theme: PropTypes.object,
   t: PropTypes.func,
@@ -814,8 +817,172 @@ const InformationSystemGraphTool = createFragmentContainer(
                 id
                 entity_type
                 relationship_type
-                source
-                target
+                source {
+                  ... on InformationType {
+                    id
+                  }
+                  ... on DiagramRef {
+                    id
+                  }
+                  ... on InformationSystem {
+                    id
+                  }
+                  ... on Activity {
+                    id
+                  }
+                  ... on AssessmentPlatform {
+                    id
+                  }
+                  ... on AssessmentLogEntry {
+                    id
+                  }
+                  ... on RiskLogEntry {
+                    id
+                  }
+                  ... on MitigatingFactor {
+                    id
+                  }
+                  ... on Observation {
+                    id
+                  }
+                  ... on OscalTask {
+                    id
+                  }
+                  ... on RequiredAsset {
+                    id
+                  }
+                  ... on Risk {
+                    id
+                  }
+                  ... on RiskResponse {
+                    id
+                  }
+                  ... on Finding {
+                    id
+                  }
+                  ... on Result {
+                    id
+                  }
+                  ... on ControlParameter {
+                    id
+                  }
+                  ... on Component {
+                    id
+                  }
+                  ... on InventoryItem {
+                    id
+                  }
+                  ... on OscalLocation {
+                    id
+                  }
+                  ... on OscalResource {
+                    id
+                  }
+                  ... on OscalRelationship {
+                    id
+                  }
+                  ... on POAM {
+                    id
+                  }
+                  ... on OscalUser {
+                    id
+                  }
+                  ... on OscalLeveragedAuthorization {
+                    id
+                  }
+                  ... on OscalRole {
+                    id
+                  }
+                  ... on SystemSecurityPlan {
+                    id
+                  }
+                  ... on POAMItem {
+                    id
+                  }
+                }
+                target {
+                  ... on InformationType {
+                    id
+                  }
+                  ... on DiagramRef {
+                    id
+                  }
+                  ... on InformationSystem {
+                    id
+                  }
+                  ... on Activity {
+                    id
+                  }
+                  ... on AssessmentPlatform {
+                    id
+                  }
+                  ... on AssessmentLogEntry {
+                    id
+                  }
+                  ... on RiskLogEntry {
+                    id
+                  }
+                  ... on MitigatingFactor {
+                    id
+                  }
+                  ... on Observation {
+                    id
+                  }
+                  ... on OscalTask {
+                    id
+                  }
+                  ... on RequiredAsset {
+                    id
+                  }
+                  ... on Risk {
+                    id
+                  }
+                  ... on RiskResponse {
+                    id
+                  }
+                  ... on Finding {
+                    id
+                  }
+                  ... on Result {
+                    id
+                  }
+                  ... on ControlParameter {
+                    id
+                  }
+                  ... on Component {
+                    id
+                  }
+                  ... on InventoryItem {
+                    id
+                  }
+                  ... on OscalLocation {
+                    id
+                  }
+                  ... on OscalResource {
+                    id
+                  }
+                  ... on OscalRelationship {
+                    id
+                  }
+                  ... on POAM {
+                    id
+                  }
+                  ... on OscalUser {
+                    id
+                  }
+                  ... on OscalLeveragedAuthorization {
+                    id
+                  }
+                  ... on OscalRole {
+                    id
+                  }
+                  ... on SystemSecurityPlan {
+                    id
+                  }
+                  ... on POAMItem {
+                    id
+                  }
+                }
               }
               ... on CyioLabel {
                 __typename

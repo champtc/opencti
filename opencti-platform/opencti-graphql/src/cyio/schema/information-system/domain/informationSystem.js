@@ -1122,7 +1122,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
   let relationship = {
     entity_type: 'oscal-relationship',
     relationship_type: 'consists-of',
-    source: parent.id,
+    source: informationSystem,
   };
 
   if (parent.information_type_iris) {
@@ -1139,7 +1139,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
       // populate the missing fields of the relationship
       rel.id = generateId();
       rel.relationship_type = 'uses';
-      rel.target = result.id;
+      rel.target = result;
       rel.created = result.created;
       rel.modified = result.modified;
       rel.valid_from = result.created
@@ -1149,7 +1149,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // add the information type to the array of edges
       let edge = {
-        cursor: result.iri,
+        cursor: iri,
         node: result,
       }
       edges.push(edge);
@@ -1169,7 +1169,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // populate the missing fields of the relationship
       rel.id = generateId();
-      rel.target = result.id;
+      rel.target = result;
       rel.created = result.created;
       rel.modified = result.modified;
       rel.valid_from = result.created
@@ -1179,7 +1179,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // add the component to the array of edges
       let edge = {
-        cursor: result.iri,
+        cursor: iri,
         node: result,
       }
       edges.push(edge);
@@ -1199,7 +1199,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // populate the missing fields of the relationship
       rel.id = generateId();
-      rel.target = result.id;
+      rel.target = result;
       rel.created = result.created;
       rel.modified = result.modified;
       rel.valid_from = result.created;
@@ -1209,7 +1209,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // add the component to the array of edges
       let edge = {
-        cursor: result.iri,
+        cursor: iri,
         node: result,
       }
       edges.push(edge);
@@ -1229,7 +1229,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // populate the missing fields of the relationship
       rel.id = generateId();
-      rel.target = result.id;
+      rel.target = result;
       rel.created = result.created;
       rel.modified = result.modified
       rel.valid_from = result.created
@@ -1239,7 +1239,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // add the component to the array of edges
       let edge = {
-        cursor: result.iri,
+        cursor: iri,
         node: result,
       }
       edges.push(edge);
@@ -1259,7 +1259,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // populate the missing fields of the relationship
       rel.id = generateId();
-      rel.target = result.id;
+      rel.target = result;
       rel.created = result.created;
       rel.modified = result.modified
       rel.valid_from = result.created
@@ -1269,7 +1269,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // add the component to the array of edges
       let edge = {
-        cursor: result.iri,
+        cursor: iri,
         node: result,
       }
       edges.push(edge);
@@ -1279,7 +1279,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
   // Add each of the relationships to the list of edges
   for ( relationship of relationships) {
     let edge = {
-      cursor: `<http://cyio.darklight.ai/relationship--${relationship.id}>`,
+      cursor: `http://cyio.darklight.ai/relationship--${relationship.id}`,
       node: relationship,
     }
     edges.push(edge)

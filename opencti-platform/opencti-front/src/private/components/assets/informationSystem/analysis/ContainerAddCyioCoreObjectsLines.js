@@ -66,21 +66,24 @@ const styles = (theme) => ({
 
 export const containerAddCyioCoreObjectsLinesRelationAddMutation = graphql`
   mutation ContainerAddCyioCoreObjectsLinesRelationAddMutation(
-    $id: ID!
-    $implementationType: ImplementationType!
-    $entityId: ID!
+    $id: ID!,
+    $entityId: ID!,
+    $implementation_type: String!,
+    
   ) {
-    addInformationSystemImplementationEntity(id: $id, implementation_type: $implementationType, entityId: $entityId)
+    addInformationSystemImplementationEntity(id: $id, entityId: $entityId, implementation_type: $implementation_type) {
+      id
+    }
   }
 `;
 
 export const containerAddCyioCoreObjectsLinesRelationDeleteMutation = graphql`
   mutation ContainerAddCyioCoreObjectsLinesRelationDeleteMutation(
-    $id: ID!
-    $implementationType: ImplementationType!
-    $entityId: ID!
+    $id: ID!,
+    $entityId: ID!,
+    $implementation_type: String!,
   ) {
-    addInformationSystemImplementationEntity(id: $id, implementation_type: $implementationType, entityId: $entityId)
+    removeInformationSystemImplementationEntity(id: $id, entityId: $entityId, implementation_type: $implementation_type)
   }
 `;
 

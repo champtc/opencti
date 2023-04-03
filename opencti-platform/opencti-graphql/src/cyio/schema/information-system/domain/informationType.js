@@ -1399,7 +1399,7 @@ export const findAllCategorizations = async (args, dbName, dataSources, select )
   }
 };
 
-export const createCategorization = async (input, dbName, dataSources, selectMap) => {
+export const createCategorization = async (input, dbName, dataSources, select) => {
   // WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -1418,8 +1418,8 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   let contextDB = conf.get('app:database:context') || 'cyber-context';
 
   // check if catalog exists
-  if (!checkIfValidUUID(input.system)) throw new UserInputError(`Invalid identifier: ${input.system}`);
-  sparqlQuery = selectInformationTypeCatalogQuery(input.system, selectCheck);
+  if (!checkIfValidUUID(input.catalog)) throw new UserInputError(`Invalid identifier: ${input.catalog}`);
+  sparqlQuery = selectInformationTypeCatalogQuery(input.catalog, selectCheck);
   response = await dataSources.Stardog.queryById({
     dbName: contextDB,
     sparqlQuery,
@@ -1428,7 +1428,7 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   });
   if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
   let catalog_iri = `<${response[0].iri}>`;
-  delete input.system;
+  delete input.catalog;
 
   // check if catalog's information type exists
   if (!checkIfValidUUID(input.information_type)) throw new UserInputError(`Invalid identifier: ${input.information_type}`);
@@ -1444,7 +1444,7 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   delete input.information_type;
 
   // create the Categorization object
-    let {iri, id, query} = insertCategorizationQuery(input);
+  let {iri, id, query} = insertCategorizationQuery(input);
   try {
     response = await dataSources.Stardog.create({
       dbName,
@@ -1457,7 +1457,7 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   }
 
   // attach the reference to the catalog
-  sparqlQuery = attachToCategorizationQuery(id, 'system_catalog', catalog_iri);
+  sparqlQuery = attachToCategorizationQuery(id, 'catalog', catalog_iri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
@@ -1483,7 +1483,7 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   }
 
   // retrieve the newly created Categorization to be returned
-  const selectQuery = selectCategorizationQuery(id, selectMap.getNode("createCategorization"));
+  const selectQuery = selectCategorizationQuery(id, select);
   let result;
   try {
     result = await dataSources.Stardog.queryById({

@@ -334,8 +334,8 @@ type Activity implements BasicObject & LifecycleObject & OscalObject {
   methods: [MethodTypes!]!
   # "Identifies one or more steps related to an activity."
   # steps: [Step]
-  # "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
-  # related_controls: [ControlReview]
+  "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
+  related_controls: ControlSet
   "Identifies the person or organization responsible for performing a specific role related to the task."
   responsible_roles: [OscalResponsibleParty]
 }
@@ -346,11 +346,12 @@ input ActivityAddInput {
   description: String!
   "Identifies the assessment method used."
   methods: [MethodTypes!]!
-  # "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
-  # related_controls: [ControlReview]
+  "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
+  related_controls: [ControlSetInput]
   "Identifies the person or organization responsible for performing a specific role related to the task."
   responsible_roles: [OscalResponsibleRoleAddInput]
 }
+
 # Ordering Types
 enum ActivityOrdering {
   "Created"
@@ -916,32 +917,6 @@ type FacetConnection {
 type FacetEdge {
   cursor: String!
   node: Facet!
-}
-
-## Finding Target
-#
-"Defines identifying information about the target of a finding."
-type FindingTarget {
-  # "Identifies the type of the finding target."
-  # target_type: FindingTargetType!
-  # "Identifies the specific target."
-  # target: StatementOrObjective!
-  "Identifies a name for this objective status."
-  name: String
-  "Identifies a human-readable description of the assessor's conclusions regarding the degree to which an objective is satisfied."
-  description: String
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies whether the objective is satisfied or not within a given system."
-  objective_status_state: ObjectiveStatusState!
-  "Identifies the reason the objective was given it's status."
-  objective_status_reason: ObjectiveStatusReason
-  "Identifies an explanation as to why the objective was not satisfied."
-  objective_status_explanation: String
-  "Indicates the degree to which the given control was implemented."
-  implementation_status: ImplementationStatus
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
 }
 
 ## LogEntry
@@ -2162,7 +2137,6 @@ type ThreatReference {
 
 ## Unions
 #
-# union StatementOrObjects = ControlStatement | ControlObjective
 union ActorTarget = OscalParty | AssessmentPlatform | Component
 # union PartyOrComponent =
 #     OscalParty

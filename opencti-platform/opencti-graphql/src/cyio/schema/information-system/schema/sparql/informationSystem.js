@@ -99,6 +99,8 @@ export const selectInformationSystemByIriQuery = (iri, select) => {
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
+  if (!select.includes('created')) select.push('created');
+  if (!select.includes('modified')) select.push('modified');
   if (!select.includes('component_type')) select.push('component_type');
   if (select.includes('system_implementation')) {
     select.push('components');

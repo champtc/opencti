@@ -1,5 +1,6 @@
 import { v4 as uuid4 } from 'uuid';
 import { CyioError } from '../../../utils.js';
+import { objectMap } from '../../../global/global-utils.js';
 // import { objectMap } from '../../../global/global-utils.js';
 
 const oscalCommonResolvers = {
@@ -130,6 +131,12 @@ const oscalCommonResolvers = {
       // return the tasking id for tracking purposes
       return response;
     },
+  },
+  //  Field types
+  OscalObject: {
+    __resolveType: (item) => {
+      return objectMap[item.entity_type].graphQLType
+    }
   },
   // Map enum GraphQL values to data model required values
   FIPS199: {

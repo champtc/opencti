@@ -570,7 +570,7 @@ class InformationSystemGraphToolComponent extends Component {
             nodeThreeObject={(node) => nodeThreePaint(node, theme.palette.text.secondary)
             }
             linkColor={(link) => (this.selectedLinks.has(link)
-              ? theme.palette.secondary.main
+              ? theme.palette.linkSelected
               : theme.palette.link)
             }
             linkWidth={0.2}
@@ -674,7 +674,7 @@ class InformationSystemGraphToolComponent extends Component {
               : null)
             }
             linkColor={(link) => (this.selectedLinks.has(link)
-              ? theme.palette.secondary.main
+              ? theme.palette.linkSelected
               : theme.palette.link)
             }
             linkDirectionalArrowLength={3}

@@ -7,6 +7,7 @@ export default (logo = null, primary = null, secondary = null) => ({
     text: { secondary: 'rgba(255, 255, 255, 0.5)' },
     primary: { main: primary || '#075AD3' },
     link: '#4FAEF8',
+    linkSelected: '#efb740',
     secondary: { main: secondary || '#F9B406' },
     header: { background: '#06102D', text: '#ffffff' },
     navAlt: {

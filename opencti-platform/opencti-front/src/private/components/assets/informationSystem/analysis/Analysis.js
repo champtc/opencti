@@ -8,7 +8,7 @@ import Grid from '@material-ui/core/Grid';
 import inject18n from '../../../../../components/i18n';
 import InformationSystemPopover from '../InformationSystemPopover';
 import InformationSystemDeletion from '../InformationSystemDeletion';
-import CyioDomainObjectHeader from '../../../common/stix_domain_objects/CyioDomainObjectHeader';
+import CyioDomainObjectAnalysisHeader from '../../../common/stix_domain_objects/CyioDomainObjectAnalysisHeader';
 import InformationSystemGraphTool, {
   informationSystemGraphToolQuery,
 } from './InformationSystemGraphTool';
@@ -51,15 +51,11 @@ class AnalysisComponent extends Component {
     return (
       <>
         <div className={classes.container}>
-          <CyioDomainObjectHeader
+          <CyioDomainObjectAnalysisHeader
             history={history}
             name={informationSystem.name}
             cyioDomainObject={informationSystem}
-            PopoverComponent={<InformationSystemPopover />}
             goBack='/defender_hq/assets/information_systems'
-            OperationsComponent={<InformationSystemDeletion />}
-            handleDisplayEdit={this.handleDisplayEdit.bind(this)}
-            handleOpenNewCreation={this.handleOpenNewCreation.bind(this)}
           />
           <QueryRenderer
             query={informationSystemGraphToolQuery}

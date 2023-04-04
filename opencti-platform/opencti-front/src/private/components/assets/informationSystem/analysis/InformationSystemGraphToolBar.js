@@ -225,6 +225,7 @@ class InformationSystemGraphToolBar extends Component {
       handleTimeRangeChange,
       timeRangeValues,
       theme,
+      overview,
       leftBarOpen,
     } = this.props;
     const {
@@ -323,7 +324,7 @@ class InformationSystemGraphToolBar extends Component {
               display: 'flex',
               verticalAlign: 'top',
               justifyContent: 'space-between',
-              marginLeft: leftBarOpen ? 260 : 80,
+              marginLeft: (overview && leftBarOpen) ? 260 : 0,
             }}
           >
             <div
@@ -644,7 +645,7 @@ class InformationSystemGraphToolBar extends Component {
                 />
               </div>
             </div>
-            {informationSystem && (
+            {(informationSystem && !overview) && (
               <div
                 style={{
                   height: '100%',
@@ -818,6 +819,7 @@ class InformationSystemGraphToolBar extends Component {
 
 InformationSystemGraphToolBar.propTypes = {
   classes: PropTypes.object,
+  overview: PropTypes.bool,
   t: PropTypes.func,
   leftBarOpen: PropTypes.bool,
   informationSystem: PropTypes.object,

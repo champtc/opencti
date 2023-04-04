@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { compose } from 'ramda';
+import * as R from 'ramda';
 import { createFragmentContainer } from 'react-relay';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
@@ -70,6 +71,10 @@ const styles = (theme) => ({
 class EntityInformationTypeDetailsComponent extends Component {
   render() {
     const { t, classes, informationType } = this.props;
+    const categorization = R.pipe(
+      R.pathOr([], ['categorizations']),
+      R.mergeAll,
+    )(informationType);
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
@@ -93,8 +98,8 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType?.categorizations?.catalog?.title
-                  && t(informationType?.categorizations?.catalog?.title)}
+                {categorization?.catalog?.title
+                  && t(categorization?.catalog?.title)}
               </div>
             </Grid>
             <Grid item xs={4}>
@@ -113,8 +118,8 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType?.categorizations?.information_type?.category
-                  && t(informationType?.categorizations?.information_type?.category)}
+                {categorization?.information_type?.category
+                  && t(categorization?.information_type?.category)}
               </div>
             </Grid>
             <Grid item xs={4}>
@@ -133,8 +138,8 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType?.categorizations?.information_type?.title
-                  && t(informationType?.categorizations?.information_type?.title)}
+                {categorization?.information_type?.title
+                  && t(categorization?.information_type?.title)}
               </div>
             </Grid>
             <Grid item xs={12}>

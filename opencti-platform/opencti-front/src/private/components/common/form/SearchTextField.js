@@ -132,6 +132,7 @@ class SearchTextField extends Component {
         .then((data) => {
           this.setState({ selectedProduct: data.informationType });
           this.props.handleSearchTextField(data.informationType, this.props.setFieldValue);
+          this.props.handleDisable();
         });
     }
   }

@@ -69,9 +69,7 @@ const styles = (theme) => ({
 
 class EntityInformationTypeDetailsComponent extends Component {
   render() {
-    const {
-      t, classes, informationType,
-    } = this.props;
+    const { t, classes, informationType } = this.props;
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
@@ -95,8 +93,8 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType?.categorizations?.information_type?.title
-                  && t(informationType?.categorizations?.information_type?.title)}
+                {informationType?.categorizations?.catalog?.title
+                  && t(informationType?.categorizations?.catalog?.title)}
               </div>
             </Grid>
             <Grid item xs={4}>
@@ -115,7 +113,8 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType.category && t(informationType.category)}
+                {informationType?.categorizations?.information_type?.category
+                  && t(informationType?.categorizations?.information_type?.category)}
               </div>
             </Grid>
             <Grid item xs={4}>
@@ -134,7 +133,8 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType.category && t(informationType.category)}
+                {informationType?.categorizations?.information_type?.title
+                  && t(informationType?.categorizations?.information_type?.title)}
               </div>
             </Grid>
             <Grid item xs={12}>
@@ -274,8 +274,11 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType?.integrity_impact?.base_impact
-                  && <RiskLevel risk={informationType?.integrity_impact?.base_impact}/>}
+                {informationType?.integrity_impact?.base_impact && (
+                  <RiskLevel
+                    risk={informationType?.integrity_impact?.base_impact}
+                  />
+                )}
               </div>
             </Grid>
             <Grid item xs={4}>
@@ -294,8 +297,11 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType?.integrity_impact?.selected_impact
-                  && <RiskLevel risk={informationType?.integrity_impact?.selected_impact}/>}
+                {informationType?.integrity_impact?.selected_impact && (
+                  <RiskLevel
+                    risk={informationType?.integrity_impact?.selected_impact}
+                  />
+                )}
               </div>
             </Grid>
             <Grid item={true} xs={6}>
@@ -369,8 +375,11 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType?.availability_impact?.base_impact
-                  && <RiskLevel risk={informationType?.availability_impact?.base_impact}/>}
+                {informationType?.availability_impact?.base_impact && (
+                  <RiskLevel
+                    risk={informationType?.availability_impact?.base_impact}
+                  />
+                )}
               </div>
             </Grid>
             <Grid item xs={4}>
@@ -389,8 +398,11 @@ class EntityInformationTypeDetailsComponent extends Component {
                   </Tooltip>
                 </div>
                 <div className="clearfix" />
-                {informationType?.availability_impact?.selected_impact
-                  && <RiskLevel risk={informationType?.availability_impact?.selected_impact}/>}
+                {informationType?.availability_impact?.selected_impact && (
+                  <RiskLevel
+                    risk={informationType?.availability_impact?.selected_impact}
+                  />
+                )}
               </div>
             </Grid>
             <Grid item={true} xs={6}>
@@ -462,6 +474,12 @@ const EntityInformationTypeDetails = createFragmentContainer(
           information_type {
             title
             id
+            category
+          }
+          catalog {
+            id
+            system
+            title
           }
         }
         confidentiality_impact {

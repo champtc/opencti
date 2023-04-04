@@ -70,12 +70,12 @@ class SecurityCategorization extends Component {
     };
   }
 
-  componentDidMount() {
+  componentDidUpdate(prevState) {
     const { values } = this.props;
-    if (values.catalog) {
+    if (prevState.values.catalog !== values.catalog) {
       this.handleCategoryChange('catalog', values.catalog);
     }
-    if (values.categorization_system) {
+    if (prevState.values.categorization_system !== values.categorization_system) {
       this.handleCategoryChange('categorization_system', values.categorization_system);
     }
   }
@@ -110,7 +110,9 @@ class SecurityCategorization extends Component {
   }
 
   render() {
-    const { t, classes, values } = this.props;
+    const {
+      t, classes, values, disabled,
+    } = this.props;
     return (
       <>
         <Grid item={true} xs={4}>
@@ -141,6 +143,7 @@ class SecurityCategorization extends Component {
             containerstyle={{ width: '100%' }}
             defaultValue={values.catalog}
             onChange={this.handleCategoryChange.bind(this)}
+            disabled={disabled}
           />
         </Grid>
         <Grid item={true} xs={4}>
@@ -168,6 +171,7 @@ class SecurityCategorization extends Component {
             defaultValue={values.categorization_system}
             categoryField={this.state.categoryField}
             onChange={this.handleCategoryChange.bind(this)}
+            disabled={disabled}
           />
         </Grid>
         <Grid item={true} xs={4}>
@@ -199,6 +203,7 @@ class SecurityCategorization extends Component {
             defaultValue={values.information_type}
             onChange={this.handleCategoryChange.bind(this)}
             informationTypeField={this.state.informationTypeField}
+            disabled={disabled}
           />
         </Grid>
       </>

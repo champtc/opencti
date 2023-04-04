@@ -54,6 +54,7 @@ const SelectField = (props) => {
         onChange={internalOnChange}
         onFocus={internalOnFocus}
         onBlur={internalOnBlur}
+        disabled={props.disabled || false}
       />
       <FormHelperText
         style={{

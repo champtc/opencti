@@ -12,6 +12,10 @@ import { Information } from 'mdi-material-ui';
 import Tooltip from '@material-ui/core/Tooltip';
 import graphql from 'babel-plugin-relay/macro';
 import Button from '@material-ui/core/Button';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import remarkParse from 'remark-parse';
 import {
   Dialog,
   DialogContent,
@@ -116,6 +120,7 @@ class EntitiesInformationTypesCreation extends Component {
     super(props);
     this.state = {
       selectedProduct: {},
+      disableAllFields: false,
     };
   }
 
@@ -166,7 +171,7 @@ class EntitiesInformationTypesCreation extends Component {
       },
       setSubmitting,
       pathname: '/data/entities/information_types',
-      onCompleted: (data) => {
+      onCompleted: () => {
         setSubmitting(false);
         resetForm();
         this.props.history.push('/data/entities/information_types');
@@ -179,10 +184,12 @@ class EntitiesInformationTypesCreation extends Component {
   }
 
   onReset() {
+    this.handleFieldDisable();
     this.props.handleInformationTypeCreation();
   }
 
   handleSetFieldValues(selectedInfoType, setFieldValue, type) {
+    const { t } = this.props;
     const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedInfoType);
     const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedInfoType);
     const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedInfoType);
@@ -191,8 +198,9 @@ class EntitiesInformationTypesCreation extends Component {
       R.mergeAll,
     )(selectedInfoType);
     if (type === 'search') {
-      setFieldValue('catalog', categorization?.id);
-      setFieldValue('system', categorization?.system);
+      setFieldValue('catalog', categorization?.catalog?.id);
+      setFieldValue('categorization_system', categorization?.information_type?.category);
+      setFieldValue('system', categorization?.catalog?.system);
       setFieldValue('information_type', categorization?.information_type?.id);
       setFieldValue('description', selectedInfoType?.description);
     }
@@ -219,454 +227,572 @@ class EntitiesInformationTypesCreation extends Component {
     this.setState({ selectedProduct: infoType }, () => this.handleSetFieldValues(infoType, setFieldValue, 'select'));
   }
 
-  // handleEditInfoType(informationTypeId) {
-  //   if (informationTypeId) {
-  //     this.setState({ informationTypeId: informationTypeId });
-  //   }
-  //   this.setState({ openEdit: !this.state.openEdit });
-  // }
-
-  // handleDeleteInfoType(infoTypeId) {
-  //   commitMutation({
-  //     mutation: informationTypesDeleteMutation,
-  //     variables: {
-  //       id: infoTypeId,
-  //     },
-  //     setSubmitting,
-  //     pathname: '/defender_hq/assets/information_systems',
-  //     onCompleted: (data) => {
-  //       setSubmitting(false);
-  //       resetForm();
-  //     },
-  //     onError: (err) => {
-  //       console.error(err);
-  //       toastGenericError('Failed to delete Information Type');
-  //     },
-  //   });
-  // }
+  handleFieldDisable() {
+    this.setState({
+      disableAllFields: true,
+    });
+  }
 
   render() {
-    const { t, classes, informationSystem, open } = this.props;
+    const { t, classes, open } = this.props;
     const {
       selectedProduct,
+      disableAllFields,
     } = this.state;
     const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedProduct);
     const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedProduct);
     const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedProduct);
-    const informationTypes = R.pathOr({}, ['information_types'], informationSystem);
     return (
-        <Dialog
-          open={open}
-          maxWidth='md'
-          keepMounted={false}
-          className={classes.dialogMain}
+      <Dialog
+        open={open}
+        maxWidth="md"
+        keepMounted={false}
+        className={classes.dialogMain}
+      >
+        <Formik
+          enableReinitialize
+          initialValues={{
+            title: '',
+            system: '',
+            catalog: '',
+            description: '',
+            information_type: '',
+            categorization_system: '',
+            integrity_impact_base: '',
+            availability_impact_base: '',
+            integrity_impact_selected: '',
+            confidentiality_impact_base: '',
+            availability_impact_selected: '',
+            integrity_impact_justification: '',
+            confidentiality_impact_selected: '',
+            availability_impact_justification: '',
+            confidentiality_impact_justification: '',
+          }}
+          validationSchema={InformationTypeValidation(t)}
+          onSubmit={this.onSubmit.bind(this)}
+          onReset={this.onReset.bind(this)}
         >
-          <Formik
-            enableReinitialize
-            initialValues={{
-              title: '',
-              system: '',
-              catalog: '',
-              description: '',
-              information_type: '',
-              integrity_impact_base: '',
-              availability_impact_base: '',
-              integrity_impact_selected: '',
-              confidentiality_impact_base: '',
-              availability_impact_selected: '',
-              integrity_impact_justification: '',
-              confidentiality_impact_selected: '',
-              availability_impact_justification: '',
-              confidentiality_impact_justification: '',
-
-            }}
-            validationSchema={InformationTypeValidation(t)}
-            onSubmit={this.onSubmit.bind(this)}
-            onReset={this.onReset.bind(this)}
-          >
-            {({
-              errors,
-              values,
-              submitForm,
-              handleReset,
-              isSubmitting,
-              setFieldValue,
-            }) => (
-              <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>
-                  {t('Information Type')}
-                </DialogTitle>
-                <DialogContent classes={{ root: classes.dialogContent }}>
-                  <Grid container={true} spacing={3}>
-                    <Grid item={true} xs={12}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Name')}
-                        </Typography>
-                        <Tooltip
-                          title={t(
-                            'Identifies the identifier defined by the standard.',
-                          )}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      <SearchTextField
-                        name='title'
-                        errors={errors.title}
-                        setFieldValue={setFieldValue}
-                        handleSearchTextField={this.handleSearchTextField.bind(this)}
-                      />
-                    </Grid>
-                    <Grid xs={12} item={true}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Description')}
-                        </Typography>
-                        <Tooltip
-                          title={t(
-                            'Identifies a summary of the reponsible party purpose and associated responsibilities.',
-                          )}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      <Field
-                        component={MarkDownField}
-                        name='description'
-                        fullWidth={true}
-                        multiline={true}
-                        rows='3'
-                        variant='outlined'
-                        containerstyle={{ width: '100px' }}
-                      />
-                    </Grid>
-                    <SecurityCategorization
-                      values={values}
+          {({
+            errors,
+            values,
+            submitForm,
+            handleReset,
+            isSubmitting,
+            setFieldValue,
+          }) => (
+            <Form>
+              <DialogTitle classes={{ root: classes.dialogTitle }}>
+                {t('Information Type')}
+              </DialogTitle>
+              <DialogContent classes={{ root: classes.dialogContent }}>
+                <Grid container={true} spacing={3}>
+                  <Grid item={true} xs={12}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Name')}
+                      </Typography>
+                      <Tooltip
+                        title={t(
+                          'Identifies the identifier defined by the standard.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    <SearchTextField
+                      name="title"
+                      errors={errors.title}
                       setFieldValue={setFieldValue}
-                      handleInformationType={this.handleInformationType.bind(this)}
+                      handleSearchTextField={this.handleSearchTextField.bind(
+                        this,
+                      )}
+                      handleDisable={this.handleFieldDisable.bind(this)}
                     />
-                    <Grid item={true} xs={12}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Confidentiality Impact')}
-                        </Typography>
-                        <Tooltip
-                          title={confidentialityImpact.explanation || 'Confidentiality Impact'}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                    </Grid>
-                    <Grid item={true} xs={2}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Base')}
-                        </Typography>
-                        <Tooltip
-                          title={confidentialityImpact.recommendation || 'Base'}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      {selectedProduct.confidentiality_impact
-                        && <RiskLevel risk={selectedProduct.confidentiality_impact.base_impact} />}
-                    </Grid>
-                    <Grid item={true} xs={2}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Selected')}
-                        </Typography>
-                        <Tooltip
-                          title={t(
-                            'Override The provisional confidentiality impact level recommended for disclosure compensation management information is low.',
-                          )}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      <TaskType
-                        name='confidentiality_impact_selected'
-                        taskType='FIPS199'
-                        fullWidth={true}
-                        required={true}
-                        style={{ height: '38.09px' }}
-                        containerstyle={{ width: '100%' }}
-                        variant='outlined'
-                      />
-                    </Grid>
-                    <Grid xs={8} item={true}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Justification')}
-                        </Typography>
-                        <Tooltip
-                          title={t(
-                            'Justification Identifies a summary of impact for how the risk affects the system.',
-                          )}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      <Field
-                        component={MarkDownField}
-                        name='confidentiality_impact_justification'
-                        fullWidth={true}
-                        multiline={true}
-                        rows='1'
-                        variant='outlined'
-                        containerstyle={{ width: '100%' }}
-                      />
-                    </Grid>
-                    <Grid item={true} xs={12}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Integrity Impact')}
-                        </Typography>
-                        <Tooltip
-                          title={integrityImpact.explanation || 'Integrity Impact'}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                    </Grid>
-                    <Grid item={true} xs={2}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Base')}
-                        </Typography>
-                        <Tooltip
-                          title={integrityImpact.recommendation || 'Base'}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      {selectedProduct.integrity_impact
-                        && <RiskLevel risk={selectedProduct.integrity_impact.base_impact} />}
-                    </Grid>
-                    <Grid item={true} xs={2}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Selected')}
-                        </Typography>
-                        <Tooltip
-                          title={t(
-                            'Override The provisional Integrity Impact level recommended for disclosure compensation management information is low.',
-                          )}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      <TaskType
-                        name='integrity_impact_selected'
-                        taskType='FIPS199'
-                        fullWidth={true}
-                        required={true}
-                        style={{ height: '38.09px' }}
-                        containerstyle={{ width: '100%' }}
-                        variant='outlined'
-                      />
-                    </Grid>
-                    <Grid xs={8} item={true}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Justification')}
-                        </Typography>
-                        <Tooltip
-                          title={t(
-                            'Justification Identifies a summary of impact for how the risk affects the system.',
-                          )}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      <Field
-                        component={MarkDownField}
-                        name='integrity_impact_justification'
-                        fullWidth={true}
-                        multiline={true}
-                        rows='3'
-                        variant='outlined'
-                        containerstyle={{ width: '100%' }}
-                      />
-                    </Grid>
-                    <Grid item={true} xs={12}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Availability Impact')}
-                        </Typography>
-                        <Tooltip
-                          title={availabilityImpact.explanation || 'Availability Impact'}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                    </Grid>
-                    <Grid item={true} xs={2}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Base')}
-                        </Typography>
-                        <Tooltip
-                          title={availabilityImpact.recommendation || 'Base'}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      {selectedProduct.availability_impact
-                        && <RiskLevel risk={selectedProduct.availability_impact.base_impact} />}
-                    </Grid>
-                    <Grid item={true} xs={2}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Selected')}
-                        </Typography>
-                        <Tooltip
-                          title={t(
-                            'Override The provisional Availability Impact level recommended for disclosure compensation management information is low.',
-                          )}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      <TaskType
-                        name='availability_impact_selected'
-                        taskType='FIPS199'
-                        fullWidth={true}
-                        required={true}
-                        style={{ height: '38.09px' }}
-                        containerstyle={{ width: '100%' }}
-                        variant='outlined'
-                      />
-                    </Grid>
-                    <Grid xs={8} item={true}>
-                      <div className={classes.textBase}>
-                        <Typography
-                          variant='h3'
-                          color='textSecondary'
-                          gutterBottom={true}
-                          style={{ margin: 0 }}
-                        >
-                          {t('Justification')}
-                        </Typography>
-                        <Tooltip
-                          title={t(
-                            'Justification Identifies a summary of impact for how the risk affects the system.',
-                          )}
-                        >
-                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
-                        </Tooltip>
-                      </div>
-                      <div className='clearfix' />
-                      <Field
-                        component={MarkDownField}
-                        name='availability_impact_justification'
-                        fullWidth={true}
-                        multiline={true}
-                        rows='3'
-                        variant='outlined'
-                        containerstyle={{ width: '100%' }}
-                      />
-                    </Grid>
                   </Grid>
-                </DialogContent>
-                <DialogActions classes={{ root: classes.dialogClosebutton }}>
-                  <Button
-                    variant='outlined'
-                    onClick={handleReset}
-                    classes={{ root: classes.buttonPopover }}
-                  >
-                    {t('Cancel')}
-                  </Button>
-                  <Button
-                    variant='contained'
-                    color='primary'
-                    onClick={submitForm}
-                    disabled={isSubmitting}
-                    classes={{ root: classes.buttonPopover }}
-                  >
-                    {t('Submit')}
-                  </Button>
-                </DialogActions>
-              </Form>
-            )}
-          </Formik>
-        </Dialog>
+                  <Grid xs={12} item={true}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Description')}
+                      </Typography>
+                      <Tooltip
+                        title={t(
+                          'Identifies a summary of the reponsible party purpose and associated responsibilities.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    <Field
+                      component={MarkDownField}
+                      name="description"
+                      fullWidth={true}
+                      multiline={true}
+                      rows="3"
+                      variant="outlined"
+                      containerstyle={{ width: '100px' }}
+                    />
+                  </Grid>
+                  <SecurityCategorization
+                    values={values}
+                    setFieldValue={setFieldValue}
+                    handleInformationType={this.handleInformationType.bind(
+                      this,
+                    )}
+                    disabled={disableAllFields}
+                  />
+                  <Grid item={true} xs={12}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Confidentiality Impact')}
+                      </Typography>
+                      <Tooltip
+                        title={
+                          confidentialityImpact.explanation
+                          || 'Confidentiality Impact'
+                        }
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                  </Grid>
+                  <Grid item={true} xs={2}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Base')}
+                      </Typography>
+                      <Tooltip
+                        title={confidentialityImpact.recommendation || 'Base'}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    {selectedProduct.confidentiality_impact && (
+                      <RiskLevel
+                        risk={
+                          selectedProduct.confidentiality_impact.base_impact
+                        }
+                      />
+                    )}
+                  </Grid>
+                  <Grid item={true} xs={2}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Selected')}
+                      </Typography>
+                      <Tooltip
+                        title={t(
+                          'Override The provisional confidentiality impact level recommended for disclosure compensation management information is low.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    <TaskType
+                      name="confidentiality_impact_selected"
+                      taskType="FIPS199"
+                      fullWidth={true}
+                      required={true}
+                      style={{ height: '38.09px' }}
+                      containerstyle={{ width: '100%' }}
+                      variant="outlined"
+                      disabled={disableAllFields}
+                    />
+                  </Grid>
+                  <Grid xs={8} item={true}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Justification')}
+                      </Typography>
+                      <Tooltip
+                        title={t(
+                          'Justification Identifies a summary of impact for how the risk affects the system.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    {disableAllFields ? (
+                      <div className={classes.scrollBg}>
+                        <div className={classes.scrollDiv}>
+                          <div className={classes.scrollObj}>
+                            <Markdown
+                              remarkPlugins={[remarkGfm, remarkParse]}
+                              rehypePlugins={[rehypeRaw]}
+                              parserOptions={{ commonmark: true }}
+                              className="markdown"
+                            >
+                              {confidentialityImpact?.adjustment_justification
+                                && t(
+                                  confidentialityImpact?.adjustment_justification,
+                                )}
+                            </Markdown>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <Field
+                        component={MarkDownField}
+                        name="confidentiality_impact_justification"
+                        fullWidth={true}
+                        multiline={true}
+                        rows="3"
+                        variant="outlined"
+                        containerstyle={{ width: '100%' }}
+                      />
+                    )}
+                  </Grid>
+                  <Grid item={true} xs={12}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Integrity Impact')}
+                      </Typography>
+                      <Tooltip
+                        title={
+                          integrityImpact.explanation || 'Integrity Impact'
+                        }
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                  </Grid>
+                  <Grid item={true} xs={2}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Base')}
+                      </Typography>
+                      <Tooltip title={integrityImpact.recommendation || 'Base'}>
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    {selectedProduct.integrity_impact && (
+                      <RiskLevel
+                        risk={selectedProduct.integrity_impact.base_impact}
+                      />
+                    )}
+                  </Grid>
+                  <Grid item={true} xs={2}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Selected')}
+                      </Typography>
+                      <Tooltip
+                        title={t(
+                          'Override The provisional Integrity Impact level recommended for disclosure compensation management information is low.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    <TaskType
+                      name="integrity_impact_selected"
+                      taskType="FIPS199"
+                      fullWidth={true}
+                      required={true}
+                      style={{ height: '38.09px' }}
+                      containerstyle={{ width: '100%' }}
+                      variant="outlined"
+                      disabled={disableAllFields}
+                    />
+                  </Grid>
+                  <Grid xs={8} item={true}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Justification')}
+                      </Typography>
+                      <Tooltip
+                        title={t(
+                          'Justification Identifies a summary of impact for how the risk affects the system.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    {disableAllFields ? (
+                      <div className={classes.scrollBg}>
+                        <div className={classes.scrollDiv}>
+                          <div className={classes.scrollObj}>
+                            <Markdown
+                              remarkPlugins={[remarkGfm, remarkParse]}
+                              rehypePlugins={[rehypeRaw]}
+                              parserOptions={{ commonmark: true }}
+                              className="markdown"
+                            >
+                              {integrityImpact?.adjustment_justification
+                                && t(integrityImpact?.adjustment_justification)}
+                            </Markdown>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <Field
+                        component={MarkDownField}
+                        name="integrity_impact_justification"
+                        fullWidth={true}
+                        multiline={true}
+                        rows="3"
+                        variant="outlined"
+                        containerstyle={{ width: '100%' }}
+                      />
+                    )}
+                  </Grid>
+                  <Grid item={true} xs={12}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Availability Impact')}
+                      </Typography>
+                      <Tooltip
+                        title={
+                          availabilityImpact.explanation
+                          || 'Availability Impact'
+                        }
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                  </Grid>
+                  <Grid item={true} xs={2}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Base')}
+                      </Typography>
+                      <Tooltip
+                        title={availabilityImpact.recommendation || 'Base'}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    {selectedProduct.availability_impact && (
+                      <RiskLevel
+                        risk={selectedProduct.availability_impact.base_impact}
+                      />
+                    )}
+                  </Grid>
+                  <Grid item={true} xs={2}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Selected')}
+                      </Typography>
+                      <Tooltip
+                        title={t(
+                          'Override The provisional Availability Impact level recommended for disclosure compensation management information is low.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    <TaskType
+                      name="availability_impact_selected"
+                      taskType="FIPS199"
+                      fullWidth={true}
+                      required={true}
+                      style={{ height: '38.09px' }}
+                      containerstyle={{ width: '100%' }}
+                      variant="outlined"
+                      disabled={disableAllFields}
+                    />
+                  </Grid>
+                  <Grid xs={8} item={true}>
+                    <div className={classes.textBase}>
+                      <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ margin: 0 }}
+                      >
+                        {t('Justification')}
+                      </Typography>
+                      <Tooltip
+                        title={t(
+                          'Justification Identifies a summary of impact for how the risk affects the system.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize="inherit"
+                          color="disabled"
+                        />
+                      </Tooltip>
+                    </div>
+                    <div className="clearfix" />
+                    {disableAllFields ? (
+                      <div className={classes.scrollBg}>
+                        <div className={classes.scrollDiv}>
+                          <div className={classes.scrollObj}>
+                            <Markdown
+                              remarkPlugins={[remarkGfm, remarkParse]}
+                              rehypePlugins={[rehypeRaw]}
+                              parserOptions={{ commonmark: true }}
+                              className="markdown"
+                            >
+                              {availabilityImpact?.adjustment_justification
+                                && t(availabilityImpact?.adjustment_justification)}
+                            </Markdown>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <Field
+                        component={MarkDownField}
+                        name="availability_impact_justification"
+                        fullWidth={true}
+                        multiline={true}
+                        rows="3"
+                        variant="outlined"
+                        containerstyle={{ width: '100%' }}
+                      />
+                    )}
+                  </Grid>
+                </Grid>
+              </DialogContent>
+              <DialogActions classes={{ root: classes.dialogClosebutton }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleReset}
+                  classes={{ root: classes.buttonPopover }}
+                >
+                  {t('Cancel')}
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={submitForm}
+                  disabled={isSubmitting}
+                  classes={{ root: classes.buttonPopover }}
+                >
+                  {t('Submit')}
+                </Button>
+              </DialogActions>
+            </Form>
+          )}
+        </Formik>
+      </Dialog>
     );
   }
 }

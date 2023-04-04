@@ -84,7 +84,7 @@ class SecurityCategorizationField extends Component {
           onChange={onChange}
           containerstyle={containerstyle}
           variant={variant}
-          disabled={disabled || false}
+          disabled={disabled}
           size={size}
           style={style}
           defaultValue={defaultValue}

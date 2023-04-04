@@ -20,6 +20,7 @@ import assessmentPlatform from '../../../../resources/images/entities/assessment
 import externalReferenceIcon from '../../../../resources/images/entities/externalReferenceIcon.svg';
 import userTypesIcon from '../../../../resources/images/entities/user_types.svg';
 import leveragedAuthorizationIcon from '../../../../resources/images/entities/leveragedAuthorizationIcon.svg';
+import informationTypesIcon from '../../../../resources/images/entities/information_types.svg';
 
 const styles = () => ({
   dataEntities: {
@@ -206,7 +207,7 @@ class DataEntitiesDropDown extends Component {
           >
             <div className={classes.menuItems}>
               <div className={classes.iconsContainer}>
-                <img src={leveragedAuthorizationIcon} alt="" />
+                <img src={informationTypesIcon} alt="" />
               </div>
               <div className={classes.menuItemText}>
                 {t('Information Types')}

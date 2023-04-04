@@ -1,26 +1,26 @@
 /* eslint-disable */
 /* refactor */
-import React, { Component } from "react";
-import PropTypes from "prop-types";
-import { compose } from "ramda";
-import { createFragmentContainer } from "react-relay";
-import graphql from "babel-plugin-relay/macro";
-import { withStyles } from "@material-ui/core/styles";
-import Grid from "@material-ui/core/Grid";
-import inject18n from "../../../../../components/i18n";
-import CyioDomainObjectHeader from "../../../common/stix_domain_objects/CyioDomainObjectHeader";
-import CyioCoreObjectOrCyioCoreRelationshipNotes from "../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes";
-import CyioCoreObjectExternalReferences from "../../../analysis/external_references/CyioCoreObjectExternalReferences";
-import InformationTypeEntityEditionContainer from "./InformationTypeEntityEditionContainer";
-import EntitiesInformationTypesCreation from "./EntitiesInformationTypesCreation";
-import EntityInformationTypeDetails from "./EntityInformationTypeDetails";
-import EntityInformationTypeOverview from "./EntityInformationTypeOverview";
-import EntitiesInformationTypesPopover from "./EntitiesInformationTypesPopover";
-import EntitiesInformationTypesDeletion from "./EntitiesInformationTypesDeletion";
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { compose } from 'ramda';
+import { createFragmentContainer } from 'react-relay';
+import graphql from 'babel-plugin-relay/macro';
+import { withStyles } from '@material-ui/core/styles';
+import Grid from '@material-ui/core/Grid';
+import inject18n from '../../../../../components/i18n';
+import CyioDomainObjectHeader from '../../../common/stix_domain_objects/CyioDomainObjectHeader';
+import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
+import CyioCoreObjectExternalReferences from '../../../analysis/external_references/CyioCoreObjectExternalReferences';
+import InformationTypeEntityEditionContainer from './InformationTypeEntityEditionContainer';
+import EntitiesInformationTypesCreation from './EntitiesInformationTypesCreation';
+import EntityInformationTypeDetails from './EntityInformationTypeDetails';
+import EntityInformationTypeOverview from './EntityInformationTypeOverview';
+import EntitiesInformationTypesPopover from './EntitiesInformationTypesPopover';
+import EntitiesInformationTypesDeletion from './EntitiesInformationTypesDeletion';
 
 const styles = () => ({
   container: {
-    margin: "0 0 40px 0",
+    margin: '0 0 40px 0',
   },
   gridContainer: {
     marginBottom: 20,
@@ -45,8 +45,9 @@ class EntityInformationTypeComponent extends Component {
   }
 
   render() {
-    const { classes, informationType, history, refreshQuery } =
-      this.props;
+    const {
+      classes, informationType, history, refreshQuery,
+    } = this.props;
     return (
       <>
         <div className={classes.container}>
@@ -175,10 +176,10 @@ const EntityInformationType = createFragmentContainer(
         ...EntityInformationTypeDetails_informationType
       }
     `,
-  }
+  },
 );
 
 export default compose(
   inject18n,
-  withStyles(styles)
+  withStyles(styles),
 )(EntityInformationType);

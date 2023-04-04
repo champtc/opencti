@@ -268,11 +268,11 @@ type SystemImplementation {
     search: String
   ): OscalRelationshipConnection
   # System Implementation
-  "Identifies a description of another authorized system from which this system inherits capabilities that satisfy security requirements. Another term for this concept is a common control provider."
-  components: [Component]
   "Identifies a defined component that can be part of an implemented system."
-  inventory_items: [InventoryItem]
+  components: [Component]
   "Identifies a single managed inventory item within the system."
+  inventory_items: [InventoryItem]
+  "Identifies another authorized system from which this system inherits capabilities that satisfy security requirements. Another term for this concept is a common control provider."
   leveraged_authorizations: [OscalLeveragedAuthorization]
   "Identifies a type of user that interacts with the system based on an associated role."
   users: [OscalUser]

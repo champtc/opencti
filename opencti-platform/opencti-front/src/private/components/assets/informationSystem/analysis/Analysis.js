@@ -69,6 +69,7 @@ class AnalysisComponent extends Component {
                 return (
                   <InformationSystemGraphTool
                     overview={true}
+                    leftBarOpen={true}
                     informationSystem={props.informationSystem}
                   />
                 );

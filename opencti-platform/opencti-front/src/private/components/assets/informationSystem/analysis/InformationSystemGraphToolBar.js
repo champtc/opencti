@@ -225,6 +225,7 @@ class InformationSystemGraphToolBar extends Component {
       handleTimeRangeChange,
       timeRangeValues,
       theme,
+      leftBarOpen,
     } = this.props;
     const {
       openCyioCoreObjectsTypes,
@@ -303,6 +304,10 @@ class InformationSystemGraphToolBar extends Component {
         anchor="bottom"
         variant="permanent"
         classes={{ paper: classes.bottomNav }}
+        PaperProps={{
+          variant: 'elevation',
+          elevation: 1,
+        }}
       >
         <div
           style={{
@@ -314,11 +319,11 @@ class InformationSystemGraphToolBar extends Component {
           <div
             style={{
               height: 54,
-              paddingTop: 3,
-              width: '100%',
+              padding: '3px 15px 0px 0px',
               display: 'flex',
               verticalAlign: 'top',
               justifyContent: 'space-between',
+              marginLeft: leftBarOpen ? 260 : 80,
             }}
           >
             <div
@@ -814,6 +819,7 @@ class InformationSystemGraphToolBar extends Component {
 InformationSystemGraphToolBar.propTypes = {
   classes: PropTypes.object,
   t: PropTypes.func,
+  leftBarOpen: PropTypes.bool,
   informationSystem: PropTypes.object,
   handleToggle3DMode: PropTypes.func,
   currentMode3D: PropTypes.bool,

@@ -223,7 +223,7 @@ class EntitiesDetailsRightBarContainer extends Component {
             fullWidth={true}
             variant='outlined'
             // onChange={handleSelectEntity}
-            value={entityData.id}
+            value={this.props.selectedEntity.id}
             style={{ height: '60px' }}
             containerstyle={{ width: '100%' }}
           >

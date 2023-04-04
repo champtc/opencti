@@ -395,7 +395,7 @@ class InformationSystemGraphToolComponent extends Component {
       variables: {
         id: this.props.informationSystem.id,
         entityId: selectedNodes[0].id,
-        implementationType: selectedNodes[0].entity_type,
+        implementation_type: selectedNodes[0].entity_type,
       },
     });
     this.selectedNodes.clear();
@@ -473,7 +473,7 @@ class InformationSystemGraphToolComponent extends Component {
 
   render() {
     const {
-      informationSystem, theme, t, classes, overview,
+      informationSystem, theme, t, classes, overview, leftBarOpen,
     } = this.props;
     const {
       mode3D,
@@ -489,8 +489,8 @@ class InformationSystemGraphToolComponent extends Component {
       selectedTimeRangeInterval,
       navOpen,
     } = this.state;
-    const width = window.innerWidth - (navOpen ? 210 : 60);
-    const height = window.innerHeight - 60;
+    const width = window.innerWidth - (navOpen ? 210 : 60) - (leftBarOpen ? 230 : 0);
+    const height = window.innerHeight - 60 - (leftBarOpen ? 120 : 0);
     const cyioCoreObjectsTypes = R.uniq(
       R.map((n) => n.entity_type, this.graphData.nodes),
     );
@@ -513,6 +513,7 @@ class InformationSystemGraphToolComponent extends Component {
       <div>
         <InformationSystemGraphToolBar
           overview={overview}
+          leftBarOpen={leftBarOpen}
           currentMode3D={mode3D}
           currentModeTree={modeTree}
           currentModeFixed={modeFixed}
@@ -744,6 +745,7 @@ InformationSystemGraphToolComponent.propTypes = {
   informationSystem: PropTypes.object,
   overview: PropTypes.bool,
   classes: PropTypes.object,
+  leftBarOpen: PropTypes.bool,
   theme: PropTypes.object,
   t: PropTypes.func,
 };

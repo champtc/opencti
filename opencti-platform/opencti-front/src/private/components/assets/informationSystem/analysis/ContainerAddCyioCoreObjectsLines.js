@@ -114,7 +114,7 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
         variables: {
           id: containerId,
           entityId: cyioCoreObject.id,
-          implementationType: cyioCoreObject.entity_type,
+          implementation_type: cyioCoreObject.entity_type,
         },
         onCompleted: () => {
           this.props.handleClose();
@@ -135,7 +135,7 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
         variables: {
           id: containerId,
           entityId: cyioCoreObject.id,
-          implementationType: cyioCoreObject.entity_type,
+          implementation_type: cyioCoreObject.entity_type,
         },
         onCompleted: () => {
           this.props.handleClose();

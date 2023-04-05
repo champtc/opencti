@@ -265,7 +265,7 @@ class SystemImplementationField extends Component {
 
   handleDelete(key) {
     this.setState(
-      { data: this.state.data.filter((value, i) => i !== key) },
+      { data: this.state.data.filter((value, i) => i === key) },
       () => {
         const finalOutput = this.state.data.length === 0
           ? []

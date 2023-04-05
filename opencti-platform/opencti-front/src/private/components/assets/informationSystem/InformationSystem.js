@@ -18,6 +18,7 @@ import InformationSystemEditionContainer from './InformationSystemEditionContain
 import CyioDomainObjectHeader from '../../common/stix_domain_objects/CyioDomainObjectHeader';
 import CyioCoreObjectExternalReferences from '../../analysis/external_references/CyioCoreObjectExternalReferences';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
+import InformationSystemGraph from './analysis/InformationSystemGraph';
 
 const styles = () => ({
   container: {
@@ -34,11 +35,16 @@ class InformationSystemComponent extends Component {
     this.state = {
       displayCreate: '',
       displayEdit: false,
+      displayGraph: false,
     };
   }
 
   handleDisplayEdit() {
     this.setState({ displayEdit: !this.state.displayEdit });
+  }
+
+  handleCreateGraph() {
+    this.setState({ displayGraph: !this.state.displayGraph });
   }
 
   handleOpenNewCreation(type) {
@@ -62,6 +68,7 @@ class InformationSystemComponent extends Component {
           PopoverComponent={<InformationSystemPopover />}
           goBack='/defender_hq/assets/information_systems'
           OperationsComponent={<InformationSystemDeletion />}
+          handleCreateGraph={this.handleCreateGraph.bind(this)}
           handleDisplayEdit={this.handleDisplayEdit.bind(this)}
           handleOpenNewCreation={this.handleOpenNewCreation.bind(this)}
         />
@@ -122,6 +129,11 @@ class InformationSystemComponent extends Component {
           refreshQuery={refreshQuery}
           handleDisplayEdit={this.handleDisplayEdit.bind(this)}
         />
+        <InformationSystemGraph
+          informationSystem={informationSystem}
+          displayGraph={this.state.displayGraph}
+          handleCreateGraph={this.handleCreateGraph.bind(this)}
+        />
       </div>
     );
   }
@@ -173,8 +185,9 @@ const InformationSystem = createFragmentContainer(InformationSystemComponent, {
         authors
         entity_type
       }
-      ...InformationSystemOverview_information
+      ...InformationSystemGraph_information
       ...InformationSystemDetails_information
+      ...InformationSystemOverview_information
     }
   `,
 });

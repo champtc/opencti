@@ -20,8 +20,8 @@ const informationSystemQuery = graphql`
     informationSystem(id: $id) {
       id
       short_name
-      ...InformationSystem_information
       ...Analysis_analysis
+      ...InformationSystem_information
     }
   }
 `;

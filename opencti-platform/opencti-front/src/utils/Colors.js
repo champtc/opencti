@@ -35,21 +35,95 @@ export const itemColor = (type, dark = false, reversed = false) => {
         return '#727926';
       }
       return '#7f8727';
+    case 'guidance':
+      if (dark) {
+        return '#FFFFFF';
+      }
+      return '#FFFFFF';
+    case 'appliance':
+    case 'computing-device':
+    case 'firewall':
+    case 'laptop':
+    case 'load-balancer':
+    case 'mobile-device':
+    case 'pbx':
+    case 'printer':
+    case 'network-router':
+    case 'server':
+    case 'network-switch':
+    case 'storage-array':
+    case 'voip-device':
+    case 'voip-handset':
+    case 'workstation':
+    case 'hardware':
+    case 'wireless-access-point':
+      if (dark) {
+        return '#FF8A1C';
+      }
+      return '#FF8A1C';
     case 'Campaign':
       if (dark) {
         return '#4a148c';
       }
       return '#9c27b0';
+    case 'interconnection':
+      if (dark) {
+        return '#00B2B9';
+      }
+      return '#00B2B9';
+    case 'network':
+      if (dark) {
+        return '#6FD2D9';
+      }
+      return '#6FD2D9';
+    case 'physical':
+    case 'plan':
+    case 'policy':
+    case 'process-procedure':
+      if (dark) {
+        return '#50ADF8';
+      }
+      return '#50ADF8';
     case 'Note':
       if (dark) {
         return '#43a047';
       }
       return '#2e7d32';
+    case 'service':
+      if (dark) {
+        return '#B5CAED';
+      }
+      return '#B5CAED';
+    case 'software':
+    case 'application-software':
+    case 'firmware':
+    case 'hypervisor':
+    case 'operating-system':
+      if (dark) {
+        return '#B7B7B7';
+      }
+      return '#B7B7B7';
     case 'Observed-Data':
       if (dark) {
         return '#00acc1';
       }
       return '#00838f';
+    case 'standard':
+      if (dark) {
+        return '#FFF0C9';
+      }
+      return '#FFF0C9';
+    case 'information-system':
+    case 'database':
+    case 'directory-server':
+    case 'dns-server':
+    case 'email-server':
+    case 'web-server':
+    case 'validation':
+      if (dark) {
+        return '#82A671';
+      }
+      return '#82A671';
     case 'Opinion':
       if (dark) {
         return '#ad1457';

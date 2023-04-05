@@ -4,19 +4,34 @@ import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import * as R from 'ramda';
 import { compose } from 'ramda';
+import * as Yup from 'yup';
 import { createFragmentContainer } from 'react-relay';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
-import Typography from '@material-ui/core/Typography';
+import { Formik, Form, Field } from 'formik';
 import { Information } from 'mdi-material-ui';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
-import Tooltip from '@material-ui/core/Tooltip';
 import graphql from 'babel-plugin-relay/macro';
-import IconButton from '@material-ui/core/IconButton';
+import {
+  Dialog,
+  DialogContent,
+  DialogActions,
+  DialogTitle,
+  Grid,
+  Slide,
+  IconButton,
+  Button,
+  Tooltip,
+  Typography,
+} from '@material-ui/core';
 import inject18n from '../../../../components/i18n';
+import MarkDownField from '../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../utils/bakedToast';
 import { QueryRenderer, commitMutation } from '../../../../relay/environment';
+import SearchTextField from '../../common/form/SearchTextField';
+import TaskType from '../../common/form/TaskType';
+import SecurityCategorization from './SecurityCategorization';
 import InformationTypeEdition, {
   InformationTypeEditionQuery,
 } from './InformationTypeEdition';
@@ -120,7 +135,6 @@ class InformationTypesCreationComponent extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    console.log(values);
     const categorizations = [
       {
         catalog: values.catalog,
@@ -268,12 +282,7 @@ class InformationTypesCreationComponent extends Component {
       variables: {
         id: infoTypeId,
       },
-      setSubmitting,
       pathname: '/defender_hq/assets/information_systems',
-      onCompleted: (data) => {
-        setSubmitting(false);
-        resetForm();
-      },
       onError: (err) => {
         console.error(err);
         toastGenericError('Failed to delete Information Type');

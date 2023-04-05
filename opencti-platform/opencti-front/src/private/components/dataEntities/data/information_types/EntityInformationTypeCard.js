@@ -6,10 +6,7 @@ import { createFragmentContainer } from 'react-relay';
 import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
 import {
-  Card,
-  Typography,
-  Grid,
-  Checkbox,
+  Card, Typography, Grid, Checkbox,
 } from '@material-ui/core';
 import CardActionArea from '@material-ui/core/CardActionArea';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -17,7 +14,7 @@ import CardContent from '@material-ui/core/CardContent';
 import Skeleton from '@material-ui/lab/Skeleton';
 import inject18n from '../../../../../components/i18n';
 import CyioCoreObjectLabels from '../../../common/stix_core_objects/CyioCoreObjectLabels';
-import EntitiesUserTypesPopover from './EntitiesUserTypesPopover';
+import EntitiesInformationTypesPopover from './EntitiesInformationTypesPopover';
 
 const styles = (theme) => ({
   card: {
@@ -100,7 +97,7 @@ const styles = (theme) => ({
   },
 });
 
-class EntityUserTypesCardComponent extends Component {
+class EntityInformationTypeCardComponent extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -115,6 +112,7 @@ class EntityUserTypesCardComponent extends Component {
   render() {
     const {
       t,
+      fsd,
       classes,
       node,
       selectAll,
@@ -126,8 +124,10 @@ class EntityUserTypesCardComponent extends Component {
     return (
       <Card
         classes={{
-          root: (selectAll || node.id in (selectedElements || {}))
-            ? classes.selectedItem : classes.card,
+          root:
+            selectAll || node.id in (selectedElements || {})
+              ? classes.selectedItem
+              : classes.card,
         }}
         raised={true}
         elevation={3}
@@ -135,14 +135,13 @@ class EntityUserTypesCardComponent extends Component {
         <CardActionArea
           classes={{ root: classes.area }}
           component={Link}
-          TouchRippleProps={this.state.openMenu && { classes: { root: classes.buttonRipple } }}
-          to={`/data/entities/user_types/${node?.id}`}
+          TouchRippleProps={
+            this.state.openMenu && { classes: { root: classes.buttonRipple } }
+          }
+          to={`/data/entities/information_types/${node?.id}`}
         >
           <CardContent className={classes.content}>
-            <Grid
-              item={true}
-              className={classes.header}
-            >
+            <Grid item={true} className={classes.header}>
               <div>
                 <Typography
                   variant="h3"
@@ -158,7 +157,7 @@ class EntityUserTypesCardComponent extends Component {
                 onClick={(event) => event.preventDefault()}
                 style={{ display: 'flex' }}
               >
-                <EntitiesUserTypesPopover
+                <EntitiesInformationTypesPopover
                   handleOpenMenu={this.handleOpenMenu.bind(this)}
                   history={history}
                   node={node}
@@ -167,21 +166,20 @@ class EntityUserTypesCardComponent extends Component {
                   disableRipple={true}
                   onClick={onToggleEntity.bind(this, node)}
                   checked={selectAll || node.id in (selectedElements || {})}
-                  color='primary'
+                  color="primary"
                 />
               </Grid>
             </Grid>
-            <Grid container={true} >
+            <Grid container={true}>
               <Grid item={true} xs={6} className={classes.body}>
                 <Typography
                   variant="h3"
                   color="textSecondary"
-                  gutterBottom={true}>
+                  gutterBottom={true}
+                >
                   {t('Name')}
                 </Typography>
-                <Typography>
-                  {node?.name && t(node?.name)}
-                </Typography>
+                <Typography>{node?.title && t(node?.title)}</Typography>
               </Grid>
               <Grid item={true} xs={6} className={classes.body}>
                 <Typography
@@ -190,31 +188,28 @@ class EntityUserTypesCardComponent extends Component {
                   style={{ marginTop: '13px' }}
                   gutterBottom={true}
                 >
-                  {t('User Type')}
+                  {t('Creation Date')}
                 </Typography>
-                <Typography>
-                  {node.user_type && t(node.user_type)}
-                </Typography>
+                <Typography>{node.created && fsd(node.created)}</Typography>
               </Grid>
             </Grid>
-            <Grid container={true} >
-              <Grid item={true} xs={6} className={classes.body}>
+            <Grid container={true}>
+              <Grid item={true} xs={12} className={classes.body}>
                 <Typography
                   variant="h3"
                   color="textSecondary"
                   style={{ marginTop: '13px' }}
                   gutterBottom={true}
                 >
-                  {t('Privilege Level')}
+                  {t('Marking')}
                 </Typography>
                 <Typography>
-                  {node?.privilege_level
-                    && (node?.privilege_level)}
+                  {node?.parent_types && node?.parent_types}
                 </Typography>
               </Grid>
             </Grid>
-            <Grid container={true} >
-              <Grid item={true} xs={6} className={classes.body}>
+            <Grid container={true}>
+              <Grid item={true} xs={12} className={classes.body}>
                 <Typography
                   variant="h3"
                   color="textSecondary"
@@ -228,20 +223,6 @@ class EntityUserTypesCardComponent extends Component {
                   onClick={onLabelClick.bind(this)}
                 />
               </Grid>
-              <Grid item={true} xs={6} className={classes.body}>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  style={{ marginTop: '13px' }}
-                  gutterBottom={true}
-                >
-                  {t('Marking')}
-                </Typography>
-                <Typography>
-                  {node?.markings
-                    && (node?.markings)}
-                </Typography>
-              </Grid>
             </Grid>
           </CardContent>
         </CardActionArea>
@@ -250,7 +231,7 @@ class EntityUserTypesCardComponent extends Component {
   }
 }
 
-EntityUserTypesCardComponent.propTypes = {
+EntityInformationTypeCardComponent.propTypes = {
   node: PropTypes.object,
   bookmarksIds: PropTypes.array,
   classes: PropTypes.object,
@@ -261,25 +242,17 @@ EntityUserTypesCardComponent.propTypes = {
   onBookmarkClick: PropTypes.func,
 };
 
-const EntityUserTypesCardFragment = createFragmentContainer(
-  EntityUserTypesCardComponent,
+const EntityInformationTypeCardFragment = createFragmentContainer(
+  EntityInformationTypeCardComponent,
   {
     node: graphql`
-      fragment EntityUserTypesCard_node on OscalUser {
+      fragment EntityInformationTypeCard_node on InformationType {
         __typename
         id
-        entity_type
-        description
-        name
+        title
         created
+        entity_type
         modified
-        user_type
-        short_name
-        privilege_level
-        roles {
-          name
-          id
-        }
         labels {
           __typename
           id
@@ -288,17 +261,37 @@ const EntityUserTypesCardFragment = createFragmentContainer(
           entity_type
           description
         }
+        links {
+          __typename
+          id
+          source_name
+          description
+          entity_type
+          url
+          hashes {
+            value
+          }
+          external_id
+        }
+        remarks {
+          __typename
+          id
+          entity_type
+          abstract
+          content
+          authors
+        }
       }
     `,
   },
 );
 
-export const EntityUserTypesCard = compose(
+export const EntityInformationTypeCard = compose(
   inject18n,
   withStyles(styles),
-)(EntityUserTypesCardFragment);
+)(EntityInformationTypeCardFragment);
 
-class EntityUserTypesCardDummyComponent extends Component {
+class EntityInformationTypeCardDummyComponent extends Component {
   render() {
     const { classes } = this.props;
     return (
@@ -321,11 +314,7 @@ class EntityUserTypesCardDummyComponent extends Component {
                     width="100%"
                     style={{ marginBottom: 10 }}
                   />
-                  <Skeleton
-                    animation="wave"
-                    variant="rect"
-                    width="100%"
-                  />
+                  <Skeleton animation="wave" variant="rect" width="100%" />
                 </div>
                 <Skeleton
                   animation="wave"
@@ -363,11 +352,11 @@ class EntityUserTypesCardDummyComponent extends Component {
   }
 }
 
-EntityUserTypesCardDummyComponent.propTypes = {
+EntityInformationTypeCardDummyComponent.propTypes = {
   classes: PropTypes.object,
 };
 
-export const EntityUserTypesCardDummy = compose(
+export const EntityInformationTypeCardDummy = compose(
   inject18n,
   withStyles(styles),
-)(EntityUserTypesCardDummyComponent);
+)(EntityInformationTypeCardDummyComponent);

@@ -333,7 +333,7 @@ class CyioListCards extends Component {
                     onClick={handleDisplayEdit && handleDisplayEdit.bind(this, selectedElements)}
                     className={classes.iconButton}
                     disabled={Boolean(Object.entries(selectedElements || {}).length !== 1)
-                      || disabled}
+                      || Boolean(selectedDataEntity === 'information_types') || disabled}
                     color="primary"
                     size="large"
                   >

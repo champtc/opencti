@@ -24,6 +24,24 @@ import {
 } from '../schema/sparql/dataMarkings.js';
 
 
+// Define Well-Known Markings
+const knownMarkings = {
+  'tlp': [
+    {name: "TLP:AMBER", id:"55d920b0-5e8b-4f79-9ee9-91f868d9b421"},
+    {name: "TLP:AMBER+STRICT", id: "939a9414-2ddd-4d32-a0cd-375ea402b003"},
+    {name: "TLP:CLEAR", id: "94868c89-83c2-464b-929b-a1a8aa3c8487"} ,
+    {name: "TLP:GREEN", id: "bab4a63c-aed9-4cf5-a766-dfca5abac2bb"},
+    {name: "TLP:RED", id: "e828b379-4e03-4974-9ac4-e53a884c97c1"}
+  ],
+  'iep': [
+    {name: "FIRST IEP-SIG TLP-AMBER", id: "01bc4353-4829-4d55-8d52-0ab7e0790df9"},
+    {name: "FIRST IEP-SIG TLP-GREEN", id: "3903ce63-674c-4b70-9457-8c5527dd9115"},
+    {name: "FIRST IEP-SIG TLP-RED", id: "5e607e88-ab70-4977-8c1b-ee3a16b0f68c"},
+    {name: "FIRST IEP-SIG TLP-WHITE", id: "0d783790-b221-40c1-840a-5787330612c1"}
+  ],
+  'statement': []
+}
+
 export const findDataMarkingById = async (id, dbName, dataSources, select) => {
   const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
   return findDataMarkingByIri(iri, dbName, dataSources, select);
@@ -165,7 +183,7 @@ export const findAllDataMarkings = async (args, dbName, dataSources, select) => 
   };
 };
 
-export const createDataMarking = async (input, dbName, dataSources, select) => {
+export const createDataMarking = async (definition_type, input, dbName, dataSources, select) => {
   // WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -178,9 +196,25 @@ export const createDataMarking = async (input, dbName, dataSources, select) => {
   }
   // END WORKAROUND
 
-  // check if object with id exists
+  // Add the definition type
+  input['definition_type'] = definition_type;
+
+  // ensure id and entity_type is in the list of times to be returned
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('entity_type')) select.push('entity_type');
+  if (!select.includes('definition_type')) select.push('definition_type');
+
+  // check if attempting to create a well-known data marking
+  let selectId;
   let { iri, id, query } = insertDataMarkingQuery(input);
-  const sparqlQuery = selectDataMarkingQuery(id, ['id', 'created', 'modified', 'name']);
+  for (let entry of knownMarkings[definition_type]) {
+    if (entry.name === input.name) selectId = entry.id; 
+  }
+
+  if (selectId === undefined) selectId = id;
+
+  // check if object with id exists
+  const sparqlQuery = selectDataMarkingQuery(selectId, ['id', 'created', 'modified', 'name']);
   let response;
   try {
     response = await dataSources.Stardog.queryById({

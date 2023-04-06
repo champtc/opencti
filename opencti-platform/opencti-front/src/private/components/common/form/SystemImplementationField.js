@@ -250,15 +250,11 @@ class SystemImplementationField extends Component {
   }
 
   handleDelete(key) {
-    this.setState(
-      { data: this.state.data.filter((value, i) => i === key) },
-      () => {
-        const finalOutput = this.state.data.length === 0
-          ? []
-          : this.state.data.map((item) => item.id);
-        this.props.onDelete(this.props.name, finalOutput[0]);
-      },
-    );
+    const finalOutput = this.state.data.length === 0
+      ? []
+      : this.state.data.filter((item, i) => i === key);
+    this.setState({ data: this.state.data.filter((value, i) => i !== key) });
+    this.props.onDelete(this.props.name, finalOutput[0].id);
   }
 
   handleSelectChange(event) {

@@ -24,13 +24,13 @@ import {
   attachToInformationSystemQuery,
   detachFromInformationSystemQuery,
 } from '../schema/sparql/informationSystem.js';
-import { findLeveragedAuthorizationByIri } from '../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
-import { findUserTypeByIri } from '../../risk-assessments/oscal-common/domain/oscalUser.js';
+import { findLeveragedAuthorizationById, findLeveragedAuthorizationByIri } from '../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
+import { findUserTypeById, findUserTypeByIri } from '../../risk-assessments/oscal-common/domain/oscalUser.js';
 import { addToInventoryQuery, removeFromInventoryQuery } from '../../assets/assetUtil.js';
 import { createInformationType, findInformationTypeByIri } from './informationType.js';
 import { createDescriptionBlock, deleteDescriptionBlockByIri } from './descriptionBlock.js';
-import { findComponentByIri } from '../../risk-assessments/component/domain/component.js';
-import { findInventoryItemByIri } from '../../risk-assessments/inventory-item/domain/inventoryItem.js';
+import { findComponentById, findComponentByIri } from '../../risk-assessments/component/domain/component.js';
+import { findInventoryItemById, findInventoryItemByIri } from '../../risk-assessments/inventory-item/domain/inventoryItem.js';
 
 
 
@@ -974,25 +974,37 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
+  // build the minimal selection 
+  let commonSelect = ["id","entity_type","created","modified","name","title","system_name","component_type","asset_type"];
+
+  // retrieve the information system to ensure it exists and for use as the source of the relationship
+  let infoSystem = await findInformationSystemById(id, dbName, dataSources, commonSelect);
+
+  // retrieve the implementation to ensure it exists and for use as the target of the relationship
+  let entity;
   let field;
   switch(implementation_type) {
     case 'component':
     case 'Component':
+      entity = await findComponentById(entityId, dbName, dataSources, commonSelect);
       field = 'components';
       break;
     case 'inventory_item':
     case 'inventory-item':
     case 'InventoryItem':
+      entity = await findInventoryItemById(entityId, dbName, dataSources, commonSelect);
       field = 'inventory_items';
       break;
     case 'leveraged_authorization':
     case 'oscal-leveraged-authorization':
     case 'OscalLeveragedAuthorization':
       field = 'leveraged_authorizations';
+      entity = await findLeveragedAuthorizationById(entityId, dbName, dataSources, commonSelect);
       break;
     case 'user_type':
     case 'oscal-user':
     case 'OscalUser':
+      entity = await findUserTypeById(entityId, dbName, dataSources, commonSelect);
       field = 'users';
       break;
     default:
@@ -1008,9 +1020,9 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
       created: timestamp,
       modified: timestamp,
       relationship_type: 'consists-of',
-      source: id,
-      target: entityId,
       valid_from: timestamp,
+      source: infoSystem,
+      target: entity,
     };
     return relationship;
   }

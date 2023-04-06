@@ -61,6 +61,13 @@ const dataMarkingReducer = (item) => {
   };
 };
 
+// Utility
+export const getDataMarkingIri = (id) => {
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  return `<http://cyio.darklight.ai/marking-definition--${id}>`;
+}
+
+
 // Query Builders
 export const insertDataMarkingQuery = (propValues) => {
   const id_material = {
@@ -105,11 +112,11 @@ export const insertDataMarkingQuery = (propValues) => {
       ${iri} a <http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition> .
       ${iri} a <http://docs.oasis-open.org/ns/cti#Object> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
-      ${iri} <http://darklight.ai/ns/common#id> "${id}".
-      ${iri} <http://darklight.ai/ns/common#object_type> "marking-definition" . 
-      ${iri} <http://darklight.ai/ns/common#created> "${timestamp}"^^xsd:dateTime . 
-      ${iri} <http://darklight.ai/ns/common#modified> "${timestamp}"^^xsd:dateTime . 
-      ${insertPredicates.join('. \n')}
+      ${iri} <http://docs.oasis-open.org/ns/cti#id> "${id}".
+      ${iri} <http://docs.oasis-open.org/ns/cti#object_type> "marking-definition" . 
+      ${iri} <http://docs.oasis-open.org/ns/cti#created> "${timestamp}"^^xsd:dateTime . 
+      ${iri} <http://docs.oasis-open.org/ns/cti#modified> "${timestamp}"^^xsd:dateTime . 
+      ${insertPredicates.join(' . \n')}
     }
   }
   `;
@@ -188,7 +195,7 @@ export const selectAllDataMarkingsQuery = (select, args, parent) => {
 
 export const deleteDataMarkingQuery = (id) => {
   const iri = `http://cyio.darklight.ai/marking-definition--${id}`;
-  return deleteDataSourceByIriQuery(iri);
+  return deleteDataMarkingByIriQuery(iri);
 };
 
 export const deleteDataMarkingByIriQuery = (iri) => {
@@ -294,15 +301,6 @@ export const dataMarkingPredicateMap = {
       return optionalizePredicate(this.binding(iri, value));
     },
   },
-  spec_version: {
-    predicate: '<http://docs.oasis-open.org/ns/cti#spec_version>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'spec_version');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
-  },
   created: {
     predicate: '<http://docs.oasis-open.org/ns/cti#created>',
     binding(iri, value) {
@@ -325,6 +323,15 @@ export const dataMarkingPredicateMap = {
     predicate: '<http://docs.oasis-open.org/ns/cti#modified>',
     binding(iri, value) {
       return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'modified');
+    },
+    optional(iri, value) {
+      return optionalizePredicate(this.binding(iri, value));
+    },
+  },
+  spec_version: {
+    predicate: '<http://docs.oasis-open.org/ns/cti#spec_version>',
+    binding(iri, value) {
+      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'spec_version');
     },
     optional(iri, value) {
       return optionalizePredicate(this.binding(iri, value));

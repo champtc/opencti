@@ -144,7 +144,7 @@ class SystemImplementationComponent extends Component {
             helperText={'Indicateds Inventory Items on this entity.'}
             onSubmit={this.onSubmit.bind(this)}
             onDelete={this.onDelete.bind(this)}
-
+            link='/defender_hq/assets/devices'
           />
         </Grid>
         <Grid item={true} xs={6}>
@@ -159,6 +159,7 @@ class SystemImplementationComponent extends Component {
             helperText={'Indicateds Components on this entity.'}
             onSubmit={this.onSubmit.bind(this)}
             onDelete={this.onDelete.bind(this)}
+            link='/defender_hq/assets/software'
           />
         </Grid>
         <Grid item={true} xs={6}>
@@ -173,6 +174,7 @@ class SystemImplementationComponent extends Component {
             helperText={'Indicateds Leveraged Authorizations on this entity.'}
             onSubmit={this.onSubmit.bind(this)}
             onDelete={this.onDelete.bind(this)}
+            link='/data/entities/leveraged_authorizations'
           />
         </Grid>
         <Grid item={true} xs={6}>
@@ -187,6 +189,7 @@ class SystemImplementationComponent extends Component {
             helperText={'Indicateds User Types on this entity.'}
             onSubmit={this.onSubmit.bind(this)}
             onDelete={this.onDelete.bind(this)}
+            link='/data/entities/user_types'
           />
         </Grid>
       </>

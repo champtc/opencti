@@ -398,21 +398,9 @@ class InformationSystemGraphToolComponent extends Component {
         implementation_type: selectedNodes[0].entity_type,
       },
     });
+    this.handleDelete(selectedNodes[0]);
     this.selectedNodes.clear();
-    this.graphData = buildGraphData(
-      this.graphObjects,
-      decodeGraphData(this.props.informationSystem.graph_data),
-      this.props.t,
-    );
     this.setState({
-      graphData: applyFilters(
-        this.graphData,
-        this.state.cyioCoreObjectsTypes,
-        this.state.markedBy,
-        this.state.createdBy,
-        ignoredCyioCoreObjectsTypes,
-        this.state.selectedTimeRangeInterval,
-      ),
       numberOfSelectedNodes: this.selectedNodes.size,
       numberOfSelectedLinks: this.selectedLinks.size,
     });

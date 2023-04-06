@@ -246,33 +246,15 @@ class SystemImplementationField extends Component {
   }
 
   handleSubmit() {
-    const { data } = this.state;
-    if (data.length === 0) {
-      this.setState({ open: false });
-
-      if (this.props.data !== data) {
-        this.setState({ open: false });
-        this.props.onSubmit(this.props.name, []);
-      }
-    } else {
-      const finalOutput = data.length === 0
-        ? []
-        : data.map((item) => item.id);
-      this.setState({ open: false });
-      this.props.onSubmit(this.props.name, finalOutput);
-    }
+    this.setState({ open: false });
   }
 
   handleDelete(key) {
-    this.setState(
-      { data: this.state.data.filter((value, i) => i === key) },
-      () => {
-        const finalOutput = this.state.data.length === 0
-          ? []
-          : this.state.data.map((item) => item.id);
-        this.props.onDelete(this.props.name, finalOutput[0]);
-      },
-    );
+    const finalOutput = this.state.data.length === 0
+      ? []
+      : this.state.data.filter((item, i) => i === key);
+    this.setState({ data: this.state.data.filter((value, i) => i !== key) });
+    this.props.onDelete(this.props.name, finalOutput[0].id);
   }
 
   handleSelectChange(event) {
@@ -307,6 +289,7 @@ class SystemImplementationField extends Component {
       helperText,
       containerstyle,
       style,
+      link,
     } = this.props;
     const systemImplementationData = this.props.data.length > 0
       ? R.map((n) => ({ id: n.id, name: n.name || n.title }))(this.props.data)
@@ -345,6 +328,7 @@ class SystemImplementationField extends Component {
           variant='outlined'
           history={history}
           handleDelete={this.handleDelete.bind(this)}
+          link={link}
         />
         <Dialog
           keepMounted={false}

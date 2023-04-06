@@ -27,7 +27,7 @@ const styles = (theme) => ({
     color: theme.palette.header.text,
   },
   appHeader: {
-    margin: '10px 0px',
+    margin: '10px',
     display: 'flex',
     justifyContent: 'space-between',
   },
@@ -98,7 +98,7 @@ class InformationSystemGraphComponent extends Component {
               onClick={() => handleCreateGraph()}
               classes={{ root: classes.buttonPopover }}
             >
-              {t('Cancel')}
+              {t('Close')}
             </Button>
             <CyioExportButtons
               domElementId="container"

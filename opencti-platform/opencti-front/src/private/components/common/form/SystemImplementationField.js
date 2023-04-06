@@ -289,6 +289,7 @@ class SystemImplementationField extends Component {
       helperText,
       containerstyle,
       style,
+      link,
     } = this.props;
     const systemImplementationData = this.props.data.length > 0
       ? R.map((n) => ({ id: n.id, name: n.name || n.title }))(this.props.data)
@@ -327,6 +328,7 @@ class SystemImplementationField extends Component {
           variant='outlined'
           history={history}
           handleDelete={this.handleDelete.bind(this)}
+          link={link}
         />
         <Dialog
           keepMounted={false}

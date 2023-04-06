@@ -246,21 +246,7 @@ class SystemImplementationField extends Component {
   }
 
   handleSubmit() {
-    const { data } = this.state;
-    if (data.length === 0) {
-      this.setState({ open: false });
-
-      if (this.props.data !== data) {
-        this.setState({ open: false });
-        this.props.onSubmit(this.props.name, []);
-      }
-    } else {
-      const finalOutput = data.length === 0
-        ? []
-        : data.map((item) => item.id);
-      this.setState({ open: false });
-      this.props.onSubmit(this.props.name, finalOutput);
-    }
+    this.setState({ open: false });
   }
 
   handleDelete(key) {

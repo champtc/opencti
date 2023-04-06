@@ -726,23 +726,7 @@ class InformationSystemGraphToolBar extends Component {
                 )}
                 <CyioCoreRelationshipCreation
                   open={openCreatedRelation}
-                  // fromObjects={relationFromObjects}
-                  // toObjects={relationToObjects}
-                  // startTime={
-                  //   lastLinkFirstSeen || dateFormat(report.published)
-                  // }
-                  // stopTime={lastLinkLastSeen || dateFormat(report.published)}
-                  // confidence={report.confidence}
                   handleClose={this.handleCloseCreateRelationship.bind(this)}
-                // handleResult={onAddRelation}
-                // handleReverseRelation={this.handleReverseRelation.bind(
-                //   this,
-                // )}
-                // defaultCreatedBy={R.propOr(null, 'createdBy', report)}
-                // defaultMarkingDefinitions={R.map(
-                //   (n) => n.node,
-                //   R.pathOr([], ['objectMarking', 'edges'], report),
-                // )}
                 />
                 <Tooltip title={t('Create a sighting')}>
                   <span>
@@ -771,13 +755,8 @@ class InformationSystemGraphToolBar extends Component {
                       (n) => n.node,
                       R.pathOr([], ['objects', 'edges'], informationSystem),
                     )}
-                    // targetCyioCoreObjectTypes={[
-                    //   'Cyio-Domain-Object',
-                    //   'Cyio-Cyber-Observable',
-                    // ]}
                     onAdd={onAdd}
                     onDelete={onDelete}
-                  // confidence={informationSystem.confidence}
                   />
                 )}
                 <Dialog

@@ -23,6 +23,7 @@ import {
   deleteInformationSystemByIriQuery,
   attachToInformationSystemQuery,
   detachFromInformationSystemQuery,
+  generateInformationSystemId,
 } from '../schema/sparql/informationSystem.js';
 import { findLeveragedAuthorizationById, findLeveragedAuthorizationByIri } from '../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
 import { findUserTypeById, findUserTypeByIri } from '../../risk-assessments/oscal-common/domain/oscalUser.js';
@@ -248,6 +249,12 @@ export const createInformationSystem = async (input, dbName, dataSources, select
   }
   // END WORKAROUND
 
+    // check if an information system with this same id exists
+    let existSelect = ['id','entity_type']
+    let checkId = generateInformationSystemId( input );
+    let infoSys = await findInformationSystemById(checkId, dbName, dataSources, existSelect);
+    if ( infoSys != undefined && infoSys != null) throw new UserInputError(`Cannot create information system as entity ${checkId} already exists`);
+  
   // Compute system ids if not supplied
   if (!input.system_ids && input.system_name) {
     let id_material = {...(input.system_name && {"system_name": input.system_name})};

@@ -975,7 +975,7 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
   // build the minimal selection 
-  let commonSelect = ["id","entity_type","created","modified","name","title","system_name","component_type","asset_type"];
+  let commonSelect = ["id","entity_type","created","modified","name","title","system_name","component_type","asset_type","date_authorized"];
 
   // retrieve the information system to ensure it exists and for use as the source of the relationship
   let infoSystem = await findInformationSystemById(id, dbName, dataSources, commonSelect);

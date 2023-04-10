@@ -273,12 +273,12 @@ export const oscalLeveragedAuthorizationPredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   party: {
-    predicate: "<http://darklight.ai/ns/common#party>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#party>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "party");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   date_authorized: {
-    predicate: "<http://darklight.ai/ns/common#date_authorized>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#date_authorized>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:date` : null,  this.predicate, "date_authorized");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },

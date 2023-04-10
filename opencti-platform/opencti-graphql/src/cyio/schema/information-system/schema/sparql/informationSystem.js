@@ -66,7 +66,7 @@ const informationSystemReducer = (item) => {
       ...(item.components && { component_iris: item.components }),
       ...(item.inventory_items && { inventory_item_iris: item.inventory_items }),
       ...(item.leveraged_authorizations && { leveraged_authorization_iris: item.leveraged_authorizations }),
-      ...(item.users && { users_iris: item.users }),
+      ...(item.users && { user_iris: item.users }),
       // hints for general lists of items
       ...(item.object_markings && {marking_iris: item.object_markings}),
       ...(item.labels && { label_iris: item.labels }),

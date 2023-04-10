@@ -143,6 +143,7 @@ const cyioInformationSystemResolvers = {
       if (item.entity_type === 'component') return 'Component';
       if (item.entity_type === 'inventory-item') return 'InventoryItem';
       if (item.entity_type === 'information-system') return 'InformationSystem';
+      if (item.entity_type === 'information-type') return 'InformationType';
       if (item.entity_type === 'oscal-user') return 'OscalUser';
       if (item.entity_type === 'oscal-leveraged-authorization') return 'OscalLeveragedAuthorization';
       if (item.entity_type === 'oscal-relationship') return 'OscalRelationship';

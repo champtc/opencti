@@ -111,12 +111,11 @@ class InformationSystemGraphComponent extends Component {
           <QueryRenderer
             query={informationSystemGraphToolQuery}
             variables={{ id: informationSystem.id }}
-            render={({ props, retry }) => {
+            render={({ props }) => {
               if (props && props.informationSystem) {
                 return (
                   <InformationSystemGraphTool
                     informationSystem={props.informationSystem}
-                    refreshQuery={retry}
                   />
                 );
               }

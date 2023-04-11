@@ -335,13 +335,14 @@ class InformationSystemGraphToolComponent extends Component {
   }
 
   handleAddEntity(cyioCoreObject) {
-    if (R.map((n) => n.id, this.graphObjects).includes(cyioCoreObject.id)) return;
-    this.graphObjects = [...this.graphObjects, cyioCoreObject];
+    if (R.map((n) => n.id, this.graphObjects).includes(cyioCoreObject[0].id)) return;
+    this.graphObjects = [...this.graphObjects, ...cyioCoreObject];
     this.graphData = buildGraphData(
       this.graphObjects,
       decodeGraphData(this.props.informationSystem.graph_data),
       this.props.t,
     );
+    this.props.refreshQuery();
     const selectedTimeRangeInterval = computeTimeRangeInterval(
       this.graphObjects,
     );
@@ -384,7 +385,7 @@ class InformationSystemGraphToolComponent extends Component {
         ignoredCyioCoreObjectsTypes,
         this.state.selectedTimeRangeInterval,
       ),
-    });
+    }, () => this.props.refreshQuery());
   }
 
   handleDeleteSelected() {
@@ -519,6 +520,7 @@ class InformationSystemGraphToolComponent extends Component {
           markedBy={markedBy}
           currentMarkedBy={currentMarkedBy}
           createdBy={createdBy}
+          graphData={graphData}
           currentCreatedBy={currentCreatedBy}
           handleSelectAll={this.handleSelectAll.bind(this)}
           handleSelectByType={this.handleSelectByType.bind(this)}
@@ -735,6 +737,7 @@ InformationSystemGraphToolComponent.propTypes = {
   classes: PropTypes.object,
   leftBarOpen: PropTypes.bool,
   theme: PropTypes.object,
+  refreshQuery: PropTypes.func,
   t: PropTypes.func,
 };
 

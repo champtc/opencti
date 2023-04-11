@@ -206,6 +206,7 @@ class InformationSystemGraphToolBar extends Component {
       createdBy,
       markedBy,
       informationSystem,
+      graphData,
       onAdd,
       onDelete,
       handleDeleteSelected,
@@ -748,7 +749,7 @@ class InformationSystemGraphToolBar extends Component {
                 {onAdd && (
                   <ContainerAddCyioCoreObjects
                     containerId={informationSystem.id}
-                    containerCyioCoreObjects={informationSystem.objects.edges}
+                    containerCyioCoreObjects={graphData.nodes}
                     knowledgeGraph={true}
                     defaultCreatedBy={R.propOr(null, 'createdBy', informationSystem)}
                     defaultMarkingDefinitions={R.map(
@@ -829,6 +830,7 @@ InformationSystemGraphToolBar.propTypes = {
   lastLinkFirstSeen: PropTypes.string,
   lastLinkLastSeen: PropTypes.string,
   handleSelectAll: PropTypes.func,
+  graphData: PropTypes.graphData,
   handleSelectByType: PropTypes.func,
   handleResetLayout: PropTypes.func,
   displayTimeRange: PropTypes.bool,

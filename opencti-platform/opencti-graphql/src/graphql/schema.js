@@ -140,7 +140,6 @@ import cyioInformationTypeCatalogResolvers from '../cyio/schema/information-syst
 import cyioDescriptionBlockResolvers from '../cyio/schema/information-system/resolvers/descriptionBlock.js';
 import cyioOscalUserResolvers from '../cyio/schema/risk-assessments/oscal-common/resolvers/oscalUser.js';
 import cyioOscalLeveragedAuthorizationResolvers from '../cyio/schema/risk-assessments/oscal-common/resolvers/oscalLeveragedAuthorization.js';
-import cyioCvssResolvers from '../cyio/schema/threat-intelligence/resolvers/cvss.js';
 import cyioVulnerabilityResolvers from '../cyio/schema/threat-intelligence/resolvers/vulnerability.js';
 
 // Cyio Extensions to support merged graphQL schema

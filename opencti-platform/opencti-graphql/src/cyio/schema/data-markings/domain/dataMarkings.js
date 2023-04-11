@@ -198,6 +198,7 @@ export const createDataMarking = async (definition_type, input, dbName, dataSour
 
   // Add the definition type
   input['definition_type'] = definition_type;
+  if (!('iep_version' in input)) input['iep_version'] = '2.0';
 
   // ensure id and entity_type is in the list of times to be returned
   if (!select.includes('id')) select.push('id');

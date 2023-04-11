@@ -207,7 +207,7 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
     const { containerCyioCoreObjects } = this.props;
 
     // eslint-disable-next-line no-underscore-dangle
-    return map((n) => n.node.id, containerCyioCoreObjects || []);
+    return map((n) => n.id, containerCyioCoreObjects || []);
   }
 
   toggleCyioCoreObject(cyioCoreObject) {
@@ -247,10 +247,10 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
           entityId: cyioCoreObject.id,
           implementation_type: cyioCoreObject.entity_type,
         },
-        onCompleted: () => {
+        onCompleted: (data) => {
           this.props.handleClose();
           if (typeof onAdd === 'function') {
-            onAdd(cyioCoreObject);
+            onAdd([cyioCoreObject, data.addInformationSystemImplementationEntity]);
           }
           this.setState({
             addedCyioCoreObjects: append(

@@ -21,6 +21,7 @@ import externalReferenceIcon from '../../../../resources/images/entities/externa
 import userTypesIcon from '../../../../resources/images/entities/user_types.svg';
 import leveragedAuthorizationIcon from '../../../../resources/images/entities/leveragedAuthorizationIcon.svg';
 import informationTypesIcon from '../../../../resources/images/entities/information_types.svg';
+import dataMarkingsIcon from '../../../../resources/images/entities/data_markings.svg';
 
 const styles = () => ({
   dataEntities: {
@@ -211,6 +212,20 @@ class DataEntitiesDropDown extends Component {
               </div>
               <div className={classes.menuItemText}>
                 {t('Information Types')}
+              </div>
+            </div>
+          </MenuItem>
+          <MenuItem
+            component={Link}
+            to="/data/entities/data_markings"
+            value="data_markings"
+          >
+            <div className={classes.menuItems}>
+              <div className={classes.iconsContainer}>
+                <img src={dataMarkingsIcon} alt="" />
+              </div>
+              <div className={classes.menuItemText}>
+                {t('Data Markings')}
               </div>
             </div>
           </MenuItem>

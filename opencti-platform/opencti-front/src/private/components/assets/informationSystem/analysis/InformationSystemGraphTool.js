@@ -342,7 +342,6 @@ class InformationSystemGraphToolComponent extends Component {
       decodeGraphData(this.props.informationSystem.graph_data),
       this.props.t,
     );
-    this.props.refreshQuery();
     const selectedTimeRangeInterval = computeTimeRangeInterval(
       this.graphObjects,
     );
@@ -385,7 +384,7 @@ class InformationSystemGraphToolComponent extends Component {
         ignoredCyioCoreObjectsTypes,
         this.state.selectedTimeRangeInterval,
       ),
-    }, () => this.props.refreshQuery());
+    });
   }
 
   handleDeleteSelected() {
@@ -737,7 +736,6 @@ InformationSystemGraphToolComponent.propTypes = {
   classes: PropTypes.object,
   leftBarOpen: PropTypes.bool,
   theme: PropTypes.object,
-  refreshQuery: PropTypes.func,
   t: PropTypes.func,
 };
 

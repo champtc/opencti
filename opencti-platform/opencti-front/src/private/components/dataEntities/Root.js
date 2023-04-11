@@ -14,6 +14,7 @@ import RootExternalReferences from './data/external_references/Root';
 import RootUserTypes from './data/user_types/Root';
 import RootLeveragedAuthorization from './data/leveraged_authorizations/Root';
 import RootInformationType from './data/information_types/Root';
+import RootDataMarking from './data/data_markings/Root';
 import Entities from './Entities';
 import RolesEntities from './data/roles/RolesEntities';
 import NotesEntities from './data/notes/NotesEntities';
@@ -29,6 +30,7 @@ import RootDataSource from './data/data_sources/Root';
 import UserTypesEntities from './data/user_types/UserTypesEntities';
 import LeveragedAuthorizationsEntities from './data/leveraged_authorizations/LeveragedAuthorizationsEntities';
 import InformationTypesEntities from './data/information_types/InformationTypesEntities';
+import DataMarkingsEntities from './data/data_markings/DataMarkingsEntities';
 
 class Root extends Component {
   render() {
@@ -109,6 +111,12 @@ class Root extends Component {
           component={InformationTypesEntities}
         />
 
+        <BoundaryRoute
+          exact
+          path="/data/entities/data_markings"
+          component={DataMarkingsEntities}
+        />
+
         {/* Data Source Section */}
         <BoundaryRoute
           exact
@@ -173,6 +181,11 @@ class Root extends Component {
           exact
           path="/data/entities/information_types/:informationTypeId"
           render={(routeProps) => <RootInformationType {...routeProps} me={me} />}
+        />
+        <BoundaryRoute
+          exact
+          path="/data/entities/data_markings/:dataMarkingId"
+          render={(routeProps) => <RootDataMarking {...routeProps} me={me} />}
         />
 
         {/* Data Source Root Path Section */}

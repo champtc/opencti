@@ -28,7 +28,7 @@ import {
 import { findLeveragedAuthorizationById, findLeveragedAuthorizationByIri } from '../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
 import { findUserTypeById, findUserTypeByIri } from '../../risk-assessments/oscal-common/domain/oscalUser.js';
 import { addToInventoryQuery, removeFromInventoryQuery } from '../../assets/assetUtil.js';
-import { createInformationType, findInformationTypeByIri } from './informationType.js';
+import { createInformationType, findInformationTypeById, findInformationTypeByIri } from './informationType.js';
 import { createDescriptionBlock, deleteDescriptionBlockByIri } from './descriptionBlock.js';
 import { findComponentById, findComponentByIri } from '../../risk-assessments/component/domain/component.js';
 import { findInventoryItemById, findInventoryItemByIri } from '../../risk-assessments/inventory-item/domain/inventoryItem.js';
@@ -73,7 +73,7 @@ export const findInformationSystemByIri = async (iri, dbName, dataSources, selec
   }
   if (response === undefined || response === null || response.length === 0) return null;
 
-  let { confidentiality, integrity, availability } = await computeSecurityObjectives(response[0].information_types);
+  let { confidentiality, integrity, availability } = await computeSecurityObjectives(response[0].information_types, dbName, dataSources);
   response[0].security_objective_confidentiality = confidentiality;
   response[0].security_objective_integrity = integrity;
   response[0].security_objective_availability = availability;
@@ -138,7 +138,7 @@ export const findAllInformationSystems = async (args, dbName, dataSources, selec
       }
     }
 
-    let { confidentiality, integrity, availability } = await computeSecurityObjectives(item.information_types);
+    let { confidentiality, integrity, availability } = await computeSecurityObjectives(item.information_types, dbName, dataSources);
     item.security_objective_confidentiality = confidentiality;
     item.security_objective_integrity = integrity;
     item.security_objective_availability = availability;
@@ -288,7 +288,7 @@ export const createInformationSystem = async (input, dbName, dataSources, select
   if (input.federation_assurance_level === undefined) input.federation_assurance_level = 'UNKNOWN';
 
   // If not specified, supply default objectives impact
-  let { confidentiality, integrity, availability } = await computeSecurityObjectives(input.information_types);
+  let { confidentiality, integrity, availability } = await computeSecurityObjectives(input.information_types, dbName, dataSources);
   if (input.security_objective_confidentiality === undefined) input.security_objective_confidentiality = confidentiality;
   if (input.security_objective_integrity === undefined) input.security_objective_integrity = integrity;
   if (input.security_objective_availability === undefined) input.security_objective_availability = availability;
@@ -990,6 +990,7 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
   // retrieve the implementation to ensure it exists and for use as the target of the relationship
   let entity;
   let field;
+  let relationshipType = 'consists-of';
   switch(implementation_type) {
     case 'component':
     case 'Component':
@@ -1014,6 +1015,12 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
       entity = await findUserTypeById(entityId, dbName, dataSources, commonSelect);
       field = 'users';
       break;
+    case 'information-type':
+    case 'InformationType':
+      entity = await findInformationTypeById(entityId, dbName, dataSources, commonSelect);
+      field = 'information_types';
+      relationshipType = 'handles'
+      break;
     default:
       throw new UserInputError(`Unknown implementation type '${implementation_type}'`);      
   }
@@ -1026,7 +1033,7 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
       entity_type: 'oscal-relationship',
       created: timestamp,
       modified: timestamp,
-      relationship_type: 'consists-of',
+      relationship_type: relationshipType,
       valid_from: timestamp,
       source: infoSystem,
       target: entity,
@@ -1060,6 +1067,10 @@ export const removeImplementationEntity = async( id, implementation_type, entity
     case 'oscal-user':
     case 'OscalUser':
       field = 'users';
+      break;
+    case 'information-type':
+    case 'InformationType':
+      field = 'information_types';
       break;
     default:
       throw new UserInputError(`Unknown implementation type '${implementation_type}'`);      
@@ -1331,7 +1342,7 @@ export const computeSensitivityLevel = ( confidentiality, integrity, availabilit
   return sensitivityLevel;
 };
 
-export const computeSecurityObjectives = async ( infoTypes ) => {
+export const computeSecurityObjectives = async ( infoTypes, dbName, dataSources ) => {
   let confidentiality = 'fips-199-low';
   let integrity = 'fips-199-low';
   let availability = 'fips-199-low';
@@ -1344,11 +1355,12 @@ export const computeSecurityObjectives = async ( infoTypes ) => {
   }
 
   // if infoTypes is an array of IRIs
-  if (typeof infoTypes[0] === 'string' && infoTypes[0].includes('information-types--')) {
+  if (typeof infoTypes[0] === 'string' && infoTypes[0].includes('information-type--')) {
     let results = [];
     // retrieve the minimal data required to compute security objectives
-    for (let item of response[0].information_types) {
-      let result = await findInformationTypeByIri(item.iri, dbName, dataSources, null);
+    let infoSelect = ['confidentiality_base_impact','confidentiality_selected_impact','integrity_base_impact','integrity_selected_impact','availability_base_impact','availability_selected_impact']
+    for (let iri of infoTypes) {
+      let result = await findInformationTypeByIri(iri, dbName, dataSources, infoSelect);
       let infoType = {
         confidentiality_impact: {
           base_impact: result.confidentiality_base_impact,

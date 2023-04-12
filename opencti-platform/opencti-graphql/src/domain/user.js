@@ -1,15 +1,12 @@
 import * as R from 'ramda';
 import { map } from 'ramda';
 import bcrypt from 'bcryptjs';
-import { v4 as uuid } from 'uuid';
-import jwt from 'jsonwebtoken';
 import axios from 'axios';
-import { delEditContext, delUserContext, notify, setEditContext } from '../database/redis';
+import { delEditContext, notify, setEditContext } from '../database/redis';
 import { AuthenticationFailure, FunctionalError } from '../config/errors';
 import { BUS_TOPICS, logApp, logAudit, OPENCTI_SESSION } from '../config/conf';
 import {
   batchListThroughGetTo,
-  createEntity,
   createRelation,
   deleteElementById,
   deleteRelationsByFromAndTo,
@@ -34,26 +31,17 @@ import {
 } from '../schema/internalRelationship';
 import { ABSTRACT_INTERNAL_RELATIONSHIP, OPENCTI_ADMIN_UUID, OPENCTI_SYSTEM_UUID } from '../schema/general';
 import { findAll as allMarkings } from './markingDefinition';
-import { findAll as findGroups } from './group';
 import { generateStandardId } from '../schema/identifier';
-import { elLoadBy } from '../database/elasticSearch';
 import { now } from '../utils/format';
 import { applicationSession } from '../database/session';
-import {
-  convertRelationToAction,
-  LOGIN_ACTION,
-  LOGOUT_ACTION,
-  ROLE_DELETION,
-  USER_CREATION,
-  USER_DELETION,
-} from '../config/audit';
+import { convertRelationToAction, LOGIN_ACTION, LOGOUT_ACTION, ROLE_DELETION, USER_DELETION } from '../config/audit';
 import { buildPagination, isEmptyField, isNotEmptyField } from '../database/utils';
 import { BYPASS, SYSTEM_USER } from '../utils/access';
 import { ENTITY_TYPE_MARKING_DEFINITION } from '../schema/stixMetaObject';
 import { oidcRefresh } from '../config/tokenManagement';
-import { keycloakAdminClient } from '../service/keycloak';
+import { endSessions, getAccessTokens, getUserByApiToken, getUserByEmail, getUserById } from '../service/keycloak';
+import extractTokenFromBearer from '../utils/tokens';
 
-const BEARER = 'Bearer ';
 const BASIC = 'Basic ';
 export const STREAMAPI = 'STREAMAPI';
 export const TAXIIAPI = 'TAXIIAPI';
@@ -74,11 +62,6 @@ export const userWithOrigin = (req, user) => {
   return { ...user, origin };
 };
 
-const extractTokenFromBearer = (authorization) => {
-  const isBearer = authorization && authorization.startsWith(BEARER);
-  return isBearer ? authorization.substring(BEARER.length) : null;
-};
-
 const extractTokenFromBasicAuth = async (authorization) => {
   const isBasic = authorization && authorization.startsWith(BASIC);
   if (isBasic) {
@@ -91,23 +74,25 @@ const extractTokenFromBasicAuth = async (authorization) => {
   return null;
 };
 
-export const findById = async (user, userId) => {
-  const data = await loadById(user, userId, ENTITY_TYPE_USER);
-  const userObj = data ? R.dissoc('password', data) : data;
-  if (userObj === undefined) return undefined;
-  const q = { email: userObj.user_email };
-  const kcUserRes = await keycloakAdminClient.users.find(q);
-  if (kcUserRes.length === 0) return userObj;
-  const kcUser = kcUserRes.at(0);
-  if (kcUser.attributes?.api_token && kcUser.attributes?.api_token.length > 0) {
-    userObj.api_token = kcUser.attributes.api_token.at(0);
+const sendTeamsMessage = (title, message) => {
+  if (process.env.MS_TEAMS_ACTIVITY_WEBHOOK) {
+    axios
+      .post(process.env.MS_TEAMS_ACTIVITY_WEBHOOK, {
+        '@type': 'MessageCard',
+        '@Context': 'http://schema.org/extensions',
+        title: `${title}`,
+        text: `${message}`,
+      })
+      .then((response) => {
+        logApp.debug('Login message sent to Teams webhook', {
+          status: response.status,
+          statusText: response.statusText,
+        });
+      })
+      .catch((axiosError) => {
+        logApp.error(axiosError);
+      });
   }
-  userObj.id = kcUser.id;
-  userObj.internal_id = kcUser.id;
-  userObj.user_email = kcUser.email;
-  userObj.firstname = kcUser.firstName;
-  userObj.lastname = kcUser.lastName;
-  return userObj;
 };
 
 export const findAll = (user, args) => {
@@ -283,67 +268,8 @@ export const roleEditContext = async (user, roleId, input) => {
   );
 };
 
-const assignRoleToUser = async (user, userId, roleName) => {
-  const generateToId = generateStandardId(ENTITY_TYPE_ROLE, { name: roleName });
-  const assignInput = {
-    fromId: userId,
-    toId: generateToId,
-    relationship_type: RELATION_HAS_ROLE,
-  };
-  return createRelation(user, assignInput);
-};
-
-const assignGroupToUser = async (user, userId, groupName) => {
-  const generateToId = generateStandardId(ENTITY_TYPE_GROUP, { name: groupName });
-  const assignInput = {
-    fromId: userId,
-    toId: generateToId,
-    relationship_type: RELATION_MEMBER_OF,
-  };
-  return createRelation(user, assignInput);
-};
-
 export const addUser = async (user, newUser) => {
-  const userEmail = newUser.user_email.toLowerCase();
-  const existingUser = await elLoadBy(SYSTEM_USER, 'user_email', userEmail, ENTITY_TYPE_USER);
-  if (existingUser) {
-    throw FunctionalError('User already exists', { email: userEmail });
-  }
-  // Create the user
-  const userToCreate = R.pipe(
-    R.assoc('user_email', userEmail),
-    R.assoc('api_token', newUser.api_token ? newUser.api_token : uuid()),
-    R.assoc('password', bcrypt.hashSync(newUser.password ? newUser.password.toString() : uuid())),
-    R.assoc('theme', newUser.theme ? newUser.theme : 'default'),
-    R.assoc('language', newUser.language ? newUser.language : 'auto'),
-    R.assoc('external', newUser.external ? newUser.external : false),
-    R.assoc('access_token', newUser.access_token ? newUser.access_token : null),
-    R.dissoc('roles')
-  )(newUser);
-  const userCreated = await createEntity(user, userToCreate, ENTITY_TYPE_USER);
-  // Link to the roles
-  let userRoles = newUser.roles || []; // Expected roles name
-  const defaultRoles = await findRoles(user, { filters: [{ key: 'default_assignation', values: [true] }] });
-  if (defaultRoles && defaultRoles.edges.length > 0) {
-    userRoles = R.pipe(
-      R.map((n) => n.node.name),
-      R.append(userRoles),
-      R.flatten
-    )(defaultRoles.edges);
-  }
-  await Promise.all(R.map((role) => assignRoleToUser(user, userCreated.id, role), userRoles));
-  // Assign default groups to user
-  const defaultGroups = await findGroups(user, { filters: [{ key: 'default_assignation', values: [true] }] });
-  const relationGroups = defaultGroups.edges.map((e) => ({
-    fromId: userCreated.id,
-    toId: e.node.internal_id,
-    relationship_type: RELATION_MEMBER_OF,
-  }));
-  await Promise.all(relationGroups.map((relation) => createRelation(user, relation)));
-  // Audit log
-  const groups = defaultGroups.edges.map((g) => ({ id: g.node.id, name: g.node.name }));
-  logAudit.info(user, USER_CREATION, { user: userEmail, roles: userRoles, groups });
-  return notify(BUS_TOPICS[ENTITY_TYPE_USER].ADDED_TOPIC, userCreated, user);
+  return newUser;
 };
 
 export const roleEditField = async (user, roleId, input) => {
@@ -477,71 +403,22 @@ export const userIdDeleteRelation = async (user, userId, toId, relationshipType)
   return userDeleteRelation(user, userData, toId, relationshipType);
 };
 
-export const loginFromProvider = async (
-  userInfo,
-  providerRoles = [],
-  providerGroups = [],
-  accessToken,
-  refreshToken
-) => {
-  const { email, name: providedName, firstname, lastname } = userInfo;
+export const loginFromProvider = async (userInfo, accessToken, refreshToken) => {
+  const { email } = userInfo;
   if (isEmptyField(email)) {
     throw Error('User email not provided');
   }
-  const name = isEmptyField(providedName) ? email : providedName;
-  const user = await elLoadBy(SYSTEM_USER, 'user_email', email, ENTITY_TYPE_USER);
-  if (!user) {
-    // If user doesnt exists, create it. Providers are trusted
-    const newUser = {
-      name,
-      firstname,
-      lastname,
-      user_email: email.toLowerCase(),
-      external: true,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    };
-    return addUser(SYSTEM_USER, newUser).then(() => {
-      // After user creation, reapply login to manage roles and groups
-      return loginFromProvider(userInfo, providerRoles, providerGroups, accessToken, refreshToken);
-    });
-  }
-  // Update the basic information
-  const patch = { name, firstname, lastname, external: true, access_token: accessToken, refresh_token: refreshToken };
-  await patchAttribute(SYSTEM_USER, user.id, ENTITY_TYPE_USER, patch);
-  // Update the roles
-  // If roles are specified here, that overwrite the default assignation
-  if (providerRoles.length > 0) {
-    // 01 - Delete all roles from the user
-    const opts = { paginate: false };
-    const userRoles = await listThroughGetTo(SYSTEM_USER, user.id, RELATION_HAS_ROLE, ENTITY_TYPE_ROLE, opts);
-    for (let index = 0; index < userRoles.length; index += 1) {
-      const userRole = userRoles[index];
-      await userDeleteRelation(SYSTEM_USER, user, userRole.id, RELATION_HAS_ROLE);
-    }
-    // 02 - Create roles from providers
-    const rolesCreation = R.map((role) => assignRoleToUser(SYSTEM_USER, user.id, role), providerRoles);
-    await Promise.all(rolesCreation);
-  }
-  // Update the groups
-  // If groups are specified here, that overwrite the default assignation
-  if (providerGroups.length > 0) {
-    // 01 - Delete all groups from the user
-    const opts = { paginate: false };
-    const userGroups = await listThroughGetTo(SYSTEM_USER, user.id, RELATION_MEMBER_OF, ENTITY_TYPE_GROUP, opts);
-    for (let index = 0; index < userGroups.length; index += 1) {
-      const userGroup = userGroups[index];
-      await userDeleteRelation(SYSTEM_USER, user, userGroup.id, RELATION_MEMBER_OF);
-    }
-    // 02 - Create groups from providers
-    const groupsCreation = R.map((group) => assignGroupToUser(SYSTEM_USER, user.id, group), providerGroups);
-    await Promise.all(groupsCreation);
+  const user = await getUserByEmail(userInfo.email);
+  if (user && R.length(accessToken) === 0) {
+    const tokens = await getAccessTokens(user.id);
+    user.access_token = tokens.accessToken;
+    user.refresh_token = tokens.refreshToken;
   }
   return { ...user, access_token: accessToken, refresh_token: refreshToken };
 };
 
 export const login = async (email, password) => {
-  const user = await elLoadBy(SYSTEM_USER, 'user_email', email, ENTITY_TYPE_USER);
+  const user = await getUserByEmail(email);
   if (!user) throw AuthenticationFailure();
   const dbPassword = user.password;
   const match = bcrypt.compareSync(password, dbPassword);
@@ -549,72 +426,31 @@ export const login = async (email, password) => {
   return user;
 };
 
-const endKCSession = (user) => {
-  if (!user.access_token && !user.refresh_token) {
-    logApp.warn('Current user is missing both access and refresh tokens');
-    return;
-  }
-
-  const decoded = jwt.decode(user.access_token, { complete: true });
-  if (!decoded.payload?.iss) {
-    logApp.warn('Unable to determine the token issuer');
-    return;
-  }
-
-  const baseURL = decoded.payload.iss;
-  const logoutEndpoint = new URL(`${baseURL}/protocol/openid-connect/logout`);
-  logoutEndpoint.search = new URLSearchParams({
-    token: user.access_token,
-    refresh_token: user.refresh_token,
-  }).toString();
-
-  axios
-    .post(logoutEndpoint.href)
-    .then((r) => {
-      if (r.status && r.statusText) {
-        logApp.info(`Keycloak session closed for ${user.user_email}: ${r.statusText} (${r.status})`);
-      } else {
-        logApp.warn('No status message returned from Keycloak for closing current users active session');
-      }
-    })
-    .catch((e) => {
-      logApp.error('Failed to call Keycloak logout endpoint for session closure', e);
-    });
-};
-
 export const logout = async (user, req, res) => {
-  await delUserContext(user);
-  await patchAttribute(SYSTEM_USER, user.id, ENTITY_TYPE_USER, { access_token: null, refresh_token: null });
   res.clearCookie(OPENCTI_SESSION);
   req.session.destroy();
-  endKCSession(user);
+  endSessions(user.id);
   logAudit.info(user, LOGOUT_ACTION);
+  sendTeamsMessage(LOGOUT_ACTION, `${user.user_email} logged out`);
   return user.id;
 };
 
-const buildSessionUser = (user) => {
+const buildSessionUser = async (user) => {
+  if (user?.attributes && !user?.access_token) {
+    const { accessToken, refreshToken } = await getAccessTokens(user.id);
+    user.token = accessToken;
+    user.access_token = accessToken;
+    user.refresh_token = refreshToken;
+  }
   return {
     id: user.id,
-    api_token: user.api_token,
+    api_token: user.attributes.api_token[0],
     session_creation: now(),
     internal_id: user.internal_id,
-    user_email: user.user_email,
+    user_email: user.email,
     access_token: user.access_token,
     refresh_token: user.refresh_token,
     name: user.name,
-    capabilities: user.capabilities.map((c) => ({ id: c.id, internal_id: c.internal_id, name: c.name })),
-    allowed_marking: user.allowed_marking.map((m) => ({
-      id: m.id,
-      standard_id: m.standard_id,
-      internal_id: m.internal_id,
-      definition_type: m.definition_type,
-    })),
-    all_marking: user.all_marking.map((m) => ({
-      id: m.id,
-      standard_id: m.standard_id,
-      internal_id: m.internal_id,
-      definition_type: m.definition_type,
-    })),
   };
 };
 
@@ -623,7 +459,17 @@ const buildCompleteUser = async (client) => {
   const capabilities = await getCapabilities(client.id);
   const marking = await getUserAndGlobalMarkings(client.id, capabilities);
   const user = { ...client, capabilities, allowed_marking: marking.user, all_marking: marking.all };
-  return buildSessionUser(user);
+  const completeUser = await buildSessionUser(user);
+  return completeUser;
+};
+
+export const findById = async (user, userId) => {
+  const kcUser = await getUserById(userId);
+  if (typeof kcUser === 'object' && Object.keys(kcUser).length === 0) {
+    return undefined;
+  }
+  const completeUser = await buildCompleteUser(kcUser);
+  return completeUser;
 };
 
 export const resolveUserById = async (id) => {
@@ -635,29 +481,27 @@ export const resolveUserById = async (id) => {
 };
 
 const resolveUserByToken = async (tokenValue) => {
-  const client = await elLoadBy(SYSTEM_USER, 'api_token', tokenValue, ENTITY_TYPE_USER);
-  return buildCompleteUser(client);
+  const user = await getUserByApiToken(tokenValue);
+  const completeUser = await buildCompleteUser(user);
+  return completeUser;
 };
 
 export const userRenewToken = async (user, userId) => {
-  let patch;
   if (user.access_token && user.refresh_token) {
-    patch = await oidcRefresh(user.refresh_token);
-    patch = {
-      access_token: patch.accessToken,
-      refresh_token: patch.refreshToken,
-    };
-  } else {
-    patch = { api_token: uuid() };
+    const tokens = await oidcRefresh(user.refresh_token);
+    user.access_token = tokens.accessToken;
+    user.refresh_token = tokens.refreshToken;
   }
-  await patchAttribute(user, userId, ENTITY_TYPE_USER, patch);
-  return loadById(user, userId, ENTITY_TYPE_USER);
+  return user;
 };
 
 export const authenticateUser = async (req, user, provider) => {
   // Build the user session with only required fields
   const sessionUser = await buildCompleteUser(user);
-  logAudit.info(userWithOrigin(req, user), LOGIN_ACTION, { provider });
+  if (provider !== 'Bearer') {
+    logAudit.info(userWithOrigin(req, user), LOGIN_ACTION, { provider });
+    sendTeamsMessage(LOGIN_ACTION, `${user.user_email} logged in`);
+  }
   req.session.user = sessionUser;
   return sessionUser;
 };

@@ -59,7 +59,7 @@ const cyioInformationSystemResolvers = {
     information_types: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.information_type_iris === undefined) return [];
       let results = []
-      for (let iri of parent.information_types_iris) {
+      for (let iri of parent.information_type_iris) {
         let result = await findInformationTypeByIri(iri, dbName, dataSources, selectMap.getNode('information_types'));
         if (result === undefined || result === null) return null;
         results.push(result);

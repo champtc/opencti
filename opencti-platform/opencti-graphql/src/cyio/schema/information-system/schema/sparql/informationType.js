@@ -742,7 +742,7 @@ export const informationTypePredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 	confidentiality_base_impact: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#confidentiality_impact>/<http://csrc.nist.gov/ns/oscal/info-system#base_impact>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#confidentiality_impact>/<http://nist.gov/ns/sp800-60#base_impact>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "confidentiality_base_impact");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
 	},
@@ -762,7 +762,7 @@ export const informationTypePredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 	integrity_base_impact: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#integrity_impact>/<http://csrc.nist.gov/ns/oscal/info-system#base_impact>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#integrity_impact>/<http://nist.gov/ns/sp800-60#base_impact>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "integrity_base_impact");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
 	},
@@ -782,7 +782,7 @@ export const informationTypePredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 	availability_base_impact: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#availability_impact>/<http://csrc.nist.gov/ns/oscal/info-system#base_impact>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#availability_impact>/<http://nist.gov/ns/sp800-60#base_impact>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "availability_base_impact");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
 	},

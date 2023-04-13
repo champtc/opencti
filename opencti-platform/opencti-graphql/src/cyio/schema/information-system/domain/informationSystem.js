@@ -1159,7 +1159,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
     let select = selectMap.getNode('information_types');
     if (select === undefined || select === null) select = ['id','entity_type','title','created','modified'];
 
-    for (let iri of parent.information_types_iris) {
+    for (let iri of parent.information_type_iris) {
       let result = await findInformationTypeByIri(iri, dbName, dataSources, select);
       if (result === undefined || result === null) continue;
 
@@ -1168,7 +1168,7 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
       // populate the missing fields of the relationship
       rel.id = generateId();
-      rel.relationship_type = 'uses';
+      rel.relationship_type = 'handles';
       rel.target = result;
       rel.created = result.created;
       rel.modified = result.modified;
@@ -1361,6 +1361,7 @@ export const computeSecurityObjectives = async ( infoTypes, dbName, dataSources 
     let infoSelect = ['confidentiality_base_impact','confidentiality_selected_impact','integrity_base_impact','integrity_selected_impact','availability_base_impact','availability_selected_impact']
     for (let iri of infoTypes) {
       let result = await findInformationTypeByIri(iri, dbName, dataSources, infoSelect);
+      if (result === null) continue;
       let infoType = {
         confidentiality_impact: {
           base_impact: result.confidentiality_base_impact,

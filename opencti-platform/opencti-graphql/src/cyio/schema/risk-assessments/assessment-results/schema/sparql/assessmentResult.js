@@ -12,7 +12,7 @@ import {
   // Reducer Selection
 export function getReducer(type) {
   switch (type) {
-    case 'ASSESSMENT-RESULT':
+    case 'ASSESSMENT-RESULTS':
       return AssessmentResultsReducer;
     default:
       throw new UserInputError(`Unsupported reducer type ' ${type}'`)
@@ -53,14 +53,14 @@ export const selectAssessmentResultsQuery = (id, select) => {
 
 export const selectAssessmentResultsByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(AssessmentResultsPredicateMap);
+  if (select === undefined || select === null) select = Object.keys(assessmentResultsPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
   if (!select.includes('component_type')) select.push('component_type');
   
-  const { selectionClause, predicates } = buildSelectVariables(AssessmentResultsPredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(assessmentResultsPredicateMap, select);
 
   return `
   SELECT ?iri ${selectionClause}
@@ -73,7 +73,7 @@ export const selectAssessmentResultsByIriQuery = (iri, select) => {
 }
 
 export const selectAllAssessmentResultsQuery = (select, args, parent) => {
-  if (select === undefined || select === null) select = Object.keys(AssessmentResultsPredicateMap);
+  if (select === undefined || select === null) select = Object.keys(assessmentResultsPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
@@ -91,7 +91,7 @@ export const selectAllAssessmentResultsQuery = (select, args, parent) => {
   }
 
   // build lists of selection variables and predicates
-  const { selectionClause, predicates } = buildSelectVariables(AssessmentResultsPredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(assessmentResultsPredicateMap, select);
 
   return `
   SELECT DISTINCT ?iri ${selectionClause}
@@ -111,13 +111,13 @@ export const insertAssessmentResultsQuery = (propValues) => {
   const iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
   const insertPredicates = [];
   Object.entries(propValues).forEach((propPair) => {
-    if (AssessmentResultsPredicateMap.hasOwnProperty(propPair[0])) {
+    if (assessmentResultsPredicateMap.hasOwnProperty(propPair[0])) {
       if (Array.isArray(propPair[1])) {
         for (let value of propPair[1]) {
-          insertPredicates.push(AssessmentResultsPredicateMap[propPair[0]].binding(iri, value));
+          insertPredicates.push(assessmentResultsPredicateMap[propPair[0]].binding(iri, value));
         }  
       } else {
-        insertPredicates.push(AssessmentResultsPredicateMap[propPair[0]].binding(iri, propPair[1]));
+        insertPredicates.push(assessmentResultsPredicateMap[propPair[0]].binding(iri, propPair[1]));
       }
     }
   });
@@ -178,9 +178,9 @@ export const deleteMultipleAssessmentResultsQuery = (ids) =>{
 }
 
 export const attachToAssessmentResultsQuery = (id, field, itemIris) => {
-  if (!AssessmentResultsPredicateMap.hasOwnProperty(field)) return null;
+  if (!assessmentResultsPredicateMap.hasOwnProperty(field)) return null;
   const iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
-  const predicate = AssessmentResultsPredicateMap[field].predicate;
+  const predicate = assessmentResultsPredicateMap[field].predicate;
 
   let statements;
   if (Array.isArray(itemIris)) {
@@ -196,15 +196,15 @@ export const attachToAssessmentResultsQuery = (id, field, itemIris) => {
   return attachQuery(
     iri, 
     statements, 
-    AssessmentResultsPredicateMap, 
+    assessmentResultsPredicateMap, 
     '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>'
   );
 }
 
 export const detachFromAssessmentResultsQuery = (id, field, itemIris) => {
-  if (!AssessmentResultsPredicateMap.hasOwnProperty(field)) return null;
+  if (!assessmentResultsPredicateMap.hasOwnProperty(field)) return null;
   const iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
-  const predicate = AssessmentResultsPredicateMap[field].predicate;
+  const predicate = assessmentResultsPredicateMap[field].predicate;
 
   let statements;
   if (Array.isArray(itemIris)) {
@@ -220,13 +220,13 @@ export const detachFromAssessmentResultsQuery = (id, field, itemIris) => {
   return detachQuery(
     iri, 
     statements, 
-    AssessmentResultsPredicateMap, 
+    assessmentResultsPredicateMap, 
     '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>'
   );
 }
   
 // Predicate Maps
-export const AssessmentResultsPredicateMap = {
+export const assessmentResultsPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},

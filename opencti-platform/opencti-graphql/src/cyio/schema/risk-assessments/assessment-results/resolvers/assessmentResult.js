@@ -2,10 +2,10 @@ import {
     findAssessmentResultsById,
     findAllAssessmentResults,
     createAssessmentResults,
-    // deleteAssessmentResultsById,
-    // editAssessmentResultsById,
-    // attachToAssessmentResults,
-    // detachFromAssessmentResults
+    deleteAssessmentResultsById,
+    editAssessmentResultsById,
+    attachToAssessmentResults,
+    detachFromAssessmentResults
   } from '../domain/assessmentResult.js';
   
   const cyioAssessmentResultsResolvers = {
@@ -17,11 +17,11 @@ import {
     Mutation: {
       // Assessment Result
       createAssessmentResults: async (_, { input }, { dbName, dataSources, selectMap }) => createAssessmentResults(input, dbName, dataSources, selectMap.getNode("createAssessmentResult")),
-      // deleteAssessmentResults: async (_, { id }, { dbName, dataSources }) => deleteAssessmentResultsById( id, dbName, dataSources),
-      // editAssessmentResults: async (_, { id, input }, { dbName, dataSources, selectMap }, {schema}) => editAssessmentResultsById(id, input, dbName, dataSources, selectMap.getNode("editAssessmentResults"), schema),
+      deleteAssessmentResults: async (_, { id }, { dbName, dataSources }) => deleteAssessmentResultsById( id, dbName, dataSources),
+      editAssessmentResults: async (_, { id, input }, { dbName, dataSources, selectMap }, {schema}) => editAssessmentResultsById(id, input, dbName, dataSources, selectMap.getNode("editAssessmentResults"), schema),
       // // Attach and Detach
-      // attachToAssessmentResults: async (_, { id, field, entityId }, { dbName, dataSources }) => attachToAssessmentResults(id, field, entityId ,dbName, dataSources),
-      // detachFromAssessmentResults: async (_, { id, field, entityId }, { dbName, dataSources }) => detachFromAssessmentResults(id, field, entityId ,dbName, dataSources),
+      attachToAssessmentResults: async (_, { id, field, entityId }, { dbName, dataSources }) => attachToAssessmentResults(id, field, entityId ,dbName, dataSources),
+      detachFromAssessmentResults: async (_, { id, field, entityId }, { dbName, dataSources }) => detachFromAssessmentResults(id, field, entityId ,dbName, dataSources),
     },
   };
   

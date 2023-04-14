@@ -203,6 +203,7 @@ class CyioListLines extends Component {
     this.state = {
       scrollValue: true,
       openInfoPopover: false,
+      anchorEl: null,
     };
   }
 
@@ -226,13 +227,17 @@ class CyioListLines extends Component {
     this.props.handleSort(this.props.sortBy, !this.props.orderAsc);
   }
 
-  handleInfoNewCreation() {
-    this.setState({ openInfoPopover: !this.state.openInfoPopover });
+  handleInfoNewCreation(event) {
+    this.setState({ openInfoPopover: true, anchorEl: event.currentTarget });
+  }
+
+  handleCloseInfoNewCreation() {
+    this.setState({ openInfoPopover: false, anchorEl: null });
   }
 
   handleInfoSystemListItem(type) {
     this.props.handleNewCreation(type);
-    this.handleInfoNewCreation();
+    this.handleCloseInfoNewCreation();
   }
 
   renderHeaderElement(field, label, width, isSortable) {
@@ -483,6 +488,7 @@ class CyioListLines extends Component {
                     <Tooltip title={t('Create New')}>
                       <Button
                         variant="contained"
+                        ref={this.state.anchorEl}
                         size="small"
                         startIcon={<AddCircleOutline />}
                         onClick={this.handleInfoNewCreation.bind(this)}
@@ -494,26 +500,27 @@ class CyioListLines extends Component {
                     </Tooltip>
                     <Popover
                       id='simple-popover'
+                      anchorEl={this.state.anchorEl}
                       open={this.state.openInfoPopover}
-                      onClose={this.handleInfoNewCreation.bind(this)}
+                      onClose={this.handleCloseInfoNewCreation.bind(this)}
                       anchorOrigin={{
-                        vertical: 125,
-                        horizontal: 'right',
+                        vertical: 'bottom',
+                        horizontal: 'center',
                       }}
                       transformOrigin={{
-                        horizontal: 150,
+                        vertical: 'top',
+                        horizontal: 'center',
                       }}
                     >
                       <List>
                         <ListItem
                           button={true}
-                          disabled={true}
                           onClick={this.handleInfoSystemListItem.bind(this, 'graph')}
                         >
                           <ListItemIcon className={classes.informationSystemIcon}>
                             <ItemIcon type='InformationSystemGraph' />
                           </ListItemIcon>
-                          <ListItemText primary="Graph" className={classes.informationSystemText} />
+                          <ListItemText primary='Graph' className={classes.informationSystemText} />
                         </ListItem>
                         <ListItem
                           button={true}
@@ -522,7 +529,7 @@ class CyioListLines extends Component {
                           <ListItemIcon className={classes.informationSystemIcon}>
                             <ItemIcon type='InformationSystemForm' />
                           </ListItemIcon>
-                          <ListItemText primary="Form" className={classes.informationSystemText} />
+                          <ListItemText primary='Form' className={classes.informationSystemText} />
                         </ListItem>
                       </List>
                     </Popover>

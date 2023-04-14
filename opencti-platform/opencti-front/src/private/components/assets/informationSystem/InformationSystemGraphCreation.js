@@ -91,10 +91,10 @@ class InformationSystemGraphCreation extends Component {
       },
       setSubmitting,
       pathname: '/defender_hq/assets/information_systems',
-      onCompleted: () => {
+      onCompleted: (data) => {
         setSubmitting(false);
         resetForm();
-        this.props.history.push('/defender_hq/assets/information_systems');
+        this.props.history.push(`/defender_hq/assets/information_systems/${data.createInformationSystem.id}/analysis`);
       },
       onError: () => {
         toastGenericError('Failed to create Information System');

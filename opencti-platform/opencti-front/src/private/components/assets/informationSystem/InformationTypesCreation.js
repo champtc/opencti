@@ -82,8 +82,6 @@ const styles = (theme) => ({
     fontFamily: 'sans-serif',
     padding: '0px',
     textAlign: 'left',
-    display: 'grid',
-    gridTemplateColumns: '40% 1fr 1fr 1fr',
   },
   popoverDialog: {
     fontSize: '18px',
@@ -108,6 +106,16 @@ const informationTypesCreationMutation = graphql`
 const informationTypesDeleteMutation = graphql`
   mutation InformationTypesCreationDeleteMutation($id: ID!) {
     deleteInformationType(id: $id)
+  }
+`;
+
+const informationTypesDetachDeleteMutation = graphql`
+  mutation InformationTypesCreationDetachDeleteMutation(
+    $id: ID!
+    $field: String!
+    $entityId: ID!
+    ) {
+    detachFromInformationSystem(id: $id, field: $field, entityId: $entityId)
   }
 `;
 
@@ -276,16 +284,35 @@ class InformationTypesCreationComponent extends Component {
     this.setState({ openEdit: !this.state.openEdit });
   }
 
-  handleDeleteInfoType(infoTypeId) {
+  handleDeleteInfoType(infoTypeId, field) {
     commitMutation({
       mutation: informationTypesDeleteMutation,
       variables: {
         id: infoTypeId,
       },
       pathname: '/defender_hq/assets/information_systems',
+      onCompleted: () => {
+        this.handleDetachInfoType(infoTypeId, field);
+      },
       onError: (err) => {
         console.error(err);
         toastGenericError('Failed to delete Information Type');
+      },
+    });
+  }
+
+  handleDetachInfoType(infoTypeId, field) {
+    commitMutation({
+      mutation: informationTypesDetachDeleteMutation,
+      variables: {
+        id: infoTypeId,
+        entityId: infoTypeId,
+        field,
+      },
+      pathname: '/defender_hq/assets/information_systems',
+      onError: (err) => {
+        console.error(err);
+        toastGenericError('Failed to detach Information Type');
       },
     });
   }
@@ -356,9 +383,9 @@ class InformationTypesCreationComponent extends Component {
         <div className={classes.scrollBg}>
           <div className={classes.scrollDiv}>
             <div className={classes.scrollObj}>
-              {informationTypes
+              {informationTypes.length
                 && informationTypes.map((informationType, key) => (
-                  <div key={key}>
+                  <div key={key} style={{ display: 'grid', gridTemplateColumns: '40% 1fr 1fr 1fr' }}>
                     <div>
                       {informationType.title && t(informationType.title)}
                     </div>
@@ -378,15 +405,15 @@ class InformationTypesCreationComponent extends Component {
                         />
                       )}
                     </div>
-                    <div>
-                      <div style={{ display: 'flex' }}>
-                        {informationType.availability_impact && (
-                          <RiskLevel
-                            risk={
-                              informationType.availability_impact.base_impact
-                            }
-                          />
-                        )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      {informationType.availability_impact && (
+                        <RiskLevel
+                          risk={
+                            informationType.availability_impact.base_impact
+                          }
+                        />
+                      )}
+                      <div>
                         <IconButton
                           size="small"
                           onClick={this.handleEditInfoType.bind(
@@ -401,6 +428,7 @@ class InformationTypesCreationComponent extends Component {
                           onClick={this.handleDeleteInfoType.bind(
                             this,
                             informationType.id,
+                            informationType.entity_type
                           )}
                         >
                           <DeleteIcon fontSize="small" />
@@ -941,6 +969,7 @@ const InformationTypesCreation = createFragmentContainer(
         information_types {
           id
           title
+          entity_type
           confidentiality_impact {
             base_impact
           }

@@ -156,8 +156,7 @@ class SearchTextField extends Component {
         });
       })
       .catch((err) => {
-        const ErrorResponse = err.res?.errors;
-        this.setState({ error: ErrorResponse });
+        console.error(err);
       });
   }
 

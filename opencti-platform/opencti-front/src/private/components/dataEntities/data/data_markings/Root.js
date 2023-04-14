@@ -1,5 +1,3 @@
-/* eslint-disable */
-/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { Route, withRouter, Switch } from 'react-router-dom';
@@ -56,7 +54,6 @@ class RootDataMarking extends Component {
 
   render() {
     const {
-      me,
       match: {
         params: { dataMarkingId },
       },

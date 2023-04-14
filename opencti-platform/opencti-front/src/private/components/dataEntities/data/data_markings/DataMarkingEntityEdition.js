@@ -52,16 +52,50 @@ Transition.displayName = 'TransitionSlide';
 
 const dataMarkingEntityEditionQuery = graphql`
   query DataMarkingEntityEditionQuery($id: ID!) {
-    leveragedAuthorization(id: $id) {
-      id
-      created
-      modified
-      title
-      description
-      date_authorized
-      party {
+    dataMarking(id: $id) {
+      ... on DataMarkingObject {
         id
+        entity_type
+        created
+        modified
+        definition_type
+        color
+      }
+      ... on StatementMarking {
+        description
+        statement
         name
+      }
+      ... on TLPMarking {
+        id
+        description
+        color
+        created
+        description
+        definition_type
+        entity_type
+        modified
+        name
+        tlp
+      }
+      ... on IEPMarking {
+        id
+        entity_type
+        definition_type
+        description
+        created
+        color
+        attribution
+        encrypt_in_transit
+        end_date
+        iep_version
+        modified
+        name
+        tlp
+        unmodified_resale
+        start_date
+        permitted_actions
+        affected_party_notifications
       }
     }
   }
@@ -81,23 +115,23 @@ class DataMarkingEntityEdition extends Component {
       displayEdit,
       handleDisplayEdit,
       history,
-      leveragedAuthorizationId,
+      dataMarkingId,
     } = this.props;
     return (
       <div className={classes.container}>
         <QueryRenderer
           query={dataMarkingEntityEditionQuery}
-          variables={{ id: leveragedAuthorizationId }}
+          variables={{ id: dataMarkingId }}
           render={({ error, props }) => {
             if (error) {
-              toastGenericError('Failed to edit leveraged authorization');
+              toastGenericError('Failed to edit data marking');
             }
             if (props) {
               return (
                 <DataMarkingEntityEditionContainer
                   displayEdit={displayEdit}
                   history={history}
-                  leveragedAuthorization={props.leveragedAuthorization}
+                  dataMarking={props.dataMarking}
                   handleDisplayEdit={handleDisplayEdit}
                 />
               );
@@ -111,7 +145,7 @@ class DataMarkingEntityEdition extends Component {
 }
 
 DataMarkingEntityEdition.propTypes = {
-  leveragedAuthorizationId: PropTypes.string,
+  dataMarkingId: PropTypes.string,
   displayEdit: PropTypes.bool,
   handleDisplayEdit: PropTypes.func,
   classes: PropTypes.object,

@@ -102,7 +102,7 @@ class EntitiesDataMarkingsPopover extends Component {
           >
             <CyioCoreObjectLabelsView
               menuItemName='Add Labels'
-              labels={node.labels}
+              labels={node?.labels ?? []}
               history={history}
               marginTop={0}
               id={node.id}

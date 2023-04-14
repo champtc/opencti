@@ -47,13 +47,15 @@ class EntityDataMarkingComponent extends Component {
   }
 
   render() {
-    const { classes, dataMarking, history, refreshQuery } = this.props;
+    const {
+      classes, dataMarking, history, refreshQuery,
+    } = this.props;
     return (
       <>
         <div className={classes.container}>
           <CyioDomainObjectHeader
             history={history}
-            name={dataMarking.title}
+            name={dataMarking.name}
             cyioDomainObject={dataMarking}
             goBack='/data/entities/data_markings'
             PopoverComponent={<EntitiesDataMarkingsPopover />}
@@ -162,6 +164,27 @@ const EntityDataMarking = createFragmentContainer(EntityDataMarkingComponent, {
       ... on StatementMarking {
         description
         statement
+        name
+        external_references {
+          __typename
+          id
+          source_name
+          description
+          entity_type
+          url
+          hashes {
+            value
+          }
+          external_id
+        }
+        notes {
+          __typename
+          id
+          entity_type
+          abstract
+          content
+          authors
+        }
       }
       ... on TLPMarking {
         id
@@ -174,6 +197,26 @@ const EntityDataMarking = createFragmentContainer(EntityDataMarkingComponent, {
         modified
         name
         tlp
+        external_references {
+          __typename
+          id
+          source_name
+          description
+          entity_type
+          url
+          hashes {
+            value
+          }
+          external_id
+        }
+        notes {
+          __typename
+          id
+          entity_type
+          abstract
+          content
+          authors
+        }
       }
       ... on IEPMarking {
         id
@@ -193,6 +236,26 @@ const EntityDataMarking = createFragmentContainer(EntityDataMarkingComponent, {
         start_date
         permitted_actions
         affected_party_notifications
+        external_references {
+          __typename
+          id
+          source_name
+          description
+          entity_type
+          url
+          hashes {
+            value
+          }
+          external_id
+        }
+        notes {
+          __typename
+          id
+          entity_type
+          abstract
+          content
+          authors
+        }
       }
     }
   `,

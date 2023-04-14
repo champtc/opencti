@@ -13,7 +13,6 @@ import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import Skeleton from '@material-ui/lab/Skeleton';
 import inject18n from '../../../../../components/i18n';
-import CyioCoreObjectLabels from '../../../common/stix_core_objects/CyioCoreObjectLabels';
 import EntitiesDataMarkingsPopover from './EntitiesDataMarkingsPopover';
 import { truncate } from '../../../../../utils/String';
 
@@ -119,7 +118,6 @@ class EntityDataMarkingCardComponent extends Component {
       selectAll,
       history,
       onToggleEntity,
-      onLabelClick,
       selectedElements,
     } = this.props;
     return (
@@ -250,6 +248,26 @@ const EntityDataMarkingCardFragment = createFragmentContainer(
           start_date
           tlp
           unmodified_resale
+          external_references {
+            __typename
+            id
+            source_name
+            description
+            entity_type
+            url
+            hashes {
+              value
+            }
+            external_id
+          }
+          notes {
+            __typename
+            id
+            entity_type
+            abstract
+            content
+            authors
+          }
         }
         ... on TLPMarking {
           color
@@ -261,6 +279,26 @@ const EntityDataMarkingCardFragment = createFragmentContainer(
           modified
           name
           tlp
+          external_references {
+            __typename
+            id
+            source_name
+            description
+            entity_type
+            url
+            hashes {
+              value
+            }
+            external_id
+          }
+          notes {
+            __typename
+            id
+            entity_type
+            abstract
+            content
+            authors
+          }
         }
         ... on StatementMarking {
           color
@@ -272,6 +310,26 @@ const EntityDataMarkingCardFragment = createFragmentContainer(
           modified
           name
           statement
+          external_references {
+            __typename
+            id
+            source_name
+            description
+            entity_type
+            url
+            hashes {
+              value
+            }
+            external_id
+          }
+          notes {
+            __typename
+            id
+            entity_type
+            abstract
+            content
+            authors
+          }
         }
       }
     `,

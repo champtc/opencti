@@ -3,8 +3,6 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import { compose } from 'ramda';
-import { createFragmentContainer } from 'react-relay';
-import graphql from 'babel-plugin-relay/macro';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -76,7 +74,9 @@ const styles = (theme) => ({
 
 class EntityDataMarkingOverview extends Component {
   render() {
-    const { t, classes, refreshQuery, dataMarking, fldt } = this.props;
+    const {
+      t, classes, refreshQuery, dataMarking, fldt,
+    } = this.props;
     return (
       <div style={{ height: '100%' }}>
         <Typography variant='h4' gutterBottom={true}>
@@ -166,8 +166,8 @@ class EntityDataMarkingOverview extends Component {
                           parserOptions={{ commonmark: true }}
                           className='markdown'
                         >
-                          {dataMarking?.description &&
-                            t(dataMarking.description)}
+                          {dataMarking?.description
+                            && t(dataMarking.description)}
                         </Markdown>
                       </div>
                     </div>
@@ -190,9 +190,9 @@ class EntityDataMarkingOverview extends Component {
                     </Tooltip>
                   </div>
                   <div className='clearfix' />
-                  {dataMarking?.definition_type && t(dataMarking.definition_type)}
+                  {dataMarking?.definition_type && t(dataMarking.definition_type).toUpperCase()}
                 </div>
-              </Grid>}              
+              </Grid>}
               <Grid item={true} xs={12}>
                 <CyioCoreObjectLabelsView
                   labels={[]}
@@ -220,5 +220,5 @@ EntityDataMarkingOverview.propTypes = {
 
 export default compose(
   inject18n,
-  withStyles(styles)
+  withStyles(styles),
 )(EntityDataMarkingOverview);

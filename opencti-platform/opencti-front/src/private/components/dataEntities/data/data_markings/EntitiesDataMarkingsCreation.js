@@ -11,6 +11,7 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
+import { MenuItem } from '@material-ui/core';
 import DialogContent from '@material-ui/core/DialogContent';
 import Slide from '@material-ui/core/Slide';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -21,10 +22,9 @@ import TextField from '../../../../../components/TextField';
 import DatePickerField from '../../../../../components/DatePickerField';
 import MarkDownField from '../../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../../utils/bakedToast';
-import { parse } from '../../../../../utils/Time';
-import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
 import TaskType from '../../../common/form/TaskType';
 import ColorPickerField from '../../../../../components/ColorPickerField';
+import SelectField from '../../../../../components/SelectField';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -58,21 +58,85 @@ const styles = (theme) => ({
   },
 });
 
-const entitiesDataMarkingsCreationMutation = graphql`
-  mutation EntitiesDataMarkingsCreationMutation($input: OscalLeveragedAuthorizationInput!) {
-    createLeveragedAuthorization (input: $input) {
+const entitiesDataMarkingsCreationStatementMutation = graphql`
+  mutation EntitiesDataMarkingsCreationStatementMutation(
+    $input: StatementMarkingInput
+  ) {
+    createStatementMarking(input: $input) {
       id
+      entity_type
+      created
+      modified
+      definition_type
+      color
+      name
+      description
+      statement
     }
   }
 `;
 
-const LeveragedAuthorizationCreationValidation = (t) => Yup.object().shape({
-  title: Yup.string().required(t('This field is required')),
-  party: Yup.string().required(t('This field is required')),
-  date_authorized: Yup.string().nullable().required(t('This field is required')),
-});
+const entitiesDataMarkingsCreationIEPMutation = graphql`
+  mutation EntitiesDataMarkingsCreationIEPMutation($input: IEPMarkingInput) {
+    createIEPMarking(input: $input) {
+      id
+      entity_type
+      created
+      modified
+      definition_type
+      color
+      name
+      description
+      start_date
+      end_date
+      encrypt_in_transit
+      permitted_actions
+      tlp
+      attribution
+      unmodified_resale
+      affected_party_notifications
+      iep_version
+    }
+  }
+`;
+
+const DataMarkingCreationValidation = (t, type) => {
+  let schema = Yup.object().shape({
+    name: Yup.string().required(t('This field is required')),
+    color: Yup.string().required(t('This field is required')),
+    definition_type: Yup.string().required(t('This field is required')),
+  });
+
+  if (type === 'statement') {
+    schema = schema.shape({
+      statement: Yup.string().nullable().required(t('This field is required')),
+    });
+  } else if (type === 'iep') {
+    schema = schema.shape({
+      affected_party_notifications: Yup.string()
+        .nullable()
+        .required(t('This field is required')),
+      attribution: Yup.string()
+        .nullable()
+        .required(t('This field is required')),
+      encrypt_in_transit: Yup.string()
+        .nullable()
+        .required(t('This field is required')),
+      permitted_actions: Yup.string()
+        .nullable()
+        .required(t('This field is required')),
+      tlp: Yup.string().nullable().required(t('This field is required')),
+      unmodified_resale: Yup.string()
+        .nullable()
+        .required(t('This field is required')),
+    });
+  }
+
+  return schema;
+};
+
 const Transition = React.forwardRef((props, ref) => (
-  <Slide direction="up" ref={ref} {...props} />
+  <Slide direction='up' ref={ref} {...props} />
 ));
 Transition.displayName = 'TransitionSlide';
 class EntitiesDataMarkingsCreation extends Component {
@@ -81,6 +145,7 @@ class EntitiesDataMarkingsCreation extends Component {
     this.state = {
       open: false,
       onSubmit: false,
+      disableSubmit: false,
       displayCancel: false,
     };
   }
@@ -97,36 +162,70 @@ class EntitiesDataMarkingsCreation extends Component {
     this.setState({ open: true });
   }
 
-  onSubmit(values, { setSubmitting, resetForm }) {
-    const adaptedValues = R.evolve(
-      {
-        date_authorized: () => (values.date_authorized === null
-          ? null
-          : parse(values.date_authorized).format('YYYY-MM-DD')),
-      },
-      values,
-    );
-    const finalValues = R.pipe(
+  onSubmit(values, { setSubmitting, resetForm, setErrors }) {
+    this.setState({ disableSubmit: true });
+    const finalValuesForIEP = R.pipe(
       R.dissoc('created'),
       R.dissoc('modified'),
-    )(adaptedValues);
-    commitMutation({
-      mutation: entitiesDataMarkingsCreationMutation,
-      variables: {
-        input: finalValues,
-      },
-      setSubmitting,
-      pathname: '/data/entities/leveraged_authorizations',
-      onCompleted: () => {
+      R.dissoc('definition_type'),
+      R.dissoc('statement'),
+    )(values);
+    const finalValuesForStatement = R.pipe(
+      R.dissoc('created'),
+      R.dissoc('modified'),
+      R.dissoc('definition_type'),
+      R.dissoc('start_date'),
+      R.dissoc('end_date'),
+      R.dissoc('encrypt_in_transit'),
+      R.dissoc('permitted_actions'),
+      R.dissoc('affected_party_notifications'),
+      R.dissoc('tlp'),
+      R.dissoc('iep_version'),
+      R.dissoc('unmodified_resale'),
+      R.dissoc('attribution'),
+    )(values);
+
+    const finalValues = values.definition_type === 'statement'
+      ? finalValuesForStatement
+      : finalValuesForIEP;
+
+    DataMarkingCreationValidation(this.props.t, values.definition_type)
+      .validate(values, { abortEarly: false })
+      .then(() => {
+        commitMutation({
+          mutation:
+            values.definition_type === 'statement'
+              ? entitiesDataMarkingsCreationStatementMutation
+              : entitiesDataMarkingsCreationIEPMutation,
+          variables: {
+            input: finalValues,
+          },
+          setSubmitting,
+          pathname: '/data/entities/data_markings',
+          onCompleted: () => {
+            setSubmitting(false);
+            this.setState({ disableSubmit: false });
+            resetForm();
+            this.props.handleDataMarkingCreation();
+            this.props.history.push('/data/entities/data_markings');
+          },
+          onError: () => {
+            toastGenericError('Failed to create data markings');
+            this.setState({ disableSubmit: false });
+          },
+        });
+      })
+      .catch((errors) => {
         setSubmitting(false);
-        resetForm();
-        this.props.handleDataMarkingCreation();
-        this.props.history.push('/data/entities/leveraged_authorizations');
-      },
-      onError: () => {
-        toastGenericError('Failed to create leveraged authorization');
-      },
-    });
+        const error = {};
+        if (errors.inner) {
+          errors.inner.forEach((err) => {
+            error[err.path] = err.message || err.type;
+          });
+        }
+        setErrors(error);
+        this.setState({ disableSubmit: false });
+      });
   }
 
   handleClose() {
@@ -142,11 +241,7 @@ class EntitiesDataMarkingsCreation extends Component {
   }
 
   render() {
-    const {
-      t,
-      classes,
-      openDataCreation,
-    } = this.props;
+    const { t, classes, openDataCreation } = this.props;
     return (
       <>
         <Dialog
@@ -157,49 +252,56 @@ class EntitiesDataMarkingsCreation extends Component {
           <Formik
             enableReinitialize={true}
             initialValues={{
-              title: '',
+              tlp: '',
+              name: '',
+              color: '',
+              end_date: '',
+              start_date: '',
               created: null,
               modified: null,
+              statement: '',
               description: '',
-              // markings: [],
-              date_authorized: null,
-              party: '',
+              attribution: '',
+              definition_type: '',
+              permitted_actions: '',
+              unmodified_resale: '',
+              encrypt_in_transit: '',
+              affected_party_notifications: '',
             }}
-            validationSchema={LeveragedAuthorizationCreationValidation(t)}
             onSubmit={this.onSubmit.bind(this)}
             onReset={this.onReset.bind(this)}
           >
             {({
-              handleReset,
-              submitForm,
-              isSubmitting,
+              handleReset, submitForm, values,
             }) => (
               <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Leveraged Authorization')}</DialogTitle>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>
+                  {t('Markings')}
+                </DialogTitle>
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={12}>
                       <div style={{ marginBottom: '10px' }}>
                         <Typography
-                          variant="h3"
-                          color="textSecondary"
+                          variant='h3'
+                          color='textSecondary'
                           gutterBottom={true}
                           style={{ float: 'left' }}
                         >
                           {t('Id')}
                         </Typography>
                         <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                          <Tooltip title={t('Id')} >
-                            <Information fontSize="inherit" color="disabled" />
+                          <Tooltip title={t('Id')}>
+                            <Information fontSize='inherit' color='disabled' />
                           </Tooltip>
                         </div>
-                        <div className="clearfix" />
+                        <div className='clearfix' />
                         <Field
                           component={TextField}
-                          name="id"
+                          name='id'
                           fullWidth={true}
                           disabled={true}
-                          size="small"
+                          size='small'
                           containerstyle={{ width: '100%' }}
                           variant='outlined'
                         />
@@ -210,25 +312,25 @@ class EntitiesDataMarkingsCreation extends Component {
                     <Grid item={true} xs={6}>
                       <div style={{ marginBottom: '12px' }}>
                         <Typography
-                          variant="h3"
-                          color="textSecondary"
+                          variant='h3'
+                          color='textSecondary'
                           gutterBottom={true}
                           style={{ float: 'left' }}
                         >
                           {t('Created Date')}
                         </Typography>
                         <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                          <Tooltip title={t('Created')} >
-                            <Information fontSize="inherit" color="disabled" />
+                          <Tooltip title={t('Created')}>
+                            <Information fontSize='inherit' color='disabled' />
                           </Tooltip>
                         </div>
-                        <div className="clearfix" />
+                        <div className='clearfix' />
                         <Field
                           component={DatePickerField}
-                          name="created"
+                          name='created'
                           fullWidth={true}
                           disabled={true}
-                          size="small"
+                          size='small'
                           containerstyle={{ width: '100%' }}
                           variant='outlined'
                           invalidDateMessage={t(
@@ -241,25 +343,25 @@ class EntitiesDataMarkingsCreation extends Component {
                     <Grid item={true} xs={6}>
                       <div>
                         <Typography
-                          variant="h3"
-                          color="textSecondary"
+                          variant='h3'
+                          color='textSecondary'
                           gutterBottom={true}
                           style={{ float: 'left' }}
                         >
                           {t('Modified Date')}
                         </Typography>
                         <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                          <Tooltip title={t('Last Modified')} >
-                            <Information fontSize="inherit" color="disabled" />
+                          <Tooltip title={t('Last Modified')}>
+                            <Information fontSize='inherit' color='disabled' />
                           </Tooltip>
                         </div>
-                        <div className="clearfix" />
+                        <div className='clearfix' />
                         <Field
                           component={DatePickerField}
-                          name="modified"
+                          name='modified'
                           fullWidth={true}
                           disabled={true}
-                          size="small"
+                          size='small'
                           variant='outlined'
                           invalidDateMessage={t(
                             'The value must be a date (YYYY-MM-DD)',
@@ -271,21 +373,21 @@ class EntitiesDataMarkingsCreation extends Component {
                     </Grid>
                     <Grid item={true} xs={12}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ float: 'left' }}
                       >
                         {t('Marking Type')}
                       </Typography>
                       <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('Party')} >
-                          <Information fontSize="inherit" color="disabled" />
+                        <Tooltip title={t('Marking Type')}>
+                          <Information fontSize='inherit' color='disabled' />
                         </Tooltip>
                       </div>
-                      <div className="clearfix" />
+                      <div className='clearfix' />
                       <TaskType
-                        name="definition_type"
+                        name='definition_type'
                         taskType='DataMarkingType'
                         fullWidth={true}
                         required={true}
@@ -295,32 +397,32 @@ class EntitiesDataMarkingsCreation extends Component {
                     </Grid>
                     <Grid item={true} xs={12}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ float: 'left' }}
                       >
                         {t('Name')}
                       </Typography>
                       <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                        <Tooltip title={t('Name')} >
-                          <Information fontSize="inherit" color="disabled" />
+                        <Tooltip title={t('Name')}>
+                          <Information fontSize='inherit' color='disabled' />
                         </Tooltip>
                       </div>
-                      <div className="clearfix" />
+                      <div className='clearfix' />
                       <Field
                         component={TextField}
-                        name="name"
+                        name='name'
                         fullWidth={true}
-                        size="small"
+                        size='small'
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
                       />
                     </Grid>
                     <Grid xs={12} item={true}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ float: 'left' }}
                       >
@@ -328,10 +430,10 @@ class EntitiesDataMarkingsCreation extends Component {
                       </Typography>
                       <div style={{ float: 'left', margin: '-1px 0 0 4px' }}>
                         <Tooltip title={t('Description')}>
-                          <Information fontSize="inherit" color="disabled" />
+                          <Information fontSize='inherit' color='disabled' />
                         </Tooltip>
                       </div>
-                      <div className="clearfix" />
+                      <div className='clearfix' />
                       <Field
                         component={MarkDownField}
                         name='description'
@@ -345,44 +447,331 @@ class EntitiesDataMarkingsCreation extends Component {
                     <Grid item={true} xs={12}>
                       <div style={{ marginTop: '10px' }}>
                         <Typography
-                          variant="h3"
-                          color="textSecondary"
+                          variant='h3'
+                          color='textSecondary'
                           gutterBottom={true}
                           style={{ float: 'left' }}
                         >
                           {t('Color')}
                         </Typography>
                         <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                          <Tooltip title={t('Marking')} >
-                            <Information fontSize="inherit" color="disabled" />
+                          <Tooltip title={t('Marking')}>
+                            <Information fontSize='inherit' color='disabled' />
                           </Tooltip>
                         </div>
-                        <div className="clearfix" />
+                        <div className='clearfix' />
                         <Field
                           component={ColorPickerField}
-                          name="color"
+                          name='color'
                           fullWidth={true}
                         />
                       </div>
                     </Grid>
-                    <Grid item={true} xs={12}>
-                      <CyioCoreObjectOrCyioCoreRelationshipNotes disableAdd={true} />
-                    </Grid>
+                    {values.definition_type === 'statement' && (
+                      <Grid item={true} xs={12}>
+                        <Typography
+                          variant='h3'
+                          color='textSecondary'
+                          gutterBottom={true}
+                          style={{ float: 'left' }}
+                        >
+                          {t('Statement Text')}
+                        </Typography>
+                        <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                          <Tooltip title={t('Name')}>
+                            <Information fontSize='inherit' color='disabled' />
+                          </Tooltip>
+                        </div>
+                        <div className='clearfix' />
+                        <Field
+                          component={TextField}
+                          name='statement'
+                          fullWidth={true}
+                          size='small'
+                          containerstyle={{ width: '100%' }}
+                          variant='outlined'
+                        />
+                      </Grid>
+                    )}
+
+                    {values.definition_type === 'iep' && (
+                      <>
+                        <Grid item={true} xs={6}>
+                          <Typography
+                            variant='h3'
+                            color='textSecondary'
+                            gutterBottom={true}
+                            style={{ float: 'left' }}
+                          >
+                            {t('IEP Version')}
+                          </Typography>
+                          <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                            <Tooltip title={t('IEP Version')}>
+                              <Information
+                                fontSize='inherit'
+                                color='disabled'
+                              />
+                            </Tooltip>
+                          </div>
+                          <div className='clearfix' />
+                          <Field
+                            component={SelectField}
+                            name="iep_version"
+                            // label={t('Opinion')}
+                            fullWidth={true}
+                            style={{ height: '13.09px' }}
+                            containerstyle={{ width: '100%' }}
+                          >
+                            <MenuItem value="2.0">
+                              {t('2.0')}
+                            </MenuItem>
+                          </Field>
+                        </Grid>
+                        <Grid item={true} xs={6}>
+                            <Typography
+                              variant='h3'
+                              color='textSecondary'
+                              gutterBottom={true}
+                              style={{ float: 'left' }}
+                            >
+                              {t('Start Date')}
+                            </Typography>
+                            <div
+                              style={{ float: 'left', margin: '1px 0 0 5px' }}
+                            >
+                              <Tooltip title={t('Start')}>
+                                <Information
+                                  fontSize='inherit'
+                                  color='disabled'
+                                />
+                              </Tooltip>
+                            </div>
+                            <div className='clearfix' />
+                            <Field
+                              component={DatePickerField}
+                              name='start_date'
+                              fullWidth={true}
+                              size='small'
+                              style={{ height: '18.09px' }}
+                              containerstyle={{ width: '100%' }}
+                              variant='outlined'
+                              invalidDateMessage={t(
+                                'The value must be a date (YYYY-MM-DD)',
+                              )}
+                            />
+                        </Grid>
+                        <Grid item={true} xs={6}>
+                            <Typography
+                              variant='h3'
+                              color='textSecondary'
+                              gutterBottom={true}
+                              style={{ float: 'left' }}
+                            >
+                              {t('End Date')}
+                            </Typography>
+                            <div
+                              style={{ float: 'left', margin: '1px 0 0 5px' }}
+                            >
+                              <Tooltip title={t('End')}>
+                                <Information
+                                  fontSize='inherit'
+                                  color='disabled'
+                                />
+                              </Tooltip>
+                            </div>
+                            <div className='clearfix' />
+                            <Field
+                              component={DatePickerField}
+                              name='end_date'
+                              fullWidth={true}
+                              size='small'
+                              style={{ height: '18.09px' }}
+                              containerstyle={{ width: '100%' }}
+                              variant='outlined'
+                              invalidDateMessage={t(
+                                'The value must be a date (YYYY-MM-DD)',
+                              )}
+                            />
+                        </Grid>
+                        <Grid item={true} xs={6}>
+                          <Typography
+                            variant='h3'
+                            color='textSecondary'
+                            gutterBottom={true}
+                            style={{ float: 'left' }}
+                          >
+                            {t('Encrypt In Transit')}
+                          </Typography>
+                          <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                            <Tooltip title={t('Encrypt In Transit')}>
+                              <Information
+                                fontSize='inherit'
+                                color='disabled'
+                              />
+                            </Tooltip>
+                          </div>
+                          <div className='clearfix' />
+                          <TaskType
+                            name='encrypt_in_transit'
+                            taskType='EncryptInTransit'
+                            fullWidth={true}
+                            required={true}
+                            style={{ height: '13.09px' }}
+                            containerstyle={{ width: '100%' }}
+                          />
+                        </Grid>
+                        <Grid item={true} xs={6}>
+                          <Typography
+                            variant='h3'
+                            color='textSecondary'
+                            gutterBottom={true}
+                            style={{ float: 'left' }}
+                          >
+                            {t('Affected Party Notifications')}
+                          </Typography>
+                          <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                            <Tooltip title={t('Affected Party Notifications')}>
+                              <Information
+                                fontSize='inherit'
+                                color='disabled'
+                              />
+                            </Tooltip>
+                          </div>
+                          <div className='clearfix' />
+                          <TaskType
+                            name='affected_party_notifications'
+                            taskType='AffectedPartyNotifications'
+                            fullWidth={true}
+                            required={true}
+                            style={{ height: '18.09px' }}
+                            containerstyle={{ width: '100%' }}
+                          />
+                        </Grid>
+                        <Grid item={true} xs={12}>
+                          <Typography
+                            variant='h3'
+                            color='textSecondary'
+                            gutterBottom={true}
+                            style={{ float: 'left' }}
+                          >
+                            {t('Permitted Actions')}
+                          </Typography>
+                          <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                            <Tooltip title={t('Permitted Actions')}>
+                              <Information
+                                fontSize='inherit'
+                                color='disabled'
+                              />
+                            </Tooltip>
+                          </div>
+                          <div className='clearfix' />
+                          <TaskType
+                            name='permitted_actions'
+                            taskType='PermittedActions'
+                            fullWidth={true}
+                            required={true}
+                            style={{ height: '18.09px' }}
+                            containerstyle={{ width: '100%' }}
+                          />
+                        </Grid>
+                        <Grid item={true} xs={6}>
+                          <Typography
+                            variant='h3'
+                            color='textSecondary'
+                            gutterBottom={true}
+                            style={{ float: 'left' }}
+                          >
+                            {t('Sharing')}
+                          </Typography>
+                          <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                            <Tooltip title={t('Sharing')}>
+                              <Information
+                                fontSize='inherit'
+                                color='disabled'
+                              />
+                            </Tooltip>
+                          </div>
+                          <div className='clearfix' />
+                          <TaskType
+                            name='tlp'
+                            taskType='TLPLevel'
+                            fullWidth={true}
+                            required={true}
+                            style={{ height: '18.09px' }}
+                            containerstyle={{ width: '100%' }}
+                          />
+                        </Grid>
+                        <Grid item={true} xs={6}>
+                          <Typography
+                            variant='h3'
+                            color='textSecondary'
+                            gutterBottom={true}
+                            style={{ float: 'left' }}
+                          >
+                            {t('Provider Attribution')}
+                          </Typography>
+                          <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                            <Tooltip title={t('Provider Attribution')}>
+                              <Information
+                                fontSize='inherit'
+                                color='disabled'
+                              />
+                            </Tooltip>
+                          </div>
+                          <div className='clearfix' />
+                          <TaskType
+                            name='attribution'
+                            taskType='ProviderAttribution'
+                            fullWidth={true}
+                            required={true}
+                            style={{ height: '18.09px' }}
+                            containerstyle={{ width: '100%' }}
+                          />
+                        </Grid>
+                        <Grid item={true} xs={6}>
+                          <Typography
+                            variant='h3'
+                            color='textSecondary'
+                            gutterBottom={true}
+                            style={{ float: 'left' }}
+                          >
+                            {t('Unmodified Resale')}
+                          </Typography>
+                          <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                            <Tooltip title={t('Unmodified Resale')}>
+                              <Information
+                                fontSize='inherit'
+                                color='disabled'
+                              />
+                            </Tooltip>
+                          </div>
+                          <div className='clearfix' />
+                          <TaskType
+                            name='unmodified_resale'
+                            taskType='UnmodifiedResale'
+                            fullWidth={true}
+                            required={true}
+                            style={{ height: '18.09px' }}
+                            containerstyle={{ width: '100%' }}
+                          />
+                        </Grid>
+                      </>
+                    )}
                   </Grid>
                 </DialogContent>
                 <DialogActions classes={{ root: classes.dialogClosebutton }}>
                   <Button
-                    variant="outlined"
+                    variant='outlined'
                     onClick={handleReset}
                     classes={{ root: classes.buttonPopover }}
                   >
                     {t('Cancel')}
                   </Button>
                   <Button
-                    variant="contained"
-                    color="primary"
+                    variant='contained'
+                    color='primary'
                     onClick={submitForm}
-                    disabled={isSubmitting}
+                    disabled={this.state.disableSubmit}
                     classes={{ root: classes.buttonPopover }}
                   >
                     {t('Submit')}

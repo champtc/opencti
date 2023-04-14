@@ -7,7 +7,7 @@ import graphql from 'babel-plugin-relay/macro';
 import { pathOr } from 'ramda';
 import CyioListCardsContent from '../../../../../components/list_cards/CyioListCardsContent';
 import { setNumberOfElements } from '../../../../../utils/Number';
-import { EntityDataMarkingCard, EntityDataMarkingCardDummy} from './EntityDataMarkingCard'
+import { EntityDataMarkingCard, EntityDataMarkingCardDummy } from './EntityDataMarkingCard';
 
 const nbOfCardsToLoad = 50;
 

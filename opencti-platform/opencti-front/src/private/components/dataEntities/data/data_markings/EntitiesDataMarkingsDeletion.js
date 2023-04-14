@@ -55,7 +55,7 @@ Transition.displayName = 'TransitionSlide';
 
 const entitiesDataMarkingsDeletionDarkLightMutation = graphql`
   mutation EntitiesDataMarkingsDeletionDarkLightMutation($id: ID!) {
-  deleteLeveragedAuthorization(id: $id)
+    deleteDataMarking(id: $id)
 }
 `;
 
@@ -97,22 +97,22 @@ class EntitiesDataMarkingsDeletion extends Component {
   }
 
   submitDelete() {
-    const leveragedAuthorizationIds = this.props.id.map((value) => (Array.isArray(value)
+    const dataMarkingsIds = this.props.id.map((value) => (Array.isArray(value)
       ? value[0]
       : value));
     this.setState({ deleting: true });
     commitMutation({
       mutation: entitiesDataMarkingsDeletionDarkLightMutation,
       variables: {
-        id: leveragedAuthorizationIds[0],
+        id: dataMarkingsIds[0],
       },
       onCompleted: () => {
         this.setState({ deleting: false });
         this.handleClose();
-        this.props.history.push('/data/entities/leveraged_authorizations');
+        this.props.history.push('/data/entities/data_markings');
       },
       onError: () => {
-        toastGenericError('Failed to delete leveraged authorization');
+        toastGenericError('Failed to delete data markings');
       },
     });
   }
@@ -152,7 +152,7 @@ class EntitiesDataMarkingsDeletion extends Component {
               lineHeight: '24px',
               color: 'white',
             }} >
-              {t('Are you sure you’d like to delete this Leveraged Authorization(s)?')}
+              {t('Are you sure you’d like to delete this Data Marking(s)?')}
             </Typography>
             <DialogContentText>
               {t('This action can’t be undone')}

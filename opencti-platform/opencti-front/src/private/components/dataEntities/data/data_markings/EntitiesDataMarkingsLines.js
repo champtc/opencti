@@ -28,22 +28,22 @@ class EntitiesDataMarkingsLines extends Component {
 
   handleIncrementedOffsetChange() {
     const incrementedOffset = this.state.offset += nbOfRowsToLoad;
-    this.setState({ offset: incrementedOffset })
+    this.setState({ offset: incrementedOffset });
     this.props.relay.refetchConnection(nbOfRowsToLoad, null, {
       offset: this.state.offset,
       first: nbOfRowsToLoad,
       ...this.props.paginationOptions,
-    })
+    });
   }
 
   handleDecrementedOffsetChange() {
     const decrementedOffset = this.state.offset -= nbOfRowsToLoad;
-    this.setState({ offset: decrementedOffset })
+    this.setState({ offset: decrementedOffset });
     this.props.relay.refetchConnection(nbOfRowsToLoad, null, {
       offset: this.state.offset,
       first: nbOfRowsToLoad,
       ...this.props.paginationOptions,
-    })
+    });
   }
 
   render() {
@@ -92,8 +92,6 @@ EntitiesDataMarkingsLines.propTypes = {
   dataColumns: PropTypes.object.isRequired,
   data: PropTypes.object,
   relay: PropTypes.object,
-  threatActors: PropTypes.object,
-  computingDeviceAssetList: PropTypes.object,
   initialLoading: PropTypes.bool,
   onLabelClick: PropTypes.func,
   setNumberOfElements: PropTypes.func,

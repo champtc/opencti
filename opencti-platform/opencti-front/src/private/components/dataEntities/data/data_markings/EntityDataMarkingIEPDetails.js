@@ -6,6 +6,7 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { Grid, Tooltip } from '@material-ui/core';
 import { Information } from 'mdi-material-ui';
+import Chip from '@material-ui/core/Chip';
 import inject18n from '../../../../../components/i18n';
 
 const styles = (theme) => ({
@@ -59,6 +60,14 @@ const styles = (theme) => ({
   },
   tooltip: { float: 'left', margin: '2px 0 0 5px' },
 });
+
+const tlpColor = {
+  red: '#FF2B2B',
+  amber: '#FFC000',
+  amber_strict: '#FFC000',
+  green: '#33FF00',
+  clear: '#FFFFFF',
+};
 
 class EntityDataMarkingIEPDetails extends Component {
   render() {
@@ -148,7 +157,9 @@ class EntityDataMarkingIEPDetails extends Component {
                   </Tooltip>
                 </div>
                 <div className='clearfix' />
-                {dataMarking?.tlp && t(dataMarking.tlp)}
+                <Chip style={{
+                  backgroundColor: '#000', borderRadius: 0, padding: 10, color: tlpColor[dataMarking?.tlp] || '#FF2B2B',
+                }} size="small" label={dataMarking?.tlp && `TLP : ${t(dataMarking?.tlp).toUpperCase()}`} />
               </div>
             </Grid>
             <Grid item xs={6}>

@@ -129,7 +129,10 @@ export const selectDataMarkingQuery = (id, select) => {
 
 export const selectDataMarkingByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(dataMarkingPredicateMap);
+
+  // due to a limitation in the selectMap.getNode capability, its possible to only get back 
+  // a reference to the __typename meta type if all the other members are fragments.
+  if (select === undefined || select === null || (select.length === 1 && select.includes('__typename'))) select = Object.keys(dataMarkingPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
@@ -150,7 +153,11 @@ export const selectDataMarkingByIriQuery = (iri, select) => {
 
 export const selectAllDataMarkingsQuery = (select, args, parent) => {
   let constraintClause = '';
-  if (select === undefined || select === null) select = Object.keys(dataMarkingPredicateMap);
+
+  // due to a limitation in the selectMap.getNode capability, its possible to only get back 
+  // a reference to the __typename meta type if all the other members are fragments.
+  if (select === undefined || select === null || (select.length === 1 && select.includes('__typename'))) select = Object.keys(dataMarkingPredicateMap);
+  
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
   if (!select.includes('definition_type')) select.push('definition_type');

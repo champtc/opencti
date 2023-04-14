@@ -198,6 +198,7 @@ export const createDataMarking = async (definition_type, input, dbName, dataSour
 
   // Add the definition type
   input['definition_type'] = definition_type;
+  if (!('iep_version' in input)) input['iep_version'] = '2.0';
 
   // ensure id and entity_type is in the list of times to be returned
   if (!select.includes('id')) select.push('id');
@@ -400,6 +401,7 @@ export const editDataMarkingById = async (dataMarkingId, input, dbName, dataSour
         case 'definition_type':
           if (!validateEnumValue(value, 'DataMarkingType', schema))
             throw new UserInputError(`Invalid value "${value}" for field "${editItem.key}".`);
+          editItem.value[0] = value.toLowerCase();
           fieldType = 'simple';
           break;
         case 'tlp':
@@ -411,26 +413,31 @@ export const editDataMarkingById = async (dataMarkingId, input, dbName, dataSour
         case 'encrypt_in_transit':
           if (!validateEnumValue(value, 'EncryptInTransit', schema))
             throw new UserInputError(`Invalid value "${value}" for field "${editItem.key}".`);
+          editItem.value[0] = value.toLowerCase();
           fieldType = 'simple';
           break;
         case 'permitted_actions':
           if (!validateEnumValue(value, 'PermittedActions', schema))
             throw new UserInputError(`Invalid value "${value}" for field "${editItem.key}".`);
+          editItem.value[0] = value.replace(/_/g, '-').toLowerCase();
           fieldType = 'simple';
           break;
         case 'affected_party_notifications':
           if (!validateEnumValue(value, 'AffectedPartyNotifications', schema))
             throw new UserInputError(`Invalid value "${value}" for field "${editItem.key}".`);
+          editItem.value[0] = value.replace(/_/g, '-').toLowerCase();
           fieldType = 'simple';
           break;
         case 'attribution':
           if (!validateEnumValue(value, 'ProviderAttribution', schema))
             throw new UserInputError(`Invalid value "${value}" for field "${editItem.key}".`);
+          editItem.value[0] = value.replace(/_/g, '-').toLowerCase();
           fieldType = 'simple';
           break;
         case 'unmodified_resale':
           if (!validateEnumValue(value, 'UnmodifiedResale', schema))
             throw new UserInputError(`Invalid value "${value}" for field "${editItem.key}".`);
+          editItem.value[0] = value.replace(/_/g, '-').toLowerCase();
           fieldType = 'simple';
           break;
         default:

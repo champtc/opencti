@@ -66,7 +66,7 @@ const informationSystemReducer = (item) => {
       ...(item.components && { component_iris: item.components }),
       ...(item.inventory_items && { inventory_item_iris: item.inventory_items }),
       ...(item.leveraged_authorizations && { leveraged_authorization_iris: item.leveraged_authorizations }),
-      ...(item.users && { users_iris: item.users }),
+      ...(item.users && { user_iris: item.users }),
       // hints for general lists of items
       ...(item.object_markings && {marking_iris: item.object_markings}),
       ...(item.labels && { label_iris: item.labels }),
@@ -81,7 +81,11 @@ const informationSystemReducer = (item) => {
 };
 
 
-// Utility
+// Utility - InformationSystem
+export const generateInformationSystemId = (input) => {
+  let id_material = {...(input.system_name && {"system_name": input.system_name})} ;
+  return generateId( id_material, DARKLIGHT_NS );
+}
 export const getInformationTypeIri = (id) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   return `<http://cyio.darklight.ai/information-system--${id}>`;
@@ -205,15 +209,12 @@ export const selectAllInformationSystemsQuery = (select, args, parent) => {
 }
 
 export const insertInformationSystemQuery = (propValues) => {
-  let id_material;
+  // generate a system id based on the system name if they don't exist
   if (!propValues.system_ids && propValues.system_name) {
-    id_material = {...(propValues.system_name && {"system_name": propValues.system_name})};
+    let id_material = {...(propValues.system_name && {"system_name": propValues.system_name})};
     propValues.system_ids = [generateId(id_material, DARKLIGHT_NS)];
   }
-  id_material = {
-    ...(propValues.system_name && {"system_name": propValues.system_name}),
-  } ;
-  const id = generateId( id_material, DARKLIGHT_NS );
+  const id = generateInformationSystemId(propValues);
   const timestamp = new Date().toISOString();
 
   // determine the appropriate ontology class type

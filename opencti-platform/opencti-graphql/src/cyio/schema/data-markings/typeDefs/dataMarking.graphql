@@ -169,7 +169,7 @@ type IEPMarking implements BasicObject & LifecycleObject & DataMarkingObject {
   notes: [CyioNote]
   # IEP Marking
   "Indicates the version of the IEP standard the policy is in adherence."
-  iep_version: String!
+  iep_version: String
   "Indicates the human-readable name of the policy"
   name: String!
   "Identifies a human-readable description that provide some background information about the IEP implementation."
@@ -194,6 +194,8 @@ type IEPMarking implements BasicObject & LifecycleObject & DataMarkingObject {
 
 input IEPMarkingInput {
   # IEP Marking
+  "Indicates the version of the IEP standard the policy is in adherence."
+  iep_version: String
   "Indicates the human-readable name of the policy"
   name: String!
   "Identifies a human-readable description that provide some background information about the IEP implementation."

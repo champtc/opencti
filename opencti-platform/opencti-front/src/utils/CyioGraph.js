@@ -103,6 +103,13 @@ import webServer from '../resources/images/entities/graph-web-server.svg';
 import wirelessAccessPoint from '../resources/images/entities/graph-wireless-access-point.svg';
 import workstation from '../resources/images/entities/graph-workstation.svg';
 import switchIcon from '../resources/images/entities/graph-switch.svg';
+import actor from '../resources/images/entities/graph-actor.svg';
+import address from '../resources/images/entities/graph-address.svg';
+import oscalLocation from '../resources/images/entities/graph-oscal-location.svg';
+import oscalUser from '../resources/images/entities/graph-oscal-user.svg';
+import poam from '../resources/images/entities/graph-poam.svg';
+import subject from '../resources/images/entities/graph-subject.svg';
+import workspace from '../resources/images/entities/graph-workspace.svg';
 
 const genImage = (src) => {
   const img = new Image();
@@ -113,7 +120,13 @@ const genImage = (src) => {
 export const graphImages = {
   'information-system': genImage(informationSystem),
   'adversary-identity': genImage(adversaryIdentity),
-  appliance: genImage(appliance),
+  actor: genImage(actor),
+  address: genImage(address),
+  'oscal-location': genImage(oscalLocation),
+  'oscal-user': genImage(oscalUser),
+  poam: genImage(poam),
+  subject: genImage(subject),
+  workspace: genImage(workspace),
   'application-software': genImage(applicationSoftware),
   'attack-pattern': genImage(attackPattern),
   'autonomous-system': genImage(autonomousSystem),
@@ -245,12 +258,19 @@ export const graphRawImages = {
   network,
   note,
   notes,
+  actor,
+  address,
+  poam,
+  subject,
+  workspace,
   workstation,
   vulnerability,
   interconnection,
   vulnerabilities,
   switch: switchIcon,
   document: documentIcon,
+  'oscal-user': oscalUser,
+  'oscal-location': oscalLocation,
   'oscal-leveraged-authorization': software,
   'information-type': informationType,
   'intrusion-set': intrusionSet,

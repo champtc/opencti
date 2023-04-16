@@ -269,7 +269,7 @@ export const roleEditContext = async (user, roleId, input) => {
 };
 
 export const addUser = async (user, newUser) => {
-  return newUser;
+  return notify(BUS_TOPICS[ENTITY_TYPE_USER].ADDED_TOPIC, {}, newUser);
 };
 
 export const roleEditField = async (user, roleId, input) => {
@@ -409,11 +409,6 @@ export const loginFromProvider = async (userInfo, accessToken, refreshToken) => 
     throw Error('User email not provided');
   }
   const user = await getUserByEmail(userInfo.email);
-  if (user && R.length(accessToken) === 0) {
-    const tokens = await getAccessTokens(user.id);
-    user.access_token = tokens.accessToken;
-    user.refresh_token = tokens.refreshToken;
-  }
   return { ...user, access_token: accessToken, refresh_token: refreshToken };
 };
 
@@ -437,20 +432,30 @@ export const logout = async (user, req, res) => {
 
 const buildSessionUser = async (user) => {
   if (user?.attributes && !user?.access_token) {
-    const { accessToken, refreshToken } = await getAccessTokens(user.id);
-    user.token = accessToken;
-    user.access_token = accessToken;
-    user.refresh_token = refreshToken;
+    const { access_token: access, refresh_token: refresh } = await getAccessTokens(user.id);
+    user.access_token = access;
+    user.refresh_token = refresh;
   }
   return {
     id: user.id,
-    api_token: user.attributes.api_token[0],
     session_creation: now(),
-    internal_id: user.internal_id,
     user_email: user.email,
     access_token: user.access_token,
     refresh_token: user.refresh_token,
-    name: user.name,
+    name: `${user.firstName} ${user.lastName}`,
+    capabilities: user.capabilities.map((c) => ({ id: c.id, internal_id: c.internal_id, name: c.name })),
+    allowed_marking: user.allowed_marking.map((m) => ({
+      id: m.id,
+      standard_id: m.standard_id,
+      internal_id: m.internal_id,
+      definition_type: m.definition_type,
+    })),
+    all_marking: user.all_marking.map((m) => ({
+      id: m.id,
+      standard_id: m.standard_id,
+      internal_id: m.internal_id,
+      definition_type: m.definition_type,
+    })),
   };
 };
 
@@ -459,8 +464,7 @@ const buildCompleteUser = async (client) => {
   const capabilities = await getCapabilities(client.id);
   const marking = await getUserAndGlobalMarkings(client.id, capabilities);
   const user = { ...client, capabilities, allowed_marking: marking.user, all_marking: marking.all };
-  const completeUser = await buildSessionUser(user);
-  return completeUser;
+  return buildSessionUser(user);
 };
 
 export const findById = async (user, userId) => {
@@ -486,6 +490,7 @@ const resolveUserByToken = async (tokenValue) => {
   return completeUser;
 };
 
+// TODO: Before calling the refresh function, check to see if the token has already expired
 export const userRenewToken = async (user, userId) => {
   if (user.access_token && user.refresh_token) {
     const tokens = await oidcRefresh(user.refresh_token);
@@ -527,8 +532,8 @@ export const authenticateUserFromRequest = async (req) => {
         await authenticateUser(req, user, loginProvider);
       }
       return user;
-    } catch (err) {
-      logApp.error(`[CYIO] Authentication error ${authToken}`, { error: err });
+    } catch (error) {
+      logApp.error('[CYIO] Authentication error', { error });
     }
   }
   return undefined;

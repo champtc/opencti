@@ -6,7 +6,6 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "yarn clean && webpack --mode development",
-    "start-mac": "export NODE_TLS_REJECT_UNAUTHORIZED=0 && export MOCKS=0 && webpack --mode development",
     "clean": "rm -f config/schema/compiled.graphql",
     "clean:relations": "babel-node ./script/script-clean-relations.js",
     "install:python": "pip3 install -r src/python/requirements.txt",

@@ -56,8 +56,8 @@ const refreshAdminToken = async () => {
     )
     .then((response) => {
       if (response.data?.access_token) {
-        logApp.info('[KEYCLOAK] Admin access token has been updated');
         adminToken = response.data.access_token;
+        logApp.debug('[KEYCLOAK] Admin access token refreshed');
       } else {
         logApp.error('[KEYCLOAK] Failed to update admin access token; received no access token', { response });
       }
@@ -92,6 +92,7 @@ const adminConfig = async () => {
   };
 };
 
+// TODO: Deprecation: This should be replaced by `validateUser()`
 // Checks an array of users after your filter, should be
 //   - an array
 //   - 0 or 1 user objects
@@ -111,6 +112,20 @@ const validateUserArray = (users) => {
   } else {
     logApp.error('[KEYCLOAK] Did not get expected array of users', { users });
   }
+};
+
+const validateUser = (user) => {
+  // Check if we got an array of users, if so we should only have one
+  if (Array.isArray(user)) {
+    if (user.length() === 1) {
+      user = user[0];
+    } else {
+      return false;
+    }
+  }
+
+  if (user?.id && user?.email) return true;
+  return false;
 };
 
 const getUsers = async () => {
@@ -136,14 +151,14 @@ export const getUserById = async (userId) => {
   const filteredUsers = R.filter(R.pipe(R.path(['id']), R.equals(userId)), users);
   validateUserArray(filteredUsers);
   if (filteredUsers.length === 1) {
-    logApp.info('[KEYCLOAK] Found user by id', { user: userId });
+    logApp.debug('[KEYCLOAK] Found user by id', { user: userId });
     return filteredUsers[0];
   }
   logApp.error('[KEYCLOAK] Failed to find user by id', { userId });
   return undefined;
 };
 
-const setUserAttributes = async (userId, key, value) => {
+export const setUserAttributes = async (userId, key, value) => {
   const user = await getUserById(userId);
   user.attributes[key] = value;
 };
@@ -168,7 +183,6 @@ export const getAccessTokens = async (userId) => {
         client_id: clientId,
         client_secret: secret,
         subject_token: adminToken,
-        // subject_token_type: 'urn:ietf:params:oauth:token-type:access_token',
         requested_subject: userId,
       }),
       {
@@ -179,7 +193,7 @@ export const getAccessTokens = async (userId) => {
     )
     .then((response) => {
       if (response.data?.access_token && response.data?.refresh_token) {
-        logApp.info('[KEYCLOAK] Got impersonated user token', { userId });
+        logApp.debug('[KEYCLOAK] Got impersonated user token', { userId });
         accessToken = response.data.access_token;
         refreshToken = response.data.refresh_token;
         expiresIn = response.data.expires_in;
@@ -195,7 +209,6 @@ export const getAccessTokens = async (userId) => {
   return { access_token: accessToken, refresh_token: refreshToken, expires_in: expiresIn, token_type: tokenType };
 };
 
-// DD-732 Add support for authenticating via an API token
 export const generateNewApiToken = async (userId) => {
   const user = await getUserById(userId);
   user.attributes.api_token = [uuid()];
@@ -204,53 +217,49 @@ export const generateNewApiToken = async (userId) => {
   await axios
     .put(endpoint, user, await adminConfig())
     .then((response) => {
-      logApp.info('[KEYCLOAK] API token updated for user', { user: user.email });
+      logApp.debug('[KEYCLOAK] API token updated for user', { user: user.email });
     })
     .catch((error) => {
       logApp.error('[KEYCLOAK] Failed to update user API token', { user: user.email, error });
     });
 };
 
-// DD-732 Add support for authenticating via an API token
 export const getUserByApiToken = async (token) => {
   const users = await getUsers();
   const filteredUsers = R.filter(R.pipe(R.path(['attributes', 'api_token', 0]), R.equals(token)), users);
-  validateUserArray(filteredUsers);
-  logApp.info('[KEYCLOAK] Found user by api token', { user: filteredUsers[0].email });
-  return filteredUsers[0];
+  if (validateUser(filteredUsers[0])) return filteredUsers[0];
+  return undefined;
 };
 
 export const getUserParentOrg = async (userId) => {
   const user = await getUserById(userId);
   validateUserArray([user]);
   if (user.attributes?.parent_org) {
-    logApp.info('[KEYCLOAK] User parent organization id found', { user: user.email });
+    logApp.debug('[KEYCLOAK] User parent organization id found', { user: user.email });
     return user.attributes.parent_org;
   }
   logApp.warn('[KEYCLOAK] Failed to find parent org in user attributes', { users: user });
   return undefined;
 };
 
-// DD-732 Add support for authenticating via an API token
 export const getApiToken = async (userId) => {
   const users = await getUsers();
   const filteredUsers = R.filter(R.pipe(R.path(['id']), R.equals(userId)), users);
   validateUserArray(filteredUsers);
   if (filteredUsers[0].attributes?.api_token) {
-    logApp.info('[KEYCLOAK] User api token found', { user: filteredUsers[0].email });
+    logApp.debug('[KEYCLOAK] User api token found', { user: filteredUsers[0].email });
     return filteredUsers[0].attributes.api_token[0];
   }
   logApp.warn('[KEYCLOAK] User api token not found', { filteredUsers });
   return undefined;
 };
 
-// DD-445 Need to rework integration with Keycloak so that looking up a user by id works
 export const getUserByEmail = async (email) => {
   const users = await getUsers();
   const filteredUsers = R.filter(R.pipe(R.path(['email']), R.equals(email)), users);
   validateUserArray(filteredUsers);
   if (filteredUsers.length === 1) {
-    logApp.info('[KEYCLOAK] User found by email', { user: filteredUsers[0].email });
+    logApp.debug('[KEYCLOAK] User found by email', { user: filteredUsers[0].email });
     return filteredUsers[0];
   }
   logApp.warn('[KEYCLOAK] May have found more than one user or no users; returning empty list', { filteredUsers });
@@ -265,7 +274,7 @@ export const getSessions = async (userId) => {
       const { data } = response;
       const filteredSessions = R.filter(R.pipe(R.path(['userId']), R.equals(userId)), data);
       if (Array.isArray(filteredSessions) && filteredSessions?.length > 0) {
-        logApp.info('[KEYCLOAK] Found sessions by user id', { userId });
+        logApp.debug('[KEYCLOAK] Found sessions by user id', { userId });
         return filteredSessions;
       }
       logApp.warn('[KEYCLOAK] No sessions found for user', { userId });
@@ -277,7 +286,6 @@ export const getSessions = async (userId) => {
   return sessions;
 };
 
-// DD-689 Deletes all active sessions for a user
 export const endSessions = async (userId) => {
   const sessions = await getSessions(userId);
   if (!Array.isArray(sessions) && sessions.length < 1) {
@@ -290,7 +298,7 @@ export const endSessions = async (userId) => {
     axios
       .delete(endpoint.href, await adminConfig())
       .then((response) => {
-        logApp.info('[KEYCLOAK] Deleted sessions for user', { sessionId: id, userId });
+        logApp.debug('[KEYCLOAK] Deleted sessions for user', { sessionId: id, userId });
       })
       .catch((error) => {
         logApp.error('[KEYCLOAK] Failed to delete user session', { error, sessionId: id, userId });
@@ -298,14 +306,13 @@ export const endSessions = async (userId) => {
   });
 };
 
-// DD-728 Allow for password changes
 export const setUserPassword = async (userId, password) => {
   const user = await getUserById(userId);
   const endpoint = new URL(`${keycloakServer}admin/realms/${realm}/users/${userId}/reset-password`);
   axios
     .put(endpoint.href, { type: 'password', value: password, temporary: false }, await adminConfig())
     .then((response) => {
-      logApp.info('[KEYCLOAK] Password reset for user', { user: user.email });
+      logApp.debug('[KEYCLOAK] Password reset for user', { user: user.email });
     })
     .catch((error) => {
       logApp.error('[KEYCLOAK] Failed to change password for user', { error, user: user.email });
@@ -385,7 +392,7 @@ export const roleDirectiveTransformer = (schema, directiveName = 'hasRole') => {
 
 export const keycloakAlive = async () => {
   try {
-    logApp.info('[INIT] Authentication Keycloak admin client');
+    logApp.info('[INIT] Authenticating Keycloak admin client');
     await keycloakAdminClient.auth();
   } catch (e) {
     logApp.error(`[INIT] Keycloak admin client failed to authenticate`, e);
@@ -426,23 +433,23 @@ const checkApiToken = async (req, res, next) => {
     }
 
     const {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      expires_in: expiresIn,
+      access_token: access,
+      refresh_token: refresh,
+      expires_in: expiration,
+      token_type: type,
     } = await getAccessTokens(user.id);
 
-    user.access_token = accessToken;
-    user.refresh_token = refreshToken;
+    user.access_token = access;
+    user.refresh_token = refresh;
     req.user = user;
 
-    const kc = getKeycloak();
-    const grant = await kc.grantManager.createGrant({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      expires_in: expiresIn,
+    const grant = await getKeycloak().grantManager.createGrant({
+      access_token: access,
+      refresh_token: refresh,
+      expires_in: expiration,
+      token_type: type,
     });
     req.kauth = grant;
-    logApp.info('[KEYCLOAK] Found user from API token; access tokens updated');
     return next();
   } catch (error) {
     logApp.error('[KEYCLOAK] Failed validating API token', { error });
@@ -451,8 +458,8 @@ const checkApiToken = async (req, res, next) => {
 };
 
 export const configureKeycloakMiddleware = (route, expressApp) => {
-  expressApp.use(route, checkApiToken);
   if (keycloakEnabled()) {
+    expressApp.use(route, checkApiToken);
     expressApp.use(route, getKeycloak().middleware());
   }
 };

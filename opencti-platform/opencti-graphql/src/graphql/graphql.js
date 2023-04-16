@@ -175,7 +175,7 @@ const createApolloServer = async (app, httpServer) => {
         } else if (e.extensions.exception.hasOwnProperty('code')) {
           errorCode = e.extensions.exception.code;
         }
-        
+
         if (errorCode === 'ERR_GRAPHQL_CONSTRAINT_VALIDATION') {
           const { fieldName } = e.extensions.exception;
           const ConstraintError = ValidationError(fieldName);

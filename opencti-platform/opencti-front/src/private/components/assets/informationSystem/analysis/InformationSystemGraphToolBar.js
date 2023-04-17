@@ -166,6 +166,7 @@ class InformationSystemGraphToolBar extends Component {
     if (
       this.props.numberOfSelectedNodes === 1
       && !this.props.selectedNodes[0].relationship_type
+      && this.props.selectedNodes[0].entity_type === 'information-type'
     ) {
       this.setState({ openEditEntity: true });
     } else if (
@@ -206,6 +207,7 @@ class InformationSystemGraphToolBar extends Component {
       createdBy,
       markedBy,
       informationSystem,
+      graphData,
       onAdd,
       onDelete,
       handleDeleteSelected,
@@ -239,43 +241,19 @@ class InformationSystemGraphToolBar extends Component {
       anchorElSelectByType,
       openCreatedRelation,
       relationReversed,
-      openEditRelation,
       openEditEntity,
     } = this.state;
-    const viewEnabled = (numberOfSelectedNodes === 1 && numberOfSelectedLinks === 0)
-      || (numberOfSelectedNodes === 0 && numberOfSelectedLinks === 1);
-    // let viewLink = null;
-    // if (viewEnabled) {
-    //   if (numberOfSelectedNodes === 1) {
-    //     if (selectedNodes[0].relationship_type) {
-    //       viewLink = `${resolveLink(selectedNodes[0].fromType)}
-    // /${selectedNodes[0].fromId
-    //         }/knowledge/relations/${selectedNodes[0].id}`;
-    //     } else {
-    //       viewLink = `${resolveLink(selectedNodes[0].entity_type)}
-    // /${selectedNodes[0].id
-    //         }`;
-    //     }
-    //   } else if (numberOfSelectedLinks === 1) {
-    //     const remoteRelevant = selectedLinks[0].source.relationship_type
-    //       ? selectedLinks[0].target
-    //       : selectedLinks[0].source;
-    //     viewLink = `${resolveLink(remoteRelevant.entity_type)}/${remoteRelevant.id
-    //       }/knowledge/relations/${selectedLinks[0].id}`;
-    //   }
-    // }
-    const editionEnabled = (numberOfSelectedNodes === 1
-      && numberOfSelectedLinks === 0)
-      || (numberOfSelectedNodes === 0 && numberOfSelectedLinks === 1);
+    const editionEnabled = (selectedNodes.length
+      && selectedNodes[0].entity_type === 'information-type')
+      && ((numberOfSelectedNodes === 1
+        && numberOfSelectedLinks === 0)
+        || (numberOfSelectedNodes === 0 && numberOfSelectedLinks === 1));
     const fromSelectedTypes = numberOfSelectedNodes >= 2
       ? R.uniq(R.map((n) => n.entity_type, R.init(selectedNodes)))
       : [];
     const toSelectedTypes = numberOfSelectedNodes >= 2
       ? R.uniq(R.map((n) => n.entity_type, R.tail(selectedNodes)))
       : [];
-    const relationEnabled = (fromSelectedTypes.length === 1 && numberOfSelectedLinks === 0)
-      || (toSelectedTypes.length === 1 && numberOfSelectedLinks === 0)
-      || (numberOfSelectedNodes === 1 && numberOfSelectedLinks === 1);
     let relationFromObjects = null;
     let relationToObjects = null;
     if (fromSelectedTypes.length === 1 && numberOfSelectedLinks === 0) {
@@ -670,13 +648,13 @@ class InformationSystemGraphToolBar extends Component {
                 {openEditEntity && (
                   <QueryRenderer
                     query={InformationTypeEditionQuery}
-                    variables={{ id: this.props.informationSystem.id }}
+                    variables={{ id: selectedNodes[0].id }}
                     render={({ props }) => {
                       if (props) {
                         return (
                           <InformationTypeEdition
                             openEdit={openEditEntity}
-                            informationType={props.informationType}
+                            data={props}
                             handleEditInfoType={this.handleCloseEditEntity.bind(this)}
                           />
                         );
@@ -697,10 +675,7 @@ class InformationSystemGraphToolBar extends Component {
                         variant='contained'
                         className={classes.iconButton}
                         onClick={this.handleOpenRemove.bind(this)}
-                        disabled={
-                          numberOfSelectedNodes === 0
-                          && numberOfSelectedLinks === 0
-                        }
+                        disabled={!editionEnabled}
                       >
                         <DeleteOutlined />
                       </Button>
@@ -748,7 +723,7 @@ class InformationSystemGraphToolBar extends Component {
                 {onAdd && (
                   <ContainerAddCyioCoreObjects
                     containerId={informationSystem.id}
-                    containerCyioCoreObjects={informationSystem.objects.edges}
+                    containerCyioCoreObjects={graphData}
                     knowledgeGraph={true}
                     defaultCreatedBy={R.propOr(null, 'createdBy', informationSystem)}
                     defaultMarkingDefinitions={R.map(
@@ -829,6 +804,7 @@ InformationSystemGraphToolBar.propTypes = {
   lastLinkFirstSeen: PropTypes.string,
   lastLinkLastSeen: PropTypes.string,
   handleSelectAll: PropTypes.func,
+  graphData: PropTypes.graphData,
   handleSelectByType: PropTypes.func,
   handleResetLayout: PropTypes.func,
   displayTimeRange: PropTypes.bool,

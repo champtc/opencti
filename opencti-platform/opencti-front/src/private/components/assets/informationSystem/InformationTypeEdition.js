@@ -28,6 +28,7 @@ import { commitMutation } from '../../../../relay/environment';
 import SearchTextField from '../../common/form/SearchTextField';
 import TaskType from '../../common/form/TaskType';
 import SecurityCategorization from './SecurityCategorization';
+import RiskLevel from '../../common/form/RiskLevel';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -84,6 +85,13 @@ const styles = (theme) => ({
     display: 'flex',
     alignItems: 'center',
     marginBottom: 5,
+  },
+  impactContent: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  impactText: {
+    marginLeft: '10px',
   },
 });
 
@@ -209,6 +217,20 @@ class InformationTypeEditionComponent extends Component {
     this.setState({ selectedProduct: selectedInfoType }, () => this.handleSetFieldValues(selectedInfoType, setFieldValue, 'search'));
   }
 
+  renderRiskLevel(baseTitle) {
+    const { t, classes } = this.props;
+    return (
+      <div className={classes.impactContent}>
+        <RiskLevel risk={baseTitle} />
+        <span className={classes.impactText}>
+          {baseTitle.includes('low') && t('Low')}
+          {baseTitle.includes('moderate') && t('Moderate')}
+          {baseTitle.includes('high') && t('High')}
+        </span>
+      </div>
+    )
+  }
+
   handleInformationType(infoType, setFieldValue) {
     this.setState({ selectedProduct: infoType }, () => this.handleSetFieldValues(infoType, setFieldValue, 'select'));
   }
@@ -218,11 +240,12 @@ class InformationTypeEditionComponent extends Component {
       t,
       classes,
       openEdit,
-      informationType,
+      data,
     } = this.props;
     const {
       selectedProduct,
     } = this.state;
+    const informationType = data.informationType;
     const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedProduct);
     const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedProduct);
     const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedProduct);
@@ -237,7 +260,7 @@ class InformationTypeEditionComponent extends Component {
       R.assoc('catalog', characterizations?.system || ''),
       R.assoc('description', informationType?.description || ''),
       R.assoc('information_type', characterizations?.information_type?.id || ''),
-      R.assoc('integrity_impact_base', informationType.integrity_impact?.base_impact || ''),
+      R.assoc('integrity_impact_base', informationType?.integrity_impact?.base_impact || ''),
       R.assoc('availability_impact_base', informationType?.availability_impact?.base_impact || ''),
       R.assoc('integrity_impact_selected', informationType?.integrity_impact?.selected_impact || ''),
       R.assoc('confidentiality_impact_base', informationType?.confidentiality_impact?.base_impact || ''),
@@ -313,6 +336,7 @@ class InformationTypeEditionComponent extends Component {
                       <div className='clearfix' />
                       <SearchTextField
                         name='title'
+                        data={values.title}
                         errors={errors.title}
                         setFieldValue={setFieldValue}
                         handleSearchTextField={this.handleSearchTextField.bind(this)}
@@ -386,8 +410,10 @@ class InformationTypeEditionComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className='clearfix' />
-                      {selectedProduct.confidentiality_impact
-                        && t(selectedProduct.confidentiality_impact.base_impact)}
+                      {(selectedProduct.confidentiality_impact
+                        && this.renderRiskLevel(selectedProduct.confidentiality_impact.base_impact))
+                        || (informationType.confidentiality_impact
+                          && this.renderRiskLevel(informationType.confidentiality_impact.base_impact))}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -481,8 +507,10 @@ class InformationTypeEditionComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className='clearfix' />
-                      {selectedProduct.integrity_impact
-                        && t(selectedProduct.integrity_impact.base_impact)}
+                      {(selectedProduct.integrity_impact
+                        && this.renderRiskLevel(selectedProduct.integrity_impact.base_impact))
+                        || (informationType.integrity_impact
+                          && this.renderRiskLevel(informationType.integrity_impact.base_impact))}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -576,8 +604,10 @@ class InformationTypeEditionComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className='clearfix' />
-                      {selectedProduct.availability_impact
-                        && t(selectedProduct.availability_impact.base_impact)}
+                      {(selectedProduct.availability_impact
+                        && this.renderRiskLevel(selectedProduct.availability_impact.base_impact))
+                        || (informationType.availability_impact
+                          && this.renderRiskLevel(informationType.availability_impact.base_impact))}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -673,7 +703,7 @@ InformationTypeEditionComponent.propTypes = {
   classes: PropTypes.object,
   handleEditInfoType: PropTypes.func,
   renderSecurityImpact: PropTypes.func,
-  informationType: PropTypes.object,
+  data: PropTypes.object,
 };
 
 export const InformationTypeEditionQuery = graphql`
@@ -683,49 +713,52 @@ export const InformationTypeEditionQuery = graphql`
   }
 `;
 
-const InformationTypeEdition = createFragmentContainer(InformationTypeEditionComponent, {
-  informationType: graphql`
-    fragment InformationTypeEdition_information on Query
-    @argumentDefinitions(
-      id: { type: "ID!" }
-    ) {
-      informationType(id: $id) {
-        id
-        entity_type
-        title
-        description
-        categorizations {
+const InformationTypeEdition = createFragmentContainer(
+  InformationTypeEditionComponent,
+  {
+    data: graphql`
+      fragment InformationTypeEdition_information on Query
+      @argumentDefinitions(
+        id: { type: "ID!" }
+      ) {
+        informationType(id: $id) {
           id
           entity_type
-          system
-          information_type {
+          title
+          description
+          categorizations {
             id
             entity_type
-            identifier
-            category
+            system
+            information_type {
+              id
+              entity_type
+              identifier
+              category
+            }
+          }
+          confidentiality_impact {
+            id
+            base_impact
+            selected_impact
+            adjustment_justification
+          }
+          integrity_impact {
+            id
+            base_impact
+            selected_impact
+            adjustment_justification
+          }
+          availability_impact {
+            id
+            base_impact
+            selected_impact
+            adjustment_justification
           }
         }
-        confidentiality_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
-        integrity_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
-        availability_impact {
-          id
-          base_impact
-          selected_impact
-          adjustment_justification
-        }
       }
-    }
-  `,
-});
+    `,
+  },
+);
 
 export default compose(inject18n, withStyles(styles))(InformationTypeEdition);

@@ -99,7 +99,7 @@ class SecurityCategorizationField extends Component {
               </MenuItem>
             ),
           )}
-          {name === 'categorization_system' && categoryField.map(
+          {name === 'system' && categoryField.map(
             (category, key) => category && (
               <MenuItem key={key} value={category}>
                 {category && t(category)}

@@ -4,6 +4,8 @@ import graphql from 'babel-plugin-relay/macro';
 import {
   map,
   filter,
+  uniq,
+  pipe,
   keys,
   groupBy,
   assoc,
@@ -69,10 +71,120 @@ export const containerAddCyioCoreObjectsLinesRelationAddMutation = graphql`
     $id: ID!,
     $entityId: ID!,
     $implementation_type: String!,
-    
   ) {
     addInformationSystemImplementationEntity(id: $id, entityId: $entityId, implementation_type: $implementation_type) {
       id
+      relationship_type
+      source {
+        __typename
+        ... on BasicObject {
+          __typename
+          id
+          entity_type
+        }
+        ... on LifecycleObject {
+          __typename
+          created
+          modified
+        }
+        ... on InformationSystem {
+          __typename
+          id
+          entity_type
+          system_name
+        }
+        ... on InformationType {
+          __typename
+          id
+          entity_type
+          title
+          created
+          modified
+        }
+        ... on InventoryItem {
+          __typename
+          id
+          entity_type
+          name
+          asset_type
+        }
+        ... on Component {
+          __typename
+          id
+          entity_type
+          name
+          component_type
+        }
+        ... on OscalUser {
+          __typename
+          id
+          entity_type
+          user_type
+          name
+        }
+        ... on OscalLeveragedAuthorization {
+          __typename
+          id
+          entity_type
+          title
+          date_authorized
+        }
+      }
+      target {
+        __typename
+        ... on BasicObject {
+          __typename
+          id
+          entity_type
+        }
+        ... on LifecycleObject {
+          __typename
+          created
+          modified
+        }
+        ... on InformationSystem {
+          __typename
+          id
+          entity_type
+          system_name
+        }
+        ... on InformationType {
+          __typename
+          id
+          entity_type
+          title
+          created
+          modified
+        }
+        ... on InventoryItem {
+          __typename
+          id
+          entity_type
+          name
+          asset_type
+        }
+        ... on Component {
+          __typename
+          id
+          entity_type
+          name
+          component_type
+        }
+        ... on OscalUser {
+          __typename
+          id
+          entity_type
+          user_type
+          name
+        }
+        ... on OscalLeveragedAuthorization {
+          __typename
+          id
+          entity_type
+          title
+          date_authorized
+        }
+      }
     }
   }
 `;
@@ -97,7 +209,17 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
     const { containerCyioCoreObjects } = this.props;
 
     // eslint-disable-next-line no-underscore-dangle
-    return map((n) => n.node.id, containerCyioCoreObjects || []);
+    return map((n) => n.id, containerCyioCoreObjects.nodes || []);
+  }
+
+  getContainerCyioCoreObjectSourceIds() {
+    const { containerCyioCoreObjects } = this.props;
+
+    // eslint-disable-next-line no-underscore-dangle
+    return pipe(
+      map((n) => n.source_id),
+      uniq,
+    )(containerCyioCoreObjects.links);
   }
 
   toggleCyioCoreObject(cyioCoreObject) {
@@ -137,10 +259,10 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
           entityId: cyioCoreObject.id,
           implementation_type: cyioCoreObject.entity_type,
         },
-        onCompleted: () => {
+        onCompleted: (data) => {
           this.props.handleClose();
           if (typeof onAdd === 'function') {
-            onAdd(cyioCoreObject);
+            onAdd([cyioCoreObject, data.addInformationSystemImplementationEntity]);
           }
           this.setState({
             addedCyioCoreObjects: append(
@@ -168,6 +290,7 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
     const cyioCoreObjects = byType(data);
     const cyioCoreObjectsTypes = keys(cyioCoreObjects);
     const containerCyioCoreObjectsIds = this.getContainerCyioCoreObjectsIds();
+    const containerCyioCoreObjectSourceIds = this.getContainerCyioCoreObjectSourceIds();
     return (
       <div className={classes.container}>
         {cyioCoreObjectsTypes.length > 0 ? (
@@ -191,10 +314,12 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
                   {cyioCoreObjects[type].map((cyioCoreObject) => {
                     const alreadyAdded = addedCyioCoreObjects.includes(cyioCoreObject.id)
                       || containerCyioCoreObjectsIds.includes(cyioCoreObject.id);
+                    const sourceId = containerCyioCoreObjectSourceIds.includes(cyioCoreObject.id);
                     return (
                       <ListItem
                         key={cyioCoreObject.id}
                         classes={{ root: classes.menuItem }}
+                        disabled={sourceId}
                         divider={true}
                         button={true}
                         onClick={this.toggleCyioCoreObject.bind(
@@ -260,7 +385,7 @@ ContainerAddCyioCoreObjectsLinesContainer.propTypes = {
   t: PropTypes.func,
   fld: PropTypes.func,
   paginationOptions: PropTypes.object,
-  containerCyioCoreObjects: PropTypes.array,
+  containerCyioCoreObjects: PropTypes.object,
   handleClose: PropTypes.func,
   onAdd: PropTypes.func,
   onDelete: PropTypes.func,

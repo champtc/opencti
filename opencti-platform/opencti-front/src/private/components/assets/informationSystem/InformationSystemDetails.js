@@ -95,6 +95,7 @@ class InformationSystemDetailsComponent extends Component {
                 <Grid container={true} spacing={3}>
                   <Grid item={true} xs={12}>
                     <InformationTypesCreation
+                      refreshQuery={refreshQuery}
                       informationSystem={informationSystem}
                     />
                   </Grid>

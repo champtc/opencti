@@ -335,8 +335,8 @@ class InformationSystemGraphToolComponent extends Component {
   }
 
   handleAddEntity(cyioCoreObject) {
-    if (R.map((n) => n.id, this.graphObjects).includes(cyioCoreObject.id)) return;
-    this.graphObjects = [...this.graphObjects, cyioCoreObject];
+    if (R.map((n) => n.id, this.graphObjects).includes(cyioCoreObject[0].id)) return;
+    this.graphObjects = [...this.graphObjects, ...cyioCoreObject];
     this.graphData = buildGraphData(
       this.graphObjects,
       decodeGraphData(this.props.informationSystem.graph_data),
@@ -519,6 +519,7 @@ class InformationSystemGraphToolComponent extends Component {
           markedBy={markedBy}
           currentMarkedBy={currentMarkedBy}
           createdBy={createdBy}
+          graphData={graphData}
           currentCreatedBy={currentCreatedBy}
           handleSelectAll={this.handleSelectAll.bind(this)}
           handleSelectByType={this.handleSelectByType.bind(this)}

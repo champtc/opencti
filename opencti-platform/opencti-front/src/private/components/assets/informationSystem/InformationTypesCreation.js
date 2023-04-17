@@ -93,12 +93,20 @@ const styles = (theme) => ({
     alignItems: 'center',
     marginBottom: 5,
   },
+  impactContent: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  impactText: {
+    marginLeft: '10px',
+  },
 });
 
 const informationTypesCreationMutation = graphql`
   mutation InformationTypesCreationMutation($input: InformationTypeInput!) {
     createInformationType(input: $input) {
       id
+      entity_type
     }
   }
 `;
@@ -106,6 +114,16 @@ const informationTypesCreationMutation = graphql`
 const informationTypesDeleteMutation = graphql`
   mutation InformationTypesCreationDeleteMutation($id: ID!) {
     deleteInformationType(id: $id)
+  }
+`;
+
+const informationTypesCreationAttachMutation = graphql`
+  mutation InformationTypesCreationAttachMutation(
+    $id: ID!
+    $field: String!
+    $entityId: ID!
+    ) {
+      attachToInformationSystem(id: $id, field: $field, entityId: $entityId)
   }
 `;
 
@@ -143,13 +161,6 @@ class InformationTypesCreationComponent extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    const categorizations = [
-      {
-        catalog: values.catalog,
-        system: values.system,
-        information_type: values.information_type,
-      },
-    ];
     const confidentialityImpact = {
       base_impact: values.confidentiality_impact_base,
       selected_impact: values.confidentiality_impact_selected,
@@ -180,7 +191,6 @@ class InformationTypesCreationComponent extends Component {
       R.dissoc('confidentiality_impact_selected'),
       R.dissoc('availability_impact_justification'),
       R.dissoc('confidentiality_impact_justification'),
-      R.assoc('categorizations', categorizations),
       R.assoc('integrity_impact', integrityImpact),
       R.assoc('availability_impact', availabilityImpact),
       R.assoc('confidentiality_impact', confidentialityImpact),
@@ -193,12 +203,32 @@ class InformationTypesCreationComponent extends Component {
       setSubmitting,
       pathname: '/defender_hq/assets/information_systems',
       onCompleted: (data) => {
+        this.handleAttachInformationType(data.createInformationType);
         setSubmitting(false);
         resetForm();
       },
       onError: (err) => {
         console.error(err);
         toastGenericError('Failed to create Information Type');
+      },
+    });
+  }
+
+  handleAttachInformationType(data) {
+    commitMutation({
+      mutation: informationTypesCreationAttachMutation,
+      variables: {
+        id: this.props.informationSystem.id,
+        entityId: data.id,
+        field: 'information_types',
+      },
+      pathname: '/defender_hq/assets/information_systems',
+      onCompleted: () => {
+        this.props.refreshQuery();
+      },
+      onError: (err) => {
+        console.error(err);
+        toastGenericError('Failed to attach Information Type');
       },
     });
   }
@@ -228,12 +258,12 @@ class InformationTypesCreationComponent extends Component {
       R.mergeAll,
     )(selectedInfoType);
     if (type === 'select') {
-      setFieldValue('system', selectedInfoType?.system);
+      setFieldValue('system', selectedInfoType?.category);
       setFieldValue('information_type', selectedInfoType?.id);
     }
     if (type === 'search') {
-      setFieldValue('catalog', categorization?.id);
-      setFieldValue('system', categorization?.system);
+      setFieldValue('catalog', categorization?.catalog?.id);
+      setFieldValue('system', categorization?.information_type?.category);
       setFieldValue('information_type', categorization?.information_type?.id);
       setFieldValue('description', selectedInfoType?.description);
     }
@@ -284,23 +314,6 @@ class InformationTypesCreationComponent extends Component {
     this.setState({ openEdit: !this.state.openEdit });
   }
 
-  handleDeleteInfoType(infoTypeId, field) {
-    commitMutation({
-      mutation: informationTypesDeleteMutation,
-      variables: {
-        id: infoTypeId,
-      },
-      pathname: '/defender_hq/assets/information_systems',
-      onCompleted: () => {
-        this.handleDetachInfoType(infoTypeId, field);
-      },
-      onError: (err) => {
-        console.error(err);
-        toastGenericError('Failed to delete Information Type');
-      },
-    });
-  }
-
   handleDetachInfoType(infoTypeId, field) {
     commitMutation({
       mutation: informationTypesDetachDeleteMutation,
@@ -310,11 +323,45 @@ class InformationTypesCreationComponent extends Component {
         field,
       },
       pathname: '/defender_hq/assets/information_systems',
+      onCompleted: () => {
+        this.handleDeleteInfoType(infoTypeId);
+      },
       onError: (err) => {
         console.error(err);
         toastGenericError('Failed to detach Information Type');
       },
     });
+  }
+
+  handleDeleteInfoType(infoTypeId) {
+    commitMutation({
+      mutation: informationTypesDeleteMutation,
+      variables: {
+        id: infoTypeId,
+      },
+      pathname: '/defender_hq/assets/information_systems',
+      onCompleted: () => {
+        this.props.refreshQuery();
+      },
+      onError: (err) => {
+        console.error(err);
+        toastGenericError('Failed to delete Information Type');
+      },
+    });
+  }
+
+  renderRiskLevel(baseTitle) {
+    const { t, classes } = this.props;
+    return (
+      <div className={classes.impactContent}>
+        <RiskLevel risk={baseTitle} />
+        <span className={classes.impactText}>
+          {baseTitle.includes('low') && t('Low')}
+          {baseTitle.includes('moderate') && t('Moderate')}
+          {baseTitle.includes('high') && t('High')}
+        </span>
+      </div>
+    )
   }
 
   handleChangeDialog() {
@@ -425,7 +472,7 @@ class InformationTypesCreationComponent extends Component {
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={this.handleDeleteInfoType.bind(
+                          onClick={this.handleDetachInfoType.bind(
                             this,
                             informationType.id,
                             informationType.entity_type
@@ -599,13 +646,8 @@ class InformationTypesCreationComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className="clearfix" />
-                      {selectedProduct.confidentiality_impact && (
-                        <RiskLevel
-                          risk={
-                            selectedProduct.confidentiality_impact.base_impact
-                          }
-                        />
-                      )}
+                      {selectedProduct.confidentiality_impact
+                        && this.renderRiskLevel(selectedProduct.confidentiality_impact.base_impact)}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -717,11 +759,8 @@ class InformationTypesCreationComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className="clearfix" />
-                      {selectedProduct.integrity_impact && (
-                        <RiskLevel
-                          risk={selectedProduct.integrity_impact.base_impact}
-                        />
-                      )}
+                      {selectedProduct.integrity_impact
+                        && this.renderRiskLevel(selectedProduct.integrity_impact.base_impact)}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -834,11 +873,8 @@ class InformationTypesCreationComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className="clearfix" />
-                      {selectedProduct.availability_impact && (
-                        <RiskLevel
-                          risk={selectedProduct.availability_impact.base_impact}
-                        />
-                      )}
+                      {selectedProduct.availability_impact
+                        && this.renderRiskLevel(selectedProduct.availability_impact.base_impact)}
                     </Grid>
                     <Grid item={true} xs={2}>
                       <div className={classes.textBase}>
@@ -957,6 +993,7 @@ InformationTypesCreationComponent.propTypes = {
   t: PropTypes.func,
   name: PropTypes.string,
   classes: PropTypes.object,
+  refreshQuery: PropTypes.func,
   informationSystem: PropTypes.object,
 };
 

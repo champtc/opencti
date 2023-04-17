@@ -427,7 +427,7 @@ class ContainerAddCyioCoreObjects extends Component {
               <MenuItem onClick={this.handleInformationSystemCreation.bind(this)}>
                 {t('Create an Information System')}
               </MenuItem>
-              <MenuItem disabled onClick={this.handleInfoTypeChange.bind(this)}>
+              <MenuItem onClick={this.handleInfoTypeChange.bind(this)}>
                 {t('Create an Information Type')}
               </MenuItem>
             </Menu>
@@ -452,7 +452,7 @@ ContainerAddCyioCoreObjects.propTypes = {
   t: PropTypes.func,
   fld: PropTypes.func,
   paginationOptions: PropTypes.object,
-  containerCyioCoreObjects: PropTypes.array,
+  containerCyioCoreObjects: PropTypes.object,
   targetCyioCoreObjectTypes: PropTypes.array,
   onTypesChange: PropTypes.func,
   onAdd: PropTypes.func,

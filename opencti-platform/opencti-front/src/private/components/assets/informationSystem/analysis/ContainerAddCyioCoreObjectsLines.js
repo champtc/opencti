@@ -4,6 +4,8 @@ import graphql from 'babel-plugin-relay/macro';
 import {
   map,
   filter,
+  uniq,
+  pipe,
   keys,
   groupBy,
   assoc,
@@ -207,7 +209,17 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
     const { containerCyioCoreObjects } = this.props;
 
     // eslint-disable-next-line no-underscore-dangle
-    return map((n) => n.id, containerCyioCoreObjects || []);
+    return map((n) => n.id, containerCyioCoreObjects.nodes || []);
+  }
+
+  getContainerCyioCoreObjectSourceIds() {
+    const { containerCyioCoreObjects } = this.props;
+
+    // eslint-disable-next-line no-underscore-dangle
+    return pipe(
+      map((n) => n.source_id),
+      uniq,
+    )(containerCyioCoreObjects.links);
   }
 
   toggleCyioCoreObject(cyioCoreObject) {
@@ -278,6 +290,7 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
     const cyioCoreObjects = byType(data);
     const cyioCoreObjectsTypes = keys(cyioCoreObjects);
     const containerCyioCoreObjectsIds = this.getContainerCyioCoreObjectsIds();
+    const containerCyioCoreObjectSourceIds = this.getContainerCyioCoreObjectSourceIds();
     return (
       <div className={classes.container}>
         {cyioCoreObjectsTypes.length > 0 ? (
@@ -301,10 +314,12 @@ class ContainerAddCyioCoreObjectsLinesContainer extends Component {
                   {cyioCoreObjects[type].map((cyioCoreObject) => {
                     const alreadyAdded = addedCyioCoreObjects.includes(cyioCoreObject.id)
                       || containerCyioCoreObjectsIds.includes(cyioCoreObject.id);
+                    const sourceId = containerCyioCoreObjectSourceIds.includes(cyioCoreObject.id);
                     return (
                       <ListItem
                         key={cyioCoreObject.id}
                         classes={{ root: classes.menuItem }}
+                        disabled={sourceId}
                         divider={true}
                         button={true}
                         onClick={this.toggleCyioCoreObject.bind(
@@ -370,7 +385,7 @@ ContainerAddCyioCoreObjectsLinesContainer.propTypes = {
   t: PropTypes.func,
   fld: PropTypes.func,
   paginationOptions: PropTypes.object,
-  containerCyioCoreObjects: PropTypes.array,
+  containerCyioCoreObjects: PropTypes.object,
   handleClose: PropTypes.func,
   onAdd: PropTypes.func,
   onDelete: PropTypes.func,

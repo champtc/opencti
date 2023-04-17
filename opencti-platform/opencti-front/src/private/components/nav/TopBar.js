@@ -85,6 +85,7 @@ import TopMenuRiskAssessment from './TopMenuRiskAssessment';
 import TopMenuRisk from './TopMenuRisk';
 import TopMenuDataLeveragedAuthorizationEntities from './TopMenuDataLeveragedAuthorizationEntities';
 import TopMenuDataInformationTypeEntities from './TopMenuDataInformationTypeEntities';
+import TopMenuDataMarkingsEntities from './TopMenuDataMarkingsEntities';
 
 const styles = (theme) => ({
   appBar: {
@@ -310,6 +311,8 @@ const TopBar = ({
             || location.pathname === '/data/data_source/leveraged_authorizations') && <TopMenuDataLeveragedAuthorizationEntities />}
           {(location.pathname === '/data/entities/information_types'
             || location.pathname === '/data/data_source/information_types') && <TopMenuDataInformationTypeEntities />}
+          {(location.pathname === '/data/entities/data_markings'
+            || location.pathname === '/data/data_source/data_markings') && <TopMenuDataMarkingsEntities />}
           {(location.pathname === '/dashboard/arsenal'
             || location.pathname.match('/dashboard/arsenal/[a-z_]+$')) && <TopMenuArsenal />}
           {location.pathname.includes('/dashboard/arsenal/malwares/') && <TopMenuMalware />}

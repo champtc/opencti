@@ -970,12 +970,12 @@ class InformationTypesCreationComponent extends Component {
           <QueryRenderer
             query={InformationTypeEditionQuery}
             variables={{ id: informationTypeId }}
-            render={({ props, retry }) => {
+            render={({ props }) => {
               if (props) {
                 return (
                   <InformationTypeEdition
                     openEdit={openEdit}
-                    informationType={props.informationType}
+                    data={props}
                     handleEditInfoType={this.handleEditInfoType.bind(this)}
                   />
                 );

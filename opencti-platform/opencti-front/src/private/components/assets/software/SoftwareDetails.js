@@ -51,12 +51,15 @@ const styles = (theme) => ({
     display: 'flex',
     minWidth: '50px',
     width: '100%',
+    placeItems: 'center',
   },
   launchIcon: {
-    marginRight: '5%',
+    marginRight: '1%',
   },
   linkTitle: {
     color: '#fff',
+    minWidth: 'fit-content',
+    fontSize: '12px',
   }
 });
 

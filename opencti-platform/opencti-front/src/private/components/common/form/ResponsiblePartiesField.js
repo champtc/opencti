@@ -67,6 +67,11 @@ const styles = (theme) => ({
     marginRight: '-20px',
     padding: '5px',
   },
+  linkTitle: {
+    color: '#fff',
+    minWidth: 'fit-content',
+    fontSize: '12px',
+  },
 });
 
 const responsiblePartiesFieldQuery = graphql`
@@ -223,7 +228,7 @@ class ResponsiblePartiesField extends Component {
                         >
                           <LaunchIcon fontSize="small" className={classes.launchIcon} />
                       </Link>
-                      <Typography>{party && t(party?.name)}</Typography>
+                      <div className={classes.linkTitle}>{party && t(party?.name)}</div>
                     </div>
                     <IconButton
                       size="small"

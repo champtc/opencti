@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
   },
   link: {
     textAlign: 'left',
-    fontSize: '1rem',
+    fontSize: '12px',
     display: 'flex',
     alignItems: 'center',
     minWidth: '50px',

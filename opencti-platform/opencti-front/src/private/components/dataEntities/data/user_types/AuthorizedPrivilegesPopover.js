@@ -299,7 +299,7 @@ class AuthorizedPrivilegesPopover extends Component {
               {this.state.authorizedPrivileges.map((privilege, key) => (
                 <div key={key} style={{ display: 'grid', gridTemplateColumns: '75% 1fr' }}>
                   <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                    <Typography>
+                    <Typography variant='caption'>
                       {(privilege.name && t(privilege.name))}
                     </Typography>
                   </div>

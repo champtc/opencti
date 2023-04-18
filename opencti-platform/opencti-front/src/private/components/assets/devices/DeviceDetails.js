@@ -71,10 +71,10 @@ const styles = (theme) => ({
   },
   link: {
     textAlign: 'left',
-    fontSize: '1rem',
     display: 'flex',
     minWidth: '50px',
     width: '100%',
+    placeItems: 'center',
   },
   launchIcon: {
     marginRight: '1%',
@@ -82,7 +82,8 @@ const styles = (theme) => ({
   linkTitle: {
     color: '#fff',
     minWidth: 'fit-content',
-  }
+    fontSize: '12px',
+  },
 });
 
 class DeviceDetailsComponent extends Component {
@@ -186,7 +187,8 @@ class DeviceDetailsComponent extends Component {
                       {device?.installed_software
                         && device.installed_software.map((software, key) => (
                           software.name
-                            && <Link
+                            && 
+                            <Link
                               key={key}
                               component="button"
                               variant="body2"
@@ -196,7 +198,7 @@ class DeviceDetailsComponent extends Component {
                               )}
                             >
                               <LaunchIcon fontSize="small"  className={classes.launchIcon} /> <div className={classes.linkTitle}>{t(software.name)} {t(software.version || " ")}</div>
-                            </Link>                   
+                            </Link>                                             
                       ))}
                     </div>
                   </div>
@@ -332,7 +334,8 @@ class DeviceDetailsComponent extends Component {
                 </div>
                 <div className="clearfix" />
                 {device?.connected_to_network?.name
-                  && <Link
+                  && 
+                  <Link
                     component="button"
                     variant="body2"
                     className={classes.link}

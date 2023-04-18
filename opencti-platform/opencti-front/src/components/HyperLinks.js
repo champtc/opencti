@@ -38,7 +38,6 @@ const useStyles = makeStyles((theme) => ({
   },
   link: {
     textAlign: 'left',
-    fontSize: '12px',
     display: 'flex',
     alignItems: 'center',
     minWidth: '50px',
@@ -50,6 +49,7 @@ const useStyles = makeStyles((theme) => ({
   linkTitle: {
     color: '#fff',
     minWidth: 'fit-content',
+    fontSize: '12px',
   },
   input: {
     display: 'block',

@@ -126,7 +126,7 @@ class EntityUserTypesDetailsComponent extends Component {
                   <div className={classes.scrollDiv}>
                     <div className={classes.scrollObj}>
                       {roles !== [] && roles.map((item) => (
-                        <Typography>{t(item.name)}</Typography>
+                        <><Typography variant='caption'>{t(item.name)}</Typography><br/></>                        
                       ))}
                     </div>
                   </div>

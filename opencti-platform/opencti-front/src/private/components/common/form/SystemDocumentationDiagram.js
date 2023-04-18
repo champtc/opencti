@@ -10,8 +10,10 @@ import AddIcon from '@material-ui/icons/Add';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Typography from '@material-ui/core/Typography';
+import Link from '@material-ui/core/Link';
 import { Information } from 'mdi-material-ui';
 import Grid from '@material-ui/core/Grid';
+import LaunchIcon from '@material-ui/icons/Launch';
 import graphql from 'babel-plugin-relay/macro';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
@@ -71,45 +73,64 @@ const styles = (theme) => ({
   dialogAction: {
     margin: '15px 20px 15px 0',
   },
+  link: {
+    textAlign: 'left',
+    fontSize: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    minWidth: '50px',
+    width: '100%',
+  },
+  launchIcon: {
+    marginRight: '1%',
+  },
+  linkTitle: {
+    color: '#fff',
+    minWidth: 'fit-content',
+  },
 });
 
 const SystemDocumentationValidation = (t) => Yup.object().shape({
   caption: Yup.string().required(t('This field is required')),
   diagram_link: Yup.string()
     .required(t('This field is required'))
-    .url(t('The value must be a valid URL (scheme://host:port/path). For example, https://cyio.darklight.ai')),
+    .url(
+      t(
+        'The value must be a valid URL (scheme://host:port/path). For example, https://cyio.darklight.ai',
+      ),
+    ),
 });
 
 const SystemDocumentationDiagramQuery = graphql`
-query SystemDocumentationDiagramQuery($id: ID!) {
-  informationSystem(id: $id) {
-    id
-    authorization_boundary {
-      diagrams {
-        entity_type
-        description
-        caption
-        diagram_link
+  query SystemDocumentationDiagramQuery($id: ID!) {
+    informationSystem(id: $id) {
+      id
+      authorization_boundary {
+        diagrams {
+          entity_type
+          description
+          caption
+          diagram_link
+        }
       }
-    }
-    network_architecture {
-      diagrams {
-        entity_type
-        description
-        caption
-        diagram_link
-       }
-    }
-    data_flow {
-      diagrams {
-        entity_type
-        description
-        caption
-        diagram_link
+      network_architecture {
+        diagrams {
+          entity_type
+          description
+          caption
+          diagram_link
+        }
+      }
+      data_flow {
+        diagrams {
+          entity_type
+          description
+          caption
+          diagram_link
+        }
       }
     }
   }
-}
 `;
 
 class SystemDocumentationDiagram extends Component {
@@ -158,9 +179,10 @@ class SystemDocumentationDiagram extends Component {
   }
 
   onSubmit(values, { resetForm }) {
-    this.setState({ open: false, diagram: [...this.state.diagram, values] }, () => (
-      this.props.setFieldValue(this.props.name, this.state.diagram)
-    ));
+    this.setState(
+      { open: false, diagram: [...this.state.diagram, values] },
+      () => this.props.setFieldValue(this.props.name, this.state.diagram),
+    );
     resetForm();
   }
 
@@ -169,7 +191,9 @@ class SystemDocumentationDiagram extends Component {
   }
 
   handleDeleteDialog(key) {
-    this.setState({ diagram: this.state.diagram.filter((value, i) => i !== key) });
+    this.setState({
+      diagram: this.state.diagram.filter((value, i) => i !== key),
+    });
   }
 
   handleCreateDiagram() {
@@ -178,9 +202,8 @@ class SystemDocumentationDiagram extends Component {
 
   onEditSubmit(values, { resetForm }) {
     this.state.diagram.splice(this.state.selectedDiagram.key, 1, values);
-    this.setState({ diagram: this.state.diagram }, () => (
-      this.props.setFieldValue(this.props.name, this.state.diagram)
-    ));
+    this.setState({ diagram: this.state.diagram },
+      () => this.props.setFieldValue(this.props.name, this.state.diagram));
     resetForm();
   }
 
@@ -194,28 +217,28 @@ class SystemDocumentationDiagram extends Component {
     } = this.props;
     const initialValues = pipe(
       assoc('caption', this.state.selectedDiagram?.diagram?.caption || ''),
-      assoc('description', this.state.selectedDiagram?.diagram?.description || ''),
-      assoc('diagram_link', this.state.selectedDiagram?.diagram?.diagram_link || ''),
-      assoc('entity_type', this.state.selectedDiagram?.diagram?.entity_type || ''),
-      pick([
-        'caption',
+      assoc(
         'description',
+        this.state.selectedDiagram?.diagram?.description || '',
+      ),
+      assoc(
         'diagram_link',
+        this.state.selectedDiagram?.diagram?.diagram_link || '',
+      ),
+      assoc(
         'entity_type',
-      ]),
+        this.state.selectedDiagram?.diagram?.entity_type || '',
+      ),
+      pick(['caption', 'description', 'diagram_link', 'entity_type']),
     )(this.state.selectedDiagram?.diagram);
-    const {
-      diagram,
-    } = this.state;
+    const { diagram } = this.state;
     return (
       <>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Typography>
-            {title && t(title)}
-          </Typography>
+          <Typography>{title && t(title)}</Typography>
           <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
-            <Tooltip title={t('Baseline Configuration Name')} >
-              <Information fontSize="inherit" color="disabled" />
+            <Tooltip title={t('Baseline Configuration Name')}>
+              <Information fontSize='inherit' color='disabled' />
             </Tooltip>
           </div>
           {!disabled && (
@@ -228,34 +251,57 @@ class SystemDocumentationDiagram extends Component {
           )}
         </div>
         <div className='clearfix' />
-        <div style={{ display: 'grid', gridTemplateColumns: '40% 1fr', padding: '10px' }}>
-          <Typography>
-            Caption
-          </Typography>
-          <Typography>
-            Diagram Link
-          </Typography>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '40% 1fr',
+            padding: '10px',
+          }}
+        >
+          <Typography>Caption</Typography>
+          <Typography>Diagram Link</Typography>
         </div>
         <div className={classes.scrollBg}>
           <div className={classes.scrollDiv}>
             <div className={classes.scrollObj}>
-              {diagram && diagram.map((data, key) => (
-                <>
-                  <div>{data.caption && data.caption}</div>
-                  <div>{data.diagram_link && truncate(data.diagram_link, 35)}</div>
-                  {!disabled && (
-                    <div style={{ display: 'flex' }}>
-                      <IconButton size='small' onClick={this.handleOpenEdit.bind(this, data, key)}>
-                        <EditIcon fontSize='small' />
-                      </IconButton>
-                      <IconButton size='small' onClick={this.handleDeleteDialog.bind(this, key)}>
-                        <DeleteIcon fontSize='small' />
-                      </IconButton>
-                    </div>
-                  )}
-                </>
-              ))
-              }
+              {diagram
+                && diagram.map((data, key) => (
+                  <>
+                    <div>{data.caption && data.caption}</div>
+                    <Link
+                      key={key}
+                      component='button'
+                      variant='body2'
+                      className={classes.link}
+                      rel="noopener noreferrer"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        window.open(data.diagram_link, '_blank');
+                      }}
+                    >
+                      <LaunchIcon fontSize="small" className={classes.launchIcon} />
+                      <div className={classes.linkTitle}>
+                          {data.diagram_link && truncate(data.diagram_link, 35)}
+                      </div>
+                    </Link>
+                    {!disabled && (
+                      <div style={{ display: 'flex' }}>
+                        <IconButton
+                          size='small'
+                          onClick={this.handleOpenEdit.bind(this, data, key)}
+                        >
+                          <EditIcon fontSize='small' />
+                        </IconButton>
+                        <IconButton
+                          size='small'
+                          onClick={this.handleDeleteDialog.bind(this, key)}
+                        >
+                          <DeleteIcon fontSize='small' />
+                        </IconButton>
+                      </div>
+                    )}
+                  </>
+                ))}
             </div>
           </div>
         </div>
@@ -266,26 +312,16 @@ class SystemDocumentationDiagram extends Component {
           onSubmit={this.onSubmit.bind(this)}
           validationSchema={SystemDocumentationValidation(t)}
         >
-          {({
-            submitForm,
-            handleReset,
-            isSubmitting,
-          }) => (
-            <Dialog
-              open={this.state.open}
-              fullWidth={true}
-              maxWidth='sm'
-            >
-              <DialogContent>
-                {t('Diagram')}
-              </DialogContent>
+          {({ submitForm, handleReset, isSubmitting }) => (
+            <Dialog open={this.state.open} fullWidth={true} maxWidth='sm'>
+              <DialogContent>{t('Diagram')}</DialogContent>
               <DialogContent style={{ overflowY: 'true' }}>
                 <Grid container spacing={3}>
                   <Grid item={true} xs={12}>
                     <div className={classes.textBase}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ margin: 0 }}
                       >
@@ -296,14 +332,18 @@ class SystemDocumentationDiagram extends Component {
                           'Identifies a summary of impact for how the risk affects the system.',
                         )}
                       >
-                        <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
                       </Tooltip>
                     </div>
-                    <div className="clearfix" />
+                    <div className='clearfix' />
                     <Field
                       component={TextField}
                       variant='outlined'
-                      name="caption"
+                      name='caption'
                       size='small'
                       fullWidth={true}
                     />
@@ -311,8 +351,8 @@ class SystemDocumentationDiagram extends Component {
                   <Grid item={true} xs={12}>
                     <div className={classes.textBase}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ margin: 0 }}
                       >
@@ -323,10 +363,14 @@ class SystemDocumentationDiagram extends Component {
                           'Identifies a summary of impact for how the risk affects the system.',
                         )}
                       >
-                        <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
                       </Tooltip>
                     </div>
-                    <div className="clearfix" />
+                    <div className='clearfix' />
                     <Field
                       component={MarkDownField}
                       name='description'
@@ -338,19 +382,19 @@ class SystemDocumentationDiagram extends Component {
                   <Grid item={true} xs={12}>
                     <div className={classes.textBase}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ margin: 0 }}
                       >
                         {t('Add Diagram')}
                       </Typography>
                     </div>
-                    <div className="clearfix" />
+                    <div className='clearfix' />
                     <Field
                       component={TextField}
                       variant='outlined'
-                      name="diagram_link"
+                      name='diagram_link'
                       size='small'
                       fullWidth={true}
                     />
@@ -358,43 +402,38 @@ class SystemDocumentationDiagram extends Component {
                   <Grid item={true} xs={12}>
                     <div className={classes.textBase}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ margin: 0 }}
                       >
                         {t('Media Type')}
                       </Typography>
                     </div>
-                    <div className="clearfix" />
+                    <div className='clearfix' />
                     <Field
                       component={SelectField}
                       variant='outlined'
-                      name="entity_type"
+                      name='entity_type'
                       fullWidth={true}
                       style={{ height: '38.09px' }}
                       containerstyle={{ width: '100%' }}
                     />
                   </Grid>
                   <Grid item={true} xs={12}>
-                    <CyioCoreObjectExternalReferences
-                      disableAdd={true}
-                    />
+                    <CyioCoreObjectExternalReferences disableAdd={true} />
                   </Grid>
                 </Grid>
               </DialogContent>
               <DialogActions className={classes.dialogAction}>
-                <Button
-                  variant='outlined'
-                  onClick={handleReset}
-                >
+                <Button variant='outlined' onClick={handleReset}>
                   {t('Cancel')}
                 </Button>
                 <Button
                   disabled={isSubmitting}
                   variant='contained'
                   onClick={submitForm}
-                  color="primary"
+                  color='primary'
                 >
                   {t('Submit')}
                 </Button>
@@ -409,26 +448,16 @@ class SystemDocumentationDiagram extends Component {
           onSubmit={this.onEditSubmit.bind(this)}
           validationSchema={SystemDocumentationValidation(t)}
         >
-          {({
-            submitForm,
-            handleReset,
-            isSubmitting,
-          }) => (
-            <Dialog
-              open={this.state.openEdit}
-              fullWidth={true}
-              maxWidth='sm'
-            >
-              <DialogContent>
-                {t('Diagram')}
-              </DialogContent>
+          {({ submitForm, handleReset, isSubmitting }) => (
+            <Dialog open={this.state.openEdit} fullWidth={true} maxWidth='sm'>
+              <DialogContent>{t('Diagram')}</DialogContent>
               <DialogContent style={{ overflowY: 'true' }}>
                 <Grid container spacing={3}>
                   <Grid item={true} xs={12}>
                     <div className={classes.textBase}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ margin: 0 }}
                       >
@@ -439,14 +468,18 @@ class SystemDocumentationDiagram extends Component {
                           'Identifies a summary of impact for how the risk affects the system.',
                         )}
                       >
-                        <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
                       </Tooltip>
                     </div>
-                    <div className="clearfix" />
+                    <div className='clearfix' />
                     <Field
                       component={TextField}
                       variant='outlined'
-                      name="caption"
+                      name='caption'
                       size='small'
                       fullWidth={true}
                     />
@@ -454,8 +487,8 @@ class SystemDocumentationDiagram extends Component {
                   <Grid item={true} xs={12}>
                     <div className={classes.textBase}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ margin: 0 }}
                       >
@@ -466,10 +499,14 @@ class SystemDocumentationDiagram extends Component {
                           'Identifies a summary of impact for how the risk affects the system.',
                         )}
                       >
-                        <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
                       </Tooltip>
                     </div>
-                    <div className="clearfix" />
+                    <div className='clearfix' />
                     <Field
                       component={MarkDownField}
                       name='description'
@@ -481,19 +518,19 @@ class SystemDocumentationDiagram extends Component {
                   <Grid item={true} xs={12}>
                     <div className={classes.textBase}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ margin: 0 }}
                       >
                         {t('Add Diagram')}
                       </Typography>
                     </div>
-                    <div className="clearfix" />
+                    <div className='clearfix' />
                     <Field
                       component={TextField}
                       variant='outlined'
-                      name="diagram_link"
+                      name='diagram_link'
                       size='small'
                       fullWidth={true}
                     />
@@ -501,43 +538,38 @@ class SystemDocumentationDiagram extends Component {
                   <Grid item={true} xs={12}>
                     <div className={classes.textBase}>
                       <Typography
-                        variant="h3"
-                        color="textSecondary"
+                        variant='h3'
+                        color='textSecondary'
                         gutterBottom={true}
                         style={{ margin: 0 }}
                       >
                         {t('Media Type')}
                       </Typography>
                     </div>
-                    <div className="clearfix" />
+                    <div className='clearfix' />
                     <Field
                       component={SelectField}
                       variant='outlined'
-                      name="entity_type"
+                      name='entity_type'
                       fullWidth={true}
                       style={{ height: '38.09px' }}
                       containerstyle={{ width: '100%' }}
                     />
                   </Grid>
                   <Grid item={true} xs={12}>
-                    <CyioCoreObjectExternalReferences
-                      disableAdd={true}
-                    />
+                    <CyioCoreObjectExternalReferences disableAdd={true} />
                   </Grid>
                 </Grid>
               </DialogContent>
               <DialogActions className={classes.dialogAction}>
-                <Button
-                  variant='outlined'
-                  onClick={handleReset}
-                >
+                <Button variant='outlined' onClick={handleReset}>
                   {t('Cancel')}
                 </Button>
                 <Button
                   disabled={isSubmitting}
                   variant='contained'
                   onClick={submitForm}
-                  color="primary"
+                  color='primary'
                 >
                   {t('Submit')}
                 </Button>
@@ -562,4 +594,7 @@ SystemDocumentationDiagram.propTypes = {
   diagramValues: PropTypes.array,
 };
 
-export default compose(inject18n, withStyles(styles))(SystemDocumentationDiagram);
+export default compose(
+  inject18n,
+  withStyles(styles),
+)(SystemDocumentationDiagram);

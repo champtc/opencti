@@ -395,6 +395,21 @@ const LeftBar = ({
                   <Collapse in={openDrawer}>
                     <MenuList component="nav" disablePadding={true}>
                       <MenuItem
+                        component={Link}
+                        to="/dashboard/assessment_results"
+                        selected={location.pathname.includes('/dashboard/assessment_results')}
+                        dense={false}
+                        classes={{ root: classes.menuItemNested }}
+                      >
+                        <ListItemIcon style={{ minWidth: 35 }}>
+                          <FiberManualRecordIcon style={{ fontSize: '0.55rem' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={t('Assessment Results')}
+                          data-cy="assessment results"
+                        />
+                      </MenuItem>
+                      <MenuItem
                         disabled={true}
                         component={Link}
                         to="/dashboard/threats"

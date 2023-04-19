@@ -347,22 +347,6 @@ const LeftBar = ({
                         </ListItemIcon>
                         <ListItemText primary={t('Assets')} data-cy="assets" />
                       </MenuItem>
-                      <MenuItem
-                        disabled={true}
-                        component={Link}
-                        to="/dashboard/events"
-                        selected={location.pathname.includes('/dashboard/events')}
-                        dense={false}
-                        classes={{ root: classes.menuItemNested }}
-                      >
-                        <ListItemIcon style={{ minWidth: 35 }}>
-                          <FiberManualRecordIcon style={{ fontSize: '0.55rem' }} />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={t('Information Systems')}
-                          data-cy="information systems"
-                        />
-                      </MenuItem>
                     </MenuList>
                   </Collapse>
                   <MenuItem

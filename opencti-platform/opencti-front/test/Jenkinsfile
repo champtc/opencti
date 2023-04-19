@@ -4,6 +4,9 @@ node {
   Map args             = [:]
   args.name            = 'opencti-front'
   args.systemType      = utils.getSystemType(env.BRANCH_NAME)
+  if('unknown' == args.systemType) {
+    args.systemType = 'dev'
+  }
 
   try {
     stage('Checkout') {

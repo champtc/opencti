@@ -15,7 +15,7 @@ node {
     }
 
     stage('Setup') {
-      sh 'curl -o- -L https://yarnpkg.com/install.sh'
+      sh 'curl -o- -L https://yarnpkg.com/install.sh | bash'
     }
 
     dir('opencti-platform/opencti-graphql') {

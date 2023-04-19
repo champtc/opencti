@@ -1,6 +1,10 @@
 @Library('utils@dev') _
 
 node {
+  Map args             = [:]
+  args.name            = 'opencti-front'
+  args.systemType      = utils.getSystemType(env.BRANCH_NAME)
+
   try {
     stage('Checkout') {
       checkout scm
@@ -13,13 +17,17 @@ node {
         withKsm(application: [[credentialsId: 'f71b1433-b4e3-4c49-b1e0-a9489323449e',
           secrets: [
             keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "login",    'TEST_USER'),
-            keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "password", 'TEST_PASS')
+            keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "password", 'TEST_PASS'),
+            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.crt", "opencti-front-localhost.crt"),
+            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.key", "opencti-front-localhost.key")
           ]
         ]]) {
           sh '''jq -n --arg u "$TEST_USER" --arg p "$TEST_PASS" '.email=$u|.password=$p' > cypress/fixtures/users.json'''
+          def envVars = deployBuilds.processProperties(args.name, args.systemType, true) //load and terp resources/opencti-front/deploy.dev.properties
+          writeFile file: '.env', text: envVars.collect{entry->entry.key+"="+entry.value}.sort().join('\n')
         }
       }
-
+/*
       //put stages inside docker.image so we have 1 and only 1 container for all operations
       //-u 0; root user so apt install can run
       //--entrypoint='' so cypress/included container doesn't run its entrypoint 'cypress run'
@@ -34,6 +42,7 @@ node {
           sh 'yarn cypress'
         }
       }
+*/
     }
   } catch (Exception e) {
     currentBuild.result = "FAILED"

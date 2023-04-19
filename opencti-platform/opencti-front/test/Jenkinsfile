@@ -14,6 +14,10 @@ node {
       notify.notifyBuild('STARTED');
     }
 
+    stage('Setup') {
+      sh 'sudo npm install yarn && yarn -v'
+    }
+
     dir('opencti-platform/opencti-graphql') {
       stage('Install GraphQL') {
         sh 'yarn install'

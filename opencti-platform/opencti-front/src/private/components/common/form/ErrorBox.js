@@ -41,24 +41,6 @@ const styles = (theme) => ({
 
 class ErrorBox extends Component {
 
-  handleErrorResponse(errorMessage) {
-    let FieldName;
-    function title(str) {
-      return str.replace(/(^|\s)\S/g, (s) => s.toUpperCase());
-    }
-    if ((/(enum)\b/).test(errorMessage)) {
-      FieldName = errorMessage.match(/(input)\.\w+/);
-      const FilteredValue = FieldName[0].replace(/(input.)/, '').replace('_', ' ');
-      return `Value of ${title(FilteredValue)} in invalid`;
-    }
-    if ((/; ?(Field)/).test(errorMessage)) {
-      FieldName = errorMessage.match(/; ?(Field).+/)[0].replace(/; ?/, '');
-      return FieldName;
-    }
-    FieldName = errorMessage.match(/\bValue\b.+/);
-    return FieldName[0];
-  }
-
   handleRenderComponent(error) {
     if (Object.keys(error).length) {
       if ((error.every((value) => value.type !== undefined && value.type.includes('CyioError')))) {
@@ -109,7 +91,7 @@ class ErrorBox extends Component {
                   divider
                   key={key}
                 >
-                  {this.handleErrorResponse(value.message)}
+                  {value.message}
                 </ListItem>
               );
             })}

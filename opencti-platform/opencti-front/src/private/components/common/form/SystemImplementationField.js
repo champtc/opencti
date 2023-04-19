@@ -72,7 +72,7 @@ const styles = (theme) => ({
   },
 });
 
-const systemImplementationFieldInventoryItemQuery = graphql`
+export const systemImplementationFieldInventoryItemQuery = graphql`
   query SystemImplementationFieldInventoryItemQuery(
     $orderedBy: InventoryItemsOrdering,
     $orderMode: OrderingMode
@@ -88,15 +88,18 @@ const systemImplementationFieldInventoryItemQuery = graphql`
       edges {
         node {
           id
-          asset_type
           name
+          created
+          description
+          asset_type
+          entity_type
         }
       }
     }
   }
 `;
 
-const systemImplementationFieldComponentListQuery = graphql`
+export const systemImplementationFieldComponentListQuery = graphql`
   query SystemImplementationFieldComponentListQuery(
     $orderedBy: ComponentsOrdering,
     $orderMode: OrderingMode
@@ -112,15 +115,18 @@ const systemImplementationFieldComponentListQuery = graphql`
       edges {
         node {
           id
-          component_type
           name
+          created
+          description
+          entity_type
+          component_type
         }
       }
     }
   }
 `;
 
-const systemImplementationFieldOscalUsersQuery = graphql`
+export const systemImplementationFieldOscalUsersQuery = graphql`
   query SystemImplementationFieldOscalUsersQuery(
     $orderedBy: OscalUsersOrdering,
     $orderMode: OrderingMode
@@ -136,15 +142,18 @@ const systemImplementationFieldOscalUsersQuery = graphql`
       edges {
         node {
           id
-          user_type
           name
+          created
+          description
+          user_type
+          entity_type
         }
       }
     }
   }
 `;
 
-const systemImplementationFieldLeveragedAuthorizationsQuery = graphql`
+export const systemImplementationFieldLeveragedAuthorizationsQuery = graphql`
   query SystemImplementationFieldleveragedAuthorizationsQuery(
     $orderedBy: OscalLeveragedAuthorizationOrdering,
     $orderMode: OrderingMode
@@ -161,6 +170,9 @@ const systemImplementationFieldLeveragedAuthorizationsQuery = graphql`
         node {
           id
           title
+          created
+          description
+          entity_type
         }
       }
     }
@@ -234,33 +246,15 @@ class SystemImplementationField extends Component {
   }
 
   handleSubmit() {
-    const { data } = this.state;
-    if (data.length === 0) {
-      this.setState({ open: false });
-
-      if (this.props.data !== data) {
-        this.setState({ open: false });
-        this.props.onSubmit(this.props.name, []);
-      }
-    } else {
-      const finalOutput = data.length === 0
-        ? []
-        : data.map((item) => item.id);
-      this.setState({ open: false });
-      this.props.onSubmit(this.props.name, finalOutput);
-    }
+    this.setState({ open: false });
   }
 
   handleDelete(key) {
-    this.setState(
-      { data: this.state.data.filter((value, i) => i !== key) },
-      () => {
-        const finalOutput = this.state.data.length === 0
-          ? []
-          : this.state.data.map((item) => item.id);
-        this.props.onDelete(this.props.name, finalOutput[0]);
-      },
-    );
+    const finalOutput = this.state.data.length === 0
+      ? []
+      : this.state.data.filter((item, i) => i === key);
+    this.setState({ data: this.state.data.filter((value, i) => i !== key) });
+    this.props.onDelete(this.props.name, finalOutput[0].id);
   }
 
   handleSelectChange(event) {
@@ -295,6 +289,7 @@ class SystemImplementationField extends Component {
       helperText,
       containerstyle,
       style,
+      link,
     } = this.props;
     const systemImplementationData = this.props.data.length > 0
       ? R.map((n) => ({ id: n.id, name: n.name || n.title }))(this.props.data)
@@ -333,6 +328,7 @@ class SystemImplementationField extends Component {
           variant='outlined'
           history={history}
           handleDelete={this.handleDelete.bind(this)}
+          link={link}
         />
         <Dialog
           keepMounted={false}

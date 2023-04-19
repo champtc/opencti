@@ -32,11 +32,23 @@ query SecurityCategorizationInformationTypeQuery(
 ) {
   getCategoryMembers(id: $id, categoryName: $categoryName) {
     id
+    title
+  }
+}
+`;
+
+const securityCategorizationInformationTypeIdQuery = graphql`
+query SecurityCategorizationInformationTypeIdQuery(
+  $id: ID!,
+  $infoTypeId: ID!
+) {
+  getInformationTypeFromCatalog(id: $id, infoTypeId: $infoTypeId) {
+    id
+    title
     entity_type
     identifier
     category
     system
-    title
     display_name
     confidentiality_impact {
       id
@@ -75,8 +87,8 @@ class SecurityCategorization extends Component {
     if (prevState.values.catalog !== values.catalog) {
       this.handleCategoryChange('catalog', values.catalog);
     }
-    if (prevState.values.categorization_system !== values.categorization_system) {
-      this.handleCategoryChange('categorization_system', values.categorization_system);
+    if (prevState.values.system !== values.system) {
+      this.handleCategoryChange('system', values.system);
     }
   }
 
@@ -93,7 +105,7 @@ class SecurityCategorization extends Component {
           });
         });
     }
-    if (name === 'categorization_system') {
+    if (name === 'system') {
       fetchQuery(securityCategorizationInformationTypeQuery, {
         id: this.state.selectedCategorization || this.props.values.catalog,
         categoryName: value,
@@ -105,7 +117,17 @@ class SecurityCategorization extends Component {
     }
     if (name === 'information_type') {
       const filteredInfo = this.state.informationTypeField.filter((info) => info.id === value);
-      this.props.handleInformationType(filteredInfo[0], this.props.setFieldValue);
+      fetchQuery(securityCategorizationInformationTypeIdQuery, {
+        id: this.state.selectedCategorization,
+        infoTypeId: filteredInfo[0].id,
+      })
+        .toPromise()
+        .then((data) => {
+          this.props.handleInformationType(
+            data.getInformationTypeFromCatalog,
+            this.props.setFieldValue,
+          );
+        });
     }
   }
 
@@ -163,12 +185,12 @@ class SecurityCategorization extends Component {
           <div className='clearfix' />
           <SecurityCategorizationField
             values={values}
-            name='categorization_system'
+            name='system'
             fullWidth={true}
             variant='outlined'
             style={{ height: '38.09px' }}
             containerstyle={{ width: '100%' }}
-            defaultValue={values.categorization_system}
+            defaultValue={values.system}
             categoryField={this.state.categoryField}
             onChange={this.handleCategoryChange.bind(this)}
             disabled={disabled}

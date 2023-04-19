@@ -108,16 +108,35 @@ const categorizationReducer = (item) => {
 		}
 };
 
-// Utility
+// Utilities - InformationType
+export const generateInformationTypeId = (input) => {
+  const id_material = {
+    ...(input.title && {"title": input.title}),
+  } ;
+  const id = generateId( id_material, DARKLIGHT_NS );
+  return id;
+}
 export const getInformationTypeIri = (id) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   return `<http://cyio.darklight.ai/information-type--${id}>`;
 }
+
+// Utilities - ImpactDefinition
+export const generateImpactDefinitionId = (input) => {
+  const id = generateId( );
+  return id;
+}
 export const getImpactDefinitionIri = (id) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   return `<http://cyio.darklight.ai/impact-definition--${id}>`;
+}
+
+// Utilities - Categorization
+export const generateCategorizationId = (input) => {
+  const id = generateId( );
+  return id;
 }
 export const getCategorizationIri = (id) => {
   // ensure the id is a valid UUID
@@ -184,10 +203,7 @@ export const selectAllInformationTypesQuery = (select, args, parent) => {
 }
 
 export const insertInformationTypeQuery = (propValues) => {
-  const id_material = {
-    ...(propValues.title && {"title": propValues.title}),
-  } ;
-  const id = generateId( id_material, DARKLIGHT_NS );
+  const id = generateInformationTypeId(propValues);
   const timestamp = new Date().toISOString();
 
   // determine the appropriate ontology class type
@@ -368,7 +384,7 @@ export const selectAllImpactDefinitionsQuery = (select, args, parent) => {
 }
 
 export const insertImpactDefinitionQuery = (propValues) => {
-  const id = generateId( );
+  const id = generateImpactDefinitionId(propValues);
   const timestamp = new Date().toISOString();
 
   // determine the appropriate ontology class type
@@ -549,7 +565,7 @@ export const selectAllCategorizationsQuery = (select, args, parent) => {
 }
 
 export const insertCategorizationQuery = (propValues) => {
-  const id = generateId( );
+  const id = generateCategorizationId(propValues);
   const timestamp = new Date().toISOString();
 
   // determine the appropriate ontology class type
@@ -726,7 +742,7 @@ export const informationTypePredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 	confidentiality_base_impact: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#confidentiality_impact>/<http://csrc.nist.gov/ns/oscal/info-system#base_impact>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#confidentiality_impact>/<http://nist.gov/ns/sp800-60#base_impact>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "confidentiality_base_impact");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
 	},
@@ -746,7 +762,7 @@ export const informationTypePredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 	integrity_base_impact: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#integrity_impact>/<http://csrc.nist.gov/ns/oscal/info-system#base_impact>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#integrity_impact>/<http://nist.gov/ns/sp800-60#base_impact>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "integrity_base_impact");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
 	},
@@ -766,7 +782,7 @@ export const informationTypePredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 	availability_base_impact: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#availability_impact>/<http://csrc.nist.gov/ns/oscal/info-system#base_impact>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#availability_impact>/<http://nist.gov/ns/sp800-60#base_impact>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "availability_base_impact");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
 	},

@@ -117,6 +117,7 @@ const iconSelector = (type, variant, fontSize, color) => {
     case 'component':
       return <img src={softwareIcon} style={style} alt="software-icon" />;
     case 'inventory_item':
+    case 'inventory-item':
       return <img src={inventoryItemIcon} style={style} alt="inventoryItem-icon" />;
     case 'resource':
       return <img src={resourceIcon} style={style} alt="resource-icon" />;
@@ -125,6 +126,7 @@ const iconSelector = (type, variant, fontSize, color) => {
     case 'party':
       return <img src={partiesIcon} style={style} alt="party-icon" />;
     case 'user':
+    case 'oscal-user':
       return <img src={userPersonIcon} style={style} alt="user-icon" />;
     case 'laptop':
       return <img src={deviceIcon} style={style} alt="laptop-icon" />;

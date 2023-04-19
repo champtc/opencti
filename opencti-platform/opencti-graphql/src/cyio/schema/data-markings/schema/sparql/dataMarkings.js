@@ -61,6 +61,13 @@ const dataMarkingReducer = (item) => {
   };
 };
 
+// Utility
+export const getDataMarkingIri = (id) => {
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  return `<http://cyio.darklight.ai/marking-definition--${id}>`;
+}
+
+
 // Query Builders
 export const insertDataMarkingQuery = (propValues) => {
   const id_material = {
@@ -105,11 +112,11 @@ export const insertDataMarkingQuery = (propValues) => {
       ${iri} a <http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition> .
       ${iri} a <http://docs.oasis-open.org/ns/cti#Object> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
-      ${iri} <http://darklight.ai/ns/common#id> "${id}".
-      ${iri} <http://darklight.ai/ns/common#object_type> "marking-definition" . 
-      ${iri} <http://darklight.ai/ns/common#created> "${timestamp}"^^xsd:dateTime . 
-      ${iri} <http://darklight.ai/ns/common#modified> "${timestamp}"^^xsd:dateTime . 
-      ${insertPredicates.join('. \n')}
+      ${iri} <http://docs.oasis-open.org/ns/cti#id> "${id}".
+      ${iri} <http://docs.oasis-open.org/ns/cti#object_type> "marking-definition" . 
+      ${iri} <http://docs.oasis-open.org/ns/cti#created> "${timestamp}"^^xsd:dateTime . 
+      ${iri} <http://docs.oasis-open.org/ns/cti#modified> "${timestamp}"^^xsd:dateTime . 
+      ${insertPredicates.join(' . \n')}
     }
   }
   `;
@@ -122,7 +129,10 @@ export const selectDataMarkingQuery = (id, select) => {
 
 export const selectDataMarkingByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(dataMarkingPredicateMap);
+
+  // due to a limitation in the selectMap.getNode capability, its possible to only get back 
+  // a reference to the __typename meta type if all the other members are fragments.
+  if (select === undefined || select === null || (select.length === 1 && select.includes('__typename'))) select = Object.keys(dataMarkingPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
@@ -143,7 +153,11 @@ export const selectDataMarkingByIriQuery = (iri, select) => {
 
 export const selectAllDataMarkingsQuery = (select, args, parent) => {
   let constraintClause = '';
-  if (select === undefined || select === null) select = Object.keys(dataMarkingPredicateMap);
+
+  // due to a limitation in the selectMap.getNode capability, its possible to only get back 
+  // a reference to the __typename meta type if all the other members are fragments.
+  if (select === undefined || select === null || (select.length === 1 && select.includes('__typename'))) select = Object.keys(dataMarkingPredicateMap);
+  
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
   if (!select.includes('definition_type')) select.push('definition_type');
@@ -188,7 +202,7 @@ export const selectAllDataMarkingsQuery = (select, args, parent) => {
 
 export const deleteDataMarkingQuery = (id) => {
   const iri = `http://cyio.darklight.ai/marking-definition--${id}`;
-  return deleteDataSourceByIriQuery(iri);
+  return deleteDataMarkingByIriQuery(iri);
 };
 
 export const deleteDataMarkingByIriQuery = (iri) => {
@@ -294,15 +308,6 @@ export const dataMarkingPredicateMap = {
       return optionalizePredicate(this.binding(iri, value));
     },
   },
-  spec_version: {
-    predicate: '<http://docs.oasis-open.org/ns/cti#spec_version>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'spec_version');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
-  },
   created: {
     predicate: '<http://docs.oasis-open.org/ns/cti#created>',
     binding(iri, value) {
@@ -325,6 +330,15 @@ export const dataMarkingPredicateMap = {
     predicate: '<http://docs.oasis-open.org/ns/cti#modified>',
     binding(iri, value) {
       return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'modified');
+    },
+    optional(iri, value) {
+      return optionalizePredicate(this.binding(iri, value));
+    },
+  },
+  spec_version: {
+    predicate: '<http://docs.oasis-open.org/ns/cti#spec_version>',
+    binding(iri, value) {
+      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'spec_version');
     },
     optional(iri, value) {
       return optionalizePredicate(this.binding(iri, value));

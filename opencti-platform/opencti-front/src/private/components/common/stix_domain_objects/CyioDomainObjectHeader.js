@@ -9,9 +9,6 @@ import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Slide from '@material-ui/core/Slide';
 import {
-  Add,
-  Close,
-  Delete,
   Edit,
   ArrowBack,
   AddCircleOutline,
@@ -19,10 +16,13 @@ import {
 import Popover from '@material-ui/core/Popover';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import inject18n from '../../../../components/i18n';
 import InfoGraphImg from '../../../../resources/images/entities/information_graph.svg';
+import ItemIcon from '../../../../components/ItemIcon';
 
 const Transition = React.forwardRef((props, ref) => (
   <Slide direction="up" ref={ref} {...props} />
@@ -70,12 +70,19 @@ const styles = (theme) => ({
     fontSize: 14,
     float: 'left',
   },
+  informationSystemIcon: {
+    minWidth: '26px',
+  },
+  informationSystemText: {
+    marginLeft: '10px',
+  },
 });
 
 class CyioDomainObjectAssetHeader extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      anchorEl: null,
       openAlias: false,
       openAliases: false,
       openAliasesCreate: false,
@@ -83,13 +90,17 @@ class CyioDomainObjectAssetHeader extends Component {
     };
   }
 
-  handleInfoNewCreation() {
-    this.setState({ openInfoPopover: !this.state.openInfoPopover });
+  handleInfoNewCreation(event) {
+    this.setState({ openInfoPopover: true, anchorEl: event.currentTarget });
+  }
+
+  handleCloseInfoNewCreation() {
+    this.setState({ openInfoPopover: false, anchorEl: null });
   }
 
   handleInfoSystemListItem(type) {
     this.props.handleOpenNewCreation(type);
-    this.handleInfoNewCreation();
+    this.handleCloseInfoNewCreation();
   }
 
   render() {
@@ -102,6 +113,7 @@ class CyioDomainObjectAssetHeader extends Component {
       disabled,
       disablePopover,
       cyioDomainObject,
+      handleCreateGraph,
       handleDisplayEdit,
       OperationsComponent,
       handleOpenNewCreation,
@@ -125,12 +137,11 @@ class CyioDomainObjectAssetHeader extends Component {
           {goBack === '/defender_hq/assets/information_systems' && (
             <Tooltip title={t('Graph')}>
               <Button
-                variant="contained"
-                // onClick={handleDisplayEdit?.bind(this)}
-                className={classes.iconButton}
-                disabled={true}
-                color="primary"
                 size="large"
+                color="primary"
+                variant="contained"
+                className={classes.iconButton}
+                onClick={handleCreateGraph?.bind(this)}
               >
                 <img src={InfoGraphImg} alt='' />
               </Button>
@@ -159,6 +170,7 @@ class CyioDomainObjectAssetHeader extends Component {
               <Button
                 variant="contained"
                 size="small"
+                ref={this.state.anchorEl}
                 startIcon={<AddCircleOutline />}
                 onClick={this.handleInfoNewCreation.bind(this)}
                 color='primary'
@@ -168,29 +180,36 @@ class CyioDomainObjectAssetHeader extends Component {
               </Button>
               <Popover
                 id='simple-popover'
+                anchorEl={this.state.anchorEl}
                 open={this.state.openInfoPopover}
-                onClose={this.handleInfoNewCreation.bind(this)}
+                onClose={this.handleCloseInfoNewCreation.bind(this)}
                 anchorOrigin={{
-                  vertical: 125,
-                  horizontal: 'right',
+                  vertical: 'bottom',
+                  horizontal: 'center',
                 }}
                 transformOrigin={{
-                  horizontal: 150,
+                  vertical: 'top',
+                  horizontal: 'center',
                 }}
               >
                 <List>
                   <ListItem
                     button={true}
-                    disabled={true}
                     onClick={this.handleInfoSystemListItem.bind(this, 'graph')}
                   >
-                    Graph
+                    <ListItemIcon className={classes.informationSystemIcon}>
+                      <ItemIcon type='InformationSystemGraph' />
+                    </ListItemIcon>
+                    <ListItemText primary='Graph' className={classes.informationSystemText} />
                   </ListItem>
                   <ListItem
                     button={true}
                     onClick={this.handleInfoSystemListItem.bind(this, 'form')}
                   >
-                    Form
+                    <ListItemIcon className={classes.informationSystemIcon}>
+                      <ItemIcon type='InformationSystemForm' />
+                    </ListItemIcon>
+                    <ListItemText primary='Form' className={classes.informationSystemText} />
                   </ListItem>
                 </List>
               </Popover>
@@ -220,6 +239,7 @@ class CyioDomainObjectAssetHeader extends Component {
 CyioDomainObjectAssetHeader.propTypes = {
   cyioDomainObject: PropTypes.object,
   PopoverComponent: PropTypes.object,
+  handleCreateGraph: PropTypes.func,
   name: PropTypes.string,
   variant: PropTypes.string,
   classes: PropTypes.object,

@@ -14,6 +14,7 @@ import {
   deleteInformationTypeQuery,
   attachToInformationTypeQuery,
   detachFromInformationTypeQuery,
+  generateInformationTypeId,
 	// Impact Definition
   impactDefinitionPredicateMap,
   singularizeImpactDefinitionSchema,
@@ -25,6 +26,7 @@ import {
   deleteImpactDefinitionByIriQuery,
   attachToImpactDefinitionQuery,
   detachFromImpactDefinitionQuery,
+  generateImpactDefinitionId,
   // Categorization
   categorizationPredicateMap,
   singularizeCategorizationSchema,
@@ -36,6 +38,7 @@ import {
   deleteCategorizationByIriQuery,
   attachToCategorizationQuery,
   detachFromCategorizationQuery,
+  generateCategorizationId,
   getCategorizationIri,
 } from '../schema/sparql/informationType.js';
 import {
@@ -217,6 +220,12 @@ export const createInformationType = async (input, dbName, dataSources, select) 
 																				.replace(/[\u2019\u2019]/g, "\\'")
 																				.replace(/[\u201C\u201D]/g, '\\"');
   }
+
+  // check if an information type with this same id exists
+  let existSelect = ['id','entity_type']
+  let checkId = generateInformationTypeId( input );
+  let infoType = await findInformationTypeById(checkId, dbName, dataSources, existSelect);
+  if ( infoType != undefined && infoType != null) throw new UserInputError(`Cannot create information type as entity ${checkId} already exists`);
 
   // Collect all the nested definitions and remove them from input array
   let nestedDefinitions = {
@@ -618,6 +627,7 @@ export const editInformationTypeById = async ( id, input, dbName, dataSources, s
 
 export const attachToInformationType = async ( id, field, entityId, dbName, dataSources ) => {
   let sparqlQuery;
+  let select = ["id","entity_type",field];
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
@@ -688,6 +698,7 @@ export const attachToInformationType = async ( id, field, entityId, dbName, data
 
 export const detachFromInformationType = async ( id, field, entityId, dbName, dataSources ) => {
   let sparqlQuery;
+  let select = ["id","entity_type",field];
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 

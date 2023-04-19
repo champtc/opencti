@@ -12,9 +12,7 @@ import SelectField from '../../../../components/SelectField';
 import { fetchQuery } from '../../../../relay/environment';
 
 const TaskTypeQuery = graphql`
-  query TaskTypeQuery(
-    $type: String!
-  ) {
+  query TaskTypeQuery($type: String!) {
     __type(name: $type) {
       name
       description
@@ -30,7 +28,7 @@ class TaskType extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      TaskTypeList: []
+      TaskTypeList: [],
     };
   }
 
@@ -92,14 +90,21 @@ class TaskType extends Component {
           style={style}
           helperText={helperText}
         >
-          {!required && <MenuItem value={''}>
-            <em>None</em>
-          </MenuItem>}
+          {!required && (
+            <MenuItem value={''}>
+              <em>None</em>
+            </MenuItem>
+          )}
           {TaskTypeList.map(
-            (et, key) =>
-              et.value && (
-                <MenuItem key={key} value={et.value}>{_.startCase(et.value)}</MenuItem>
+            (et, key) =>            
+             {
+              const isDisabled = et.value === 'tlp' || false;
+              return  et.value && (
+                <MenuItem key={key} value={et.value} disabled={isDisabled}>
+                  {_.startCase(et.value)}
+                </MenuItem>
               )
+             }
           )}
         </Field>
       </div>

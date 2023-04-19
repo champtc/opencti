@@ -13,9 +13,9 @@ const cyioDataMarkingResolvers = {
     dataMarking: async (_, { id }, { dbName, dataSources, selectMap }) => findDataMarkingById(id, dbName, dataSources, selectMap.getNode('dataMarking')),
   },
   Mutation: {
-    createStatementMarking: async (_, { input }, { dbName, selectMap, dataSources }) => createDataMarking( input, dbName, dataSources, selectMap.getNode('createStatementMarking')),
-    createTLPMarking: async (_, { input }, { dbName, selectMap, dataSources }) => createDataMarking( input, dbName, dataSources, selectMap.getNode('createTLPMarking')),
-    createIEPMarking: async (_, { input }, { dbName, selectMap, dataSources }) => createDataMarking( input, dbName, dataSources, selectMap.getNode('createIEPMarking')),
+    createStatementMarking: async (_, { input }, { dbName, selectMap, dataSources }) => createDataMarking( 'statement', input, dbName, dataSources, selectMap.getNode('createStatementMarking')),
+    createTLPMarking: async (_, { input }, { dbName, selectMap, dataSources }) => createDataMarking( 'tlp', input, dbName, dataSources, selectMap.getNode('createTLPMarking')),
+    createIEPMarking: async (_, { input }, { dbName, selectMap, dataSources }) => createDataMarking( 'iep', input, dbName, dataSources, selectMap.getNode('createIEPMarking')),
     deleteDataMarking: async (_, { id }, { dbName, dataSources }) => deleteDataMarkingById( id, dbName, dataSources),
     deleteDataMarkings: async (_, { ids }, { dbName, dataSources }) => deleteDataMarkingById( ids, dbName, dataSources),
     editDataMarking: async (_, { id, input }, { dbName, dataSources, selectMap }, {schema}) => editDataMarkingById(id, input, dbName, dataSources, selectMap.getNode('editDataMarking'), schema),

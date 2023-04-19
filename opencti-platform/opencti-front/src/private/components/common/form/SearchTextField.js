@@ -132,7 +132,7 @@ class SearchTextField extends Component {
         .then((data) => {
           this.setState({ selectedProduct: data.informationType });
           this.props.handleSearchTextField(data.informationType, this.props.setFieldValue);
-          this.props.handleDisable();
+          // this.props.handleDisable();
         });
     }
   }
@@ -156,8 +156,7 @@ class SearchTextField extends Component {
         });
       })
       .catch((err) => {
-        const ErrorResponse = err.res?.errors;
-        this.setState({ error: ErrorResponse });
+        console.error(err);
       });
   }
 

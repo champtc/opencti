@@ -262,6 +262,7 @@ class HyperLinkField extends Component {
       helperText,
       containerstyle,
       style,
+      link,
     } = this.props;
     const { error, data } = this.state;
 
@@ -303,6 +304,7 @@ class HyperLinkField extends Component {
           variant="outlined"
           history={history}
           handleDelete={this.handleDelete.bind(this)}
+          link={link}
         />
         <Dialog open={this.state.open} fullWidth={true} maxWidth="sm">
           <DialogContent>{t(`Edit ${title}(s)`)}</DialogContent>

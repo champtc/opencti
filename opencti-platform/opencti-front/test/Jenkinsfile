@@ -16,13 +16,15 @@ node {
 
     dir('opencti-platform/opencti-front') {
       stage('Configure') {
+        OPENCTI_CRT_PATH = keeperUtils.getCertFilePath('.', args.name, 'crt')
+        OPENCTI_KEY_PATH = keeperUtils.getCertFilePath('.', args.name, 'key')
         //TODO: cypress Keeper integration instead of creds on disk
         withKsm(application: [[credentialsId: 'f71b1433-b4e3-4c49-b1e0-a9489323449e',
           secrets: [
             keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "login",    'TEST_USER'),
             keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "password", 'TEST_PASS'),
-            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.crt", "opencti-front-localhost.crt"),
-            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.key", "opencti-front-localhost.key")
+            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.crt", OPENCTI_CRT_PATH),
+            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.key", OPENCTI_KEY_PATH)
           ]
         ]]) {
           sh 'ls -l darklight/resources/opencti-front/certs'

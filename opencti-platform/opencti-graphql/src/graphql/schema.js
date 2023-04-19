@@ -143,6 +143,14 @@ import cyioInformationTypeCatalogResolvers from '../cyio/schema/information-syst
 import cyioDescriptionBlockResolvers from '../cyio/schema/information-system/resolvers/descriptionBlock.js';
 import cyioOscalUserResolvers from '../cyio/schema/risk-assessments/oscal-common/resolvers/oscalUser.js';
 import cyioOscalLeveragedAuthorizationResolvers from '../cyio/schema/risk-assessments/oscal-common/resolvers/oscalLeveragedAuthorization.js';
+import cyioVulnerabilityResolvers from '../cyio/schema/threat-intelligence/resolvers/vulnerability.js';
+import cvssResolvers from '../cyio/schema/threat-intelligence/resolvers/cvss.js';
+import cyioAffectedProductResolvers from '../cyio/schema/threat-intelligence/resolvers/affectedProduct.js';
+import cyioImpactTypeResolvers from '../cyio/schema/threat-intelligence/resolvers/impact.js';
+import cyioProblemTypeResolvers from '../cyio/schema/threat-intelligence/resolvers/problemType.js';
+import cyioTaxonomyEntryResolvers from '../cyio/schema/threat-intelligence/resolvers/taxonomyEntry.js';
+import cyioCreditResolvers from '../cyio/schema/threat-intelligence/resolvers/credit.js';
+import cyioUnknownMetricResolvers from '../cyio/schema/threat-intelligence/resolvers/unknownMetric.js';
 
 // Cyio Extensions to support merged graphQL schema
 
@@ -299,6 +307,14 @@ const createSchema = () => {
     cyioDescriptionBlockResolvers,
     cyioOscalUserResolvers,
     cyioOscalLeveragedAuthorizationResolvers,
+    cyioVulnerabilityResolvers,
+    cvssResolvers,
+    cyioAffectedProductResolvers,
+    cyioImpactTypeResolvers,
+    cyioProblemTypeResolvers,
+    cyioTaxonomyEntryResolvers,
+    cyioCreditResolvers,
+    cyioUnknownMetricResolvers,
 ]);
 
   // load the OpenCTI and each of the Cyio GraphQL schema files

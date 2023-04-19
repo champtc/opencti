@@ -75,6 +75,20 @@ import {
 } from '../risk-assessments/oscal-common/schema/sparql/oscalUser.js' ;
 import { oscalLeveragedAuthorizationPredicateMap } from '../risk-assessments/oscal-common/schema/sparql/oscalLeveragedAuthorization.js';
 
+// sanitize input
+export const sanitizeInputFields = (input) => {
+  // remove input fields with null or empty values so creation will work
+  for (const [key, value] of Object.entries(input)) {
+    if (Array.isArray(input[key]) && input[key].length === 0) {
+      delete input[key];
+      continue;
+    }
+    
+    if (value === null || value.length === 0) {
+      delete input[key];
+    }
+  }
+};
 
 // find id of parent
 export const findParentId = (iri) => {
@@ -684,5 +698,40 @@ export const objectMap = {
     parent: "computing-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Workstation",
     iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Workstation",
+  },
+  "cvss": {
+    graphQLType: "MetricType",
+    classIri: "http://first.org/ns/cvss#CVSS",
+    iriTemplate: "http://cyio.darklight.ai/cvss"
+  },
+  "affected-product": {
+    graphQLType: "AffectedProduct",
+    classIri: "http://nist.gov/ns/vulnerability#AffectedProduct",
+    iriTemplate: "http://cyio.darklight.ai/affected-product"
+  },
+  "version": {
+    graphQLType: "VersionSpec",
+    classIri: "http://nist.gov/ns/vulnerability#VersionSpec",
+    iriTemplate: "http://cyio.darklight.ai/version"
+  },
+  "impact-type": {
+    graphQLType: "ImpactType",
+    classIri: "http://nist.gov/ns/vulnerability#ImpactType",
+    iriTemplate: "http://cyio.darklight.ai/impact-type"
+  },
+  "problem-type": {
+    graphQLType: "ProblemType",
+    classIri: "http://nist.gov/ns/vulnerability#ProblemType",
+    iriTemplate: "http://cyio.darklight.ai/problem-type"
+  },
+  "taxonmy-map-entry": {
+    graphQLType: "TaxonomyMapEntry",
+    classIri: "http://nist.gov/ns/vulnerability#TaxonomyMapEntry",
+    iriTemplate: "http://cyio.darklight.ai/taxonmy-map-entry"
+  },
+  "credit": {
+    graphQLType: "Credit",
+    classIri: "http://nist.gov/ns/vulnerability#Credit",
+    iriTemplate: "http://cyio.darklight.ai/credit"
   },
 };

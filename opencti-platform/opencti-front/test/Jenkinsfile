@@ -27,7 +27,7 @@ node {
             keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.key", OPENCTI_KEY_PATH)
           ]
         ]]) {
-          sh 'cp darklight/resources/opencti-front/certs/* .'
+          sh 'mv darklight/resources/opencti-front/certs/* .'  //preserve files outside withKsm block
           sh '''jq -n --arg u "$TEST_USER" --arg p "$TEST_PASS" '.email=$u|.password=$p' > cypress/fixtures/users.json'''
           def envVars = deployBuilds.processProperties(args.name, args.systemType, true) //load and terp resources/opencti-front/deploy.dev.properties
           writeFile file: '.env', text: envVars.collect{entry->entry.key+"="+entry.value}.sort().join('\n')

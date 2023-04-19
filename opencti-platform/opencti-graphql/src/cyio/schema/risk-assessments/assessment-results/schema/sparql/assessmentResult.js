@@ -326,3 +326,140 @@ export const singularizeAssessmentResultsSchema = {
     "local_definitions": true,
   }
 };
+
+// Serialization schema
+export const singularizeRevisionsSchema = { 
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
+    "name": true,
+    "published": true,
+    "last_modified": true,
+    "version": true,
+    "oscal_version": true,
+    "revisions": true,
+    "document_ids": true,
+    "shared_metadata": true,
+    "assessment_plan": true,
+    "local_definitions": true,
+  }
+};
+
+export const selectRevisionsByIriQuery = (iri, select) => {
+  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select === undefined || select === null) select = Object.keys(revisionsPredicateMap);
+
+  // this is needed to assist in the determination of the type of the data source
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('object_type')) select.push('object_type');
+
+  const { selectionClause, predicates } = buildSelectVariables(revisionsPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    BIND(${iri} AS ?iri)
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Revisions> .
+    ${predicates}
+  }`
+}
+
+export const selectSharedMetadataByIriQuery = (iri, select) => {
+  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select === undefined || select === null) select = Object.keys(sharedMetadataPredicateMap);
+
+  // this is needed to assist in the determination of the type of the data source
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('object_type')) select.push('object_type');
+
+  const { selectionClause, predicates } = buildSelectVariables(sharedMetadataPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    BIND(${iri} AS ?iri)
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#SharedMetadata> .
+    ${predicates}
+  }`
+}
+
+export const selectAssessmentPlanByIriQuery = (iri, select) => {
+  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select === undefined || select === null) select = Object.keys(assessmentPlanPredicateMap);
+
+  // this is needed to assist in the determination of the type of the data source
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('object_type')) select.push('object_type');
+
+  const { selectionClause, predicates } = buildSelectVariables(assessmentPlanPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    BIND(${iri} AS ?iri)
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan> .
+    ${predicates}
+  }`
+}
+
+export const selectLocalDefinitionsByIriQuery = (iri, select) => {
+  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select === undefined || select === null) select = Object.keys(localDefinitionsPredicateMap);
+
+  // this is needed to assist in the determination of the type of the data source
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('object_type')) select.push('object_type');
+
+  const { selectionClause, predicates } = buildSelectVariables(localDefinitionsPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    BIND(${iri} AS ?iri)
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#LocalDefinitions> .
+    ${predicates}
+  }`
+}
+
+export const selectResultsByIriQuery = (iri, select) => {
+  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select === undefined || select === null) select = Object.keys(resultsPredicateMap);
+
+  // this is needed to assist in the determination of the type of the data source
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('object_type')) select.push('object_type');
+
+  const { selectionClause, predicates } = buildSelectVariables(resultsPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    BIND(${iri} AS ?iri)
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Results> .
+    ${predicates}
+  }`
+}
+
+export const selectResourcesByIriQuery = (iri, select) => {
+  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select === undefined || select === null) select = Object.keys(resourcesPredicateMap);
+
+  // this is needed to assist in the determination of the type of the data source
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('object_type')) select.push('object_type');
+
+  const { selectionClause, predicates } = buildSelectVariables(resourcesPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    BIND(${iri} AS ?iri)
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Resources> .
+    ${predicates}
+  }`
+}

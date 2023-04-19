@@ -5,11 +5,10 @@ import {
   updateQuery, 
   checkIfValidUUID, 
   validateEnumValue,
-  // generateId,
-  // DARKLIGHT_NS
 } from '../../../utils.js';
 import {
   getReducer,
+  //Assessment Results
   assessmentResultsPredicateMap,
   singularizeAssessmentResultsSchema,
   selectAssessmentResultsQuery,
@@ -20,14 +19,26 @@ import {
   deleteAssessmentResultsByIriQuery,
   attachToAssessmentResultsQuery,
   detachFromAssessmentResultsQuery,
+  //Revisions
+  singularizeRevisionsSchema,
+  selectRevisionsByIriQuery,
+  //Shared Metadata
+  singularizeSharedMetadataSchema,
+  selectSharedMetadataByIriQuery,
+  //Local Definitions
+  singularizeLocalDefinitionsSchema,
+  selectLocalDefinitionsByIriQuery,
+  //Assessment Plan
+  singularizeAssessmentPlanSchema,
+  selectAssessmentPlanByIriQuery,
+  //Results
+  singularizeResultsSchema,
+  selectResultsByIriQuery,
+  //Resource
+  singularizeResourcesSchema,
+  selectResourcesByIriQuery,
 } from '../schema/sparql/assessmentResult.js';
-// import { findLeveragedAuthorizationByIri } from '../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
-// import { findUserTypeByIri } from '../../risk-assessments/oscal-common/domain/oscalUser.js';
 import { addToInventoryQuery, removeFromInventoryQuery } from '../../../assets/assetUtil.js';
-// import { createInformationType, findInformationTypeByIri } from './informationType.js';
-// import { createDescriptionBlock, deleteDescriptionBlockByIri } from './descriptionBlock.js';
-// import { findComponentByIri } from '../../risk-assessments/component/domain/component.js';
-// import { findInventoryItemByIri } from '../../risk-assessments/inventory-item/domain/inventoryItem.js';
 
 // Assessment Result
 export const findAssessmentResultsById = async (id, dbName, dataSources, select) => {
@@ -592,4 +603,118 @@ export const detachFromAssessmentResults = async (id, field, entityId, dbName, d
   }
 
   return true;
+};
+
+export const findRevisionsByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectRevisionsByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Revisions",
+      singularizeSchema: singularizeRevisionsSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) return null;
+  const reducer = getReducer("REVISIONS");
+  return reducer(response[0]);  
+};
+
+export const findSharedMetadataByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Shared Metadata",
+      singularizeSchema: singularizeSharedMetadataSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) return null;
+  const reducer = getReducer("SHARED-METADATA");
+  return reducer(response[0]);  
+};
+
+export const findAssessmentPlanByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Assessment Plan",
+      singularizeSchema: singularizeAssessmentPlanSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) return null;
+  const reducer = getReducer("ASSESSMENT-PLAN");
+  return reducer(response[0]);  
+};
+
+export const findLocalDefinitionsByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectLocalDefinitionsByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Local Definitions",
+      singularizeSchema: singularizeLocalDefinitionsSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) return null;
+  const reducer = getReducer("LOCAL-DEFINITIONS");
+  return reducer(response[0]);  
+};
+
+export const findResultsByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectResultsByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Results",
+      singularizeSchema: singularizeResultsSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) return null;
+  const reducer = getReducer("RESULTS");
+  return reducer(response[0]);  
+};
+
+export const findResourcesByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectResourcesByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Resources",
+      singularizeSchema: singularizeResourcesSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) return null;
+  const reducer = getReducer("RESOURCES");
+  return reducer(response[0]);  
 };

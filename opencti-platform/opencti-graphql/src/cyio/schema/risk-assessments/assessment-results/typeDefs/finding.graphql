@@ -172,20 +172,3 @@ enum TargetType {
   objective_id
 }
 
-"Defines whether the objective was satisfied or not."
-enum ObjectiveStatusStateType {
-  "The objective has been completely satisfied."
-  satisfied
-  "The objective has been completely satisfied."
-  not_satisfied
-}
-
-"Defines the reason the objective was given it's status."
-enum ObjectiveStatusReasonType {
-  "The target system or system component satisfied all the conditions."
-  pass
-  "The target system or system component satisfied all the conditions."
-  fail
-  "Some other event took place that is not a pass or a fail."
-  other
-}

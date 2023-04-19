@@ -1,5 +1,6 @@
 import { UserInputError } from 'apollo-server-errors';
 import { riskSingularizeSchema } from '../../risk-mappings.js';
+import { checkIfValidUUID } from '../../../utils.js';
 import { 
   getReducer,
   selectInventoryItemQuery,
@@ -9,6 +10,9 @@ import {
 
 
 export const findInventoryItemById = async (id, dbName, dataSources, select) => {
+  // ensure the id is a valid UUID
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+
   const sparqlQuery = selectInventoryItemQuery(id, select);
   let response;
   try {

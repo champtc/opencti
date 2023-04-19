@@ -16,6 +16,7 @@ import {
 import { findDescriptionBlockByIri } from '../domain/descriptionBlock.js';
 import { findInformationTypeByIri } from '../domain/informationType.js';
 import { findDataMarkingByIri } from '../../data-markings/domain/dataMarkings.js';
+import { findResponsiblePartyByIri } from '../../risk-assessments/oscal-common/domain/oscalResponsibleParty.js';
 
 
 const cyioInformationSystemResolvers = {

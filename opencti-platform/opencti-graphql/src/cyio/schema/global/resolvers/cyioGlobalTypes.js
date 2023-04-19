@@ -343,8 +343,24 @@ const cyioGlobalTypeResolvers = {
       while (objectMap[to_type].parent !== undefined) {
         to_type = objectMap[to_type].parent;
       }
-      const sourceIri = `<${objectMap[from_type].iriTemplate}-${input.from_id}>`;
-      const targetIri = `<${objectMap[to_type].iriTemplate}-${input.to_id}>`;
+
+      // WORKAROUND: deal with issues where some IRIs use '-' and others use  '--'
+      // to separate the scope from the id
+      let toSeparator = '-';
+      let fromSeparator = '-'
+      let doubleSeparator = [
+        'marking-definition','connection-information','data-source',
+        'description-block','frequency-timing','description-block',
+        'diagram','information-system','information-type',
+        'impact-definition','categorization','information-type-catalog',
+        'oscal-leveraged-authorization','oscal-user','authorized-privilege',
+        'system-configuration','workspace'
+      ]
+      if (doubleSeparator.includes(to_type)) toSeparator = '--'
+      if (doubleSeparator.includes(from_type)) fromSeparator = '--';
+      const sourceIri = `<${objectMap[from_type].iriTemplate}${fromSeparator}${input.from_id}>`;
+      const targetIri = `<${objectMap[to_type].iriTemplate}${toSeparator}${input.to_id}>`;
+      // END WORKAROUND
 
       let statements = `${sourceIri} ${predicate} ${targetIri}`;
       let classIri = objectMap[from_type].classIri;
@@ -425,8 +441,24 @@ const cyioGlobalTypeResolvers = {
       while (objectMap[to_type].parent !== undefined) {
         to_type = objectMap[to_type].parent;
       }
-      const sourceIri = `<${objectMap[from_type].iriTemplate}-${input.from_id}>`;
-      const targetIri = `<${objectMap[to_type].iriTemplate}-${input.to_id}>`;
+
+      // WORKAROUND: deal with issues where some IRIs use '-' and others use  '--'
+      // to separate the scope from the id
+      let toSeparator = '-';
+      let fromSeparator = '-'
+      let doubleSeparator = [
+        'marking-definition','connection-information','data-source',
+        'description-block','frequency-timing','description-block',
+        'diagram','information-system','information-type',
+        'impact-definition','categorization','information-type-catalog',
+        'oscal-leveraged-authorization','oscal-user','authorized-privilege',
+        'system-configuration','workspace'
+      ]
+      if (doubleSeparator.includes(to_type)) toSeparator = '--'
+      if (doubleSeparator.includes(from_type)) fromSeparator = '--';
+      const sourceIri = `<${objectMap[from_type].iriTemplate}${fromSeparator}${input.from_id}>`;
+      const targetIri = `<${objectMap[to_type].iriTemplate}${toSeparator}${input.to_id}>`;
+      // END WORKAROUND
 
       let statements = `${sourceIri} ${predicate} ${targetIri}`;
       let classIri = objectMap[from_type].classIri;

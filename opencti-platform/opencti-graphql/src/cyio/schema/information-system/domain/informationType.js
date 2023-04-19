@@ -222,10 +222,10 @@ export const createInformationType = async (input, dbName, dataSources, select) 
   }
 
   // check if an information type with this same id exists
-  let existSelect = ['id','entity_type']
+  let existSelect = ['id','entity_type','title','created','modified']
   let checkId = generateInformationTypeId( input );
   let infoType = await findInformationTypeById(checkId, dbName, dataSources, existSelect);
-  if ( infoType != undefined && infoType != null) throw new UserInputError(`Cannot create information type as entity ${checkId} already exists`);
+  if ( infoType != undefined && infoType != null) throw new UserInputError(`Cannot create information type as entity ${checkId}; already exists`);
 
   // Collect all the nested definitions and remove them from input array
   let nestedDefinitions = {
@@ -247,7 +247,7 @@ export const createInformationType = async (input, dbName, dataSources, select) 
                         .replace(/[\u2019\u2019]/g, "\\'")
                         .replace(/[\u201C\u201D]/g, '\\"');
         }
-        if (value === undefined || value === null) continue;
+        if (value === undefined || value === null || value.length === 0) continue;
         nestedDefinitions[fieldName]['props'][key] = value;
       }
     }
@@ -886,7 +886,7 @@ export const findAllImpactDefinitions = async (args, dbName, dataSources, select
   }
 };
 
-export const createImpactDefinition = async (input, dbName, dataSources, selectMap) => {
+export const createImpactDefinition = async (input, dbName, dataSources, select) => {
   // TODO: WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -924,7 +924,7 @@ export const createImpactDefinition = async (input, dbName, dataSources, selectM
   }
 
   // retrieve the newly created Impact Definition to be returned
-  const selectQuery = selectImpactDefinitionQuery(id, selectMap.getNode("createImpactDefinition"));
+  const selectQuery = selectImpactDefinitionQuery(id, select);
   let result;
   try {
     result = await dataSources.Stardog.queryById({

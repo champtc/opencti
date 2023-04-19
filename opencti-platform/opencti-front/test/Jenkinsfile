@@ -16,9 +16,9 @@ node {
 
     dir('opencti-platform/opencti-front') {
       stage('Configure') {
+        //will be copied to darklight/resources/opencti-front/certs.  Files removed outside the withKsm block
         OPENCTI_CRT_PATH = keeperUtils.getCertFilePath('.', args.name, 'crt')
         OPENCTI_KEY_PATH = keeperUtils.getCertFilePath('.', args.name, 'key')
-        //TODO: cypress Keeper integration instead of creds on disk
         withKsm(application: [[credentialsId: 'f71b1433-b4e3-4c49-b1e0-a9489323449e',
           secrets: [
             keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "login",    'TEST_USER'),
@@ -27,7 +27,7 @@ node {
             keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.key", OPENCTI_KEY_PATH)
           ]
         ]]) {
-          sh 'ls -l darklight/resources/opencti-front/certs'
+          sh 'mv darklight/resources/opencti-front/certs/* .'
           sh '''jq -n --arg u "$TEST_USER" --arg p "$TEST_PASS" '.email=$u|.password=$p' > cypress/fixtures/users.json'''
           def envVars = deployBuilds.processProperties(args.name, args.systemType, true) //load and terp resources/opencti-front/deploy.dev.properties
           writeFile file: '.env', text: envVars.collect{entry->entry.key+"="+entry.value}.sort().join('\n')

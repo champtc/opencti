@@ -122,6 +122,17 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
   risks(first: Int, offset: Int, orderedBy: RisksOrdering orderMode: OrderingMode): RiskConnection
   "Identifies one ore more POAM Items that bind a specific Risk to the associated Observations."
   findings(first: Int, offset: Int): FindingConnection
+  # DarkLight Extensions
+  "Identifies the status of the ingest process"
+  ingest_status: IngestStatus
+  "Identifies the scan identifier assigned by the assessment platform for the specific assessment."
+  scan_id: String
+  "Identifies the type of assessment performed."
+  assessment_type: AssessmentType!
+  "Identifies if the specific assessment was performed were authenticated to the target.\r\nAuthenticated assessment allows the scanner to do a more thorough check looking for problems that can not be seen from the network."
+  authenticated_scan: Boolean
+  "Identifies the count of targets within the specific assessment."
+  target_count: Int
 }
 
 input ResultInput {
@@ -137,6 +148,15 @@ input ResultInput {
   reviewed_controls: ControlSetInput
   "Identifies a set of textual statements, typically written by the assessor."
   attestations: [AttestationInput]
+  # DarkLight Extensions
+  "Identifies the status of the ingest process"
+  ingest_status: IngestStatus!
+  "Identifies the scan identifier assigned by the assessment platform for the specific assessment."
+  scan_id: String
+  "Identifies if the specific assessment was performed were authenticated to the target.\r\nAuthenticated assessment allows the scanner to do a more thorough check looking for problems that can not be seen from the network."
+  authenticated_scan: Boolean = false
+  "Identifies the count of targets within the specific assessment."
+  target_count: Int
 }
 
 # Pagination Types
@@ -433,4 +453,36 @@ enum AssessmentPartName {
   assessment_objective
   "The part defines an assessment method."
   assessment_method
+}
+
+"""
+Defines the set of values that represents the status of the ingest
+"""
+enum IngestStatus {
+  "Assessment results in unknown/unsupported format."
+  UNKNOWN_FORMAT
+  "Assessment results ingested successfully"
+  SUCCESS
+}
+
+"""
+Defines the set of values that represent the type of assessment.
+"""
+enum AssessmentType {
+  "Identifies high-level domains and DNS related-information"
+  ATTACK_SURFACE_DISCOVERY
+  "Identifies active hosts and open ports"
+  HOST_DISCOVERY
+  "Identifies vulnerabilities by performing full system scan."
+  NETWORK_SCAN
+  "Identifies malware on Windows and Unix Systems"
+  MALWARE
+  "Identifies published and unknown web vulnerabilities."
+  WEB_APPLICATION
+  "Identifies misconfigurations in Active Directory"
+  ACTIVE_DIRECTORY
+  "Identifies system configurations against a known baseline"
+  POLICY_COMPLIANCE
+  "Identifies configuration issues in third-party cloud services."
+  CLOUD_AUDIT
 }

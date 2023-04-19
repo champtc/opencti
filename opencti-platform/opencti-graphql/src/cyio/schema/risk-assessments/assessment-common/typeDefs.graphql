@@ -790,15 +790,11 @@ input OnDateTimingAddInput {
 ## Evidence
 #
 "Defines identifying information about evidence relevant to this observation."
-type Evidence {
+type Evidence implements ComplexDatatype{
   "Uniquely identifies this object."
   id: ID!
   "Identifies the type of the Object."
   entity_type: String!
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
   "Identifies a resolvable URL reference to the relevant evidence."
   href: URL
   "Identifies a human-readable description of the evidence."
@@ -1054,6 +1050,8 @@ type AssessmentLogEntry implements BasicObject & LifecycleObject & OscalObject &
     search: String
   ): OscalRelationshipConnection
   # LogEntry
+  "Identifies the type of assessment tracking entry."
+  assessment_activity_type: [AssessmentActivityType]
   "Identifies the name for the risk log entry."
   name: String!
   "Identifies a human-readable description of of what was done regarding the risk."
@@ -1072,6 +1070,8 @@ input AssessmentLogEntryAddInput {
   "Identifies a reference to the Result for which this is a log entry so that it can be attached."
   result_id: ID
   # Entry
+  "Identifies the type of assessment tracking entry."
+  assessment_activity_type: [AssessmentActivityType!]!
   "Identifies the name for the risk log entry."
   name: String!
   "Identifies a human-readable description of of what was done regarding the risk."
@@ -2168,6 +2168,18 @@ enum ActorType {
   party
 }
 
+"Defines the type of assessment activity entry. Can be multi-valued."
+enum AssessmentActivityType {
+  "Information related to the current state of the assessment."
+  status_update
+  "A significant step in the assessment activities has been achieved."
+  milestone_complete
+  "Assessors attestations completed"
+  attestation_completed
+  "Controls have been reviewed"
+  controls_reviewed
+}
+
 "Defines the type of remediation tracking entry. Can be multi-valued."
 enum EntryType {
   "Contacted vendor to determine the status of a pending fix to a known vulnerability."
@@ -2239,7 +2251,7 @@ enum MethodTypes {
 }
 
 "Defines the reasons for the objective status"
-enum ObjectiveStatusReason {
+enum ObjectiveStatusReasonType {
   "The target system or system component satisfied all the conditions."
   pass
   "The target system or system component did not satisfy all the conditions."
@@ -2249,7 +2261,7 @@ enum ObjectiveStatusReason {
 }
 
 "Defines the states of the objective status"
-enum ObjectiveStatusState {
+enum ObjectiveStatusStateType {
   "The objective has been completely satisfied"
   satisfied
   "The objective has not been completely satisfied, but may be partially satisfied"

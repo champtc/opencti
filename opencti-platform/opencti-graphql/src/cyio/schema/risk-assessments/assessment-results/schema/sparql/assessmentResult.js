@@ -337,16 +337,66 @@ export const singularizeRevisionsSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
-    "name": true,
-    "published": true,
-    "last_modified": true,
-    "version": true,
-    "oscal_version": true,
-    "revisions": true,
-    "document_ids": true,
-    "shared_metadata": true,
-    "assessment_plan": true,
-    "local_definitions": true,
+  }
+};
+
+export const singularizeSharedMetadataSchema = { 
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
+  }
+};
+
+export const singularizeAssessmentPlanSchema = { 
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
+  }
+};
+
+export const singularizeLocalDefinitionsSchema = { 
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
+  }
+};
+
+export const singularizeResultsSchema = { 
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
+  }
+};
+
+export const singularizeResourcesSchema = { 
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
   }
 };
 

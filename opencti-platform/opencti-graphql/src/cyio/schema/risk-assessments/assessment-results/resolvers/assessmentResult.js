@@ -7,7 +7,7 @@ import {
     attachToAssessmentResults,
     detachFromAssessmentResults,
     findRevisionsByIri,
-    findShardMetadataByIri,
+    findSharedMetadataByIri,
     findAssessmentPlanByIri,
     findLocalDefinitionsByIri,
     findResultsByIri,
@@ -43,36 +43,36 @@ import {
       },
       shared_metadata: async (parent, _, {dbName, dataSources, selectMap}) => {
         console.log({parent, dbName, dataSources, selectMap})
-        if (parent.data_flow_iri === undefined) return null;
-        let result = await findShardMetadataByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('data_flow'));
+        if (parent.shared_metadata_iri === undefined) return null;
+        let result = await findSharedMetadataByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('shared_metadata'));
         if (result === undefined || result === null) return null;
         return result;
       },
       assessment_plan: async (parent, _, {dbName, dataSources, selectMap}) => {
         console.log({parent, dbName, dataSources, selectMap})
-        if (parent.data_flow_iri === undefined) return null;
-        let result = await findAssessmentPlanByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('data_flow'));
+        if (parent.assessment_plan_iri === undefined) return null;
+        let result = await findAssessmentPlanByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('assessment_plan'));
         if (result === undefined || result === null) return null;
         return result;
       },
       local_definitions: async (parent, _, {dbName, dataSources, selectMap}) => {
         console.log({parent, dbName, dataSources, selectMap})
-        if (parent.data_flow_iri === undefined) return null;
-        let result = await findLocalDefinitionsByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('data_flow'));
+        if (parent.local_definitions_iri === undefined) return null;
+        let result = await findLocalDefinitionsByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('local_definitions'));
         if (result === undefined || result === null) return null;
         return result;
       },
       results: async (parent, _, {dbName, dataSources, selectMap}) => {
         console.log({parent, dbName, dataSources, selectMap})
-        if (parent.data_flow_iri === undefined) return null;
-        let result = await findResultsByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('data_flow'));
+        if (parent.results_iri === undefined) return null;
+        let result = await findResultsByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('results'));
         if (result === undefined || result === null) return null;
         return result;
       },
       resources: async (parent, _, {dbName, dataSources, selectMap}) => {
         console.log({parent, dbName, dataSources, selectMap})
-        if (parent.data_flow_iri === undefined) return null;
-        let result = await findResourcesByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('data_flow'));
+        if (parent.resources_iri === undefined) return null;
+        let result = await findResourcesByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('resources'));
         if (result === undefined || result === null) return null;
         return result;
       },

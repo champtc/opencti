@@ -15,7 +15,7 @@ node {
     }
 
     stage('Setup') {
-      sh 'sudo npm install yarn && yarn -v'
+      sh 'curl -o- -L https://yarnpkg.com/install.sh'
     }
 
     dir('opencti-platform/opencti-graphql') {

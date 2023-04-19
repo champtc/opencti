@@ -49,10 +49,11 @@ export const componentReducer = (item) => {
   // END WORKAROUND
 
   return {
+    iri: item.iri,
     id: item.id,
     standard_id: item.id,
     entity_type: 'component',
-    ...(item.iri && { parent_iri: item.iri }),
+    // ...(item.iri && { parent_iri: item.iri }),
     ...(item.object_type && { object_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),

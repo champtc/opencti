@@ -89,7 +89,7 @@ const inventoryItemResolvers = {
           if (select.includes('props')) {
             inventoryItem = convertAssetToInventoryItem(inventoryItem);
           } else {
-            inventoryItem = reducer(response[0]);
+            inventoryItem = reducer(inventoryItem);
           }
 
           // if haven't reached limit to be returned

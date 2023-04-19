@@ -23,8 +23,8 @@ node {
           secrets: [
             keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "login",    'TEST_USER'),
             keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "password", 'TEST_PASS'),
-            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.crt", OPENCTI_CRT_PATH),
-            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.key", OPENCTI_KEY_PATH)
+            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "crt", OPENCTI_CRT_PATH),
+            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "key", OPENCTI_KEY_PATH)
           ]
         ]]) {
           sh '''jq -n --arg u "$TEST_USER" --arg p "$TEST_PASS" '.email=$u|.password=$p' > cypress/fixtures/users.json'''

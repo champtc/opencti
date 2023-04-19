@@ -1,5 +1,5 @@
 import { UserInputError } from 'apollo-server-errors';
-import conf from '../../../../config/conf';
+import conf, {logApp } from '../../../../config/conf';
 import { selectObjectIriByIdQuery } from '../../global/global-utils.js';
 import { objectTypeMapping } from '../../assets/asset-mappings';
 import { 
@@ -1089,7 +1089,10 @@ export const findSystemImplementation = async ( parent, dbName, dataSources, sel
     let results = [];
     for (let iri of parent.component_iris) {
       let result = await findComponentByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve component resource ${iri}`);
+        continue;
+      }
       results.push(result);
     }
     if (results.length !== 0) systemImplementation['components'] = results || [];
@@ -1099,7 +1102,10 @@ export const findSystemImplementation = async ( parent, dbName, dataSources, sel
     let results = [];
     for (let iri of parent.inventory_item_iris) {
       let result = await findInventoryItemByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve inventory-item resource ${iri}`);
+        continue;
+      }
       results.push(result);
     }
     if (results.length !== 0) systemImplementation['inventory_items'] = results || [];
@@ -1109,7 +1115,10 @@ export const findSystemImplementation = async ( parent, dbName, dataSources, sel
     let results = [];
     for (let iri of parent.leveraged_authorization_iris) {
       let result = await findLeveragedAuthorizationByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve leveraged authorization resource ${iri}`);
+        continue;
+      }
       results.push(result);
     }
     if (results.length !== 0) systemImplementation['leveraged_authorizations'] = results || [];
@@ -1119,7 +1128,10 @@ export const findSystemImplementation = async ( parent, dbName, dataSources, sel
     let results = [];
     for (let iri of parent.user_iris) {
       let result = await findUserTypeByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve user resource ${iri}`);
+        continue;
+      }
       results.push(result);
     }
     if (results.length !== 0) systemImplementation['users'] = results || [];
@@ -1192,7 +1204,10 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
     for (let iri of parent.component_iris) {
       let result = await findComponentByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve component resource ${iri}`);
+        continue;
+      }
 
       // make copy of relationship template
       let rel = {...relationship};
@@ -1222,7 +1237,10 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
     for (let iri of parent.inventory_item_iris) {
       let result = await findInventoryItemByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve inventory-item resource ${iri}`);
+        continue;
+      }
 
       // make copy of relationship template
       let rel = { ...relationship };
@@ -1252,7 +1270,10 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
     for (let iri of parent.leveraged_authorization_iris) {
       let result = await findLeveragedAuthorizationByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve leveraged authorization resource ${iri}`);
+        continue;
+      }
 
       // make copy of relationship template
       let rel = { ...relationship };
@@ -1282,7 +1303,10 @@ export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
 
     for (let iri of parent.user_iris) {
       let result = await findUserTypeByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve user resource ${iri}`);
+        continue;
+      }
 
       // make copy of relationship template
       let rel = { ...relationship };

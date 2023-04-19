@@ -1,3 +1,4 @@
+import {logApp } from '../../../../config/conf';
 import {
   findAllInformationSystems,
   findInformationSystemById,
@@ -41,19 +42,28 @@ const cyioInformationSystemResolvers = {
     authorization_boundary: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.authorization_boundary_iri === undefined) return null;
       let result = await findDescriptionBlockByIri(parent.authorization_boundary_iri, dbName, dataSources, selectMap.getNode('authorization_boundary'));
-      if (result === undefined || result === null) return null;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${parent.authorization_boundary_iri}`);
+        return null;
+      }
       return result;
     },
     network_architecture: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.network_architecture_iri === undefined) return null;
       let result = await findDescriptionBlockByIri(parent.network_architecture_iri, dbName, dataSources, selectMap.getNode('network_architecture'));
-      if (result === undefined || result === null) return null;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${parent.network_architecture_iri}`);
+        return null;
+      }
       return result;
     },
     data_flow: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.data_flow_iri === undefined) return null;
       let result = await findDescriptionBlockByIri(parent.data_flow_iri, dbName, dataSources, selectMap.getNode('data_flow'));
-      if (result === undefined || result === null) return null;
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${parent.data_flow_iri}`);
+        return null;
+      }
       return result;
     },
     information_types: async (parent, _, { dbName, dataSources, selectMap }) => {
@@ -61,7 +71,10 @@ const cyioInformationSystemResolvers = {
       let results = []
       for (let iri of parent.information_type_iris) {
         let result = await findInformationTypeByIri(iri, dbName, dataSources, selectMap.getNode('information_types'));
-        if (result === undefined || result === null) return null;
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          continue;
+        }
         results.push(result);
       }
       return results;
@@ -92,7 +105,10 @@ const cyioInformationSystemResolvers = {
       let results = []
       for (let iri of parent.responsible_party_iris) {
         let result = await findResponsiblePartyByIri(iri, dbName, dataSources, selectMap.getNode('responsible_parties'));
-        if (result === undefined || result === null) continue;
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND: Cannot retrieve resource ${iri}`);
+          continue;
+        }
         results.push(result);
       }
       return results;
@@ -102,7 +118,10 @@ const cyioInformationSystemResolvers = {
       let results = []
       for (let iri of parent.marking_iris) {
         let result = await findDataMarkingByIri(iri, dbName, dataSources, selectMap.getNode('object_markings'));
-        if (result === undefined || result === null) return null;
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
         results.push(result);
       }
       return results;
@@ -112,7 +131,10 @@ const cyioInformationSystemResolvers = {
       let results = []
       for (let iri of parent.label_iris) {
         let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
-        if (result === undefined || result === null) return null;
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
         results.push(result);
       }
       return results;
@@ -122,7 +144,10 @@ const cyioInformationSystemResolvers = {
       let results = []
       for (let iri of parent.link_iris) {
         let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
-        if (result === undefined || result === null) return null;
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
         results.push(result);
       }
       return results;
@@ -132,7 +157,10 @@ const cyioInformationSystemResolvers = {
       let results = []
       for (let iri of parent.remark_iris) {
         let result = await findRemarkByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
-        if (result === undefined || result === null) return null;
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
         results.push(result);
       }
       return results;

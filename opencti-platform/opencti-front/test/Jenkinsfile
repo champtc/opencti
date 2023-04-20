@@ -54,16 +54,15 @@ node {
         sh 'yarn start &'
         timeout(time: 30, unit: 'MINUTES') {
           //https://stackoverflow.com/questions/42873285/curl-retry-mechanism
-          sh 'curl --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 60 https://localhost:3000 | grep "</html>"'
+          sh 'curl --silent --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 120 https://localhost:3000 | grep "</html>"'
         }
       }
 
-      //See if we can run tests without docker container
-      stage('Test') {
-        sh 'yarn cypress'
-      }
+      //TODO: See if we can run tests without docker container, more consistent with rest of script
+      //stage('Test') {
+      //  sh 'yarn cypress'
+      //}
 
-/*
       //put stages inside docker.image so we have 1 and only 1 container for all operations
       //-u 0; root user so apt install can run
       //--entrypoint='' so cypress/included container doesn't run its entrypoint 'cypress run'
@@ -78,7 +77,6 @@ node {
           sh 'yarn cypress'
         }
       }
-*/
     }
   } catch (Exception e) {
     currentBuild.result = "FAILED"

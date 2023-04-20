@@ -38,11 +38,11 @@ const AssessmentResultsReducer = (item) => {
       ...(item.last_modified && { last_modified: item.last_modified }),
       ...(item.version && { version: item.version }),
       ...(item.oscal_version && { oscal_version: item.oscal_version }),
-      ...(item.revisions && { revisions: item.revisions }),
+      ...(item.revisions && { revisions_iris: item.revisions }),
       ...(item.document_ids && { document_ids: item.document_ids }),
-      ...(item.shared_metadata && { shared_metadata: item.shared_metadata }),
-      ...(item.assessment_plan && { assessment_plan: item.assessment_plan }),
-      ...(item.local_definitions && { local_definitions: item.local_definitions }),
+      ...(item.shared_metadata && { shared_metadata_iri: item.shared_metadata }),
+      ...(item.assessment_plan && { assessment_plan_iri: item.assessment_plan }),
+      ...(item.local_definitions && { local_definitions_iri: item.local_definitions }),
     }
 };
 
@@ -302,6 +302,180 @@ export const assessmentResultsPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "local_definitions");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
+};
+
+export const revisionsPredicateMap = {
+  id: {
+    predicate: "<http://darklight.ai/ns/common#id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  object_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "object_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  entity_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  created: {
+    predicate: "<http://darklight.ai/ns/common#created>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "created");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  modified: {
+    predicate: "<http://darklight.ai/ns/common#modified>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+
+};
+
+export const sharedMetadataPredicateMap = {
+  id: {
+    predicate: "<http://darklight.ai/ns/common#id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  object_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "object_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  entity_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  created: {
+    predicate: "<http://darklight.ai/ns/common#created>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "created");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  modified: {
+    predicate: "<http://darklight.ai/ns/common#modified>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+
+};
+
+export const assessmentPlanPredicateMap = {
+  id: {
+    predicate: "<http://darklight.ai/ns/common#id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  object_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "object_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  entity_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  created: {
+    predicate: "<http://darklight.ai/ns/common#created>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "created");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  modified: {
+    predicate: "<http://darklight.ai/ns/common#modified>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+
+};
+
+export const localDefinitionsPredicateMap = {
+  id: {
+    predicate: "<http://darklight.ai/ns/common#id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  object_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "object_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  entity_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  created: {
+    predicate: "<http://darklight.ai/ns/common#created>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "created");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  modified: {
+    predicate: "<http://darklight.ai/ns/common#modified>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+
+};
+
+export const resultsPredicateMap = {
+  id: {
+    predicate: "<http://darklight.ai/ns/common#id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  object_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "object_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  entity_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  created: {
+    predicate: "<http://darklight.ai/ns/common#created>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "created");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  modified: {
+    predicate: "<http://darklight.ai/ns/common#modified>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+
+};
+
+export const resourcesPredicateMap = {
+  id: {
+    predicate: "<http://darklight.ai/ns/common#id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  object_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "object_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  entity_type: {
+    predicate: "<http://darklight.ai/ns/common#object_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  created: {
+    predicate: "<http://darklight.ai/ns/common#created>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "created");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  modified: {
+    predicate: "<http://darklight.ai/ns/common#modified>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+
 };
 
 // Serialization schema

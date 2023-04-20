@@ -53,10 +53,10 @@ node {
         sh 'yarn install'
       }
       stage('Start Front') {
-        sh 'echo skip # yarn start &'
+        sh 'yarn start &'
         timeout(time: 30, unit: 'MINUTES') {
           //https://stackoverflow.com/questions/42873285/curl-retry-mechanism
-          sh 'echo skip # curl --silent --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 120 https://localhost:3000 | grep "</html>"'
+          sh 'curl --silent --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 120 https://localhost:3000 | grep "</html>"'
         }
       }
 

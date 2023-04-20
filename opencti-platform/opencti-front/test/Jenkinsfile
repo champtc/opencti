@@ -23,6 +23,8 @@ node {
       sh 'sudo yum -y install yarn --disableplugin=priorities'
       //https://docs.cypress.io/guides/continuous-integration/introduction#Dependencies
       sh 'sudo yum install -y xorg-x11-server-Xvfb gtk2-devel gtk3-devel libnotify-devel GConf2 nss libXScrnSaver alsa-lib'
+      sh 'curl --silent --location https://rpm.nodesource.com/setup_16.x | sudo bash -'
+      sh 'sudo yum -y install nodejs'
     }
 
     dir('opencti-platform/opencti-graphql') {

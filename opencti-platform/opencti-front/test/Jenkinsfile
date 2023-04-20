@@ -21,7 +21,8 @@ node {
       sh 'sudo yum remove libuv -y'
       sh 'sudo curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo'
       sh 'sudo yum -y install yarn --disableplugin=priorities'
-      sh 'sudo yum -y install Xvfb'
+      //https://docs.cypress.io/guides/continuous-integration/introduction#Dependencies
+      sh 'sudo yum install -y xorg-x11-server-Xvfb gtk2-devel gtk3-devel libnotify-devel GConf2 nss libXScrnSaver alsa-lib'
     }
 
     dir('opencti-platform/opencti-graphql') {

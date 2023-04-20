@@ -51,7 +51,7 @@ const cyioDataSourceResolvers = {
     },
     iep: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.iep_iri === undefined) return null;
-      return findDataMarkingByIri(parent.iep_iri, dbName, dataSources, selectMap);
+      return findDataMarkingByIri(parent.iep_iri, dbName, dataSources, selectMap.getNode('iep'));
     },
     external_references: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.external_references_iri === undefined) return [];

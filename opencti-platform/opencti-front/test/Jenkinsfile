@@ -50,8 +50,12 @@ node {
       stage('Install Front') {
         sh 'yarn install'
       }
-      stage('Start Front') { //TODO: probably need to start in the background and then poll 25+ minutes until avail.  Figure out how to start faster and/or have it background after start!
-        sh 'yarn start'
+      stage('Start Front') {
+        sh 'yarn start &'
+        timeout(time: 30, unit: 'MINUTES') {
+          //https://stackoverflow.com/questions/42873285/curl-retry-mechanism
+          sh 'curl --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 60 https://localhost:3000 | grep "</html>"'
+        }
       }
 
       //See if we can run tests without docker container

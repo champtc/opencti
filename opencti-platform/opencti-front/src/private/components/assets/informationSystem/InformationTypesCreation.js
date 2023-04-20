@@ -36,6 +36,7 @@ import InformationTypeEdition, {
   InformationTypeEditionQuery,
 } from './InformationTypeEdition';
 import RiskLevel from '../../common/form/RiskLevel';
+import InformationTypeDetailsPopover from './InformationTypeDetailsPopover';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -155,8 +156,10 @@ class InformationTypesCreationComponent extends Component {
     this.state = {
       open: false,
       openEdit: false,
+      openDetails: false,
       selectedProduct: {},
       informationTypeId: '',
+      informationTypeDetails: {},
     };
   }
 
@@ -368,6 +371,12 @@ class InformationTypesCreationComponent extends Component {
     this.setState({ open: !this.state.open });
   }
 
+  handleOpenDetails(details) {
+    this.setState({ 
+      openDetails: !this.state.openDetails,
+    });
+  }
+
   render() {
     const { t, classes, informationSystem } = this.props;
     const {
@@ -433,14 +442,24 @@ class InformationTypesCreationComponent extends Component {
               {informationTypes.length
                 && informationTypes.map((informationType, key) => (
                   <div key={key} style={{ display: 'grid', gridTemplateColumns: '40% 1fr 1fr 1fr' }}>
-                    <div>
+                    <div
+                      onClick={() => {
+                        this.setState({ 
+                          informationTypeDetails: informationType, 
+                        });
+                        this.handleOpenDetails();
+                      }}
+                      style={{
+                        cursor: 'pointer',
+                      }}
+                    >
                       {informationType.title && t(informationType.title)}
                     </div>
                     <div>
                       {informationType.confidentiality_impact && (
                         <RiskLevel
                           risk={
-                            informationType.confidentiality_impact.base_impact
+                            informationType.confidentiality_impact.selected_impact
                           }
                         />
                       )}
@@ -448,7 +467,7 @@ class InformationTypesCreationComponent extends Component {
                     <div>
                       {informationType.integrity_impact && (
                         <RiskLevel
-                          risk={informationType.integrity_impact.base_impact}
+                          risk={informationType.integrity_impact.selected_impact}
                         />
                       )}
                     </div>
@@ -456,7 +475,7 @@ class InformationTypesCreationComponent extends Component {
                       {informationType.availability_impact && (
                         <RiskLevel
                           risk={
-                            informationType.availability_impact.base_impact
+                            informationType.availability_impact.selected_impact
                           }
                         />
                       )}
@@ -984,6 +1003,13 @@ class InformationTypesCreationComponent extends Component {
             }}
           />
         )}
+        {this.state.openDetails && (
+          <InformationTypeDetailsPopover 
+            openDetails={this.state.openDetails}
+            informationType={this.state.informationTypeDetails}
+            handleDisplay={this.handleOpenDetails.bind(this)}
+          />
+        )}
       </div>
     );
   }
@@ -1007,14 +1033,38 @@ const InformationTypesCreation = createFragmentContainer(
           id
           title
           entity_type
+          description
+          categorizations {
+            id
+            entity_type
+            information_type {
+              title
+              id
+              category
+            }
+            catalog {
+              id
+              system
+              title
+            }
+          }
           confidentiality_impact {
             base_impact
+            selected_impact
+            adjustment_justification
+            explanation
           }
           integrity_impact {
             base_impact
+            selected_impact
+            adjustment_justification
+            explanation
           }
           availability_impact {
             base_impact
+            selected_impact
+            adjustment_justification
+            explanation
           }
         }
       }

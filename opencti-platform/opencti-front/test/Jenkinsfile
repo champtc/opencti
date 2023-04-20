@@ -15,10 +15,11 @@ node {
     }
 
     stage('Setup') {
-      //sh 'curl --silent --location https://rpm.nodesource.com/setup_16.x | bash -'
-      //sh 'sudo yum -y install nodejs'
+      //https://stackoverflow.com/questions/71043534/nodejs-16-dependency-issue-with-libuv
+      //workaround for Error: Package: 1:nodejs-16.18.1-3.el7.x86_64 (epel) Requires: libuv >= 1:1.43.0
+      sh 'yum remove libuv -y'
       sh 'sudo curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo'
-      sh 'sudo yum -y install yarn'
+      sh 'sudo yum -y install yarn --disableplugin=priorities'
     }
 
     dir('opencti-platform/opencti-graphql') {

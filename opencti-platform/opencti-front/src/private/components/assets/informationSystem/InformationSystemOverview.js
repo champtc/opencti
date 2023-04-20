@@ -331,6 +331,8 @@ class InformationSystemOverviewComponent extends Component {
               toType='OscalResponsibleParty'
               name='responsible_parties'
               title='Responsible Parties'
+              entityType='informationSystem'
+              data={informationSystem.responsible_parties}
             />
             </Grid>
           </Grid>

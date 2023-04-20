@@ -14,9 +14,10 @@ node {
       notify.notifyBuild('STARTED');
     }
 
-    stage('Setup') {
-      //https://stackoverflow.com/questions/71043534/nodejs-16-dependency-issue-with-libuv
+    stage('Install yarn') {
       //workaround for Error: Package: 1:nodejs-16.18.1-3.el7.x86_64 (epel) Requires: libuv >= 1:1.43.0
+      //  https://stackoverflow.com/questions/71043534/nodejs-16-dependency-issue-with-libuv
+      //  remove libuv and then use --disableplugin=priorities
       sh 'sudo yum remove libuv -y'
       sh 'sudo curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo'
       sh 'sudo yum -y install yarn --disableplugin=priorities'
@@ -28,7 +29,7 @@ node {
       }
     }
     dir('opencti-platform/opencti-front') {
-      stage('Configure') {
+      stage('Setup Front Config') {
         //will be copied to darklight/resources/opencti-front/certs.  Files removed outside the withKsm block
         OPENCTI_CRT_PATH = keeperUtils.getCertFilePath('.', args.name, 'crt')
         OPENCTI_KEY_PATH = keeperUtils.getCertFilePath('.', args.name, 'key')
@@ -49,10 +50,16 @@ node {
       stage('Install Front') {
         sh 'yarn install'
       }
-      stage('Start Front') {
+      stage('Start Front') { //TODO: probably need to start in the background and then poll 25+ minutes until avail.  Figure out how to start faster and/or have it background after start!
         sh 'yarn start'
       }
 
+      //See if we can run tests without docker container
+      stage('Test') {
+        sh 'yarn cypress'
+      }
+
+/*
       //put stages inside docker.image so we have 1 and only 1 container for all operations
       //-u 0; root user so apt install can run
       //--entrypoint='' so cypress/included container doesn't run its entrypoint 'cypress run'
@@ -67,6 +74,7 @@ node {
           sh 'yarn cypress'
         }
       }
+*/
     }
   } catch (Exception e) {
     currentBuild.result = "FAILED"

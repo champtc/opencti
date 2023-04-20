@@ -12,6 +12,7 @@ import {
   selectAllInformationTypesQuery,
   insertInformationTypeQuery,
   deleteInformationTypeQuery,
+  deleteInformationTypeByIriQuery,
   attachToInformationTypeQuery,
   detachFromInformationTypeQuery,
   generateInformationTypeId,
@@ -430,6 +431,68 @@ export const deleteInformationTypeById = async ( id, dbName, dataSources ) => {
 
   if (!Array.isArray(id)) return id;
   return removedIds;
+};
+
+export const deleteInformationTypeByIri = async ( iri, dbName, dataSources ) => {
+  let select = ['iri','id','object_type','confidentiality_impact','integrity_impact','availability_impact','categorizations'];
+  let response;
+
+  // check if object iw IRI exists
+  let sparqlQuery = selectInformationTypeByIriQuery(iri, select);
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName: dbName,
+      sparqlQuery,
+      queryId: "Select InformationType",
+      singularizeSchema: singularizeInformationTypeSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist: ${iri}`);
+
+  let infoType = response[0];
+  let nestedReferences = {
+    'confidentiality_impact': { iris: infoType.confidentiality_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'integrity_impact': { iris: infoType.integrity_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'availability_impact': { iris: infoType.availability_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'categorizations': { iris: infoType.categorizations, deleteFunction: deleteCategorizationByIriQuery },
+  };
+
+  // delete any nested nodes that are private to the information system
+  for (let [fieldName, fieldInfo] of Object.entries(nestedReferences)) {
+    if (fieldInfo.iris === undefined || fieldInfo.iris === null) continue;
+    if (!Array.isArray(fieldInfo.iris)) fieldInfo.iris = [fieldInfo.iris];
+    for( let nestedIri of fieldInfo.iris) {
+      let sparqlQuery = fieldInfo.deleteFunction(nestedIri);
+      try {
+        let results = await dataSources.Stardog.delete({
+          dbName,
+          sparqlQuery,
+          queryId: `Delete ${fieldName}`
+        });
+      } catch (e) {
+        console.log(e)
+        throw e
+      }
+    }
+  }
+
+  // delete the Information Type
+  sparqlQuery = deleteInformationTypeByIriQuery(iri);
+  try {
+    response = await dataSources.Stardog.delete({
+      dbName,
+      sparqlQuery,
+      queryId: "Delete Information Type"
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  
+  return iri;
 };
 
 export const editInformationTypeById = async ( id, input, dbName, dataSources, select, schema ) => {

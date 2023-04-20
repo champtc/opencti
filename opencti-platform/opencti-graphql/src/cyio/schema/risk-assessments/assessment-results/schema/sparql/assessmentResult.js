@@ -547,6 +547,8 @@ export const singularizeLocalDefinitionsSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
+    "objectives_and_methods": true,
+    "activities": true,
   }
 };
 

@@ -290,7 +290,6 @@ export const deleteAssessmentResultsById = async ( id, dbName, dataSources) => {
   return removedIds;
 };
 
-
 export const deleteAssessmentResultsByIri = async ( iri, dbName, dataSources) => {
     // check if object with iri exists
     let select = ['iri','id'];

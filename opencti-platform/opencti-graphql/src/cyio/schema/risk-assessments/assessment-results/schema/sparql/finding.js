@@ -42,6 +42,7 @@ const findingReducer = (item) => {
     ...(item.target && { target: item.target }),
   }
 };
+
 const findingTargetReducer = (item) => {
   // if no object type was returned, compute the type from the IRI
   if (item.object_type === undefined) {
@@ -72,6 +73,7 @@ export const getFindingIri = (id) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   return `<http://cyio.darklight.ai/finding--${id}>`;
 }
+
 export const getFindingTargetIri = (id) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);

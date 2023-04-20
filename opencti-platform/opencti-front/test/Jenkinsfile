@@ -14,13 +14,14 @@ node {
       notify.notifyBuild('STARTED');
     }
 
-    stage('Install yarn') {
+    stage('Install deps') {
       //workaround for Error: Package: 1:nodejs-16.18.1-3.el7.x86_64 (epel) Requires: libuv >= 1:1.43.0
       //  https://stackoverflow.com/questions/71043534/nodejs-16-dependency-issue-with-libuv
       //  remove libuv and then use --disableplugin=priorities
       sh 'sudo yum remove libuv -y'
       sh 'sudo curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo'
       sh 'sudo yum -y install yarn --disableplugin=priorities'
+      sh 'sudo yum -y install Xvfb'
     }
 
     dir('opencti-platform/opencti-graphql') {
@@ -51,18 +52,19 @@ node {
         sh 'yarn install'
       }
       stage('Start Front') {
-        sh 'yarn start &'
+        sh 'echo skip # yarn start &'
         timeout(time: 30, unit: 'MINUTES') {
           //https://stackoverflow.com/questions/42873285/curl-retry-mechanism
-          sh 'curl --silent --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 120 https://localhost:3000 | grep "</html>"'
+          sh 'echo skip # curl --silent --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 120 https://localhost:3000 | grep "</html>"'
         }
       }
 
       //TODO: See if we can run tests without docker container, more consistent with rest of script
-      //stage('Test') {
-      //  sh 'yarn cypress'
-      //}
+      stage('Test') {
+        sh 'yarn cypress'
+      }
 
+/*
       //put stages inside docker.image so we have 1 and only 1 container for all operations
       //-u 0; root user so apt install can run
       //--entrypoint='' so cypress/included container doesn't run its entrypoint 'cypress run'
@@ -74,9 +76,10 @@ node {
           sh 'yarn install'
         }
         stage('Test') {
-          sh 'yarn cypress'
+          sh 'yarn cypress' //--> The cypress npm package is installed, but the Cypress binary is missing.
         }
       }
+*/
     }
   } catch (Exception e) {
     currentBuild.result = "FAILED"

@@ -15,7 +15,9 @@ node {
     }
 
     stage('Setup') {
-      sh 'sudo yum update -y && curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo && sudo yum install yarn -y && yarn -v'
+      sh 'curl --silent --location https://rpm.nodesource.com/setup_16.x | bash -'
+      sh 'sudo yum -y install nodejs'
+      sh 'sudo yum -y install yarn'
     }
 
     dir('opencti-platform/opencti-graphql') {

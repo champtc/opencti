@@ -490,7 +490,7 @@ export const editResultById = async (id, input, dbName, dataSources, select, sch
 
   const query = updateQuery(
     `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result#Result",
     input,
     resultPredicateMap
   );
@@ -1193,7 +1193,7 @@ export const editAttestationById = async (id, input, dbName, dataSources, select
 
   const query = updateQuery(
     `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result#Attestation",
     input,
     attestationPredicateMap
   );
@@ -1757,7 +1757,7 @@ export const editControlSetById = async (id, input, dbName, dataSources, select,
 
   const query = updateQuery(
     `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result#ControlSet",
     input,
     controlSetPredicateMap
   );
@@ -2321,7 +2321,7 @@ export const editControlSelectionById = async (id, input, dbName, dataSources, s
 
   const query = updateQuery(
     `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result#ControlSelection",
     input,
     controlSelectionPredicateMap
   );
@@ -2885,7 +2885,7 @@ export const editSelectedControlById = async (id, input, dbName, dataSources, se
 
   const query = updateQuery(
     `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result#SelectedControl",
     input,
     selectedControlPredicateMap
   );
@@ -3449,7 +3449,7 @@ export const editControlObjectiveSelectionById = async (id, input, dbName, dataS
 
   const query = updateQuery(
     `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result#ControlObjectiveSelection",
     input,
     controlObjectiveSelectionPredicateMap
   );
@@ -4013,7 +4013,7 @@ export const editAssessmentPartById = async (id, input, dbName, dataSources, sel
 
   const query = updateQuery(
     `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result#AssessmentPart",
     input,
     assessmentPartPredicateMap
   );

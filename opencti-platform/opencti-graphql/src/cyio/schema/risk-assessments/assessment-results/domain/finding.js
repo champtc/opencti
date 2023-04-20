@@ -208,6 +208,378 @@ export const createFinding = async (input, dbName, dataSources, select) => {
   return reducer(result[0]);
 };
 
+export const deleteFindingById = async ( id, dbName, dataSources) => {
+  let select = ['iri','id'];
+  let idArray = [];
+  if (!Array.isArray(id)) {
+    idArray = [id];
+  } else {
+    idArray = id;
+  }
+
+  let removedIds = []
+  for (let itemId of idArray) {
+    let response;
+    if (!checkIfValidUUID(itemId)) throw new UserInputError(`Invalid identifier: ${itemId}`);  
+
+    // check if object with id exists
+    let sparqlQuery = selectFindingQuery(itemId, select);
+    try {
+      response = await dataSources.Stardog.queryById({
+        dbName,
+        sparqlQuery,
+        queryId: "Select Finding",
+        singularizeSchema: singularizeFindingSchema
+      });
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+    
+    if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
+    let AsseFinding = response[0];
+
+    // Removing Finding Asset from Asset Inventory
+    const invQuery = removeFromInventoryQuery(AsseFinding.iri);
+    await dataSources.Stardog.create({
+      dbName,
+      sparqlQuery: invQuery,
+      queryId: 'Removing Finding Asset from Inventory',
+    });
+
+    sparqlQuery = deleteFindingQuery(itemId);
+    try {
+      response = await dataSources.Stardog.delete({
+        dbName,
+        sparqlQuery,
+        queryId: "Delete Finding"
+      });
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+    
+    removedIds.push(itemId);
+  }
+
+  if (!Array.isArray(id)) return id;
+  return removedIds;
+};
+
+export const deleteFindingByIri = async ( iri, dbName, dataSources) => {
+    // check if object with iri exists
+    let select = ['iri','id'];
+    let response;
+    try {
+      let sparqlQuery = selectFindingByIriQuery(iri, select);
+      response = await dataSources.Stardog.queryById({
+        dbName,
+        sparqlQuery,
+        queryId: "Select Finding",
+        singularizeSchema: singularizeFindingSchema
+      });
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+    
+    if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with IRI ${iri}`);
+    let AsseFinding = response[0];
+
+    // Removing Finding Asset from Asset Inventory
+    const connectQuery = removeFromInventoryQuery(AsseFinding.iri);
+    await dataSources.Stardog.create({
+      dbName,
+      sparqlQuery: connectQuery,
+      queryId: 'Removing Finding Asset from Inventory',
+    });
+
+    sparqlQuery = deleteFindingByIriQuery(iri);
+    try {
+      response = await dataSources.Stardog.delete({
+        dbName,
+        sparqlQuery,
+        queryId: "Delete Finding"
+      });
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+
+  return iri;
+};
+
+export const editFindingById = async (id, input, dbName, dataSources, select, schema) => {
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
+
+  // make sure there is input data containing what is to be edited
+  if (input === undefined || input.length === 0) throw new UserInputError(`No input data was supplied`);
+
+  // WORKAROUND to remove immutable fields
+  input = input.filter(element => (element.key !== 'id' && element.key !== 'created' && element.key !== 'modified'));
+
+  // check that the object to be edited exists with the predicates - only get the minimum of data
+  let editSelect = ['id','created','modified'];
+  for (let editItem of input) {
+    editSelect.push(editItem.key);
+  }
+
+  const sparqlQuery = selectFindingQuery(id, editSelect );
+  let response = await dataSources.Stardog.queryById({
+    dbName,
+    sparqlQuery,
+    queryId: "Select Finding",
+    singularizeSchema: singularizeFindingSchema
+  });
+  if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+
+  // determine operation, if missing
+  for (let editItem of input) {
+    if (editItem.operation !== undefined) continue;
+
+    // if value if empty then treat as a remove
+    if (editItem.value.length === 0) {
+      editItem.operation = 'remove';
+      continue;
+    }
+    if (Array.isArray(editItem.value) && editItem.value[0] === null) throw new UserInputError(`Field "${editItem.key}" has invalid value "null"`);
+
+    if (!response[0].hasOwnProperty(editItem.key)) {
+      editItem.operation = 'add';
+    } else {
+      editItem.operation = 'replace';
+
+      // Set operation to 'skip' if no change in value
+      if (response[0][editItem.key] === editItem.value) editItem.operation ='skip';
+    }
+  }
+
+  // Push an edit to update the modified time of the object
+  const timestamp = new Date().toISOString();
+  if (!response[0].hasOwnProperty('created')) {
+    let update = {key: "created", value:[`${timestamp}`], operation: "add"}
+    input.push(update);
+  }
+  let operation = "replace";
+  if (!response[0].hasOwnProperty('modified')) operation = "add";
+  let update = {key: "modified", value:[`${timestamp}`], operation: `${operation}`}
+  input.push(update);
+
+  // Handle the update to fields that have references to other object instances
+  for (let editItem  of input) {
+    if (editItem.operation === 'skip') continue;
+
+    let value, fieldType, objectType, objArray, iris=[];
+    for (value of editItem.value) {
+      switch(editItem.key) {
+        case 'revisions':
+          objectType = 'revisions';
+          fieldType = 'id';
+          break;
+        case 'document_ids':
+          objectType = 'document_ids';
+          fieldType = 'id';
+          break;
+        case 'assessment_plan':
+          objectType = 'assessment_plan';
+          fieldType = 'id';
+          break;
+        case 'local_definitions':
+          objectType = 'local_definitions';
+          fieldType = 'id';
+          break;
+        default:
+          fieldType = 'simple';
+          break;
+      }
+
+      if (fieldType === 'id') {
+        // continue to next item if nothing to do
+        if (editItem.operation === 'skip') continue;
+
+        let sparqlQuery = selectObjectIriByIdQuery(value, objectType);
+        let result = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: "Obtaining IRI for the object with id",
+          singularizeSchema: singularizeFindingSchema
+        });
+        if (result === undefined || result.length === 0) throw new UserInputError(`Entity does not exist with ID ${value}`);
+        iris.push(`<${result[0].iri}>`);
+      }
+    }
+    if (iris.length > 0) editItem.value = iris;
+  }    
+
+  const query = updateQuery(
+    `http://cyio.darklight.ai/finding--${id}`,
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result#Finding",
+    input,
+    findingPredicateMap
+  );
+  if (query !== null) {
+    let response;
+    try {
+      response = await dataSources.Stardog.edit({
+        dbName,
+        sparqlQuery: query,
+        queryId: "Update Finding"
+      });  
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+  }
+
+  const selectQuery = selectFindingQuery(id, select);
+  const result = await dataSources.Stardog.queryById({
+    dbName,
+    sparqlQuery: selectQuery,
+    queryId: "Select Finding",
+    singularizeSchema: singularizeFindingSchema
+  });
+  const reducer = getReducer("FINDING");
+  return reducer(result[0]);
+};
+
+export const attachToFinding = async (id, field, entityId, dbName, dataSources) => {
+  let sparqlQuery;
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
+
+  // check to see if the result exists
+  let select = ['id','iri','object_type'];
+  let iri = `<http://cyio.darklight.ai/finding--${id}>`;
+  sparqlQuery = selectFindingByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Finding",
+      singularizeSchema: singularizeFindingSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+
+  let attachableObjects = {
+    'revisions': 'revisions',
+    'document_ids': 'document_ids',
+    'assessment_plan': 'assessment_plan',
+    'local_definitions': 'local_definitions',
+  }
+  let objectType = attachableObjects[field];
+  try {
+    // check to see if the entity exists
+    sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
+    response = await dataSources.Stardog.queryById({
+      dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
+      sparqlQuery,
+      queryId: "Obtaining IRI for the object with id",
+      singularizeSchema: singularizeFindingSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${entityId}`);
+  
+  // check to make sure entity to be attached is proper for the field specified
+  if (response[0].object_type !== attachableObjects[field]) {
+    if (!objectTypeMapping.hasOwnProperty(response[0].object_type)) throw new UserInputError(`Can not attach object of type '${response[0].object_type}' to field '${field}'`);
+  }
+
+  // retrieve the IRI of the entity
+  let entityIri = `<${response[0].iri}>`;
+
+  // Attach the object to the result
+  sparqlQuery = attachToFindingQuery(id, field, entityIri);
+  try {
+    response = await dataSources.Stardog.create({
+      dbName,
+      sparqlQuery,
+      queryId: `Attach ${field} to Finding`
+      });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+
+  return true;
+};
+
+export const detachFromFinding = async (id, field, entityId, dbName, dataSources) => {
+  let sparqlQuery;
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
+
+  // check to see if the result exists
+  let select = ['id','iri','object_type'];
+  let iri = `<http://cyio.darklight.ai/finding--${id}>`;
+  sparqlQuery = selectFindingByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Finding",
+      singularizeSchema: singularizeFindingSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+
+  let attachableObjects = {
+    'revisions': 'revisions',
+    'document_ids': 'document_ids',
+    'assessment_plan': 'assessment_plan',
+    'local_definitions': 'local_definitions',
+  }
+  let objectType = attachableObjects[field];
+  try {
+    // check to see if the entity exists
+    sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
+    response = await dataSources.Stardog.queryById({
+      dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
+      sparqlQuery,
+      queryId: "Obtaining IRI for the object with id",
+      singularizeSchema: singularizeFindingSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${entityId}`);
+
+  // check to make sure entity to be attached is proper for the field specified
+  if (response[0].object_type !== attachableObjects[field]) {
+    if (!objectTypeMapping.hasOwnProperty(response[0].object_type)) throw new UserInputError(`Can not attach object of type '${response[0].object_type}' to field '${field}'`);
+  }
+
+  // retrieve the IRI of the entity
+  let entityIri = `<${response[0].iri}>`;
+
+  // Attach the object to the result
+  sparqlQuery = detachFromFindingQuery(id, field, entityIri);
+  try {
+    response = await dataSources.Stardog.create({
+      dbName,
+      sparqlQuery,
+      queryId: `Detach ${field} from Finding`
+      });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+
+  return true;
+};
+
 // Finding Target
 export const findFindingTargetById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
@@ -388,4 +760,376 @@ export const createFindingTarget = async (input, dbName, dataSources, selectMap)
   if (result === undefined || result === null || result.length === 0) return null;
   const reducer = getReducer("FINDING-TARGET");
   return reducer(result[0]);
+};
+
+export const deleteFindingTargetById = async ( id, dbName, dataSources) => {
+  let select = ['iri','id'];
+  let idArray = [];
+  if (!Array.isArray(id)) {
+    idArray = [id];
+  } else {
+    idArray = id;
+  }
+
+  let removedIds = []
+  for (let itemId of idArray) {
+    let response;
+    if (!checkIfValidUUID(itemId)) throw new UserInputError(`Invalid identifier: ${itemId}`);  
+
+    // check if object with id exists
+    let sparqlQuery = selectFindingTargetQuery(itemId, select);
+    try {
+      response = await dataSources.Stardog.queryById({
+        dbName,
+        sparqlQuery,
+        queryId: "Select Finding Target",
+        singularizeSchema: singularizeFindingTargetSchema
+      });
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+    
+    if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
+    let AsseResult = response[0];
+
+    // Removing Finding Target Asset from Asset Inventory
+    const invQuery = removeFromInventoryQuery(AsseResult.iri);
+    await dataSources.Stardog.create({
+      dbName,
+      sparqlQuery: invQuery,
+      queryId: 'Removing Finding Target Asset from Inventory',
+    });
+
+    sparqlQuery = deleteFindingTargetQuery(itemId);
+    try {
+      response = await dataSources.Stardog.delete({
+        dbName,
+        sparqlQuery,
+        queryId: "Delete Finding Target"
+      });
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+    
+    removedIds.push(itemId);
+  }
+
+  if (!Array.isArray(id)) return id;
+  return removedIds;
+};
+
+export const deleteFindingTargetByIri = async ( iri, dbName, dataSources) => {
+    // check if object with iri exists
+    let select = ['iri','id'];
+    let response;
+    try {
+      let sparqlQuery = selectFindingTargetByIriQuery(iri, select);
+      response = await dataSources.Stardog.queryById({
+        dbName,
+        sparqlQuery,
+        queryId: "Select Finding Target",
+        singularizeSchema: singularizeFindingTargetSchema
+      });
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+    
+    if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with IRI ${iri}`);
+    let AsseResult = response[0];
+
+    // Removing Finding Target Asset from Asset Inventory
+    const connectQuery = removeFromInventoryQuery(AsseResult.iri);
+    await dataSources.Stardog.create({
+      dbName,
+      sparqlQuery: connectQuery,
+      queryId: 'Removing Finding Target Asset from Inventory',
+    });
+
+    sparqlQuery = deleteFindingTargetByIriQuery(iri);
+    try {
+      response = await dataSources.Stardog.delete({
+        dbName,
+        sparqlQuery,
+        queryId: "Delete Finding Target"
+      });
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+
+  return iri;
+};
+
+export const editFindingTargetById = async (id, input, dbName, dataSources, select, schema) => {
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
+
+  // make sure there is input data containing what is to be edited
+  if (input === undefined || input.length === 0) throw new UserInputError(`No input data was supplied`);
+
+  // WORKAROUND to remove immutable fields
+  input = input.filter(element => (element.key !== 'id' && element.key !== 'created' && element.key !== 'modified'));
+
+  // check that the object to be edited exists with the predicates - only get the minimum of data
+  let editSelect = ['id','created','modified'];
+  for (let editItem of input) {
+    editSelect.push(editItem.key);
+  }
+
+  const sparqlQuery = selectFindingTargetQuery(id, editSelect );
+  let response = await dataSources.Stardog.queryById({
+    dbName,
+    sparqlQuery,
+    queryId: "Select Finding Target",
+    singularizeSchema: singularizeFindingTargetSchema
+  });
+  if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+
+  // determine operation, if missing
+  for (let editItem of input) {
+    if (editItem.operation !== undefined) continue;
+
+    // if value if empty then treat as a remove
+    if (editItem.value.length === 0) {
+      editItem.operation = 'remove';
+      continue;
+    }
+    if (Array.isArray(editItem.value) && editItem.value[0] === null) throw new UserInputError(`Field "${editItem.key}" has invalid value "null"`);
+
+    if (!response[0].hasOwnProperty(editItem.key)) {
+      editItem.operation = 'add';
+    } else {
+      editItem.operation = 'replace';
+
+      // Set operation to 'skip' if no change in value
+      if (response[0][editItem.key] === editItem.value) editItem.operation ='skip';
+    }
+  }
+
+  // Push an edit to update the modified time of the object
+  const timestamp = new Date().toISOString();
+  if (!response[0].hasOwnProperty('created')) {
+    let update = {key: "created", value:[`${timestamp}`], operation: "add"}
+    input.push(update);
+  }
+  let operation = "replace";
+  if (!response[0].hasOwnProperty('modified')) operation = "add";
+  let update = {key: "modified", value:[`${timestamp}`], operation: `${operation}`}
+  input.push(update);
+
+  // Handle the update to fields that have references to other object instances
+  for (let editItem  of input) {
+    if (editItem.operation === 'skip') continue;
+
+    let value, fieldType, objectType, objArray, iris=[];
+    for (value of editItem.value) {
+      switch(editItem.key) {
+        case 'revisions':
+          objectType = 'revisions';
+          fieldType = 'id';
+          break;
+        case 'document_ids':
+          objectType = 'document_ids';
+          fieldType = 'id';
+          break;
+        case 'assessment_plan':
+          objectType = 'assessment_plan';
+          fieldType = 'id';
+          break;
+        case 'local_definitions':
+          objectType = 'local_definitions';
+          fieldType = 'id';
+          break;
+        default:
+          fieldType = 'simple';
+          break;
+      }
+
+      if (fieldType === 'id') {
+        // continue to next item if nothing to do
+        if (editItem.operation === 'skip') continue;
+
+        let sparqlQuery = selectObjectIriByIdQuery(value, objectType);
+        let result = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: "Obtaining IRI for the object with id",
+          singularizeSchema: singularizeFindingTargetSchema
+        });
+        if (result === undefined || result.length === 0) throw new UserInputError(`Entity does not exist with ID ${value}`);
+        iris.push(`<${result[0].iri}>`);
+      }
+    }
+    if (iris.length > 0) editItem.value = iris;
+  }    
+
+  const query = updateQuery(
+    `http://cyio.darklight.ai/finding-target--${id}`,
+    "http://csrc.nist.gov/ns/oscal/assessment-results/result/finding#FindingTarget",
+    input,
+    findingTargetPredicateMap
+  );
+  if (query !== null) {
+    let response;
+    try {
+      response = await dataSources.Stardog.edit({
+        dbName,
+        sparqlQuery: query,
+        queryId: "Update Finding Target"
+      });  
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+  }
+
+  const selectQuery = selectFindingTargetQuery(id, select);
+  const result = await dataSources.Stardog.queryById({
+    dbName,
+    sparqlQuery: selectQuery,
+    queryId: "Select Finding Target",
+    singularizeSchema: singularizeFindingTargetSchema
+  });
+  const reducer = getReducer("ATTESTATION");
+  return reducer(result[0]);
+};
+
+export const attachToFindingTarget = async (id, field, entityId, dbName, dataSources) => {
+  let sparqlQuery;
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
+
+  // check to see if the finding target exists
+  let select = ['id','iri','object_type'];
+  let iri = `<http://cyio.darklight.ai/finding-target--${id}>`;
+  sparqlQuery = selectFindingTargetByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Finding Target",
+      singularizeSchema: singularizeFindingTargetSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+
+  let attachableObjects = {
+    'revisions': 'revisions',
+    'document_ids': 'document_ids',
+    'assessment_plan': 'assessment_plan',
+    'local_definitions': 'local_definitions',
+  }
+  let objectType = attachableObjects[field];
+  try {
+    // check to see if the entity exists
+    sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
+    response = await dataSources.Stardog.queryById({
+      dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
+      sparqlQuery,
+      queryId: "Obtaining IRI for the object with id",
+      singularizeSchema: singularizeFindingTargetSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${entityId}`);
+  
+  // check to make sure entity to be attached is proper for the field specified
+  if (response[0].object_type !== attachableObjects[field]) {
+    if (!objectTypeMapping.hasOwnProperty(response[0].object_type)) throw new UserInputError(`Can not attach object of type '${response[0].object_type}' to field '${field}'`);
+  }
+
+  // retrieve the IRI of the entity
+  let entityIri = `<${response[0].iri}>`;
+
+  // Attach the object to the finding target
+  sparqlQuery = attachToFindingTargetQuery(id, field, entityIri);
+  try {
+    response = await dataSources.Stardog.create({
+      dbName,
+      sparqlQuery,
+      queryId: `Attach ${field} to Finding Target`
+      });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+
+  return true;
+};
+
+export const detachFromFindingTarget = async (id, field, entityId, dbName, dataSources) => {
+  let sparqlQuery;
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
+
+  // check to see if the finding target exists
+  let select = ['id','iri','object_type'];
+  let iri = `<http://cyio.darklight.ai/finding-target--${id}>`;
+  sparqlQuery = selectFindingTargetByIriQuery(iri, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Finding Target",
+      singularizeSchema: singularizeFindingTargetSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+
+  let attachableObjects = {
+    'revisions': 'revisions',
+    'document_ids': 'document_ids',
+    'assessment_plan': 'assessment_plan',
+    'local_definitions': 'local_definitions',
+  }
+  let objectType = attachableObjects[field];
+  try {
+    // check to see if the entity exists
+    sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
+    response = await dataSources.Stardog.queryById({
+      dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
+      sparqlQuery,
+      queryId: "Obtaining IRI for the object with id",
+      singularizeSchema: singularizeFindingTargetSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${entityId}`);
+
+  // check to make sure entity to be attached is proper for the field specified
+  if (response[0].object_type !== attachableObjects[field]) {
+    if (!objectTypeMapping.hasOwnProperty(response[0].object_type)) throw new UserInputError(`Can not attach object of type '${response[0].object_type}' to field '${field}'`);
+  }
+
+  // retrieve the IRI of the entity
+  let entityIri = `<${response[0].iri}>`;
+
+  // Attach the object to the finding target
+  sparqlQuery = detachFromFindingTargetQuery(id, field, entityIri);
+  try {
+    response = await dataSources.Stardog.create({
+      dbName,
+      sparqlQuery,
+      queryId: `Detach ${field} from Finding Target`
+      });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+
+  return true;
 };

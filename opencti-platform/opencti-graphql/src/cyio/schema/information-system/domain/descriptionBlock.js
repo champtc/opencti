@@ -890,7 +890,7 @@ export const deleteDiagramRefByIri = async ( iri, dbName, dataSources ) => {
     throw e
   }
   
-  if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
+  if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${iri}`);
   sparqlQuery = deleteDiagramByIriQuery(iri);
   try {
     response = await dataSources.Stardog.delete({

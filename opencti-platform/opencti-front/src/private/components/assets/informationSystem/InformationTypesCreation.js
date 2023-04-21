@@ -381,7 +381,7 @@ class InformationTypesCreationComponent extends Component {
   }
 
   handleOpenDetails(details) {
-    this.setState({ 
+    this.setState({
       openDetails: !this.state.openDetails,
     });
   }
@@ -453,8 +453,8 @@ class InformationTypesCreationComponent extends Component {
                   <div key={key} style={{ display: 'grid', gridTemplateColumns: '40% 1fr 1fr 1fr' }}>
                     <div
                       onClick={() => {
-                        this.setState({ 
-                          informationTypeDetails: informationType, 
+                        this.setState({
+                          informationTypeDetails: informationType,
                         });
                         this.handleOpenDetails();
                       }}
@@ -466,27 +466,17 @@ class InformationTypesCreationComponent extends Component {
                     </div>
                     <div>
                       {informationType.confidentiality_impact && (
-                        <RiskLevel
-                          risk={
-                            informationType.confidentiality_impact.selected_impact
-                          }
-                        />
+                        this.renderRiskLevel(informationType.confidentiality_impact.selected_impact)
                       )}
                     </div>
                     <div>
                       {informationType.integrity_impact && (
-                        <RiskLevel
-                          risk={informationType.integrity_impact.selected_impact}
-                        />
+                        this.renderRiskLevel(informationType.integrity_impact.selected_impact)
                       )}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       {informationType.availability_impact && (
-                        <RiskLevel
-                          risk={
-                            informationType.availability_impact.selected_impact
-                          }
-                        />
+                        this.renderRiskLevel(informationType.availability_impact.selected_impact)
                       )}
                       <div>
                         <IconButton
@@ -1013,7 +1003,7 @@ class InformationTypesCreationComponent extends Component {
           />
         )}
         {this.state.openDetails && (
-          <InformationTypeDetailsPopover 
+          <InformationTypeDetailsPopover
             openDetails={this.state.openDetails}
             informationType={this.state.informationTypeDetails}
             handleDisplay={this.handleOpenDetails.bind(this)}

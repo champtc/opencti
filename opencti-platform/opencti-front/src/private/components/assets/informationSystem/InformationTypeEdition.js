@@ -14,19 +14,19 @@ import Tooltip from '@material-ui/core/Tooltip';
 import graphql from 'babel-plugin-relay/macro';
 import Button from '@material-ui/core/Button';
 import {
+  Grid,
+  Slide,
   Dialog,
   DialogContent,
   DialogActions,
   DialogTitle,
-  Grid,
-  Slide,
 } from '@material-ui/core';
 import inject18n from '../../../../components/i18n';
 import MarkDownField from '../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../utils/bakedToast';
 import { commitMutation } from '../../../../relay/environment';
-import SearchTextField from '../../common/form/SearchTextField';
 import TaskType from '../../common/form/TaskType';
+import TextField from '../../../../components/TextField';
 import SecurityCategorization from './SecurityCategorization';
 import RiskLevel from '../../common/form/RiskLevel';
 
@@ -93,13 +93,17 @@ const styles = (theme) => ({
   impactText: {
     marginLeft: '10px',
   },
+  textField: {
+    height: '38.09px',
+  },
 });
 
 const informationTypeEditionMutation = graphql`
   mutation InformationTypeEditionMutation(
-    $input: InformationTypeInput!
+    $id: ID!
+    $input: [EditInput]!
   ) {
-    createInformationType(input: $input) {
+    editInformationType(id: $id, input: $input) {
       id
     }
   }
@@ -127,11 +131,11 @@ class InformationTypeEditionComponent extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
-    const categorizations = [{
+    const categorizations = {
       catalog: values.catalog,
       system: values.system,
       information_type: values.information_type,
-    }];
+    };
     const confidentialityImpact = {
       base_impact: values.confidentiality_impact_base,
       selected_impact: values.confidentiality_impact_selected,
@@ -150,6 +154,7 @@ class InformationTypeEditionComponent extends Component {
     const finalValues = R.pipe(
       R.dissoc('system'),
       R.dissoc('catalog'),
+      R.dissoc('category'),
       R.dissoc('information_type'),
       R.dissoc('integrity_impact_base'),
       R.dissoc('availability_impact_base'),
@@ -164,10 +169,22 @@ class InformationTypeEditionComponent extends Component {
       R.assoc('integrity_impact', integrityImpact),
       R.assoc('availability_impact', availabilityImpact),
       R.assoc('confidentiality_impact', confidentialityImpact),
+      R.dissoc('categorizations'),
+      R.dissoc('integrity_impact'),
+      R.dissoc('availability_impact'),
+      R.dissoc('confidentiality_impact'),
+      R.toPairs,
+      R.map((n) => {
+        return {
+          key: n[0],
+          value: n[1],
+        }
+      }),
     )(values);
     commitMutation({
       mutation: informationTypeEditionMutation,
       variables: {
+        id: this.props.data.informationType.id,
         input: finalValues,
       },
       setSubmitting,
@@ -178,7 +195,7 @@ class InformationTypeEditionComponent extends Component {
       },
       onError: (err) => {
         console.error(err);
-        toastGenericError('Failed to create Information Type');
+        toastGenericError('Failed to edit Information Type');
       },
     });
   }
@@ -189,28 +206,67 @@ class InformationTypeEditionComponent extends Component {
   }
 
   handleSetFieldValues(selectedInfoType, setFieldValue, type) {
-    const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedInfoType);
-    const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedInfoType);
-    const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedInfoType);
+    const integrityImpact = R.pathOr(
+      {},
+      ['integrity_impact'],
+      selectedInfoType,
+    );
+    const availabilityImpact = R.pathOr(
+      {},
+      ['availability_impact'],
+      selectedInfoType,
+    );
+    const confidentialityImpact = R.pathOr(
+      {},
+      ['confidentiality_impact'],
+      selectedInfoType,
+    );
     const categorization = R.pipe(
       R.pathOr([], ['categorizations']),
       R.mergeAll,
     )(selectedInfoType);
+    if (type === 'select') {
+      setFieldValue('system', selectedInfoType?.system);
+      setFieldValue('category', selectedInfoType?.category);
+      setFieldValue('information_type', selectedInfoType?.id);
+    }
     if (type === 'search') {
-      setFieldValue('catalog', categorization?.id);
+      setFieldValue('catalog', categorization?.catalog?.id);
+      setFieldValue('category', categorization?.information_type?.category);
       setFieldValue('system', categorization?.system);
       setFieldValue('information_type', categorization?.information_type?.id);
       setFieldValue('description', selectedInfoType?.description);
     }
-    setFieldValue('confidentiality_impact_base', confidentialityImpact?.base_impact);
+    setFieldValue(
+      'confidentiality_impact_base',
+      confidentialityImpact?.base_impact,
+    );
     setFieldValue('integrity_impact_base', integrityImpact?.base_impact);
     setFieldValue('availability_impact_base', availabilityImpact?.base_impact);
-    setFieldValue('integrity_impact_selected', integrityImpact?.selected_impact);
-    setFieldValue('availability_impact_selected', availabilityImpact?.selected_impact);
-    setFieldValue('confidentiality_impact_selected', confidentialityImpact?.selected_impact);
-    setFieldValue('integrity_impact_justification', integrityImpact?.adjustment_justification);
-    setFieldValue('availability_impact_justification', availabilityImpact?.adjustment_justification);
-    setFieldValue('confidentiality_impact_justification', confidentialityImpact?.adjustment_justification);
+    setFieldValue(
+      'integrity_impact_selected',
+      integrityImpact?.selected_impact,
+    );
+    setFieldValue(
+      'availability_impact_selected',
+      availabilityImpact?.selected_impact,
+    );
+    setFieldValue(
+      'confidentiality_impact_selected',
+      confidentialityImpact?.selected_impact,
+    );
+    setFieldValue(
+      'integrity_impact_justification',
+      integrityImpact?.adjustment_justification,
+    );
+    setFieldValue(
+      'availability_impact_justification',
+      availabilityImpact?.adjustment_justification,
+    );
+    setFieldValue(
+      'confidentiality_impact_justification',
+      confidentialityImpact?.adjustment_justification,
+    );
   }
 
   handleSearchTextField(selectedInfoType, setFieldValue) {
@@ -249,17 +305,18 @@ class InformationTypeEditionComponent extends Component {
     const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedProduct);
     const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedProduct);
     const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedProduct);
-    const characterizations = R.pipe(
-      R.pathOr([], ['characterizations']),
+    const categorizations = R.pipe(
+      R.pathOr([], ['categorizations']),
       R.mergeAll,
     )(informationType);
     const initialValues = R.pipe(
       R.assoc('id', informationType?.id || ''),
       R.assoc('title', informationType?.title || ''),
-      R.assoc('system', characterizations?.id || ''),
-      R.assoc('catalog', characterizations?.system || ''),
+      R.assoc('system', categorizations?.system || ''),
+      R.assoc('catalog', categorizations?.catalog?.id || ''),
+      R.assoc('category', categorizations?.information_type?.category || ''),
       R.assoc('description', informationType?.description || ''),
-      R.assoc('information_type', characterizations?.information_type?.id || ''),
+      R.assoc('information_type', categorizations?.information_type?.id || ''),
       R.assoc('integrity_impact_base', informationType?.integrity_impact?.base_impact || ''),
       R.assoc('availability_impact_base', informationType?.availability_impact?.base_impact || ''),
       R.assoc('integrity_impact_selected', informationType?.integrity_impact?.selected_impact || ''),
@@ -273,6 +330,7 @@ class InformationTypeEditionComponent extends Component {
         'title',
         'system',
         'catalog',
+        'category',
         'description',
         'information_type',
         'integrity_impact_base',
@@ -334,12 +392,14 @@ class InformationTypeEditionComponent extends Component {
                         </Tooltip>
                       </div>
                       <div className='clearfix' />
-                      <SearchTextField
+                      <Field
+                        component={TextField}
                         name='title'
-                        data={values.title}
-                        errors={errors.title}
-                        setFieldValue={setFieldValue}
-                        handleSearchTextField={this.handleSearchTextField.bind(this)}
+                        fullWidth={true}
+                        variant='outlined'
+                        size='small'
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
                       />
                     </Grid>
                     <Grid xs={12} item={true}>
@@ -373,6 +433,7 @@ class InformationTypeEditionComponent extends Component {
                     </Grid>
                     <SecurityCategorization
                       values={values}
+                      disabled={true}
                       setFieldValue={setFieldValue}
                       handleInformationType={this.handleInformationType.bind(this)}
                     />
@@ -438,6 +499,7 @@ class InformationTypeEditionComponent extends Component {
                         name='confidentiality_impact_selected'
                         taskType='FIPS199'
                         fullWidth={true}
+                        disabled={true}
                         required={true}
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
@@ -468,6 +530,7 @@ class InformationTypeEditionComponent extends Component {
                         name='confidentiality_impact_justification'
                         fullWidth={true}
                         multiline={true}
+                        disabled={true}
                         rows='1'
                         variant='outlined'
                         containerstyle={{ width: '100%' }}
@@ -535,6 +598,7 @@ class InformationTypeEditionComponent extends Component {
                         name='integrity_impact_selected'
                         taskType='FIPS199'
                         fullWidth={true}
+                        disabled={true}
                         required={true}
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
@@ -565,6 +629,7 @@ class InformationTypeEditionComponent extends Component {
                         name='integrity_impact_justification'
                         fullWidth={true}
                         multiline={true}
+                        disabled={true}
                         rows='3'
                         variant='outlined'
                         containerstyle={{ width: '100%' }}
@@ -632,6 +697,7 @@ class InformationTypeEditionComponent extends Component {
                         name='availability_impact_selected'
                         taskType='FIPS199'
                         fullWidth={true}
+                        disabled={true}
                         required={true}
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
@@ -662,6 +728,7 @@ class InformationTypeEditionComponent extends Component {
                         name='availability_impact_justification'
                         fullWidth={true}
                         multiline={true}
+                        disabled={true}
                         rows='3'
                         variant='outlined'
                         containerstyle={{ width: '100%' }}
@@ -730,6 +797,9 @@ const InformationTypeEdition = createFragmentContainer(
             id
             entity_type
             system
+            catalog {
+              id
+            }
             information_type {
               id
               entity_type

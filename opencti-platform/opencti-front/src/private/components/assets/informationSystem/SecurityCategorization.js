@@ -247,6 +247,7 @@ SecurityCategorization.propTypes = {
   t: PropTypes.func,
   values: PropTypes.object,
   classes: PropTypes.object,
+  disabled: PropTypes.bool,
   handleInformationType: PropTypes.func,
 };
 

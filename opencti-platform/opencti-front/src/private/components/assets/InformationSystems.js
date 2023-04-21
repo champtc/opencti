@@ -412,10 +412,12 @@ class InformationSystems extends Component {
         {view === 'cards' && this.renderCards(paginationOptions)}
         {view === 'lines' && this.renderLines(paginationOptions)}
         <InformationSystemFormCreation
+          history={this.props.history}
           InfoSystemCreation={InfoSystemCreation === 'form'}
           handleInformationSystemCreation={this.handleInformationSystemCreation.bind(this)}
         />
         <InformationSystemGraphCreation
+          history={this.props.history}
           InfoSystemCreation={InfoSystemCreation === 'graph'}
           handleInformationSystemCreation={this.handleInformationSystemCreation.bind(this)}
         />

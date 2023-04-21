@@ -80,7 +80,6 @@ class InformationSystemFormCreation extends Component {
 
   onSubmit(values, { setSubmitting, resetForm }) {
     const finalValues = R.pipe(
-      R.assoc('name', values.name),
       R.dissoc('created'),
       R.dissoc('modified'),
     )(values);
@@ -126,6 +125,7 @@ class InformationSystemFormCreation extends Component {
               system_name: '',
               description: '',
               deployment_model: [],
+              operational_status: '',
               cloud_service_model: '',
               identity_assurance_level: '',
               federation_assurance_level: '',
@@ -331,6 +331,30 @@ class InformationSystemFormCreation extends Component {
                       <TaskType
                         name="federation_assurance_level"
                         taskType='FederationAssuranceLevel'
+                        fullWidth={true}
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
+                        variant='outlined'
+                      />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <div className={classes.textBase}>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ margin: 0 }}
+                        >
+                          {t('Status')}
+                        </Typography>
+                        <Tooltip title={t('Status')} >
+                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
+                        </Tooltip>
+                      </div>
+                      <div className='clearfix' />
+                      <TaskType
+                        name='operational_status'
+                        taskType='OperationalStatus'
                         fullWidth={true}
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}

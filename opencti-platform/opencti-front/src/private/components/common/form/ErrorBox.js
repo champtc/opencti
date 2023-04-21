@@ -78,18 +78,16 @@ class ErrorBox extends Component {
     return (
       <>
         <DialogTitle classes={{ root: classes.dialogTitle }}>
-          {t('ERROR')}
+          {t('USER INPUT ERROR')}
         </DialogTitle>
-        <DialogContent style={{ overflow: 'hidden' }}>
-          <Typography style={{ marginBottom: '20px' }}>
-            Sorry. Something went wrong and DarkLight Support has been notified. Please try again or contact <strong style={{ color: '#075AD3' }}>Support@darklight.ai</strong> for assistance.
-          </Typography>
+        <DialogContent>
           <List>
             {Object.keys(error).length && error.map((value, key) => {
               return (
                 <ListItem
                   divider
                   key={key}
+                  style={{ fontSize: '16px' }}
                 >
                   {value.message}
                 </ListItem>

@@ -71,21 +71,23 @@ const systemImplementationRemoveMutation = graphql`
 
 class SystemImplementationComponent extends Component {
   onSubmit(name, output) {
-    commitMutation({
-      mutation: systemImplementationAttachMutation,
-      variables: {
-        id: this.props.informationSystem.id,
-        entityId: output,
-        implementation_type: name,
-      },
-      pathname: '/defender_hq/assets/information_systems',
-      onCompleted: () => {
-        this.props.refreshQuery();
-      },
-      onError: () => {
-        toastGenericError(`Failed to add ${name}`);
-      },
-    });
+    output.map((value) => (
+      commitMutation({
+        mutation: systemImplementationAttachMutation,
+        variables: {
+          id: this.props.informationSystem.id,
+          entityId: value.id,
+          implementation_type: name,
+        },
+        pathname: '/defender_hq/assets/information_systems',
+        onCompleted: () => {
+          this.props.refreshQuery();
+        },
+        onError: () => {
+          toastGenericError(`Failed to add ${name}`);
+        },
+      })
+    ));
   }
 
   onDelete(name, output) {

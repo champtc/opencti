@@ -82,7 +82,7 @@ class EntitiesDataMarkingsPopover extends Component {
               cyioCoreObjectOrStixCoreRelationshipId={node.id}
               typename={node.__typename}
               fieldName='remarks'
-              cyioCoreObjectOrStixCoreRelationshipNotes={node.remarks}
+              cyioCoreObjectOrStixCoreRelationshipNotes={node.remarks ?? []}
             />
           </MenuItem>
           <MenuItem
@@ -92,7 +92,7 @@ class EntitiesDataMarkingsPopover extends Component {
             <CyioAddExternalReferences
               menuItemName='Add External Reference'
               cyioCoreObjectOrCyioCoreRelationshipId={node.id}
-              cyioCoreObjectOrCyioCoreRelationshipReferences={node.links}
+              cyioCoreObjectOrCyioCoreRelationshipReferences={node.links ?? []}
               fieldName='links'
               typename={node.__typename}
             />

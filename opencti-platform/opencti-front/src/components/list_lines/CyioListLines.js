@@ -452,7 +452,7 @@ class CyioListLines extends Component {
                     onClick={handleDisplayEdit && handleDisplayEdit.bind(this, selectedElements)}
                     className={classes.iconButton}
                     disabled={Boolean(Object.entries(selectedElements || {}).length !== 1)
-                      || Boolean(selectedDataEntity === 'information_types') || disabled}
+                        || disabled}
                     color="primary"
                     size="large"
                   >

@@ -46,7 +46,7 @@ node {
         stage('Install Front') {
           //npm install recommended by John, https://darklightdev.atlassian.net/wiki/spaces/DLDEV/pages/138018817/Front-End+Build+Local.
           //For amzn2 CXXFLAGS="--std=c++14" is workaround from https://github.com/nodejs/node/issues/38367 but yarn install ended up just hanging.
-          sh 'npm install'
+          //sh 'npm install'
           sh 'yarn install'
         }
         stage('Start Front') {

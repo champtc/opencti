@@ -624,6 +624,7 @@ export const singularizeInformationSystemSchema = {
     "security_objective_confidentiality": true,
     "security_objective_integrity": true,
     "security_objective_availability": true,
+    "critical_system_designation": true,
     "privacy_designation": true,
     "authorization_boundary": true,
     "network_architecture": true,

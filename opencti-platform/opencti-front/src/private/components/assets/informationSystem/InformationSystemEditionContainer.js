@@ -126,6 +126,7 @@ class InformationSystemEditionContainer extends Component {
       R.assoc('short_name', informationSystem?.short_name || ''),
       R.assoc('description', informationSystem?.description || ''),
       R.assoc('deployment_model', informationSystem?.deployment_model || []),
+      R.assoc('operational_status', informationSystem?.operational_status || ''),
       R.assoc('cloud_service_model', informationSystem?.cloud_service_model || ''),
       R.assoc('identity_assurance_level', informationSystem?.identity_assurance_level || ''),
       R.assoc('federation_assurance_level', informationSystem?.federation_assurance_level || ''),
@@ -353,6 +354,30 @@ class InformationSystemEditionContainer extends Component {
                       <TaskType
                         name="federation_assurance_level"
                         taskType='FederationAssuranceLevel'
+                        fullWidth={true}
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
+                        variant='outlined'
+                      />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <div className={classes.textBase}>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ margin: 0 }}
+                        >
+                          {t('Status')}
+                        </Typography>
+                        <Tooltip title={t('Status')} >
+                          <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
+                        </Tooltip>
+                      </div>
+                      <div className="clearfix" />
+                      <TaskType
+                        name="operational_status"
+                        taskType='OperationalStatus'
                         fullWidth={true}
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}

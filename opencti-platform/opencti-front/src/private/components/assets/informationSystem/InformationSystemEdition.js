@@ -36,6 +36,7 @@ export const informationSystemEditionQuery = graphql`
       system_name
       description
       deployment_model
+      operational_status
       cloud_service_model
       identity_assurance_level
       federation_assurance_level

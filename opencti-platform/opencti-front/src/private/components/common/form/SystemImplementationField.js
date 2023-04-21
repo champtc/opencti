@@ -246,6 +246,8 @@ class SystemImplementationField extends Component {
   }
 
   handleSubmit() {
+    const filterData = this.state.data.filter((value) => !this.props.data.includes(value));
+    this.props.onSubmit(this.props.name, filterData);
     this.setState({ open: false });
   }
 
@@ -262,7 +264,7 @@ class SystemImplementationField extends Component {
     const diagramId = event.target.value;
     this.setState({ value: diagramId });
     const addItem = R.find((n) => n.id === diagramId)(this.state.list);
-    if (this.state.data.every((value) => value.id !== diagramId)) {
+    if (data.every((value) => value.id !== diagramId)) {
       this.setState({
         data: [...data, addItem],
         value: '',
@@ -274,7 +276,6 @@ class SystemImplementationField extends Component {
         isSubmitting: false,
       });
     }
-    this.props.onSubmit(this.props.name, diagramId);
   }
 
   render() {
@@ -293,6 +294,9 @@ class SystemImplementationField extends Component {
     } = this.props;
     const systemImplementationData = this.props.data.length > 0
       ? R.map((n) => ({ id: n.id, name: n.name || n.title }))(this.props.data)
+      : [];
+    const selectedDataEntities = this.state.data.length > 0
+      ? R.map((n) => ({ id: n.id, name: n.name || n.title }))(this.state.data)
       : [];
     return (
       <>
@@ -374,7 +378,7 @@ class SystemImplementationField extends Component {
             <div className={classes.scrollBg}>
               <div className={classes.scrollDiv}>
                 <div className={classes.scrollObj}>
-                  {systemImplementationData.map((item, key) => (
+                  {selectedDataEntities.map((item, key) => (
                     <div key={key}>
                       <Typography>{item.name}</Typography>
                     </div>

@@ -364,16 +364,19 @@ class InformationTypesCreationComponent extends Component {
 
   renderRiskLevel(baseTitle) {
     const { t, classes } = this.props;
-    return (
-      <div className={classes.impactContent}>
-        <RiskLevel risk={baseTitle} />
-        <span className={classes.impactText}>
-          {baseTitle.includes('low') && t('Low')}
-          {baseTitle.includes('moderate') && t('Moderate')}
-          {baseTitle.includes('high') && t('High')}
-        </span>
-      </div>
-    )
+    if (baseTitle) {
+      return (
+        <div className={classes.impactContent}>
+          <RiskLevel risk={baseTitle} />
+          <span className={classes.impactText}>
+            {baseTitle.includes('low') && t('Low')}
+            {baseTitle.includes('moderate') && t('Moderate')}
+            {baseTitle.includes('high') && t('High')}
+          </span>
+        </div>
+      )
+    }
+    return <></>;
   }
 
   handleChangeDialog() {

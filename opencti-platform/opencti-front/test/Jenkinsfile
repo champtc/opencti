@@ -15,6 +15,10 @@ node {
     }
 
     docker.image('cypress/included:12.6.0').inside(' -u 0 --entrypoint=""') {
+      stage('Install Deps') {
+        sh 'apt update'
+        sh 'apt install -y jq'
+      }
       dir('opencti-platform/opencti-graphql') {
         stage('Install GraphQL') {
           sh 'yarn install'

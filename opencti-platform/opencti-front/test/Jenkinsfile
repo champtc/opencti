@@ -53,9 +53,9 @@ node {
         }
       }
       stage('Install Front') {
-       //npm install recommended by John, https://darklightdev.atlassian.net/wiki/spaces/DLDEV/pages/138018817/Front-End+Build+Local.
-       //CXXFLAGS is workaround from https://github.com/nodejs/node/issues/38367
-        sh 'CXXFLAGS="--std=c++14" npm install'
+        //npm install recommended by John, https://darklightdev.atlassian.net/wiki/spaces/DLDEV/pages/138018817/Front-End+Build+Local.
+        //CXXFLAGS is workaround from https://github.com/nodejs/node/issues/38367
+        //sh 'CXXFLAGS="--std=c++14" npm install'
         sh 'CXXFLAGS="--std=c++14" yarn install'
       }
       stage('Start Front') {

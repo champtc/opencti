@@ -166,13 +166,10 @@ class InformationTypeEditionComponent extends Component {
       R.dissoc('availability_impact_justification'),
       R.dissoc('confidentiality_impact_justification'),
       R.assoc('categorizations', categorizations),
-      R.assoc('integrity_impact', integrityImpact),
-      R.assoc('availability_impact', availabilityImpact),
-      R.assoc('confidentiality_impact', confidentialityImpact),
+      R.assoc('integrity_impact', JSON.stringify(integrityImpact)),
+      R.assoc('availability_impact', JSON.stringify(availabilityImpact)),
+      R.assoc('confidentiality_impact', JSON.stringify(confidentialityImpact)),
       R.dissoc('categorizations'),
-      R.dissoc('integrity_impact'),
-      R.dissoc('availability_impact'),
-      R.dissoc('confidentiality_impact'),
       R.toPairs,
       R.map((n) => {
         return {
@@ -499,7 +496,6 @@ class InformationTypeEditionComponent extends Component {
                         name='confidentiality_impact_selected'
                         taskType='FIPS199'
                         fullWidth={true}
-                        disabled={true}
                         required={true}
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
@@ -530,7 +526,6 @@ class InformationTypeEditionComponent extends Component {
                         name='confidentiality_impact_justification'
                         fullWidth={true}
                         multiline={true}
-                        disabled={true}
                         rows='1'
                         variant='outlined'
                         containerstyle={{ width: '100%' }}
@@ -598,7 +593,6 @@ class InformationTypeEditionComponent extends Component {
                         name='integrity_impact_selected'
                         taskType='FIPS199'
                         fullWidth={true}
-                        disabled={true}
                         required={true}
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
@@ -629,7 +623,6 @@ class InformationTypeEditionComponent extends Component {
                         name='integrity_impact_justification'
                         fullWidth={true}
                         multiline={true}
-                        disabled={true}
                         rows='3'
                         variant='outlined'
                         containerstyle={{ width: '100%' }}
@@ -697,7 +690,6 @@ class InformationTypeEditionComponent extends Component {
                         name='availability_impact_selected'
                         taskType='FIPS199'
                         fullWidth={true}
-                        disabled={true}
                         required={true}
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
@@ -728,7 +720,6 @@ class InformationTypeEditionComponent extends Component {
                         name='availability_impact_justification'
                         fullWidth={true}
                         multiline={true}
-                        disabled={true}
                         rows='3'
                         variant='outlined'
                         containerstyle={{ width: '100%' }}

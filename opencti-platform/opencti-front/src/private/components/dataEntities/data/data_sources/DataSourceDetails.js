@@ -10,6 +10,7 @@ import Paper from '@material-ui/core/Paper';
 import {
   CogOutline,
 } from 'mdi-material-ui';
+import * as _ from 'lodash';
 import LaunchIcon from '@material-ui/icons/Launch';
 import Typography from '@material-ui/core/Typography';
 import { Button, Grid, Chip, Tooltip } from '@material-ui/core';
@@ -228,7 +229,7 @@ class DataSourceDetailsComponent extends Component {
                       {t('Type')}
                     </Typography>
                     <div className="clearfix" />
-                    <Chip variant="outlined" label={dataSource.entity_type} style={{ backgroundColor: 'rgba(211, 19, 74, 0.2)' }} classes={{ root: classes.chip }} />
+                    <Chip variant="outlined" label={_.startCase(dataSource.data_source_type)} style={{ backgroundColor: 'rgba(211, 19, 74, 0.2)' }} classes={{ root: classes.chip }} />
                   </div>
                 </Grid>
                 <Grid item={true} xs={12}>
@@ -401,6 +402,7 @@ const DataSourceDetails = createFragmentContainer(
         contextual
         description
         entity_type
+        data_source_type
         update_frequency {
           period
           unit

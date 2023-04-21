@@ -1563,11 +1563,81 @@ export const resultPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-//   name: {
-//     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
-//     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
-//     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-//   },
+  name: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#name>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  description: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#description>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "description");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  start: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#start>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime`: null, this.predicate, "start");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  end: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#end>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime`: null, this.predicate, "end");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  local_definitions: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#local_definitions>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "local_definitions");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  reviewed_controls: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#reviewed_controls>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "reviewed_controls");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  attestation: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#attestation>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "attestation");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  ingest_status: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#ingest_status>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "ingest_status");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  scan_id: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#scan_id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "scan_id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  assessment_type: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#assessment_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "assessment_type");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  authenticated_scan: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#authenticated_scan>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "authenticated_scan");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  target_count: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#target_count>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "target_count");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  labels: {
+    predicate: "<http://darklight.ai/ns/common#labels>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "labels");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  links: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#links>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "links");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  remarks: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#remarks>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "remarks");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
 };
 
 export const attestationPredicateMap = {
@@ -1596,11 +1666,16 @@ export const attestationPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-//   name: {
-//     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
-//     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
-//     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-//   },
+  responsible_parties: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#responsible_parties>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "responsible_parties");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  parts: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#parts>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "parts");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
 };
 
 export const controlSetPredicateMap = {
@@ -1629,11 +1704,21 @@ export const controlSetPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-//   name: {
-//     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
-//     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
-//     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-//   },
+  description: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#description>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "description");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  control_selections: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#control_selections>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "control_selections");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  control_objective_selections: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#control_objective_selections>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "control_objective_selections");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
 };
 
 export const controlSelectionPredicateMap = {
@@ -1662,11 +1747,36 @@ export const controlSelectionPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-//   name: {
-//     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
-//     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
-//     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-//   },
+  description: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#description>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "description");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  include_all_controls: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#include_all_controls>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "include_all_controls");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  include_controls: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#include_controls>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "include_controls");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  exclude_controls: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#exclude_controls>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "exclude_controls");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  links: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#links>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "links");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  remarks: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#remarks>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "remarks");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
 };
 
 export const selectedControlPredicateMap = {
@@ -1695,11 +1805,16 @@ export const selectedControlPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-//   name: {
-//     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
-//     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
-//     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-//   },
+  control: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#control>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "control");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  statements: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#statements>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "statements");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
 };
 
 export const controlObjectiveSelectionPredicateMap = {
@@ -1728,11 +1843,26 @@ export const controlObjectiveSelectionPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-//   name: {
-//     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
-//     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
-//     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-//   },
+  description: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#description>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "description");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  include_all_objectives: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#include_all_objectives>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "include_all_objectives");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  include_objectives: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#include_objectives>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "include_objectives");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  exclude_objectives: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#exclude_objectives>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "exclude_objectives");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
 };
 
 export const assessmentPartPredicateMap = {
@@ -1761,11 +1891,41 @@ export const assessmentPartPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-//   name: {
-//     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
-//     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
-//     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-//   },
+  name: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-result/results#name>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  ns: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-result/results#ns>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "ns");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  class: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-result/results#class>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "class");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  title: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-result/results#title>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "title");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  prose: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-result/results#prose>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "prose");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  parts: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-result/results#parts>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "parts");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  links: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#links>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "links");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
 };
 
 // Serialization schema
@@ -1778,6 +1938,27 @@ export const singularizeResultSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
+    "labels": false,
+    "links": false,
+    "remarks": false,
+    "relationships": false,
+    "props": false,
+    "name": true,
+    "description": true,
+    "start": true,
+    "end": true,
+    "local_definitions": true,
+    "reviewed_controls": true,
+    "attestation": false,
+    "assessment_log": false,
+    "observations": false,
+    "risk": false,
+    "findings": false,
+    "ingest_status": true,
+    "scan_id": true,
+    "assessment_type": true,
+    "authenticated_scan": true,
+    "target_count": true,
   }
 };
 
@@ -1790,6 +1971,8 @@ export const singularizeAttestationSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
+    "responsible_parties": false,
+    "parts": false,
   }
 };
 
@@ -1802,6 +1985,9 @@ export const singularizeControlSetSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
+    "description": true,
+    "control_selections": false,
+    "control_objective_selections": false,
   }
 };
 
@@ -1814,6 +2000,10 @@ export const singularizeControlSelectionSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
+    "description": true,
+    "include_all_controls": true,
+    "include_controls": false,
+    "exclude_controls": false,
   }
 };
 
@@ -1826,6 +2016,8 @@ export const singularizeSelectedControlSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
+    "control": true,
+    "statements": false,
   }
 };
 
@@ -1838,6 +2030,10 @@ export const singularizeControlObjectiveSelectionSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
+    "description": true,
+    "include_all_objectives": true,
+    "include_objectives": false,
+    "exclude_objectives": false,
   }
 };
 
@@ -1850,5 +2046,12 @@ export const singularizeAssessmentPartSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
+    "links": false,
+    "name": true,
+    "ns": true,
+    "class": true,
+    "title": true,
+    "prose": true,
+    "parts": false,
   }
 };

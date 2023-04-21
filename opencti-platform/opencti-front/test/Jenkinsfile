@@ -14,79 +14,50 @@ node {
       notify.notifyBuild('STARTED');
     }
 
-    stage('Install deps') {
-      //workaround for Error: Package: 1:nodejs-16.18.1-3.el7.x86_64 (epel) Requires: libuv >= 1:1.43.0
-      //  https://stackoverflow.com/questions/71043534/nodejs-16-dependency-issue-with-libuv
-      //  remove libuv and then use --disableplugin=priorities
-      sh 'sudo yum remove libuv -y'
-      sh 'sudo curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo'
-      sh 'sudo yum -y install yarn --disableplugin=priorities'
-      //https://docs.cypress.io/guides/continuous-integration/introduction#Dependencies
-      sh 'sudo yum install -y xorg-x11-server-Xvfb gtk2-devel gtk3-devel libnotify-devel GConf2 nss libXScrnSaver alsa-lib'
-      sh 'curl --silent --location https://rpm.nodesource.com/setup_16.x | sudo bash -'
-      sh 'sudo yum -y install nodejs'
-      sh 'sudo yum -y install gcc-c++'  //npm install tries to build node-gyp; trying to pre-install node-gyp with neither worked with npm nor yarn
-    }
-
-    dir('opencti-platform/opencti-graphql') {
-      stage('Install GraphQL') {
-        sh 'yarn install'
-      }
-    }
-    dir('opencti-platform/opencti-front') {
-      stage('Setup Front Config') {
-        //will be copied to darklight/resources/opencti-front/certs.  Files removed outside the withKsm block
-        OPENCTI_CRT_PATH = keeperUtils.getCertFilePath('.', args.name, 'crt')
-        OPENCTI_KEY_PATH = keeperUtils.getCertFilePath('.', args.name, 'key')
-        withKsm(application: [[credentialsId: 'f71b1433-b4e3-4c49-b1e0-a9489323449e',
-          secrets: [
-            keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "login",    'TEST_USER'),
-            keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "password", 'TEST_PASS'),
-            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.crt", OPENCTI_CRT_PATH),
-            keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.key", OPENCTI_KEY_PATH)
-          ]
-        ]]) {
-          sh 'mv darklight/resources/opencti-front/certs/* .'  //preserve files outside withKsm block
-          sh '''jq -n --arg u "$TEST_USER" --arg p "$TEST_PASS" '.email=$u|.password=$p' > cypress/fixtures/users.json'''
-          def envVars = deployBuilds.processProperties(args.name, args.systemType, true) //load and terp resources/opencti-front/deploy.dev.properties
-          writeFile file: '.env', text: envVars.collect{entry->entry.key+"="+entry.value}.sort().join('\n')
-        }
-      }
-      stage('Install Front') {
-        //npm install recommended by John, https://darklightdev.atlassian.net/wiki/spaces/DLDEV/pages/138018817/Front-End+Build+Local.
-        //CXXFLAGS is workaround from https://github.com/nodejs/node/issues/38367
-        //sh 'CXXFLAGS="--std=c++14" npm install'
-        sh 'CXXFLAGS="--std=c++14" yarn install'
-      }
-      stage('Start Front') {
-        sh 'CXXFLAGS="--std=c++14" yarn start &'
-        timeout(time: 30, unit: 'MINUTES') {
-          //https://stackoverflow.com/questions/42873285/curl-retry-mechanism
-          sh 'curl --silent --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 120 https://localhost:3000 | grep "</html>"'
-        }
-      }
-
-      //TODO: See if we can run tests without docker container, more consistent with rest of script
-      stage('Test') {
-        sh 'CXXFLAGS="--std=c++14" yarn cypress'
-      }
-
-/*
-      //put stages inside docker.image so we have 1 and only 1 container for all operations
-      //-u 0; root user so apt install can run
-      //--entrypoint='' so cypress/included container doesn't run its entrypoint 'cypress run'
-      docker.image('cypress/included:12.6.0').inside(' -u 0 --entrypoint=""') {
-        stage('Install Test') {
-          // Install app dependencies
-          sh 'apt update'
-          sh 'apt install -y python3 make g++'
+    docker.image('cypress/included:12.6.0').inside(' -u 0 --entrypoint=""') {
+      dir('opencti-platform/opencti-graphql') {
+        stage('Install GraphQL') {
           sh 'yarn install'
         }
-        stage('Test') {
-          sh 'yarn cypress' //--> The cypress npm package is installed, but the Cypress binary is missing.
-        }
       }
-*/
+      dir('opencti-platform/opencti-front') {
+        stage('Setup Front Config') {
+          //will be copied to darklight/resources/opencti-front/certs.  Files removed outside the withKsm block
+          OPENCTI_CRT_PATH = keeperUtils.getCertFilePath('.', args.name, 'crt')
+          OPENCTI_KEY_PATH = keeperUtils.getCertFilePath('.', args.name, 'key')
+          withKsm(application: [[credentialsId: 'f71b1433-b4e3-4c49-b1e0-a9489323449e',
+            secrets: [
+              keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "login",    'TEST_USER'),
+              keeperUtils.createEnvEntry('nA6xB8flzxlTDUVIqZuwmg', "password", 'TEST_PASS'),
+              keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.crt", OPENCTI_CRT_PATH),
+              keeperUtils.createFileEntry('W4HjFC-EOYSKQ0Qh1u3S_Q', "opencti-front-localhost.key", OPENCTI_KEY_PATH)
+            ]
+          ]]) {
+            sh 'mv darklight/resources/opencti-front/certs/* .'  //preserve files outside withKsm block
+            sh '''jq -n --arg u "$TEST_USER" --arg p "$TEST_PASS" '.email=$u|.password=$p' > cypress/fixtures/users.json'''
+            def envVars = deployBuilds.processProperties(args.name, args.systemType, true) //load and terp resources/opencti-front/deploy.dev.properties
+            writeFile file: '.env', text: envVars.collect{entry->entry.key+"="+entry.value}.sort().join('\n')
+          }
+        }
+        stage('Install Front') {
+          //npm install recommended by John, https://darklightdev.atlassian.net/wiki/spaces/DLDEV/pages/138018817/Front-End+Build+Local.
+          //For amzn2 CXXFLAGS="--std=c++14" is workaround from https://github.com/nodejs/node/issues/38367 but yarn install ended up just hanging.
+          sh 'npm install'
+          sh 'yarn install'
+        }
+        stage('Start Front') {
+          sh 'yarn start &'
+          timeout(time: 30, unit: 'MINUTES') {
+            //https://stackoverflow.com/questions/42873285/curl-retry-mechanism
+            sh 'curl --silent --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 120 https://localhost:3000 | grep "</html>"'
+          }
+        }
+  
+        //TODO: See if we can run tests without docker container, more consistent with rest of script
+        stage('Test') {
+          sh 'yarn cypress'
+        }  
+      }
     }
   } catch (Exception e) {
     currentBuild.result = "FAILED"

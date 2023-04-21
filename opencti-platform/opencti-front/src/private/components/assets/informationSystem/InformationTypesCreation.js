@@ -164,6 +164,11 @@ class InformationTypesCreationComponent extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
+    const categorizations = {
+      catalog: values.catalog,
+      system: values.system,
+      information_type: values.information_type,
+    }
     const confidentialityImpact = {
       base_impact: values.confidentiality_impact_base,
       selected_impact: values.confidentiality_impact_selected,
@@ -183,6 +188,7 @@ class InformationTypesCreationComponent extends Component {
     const finalValues = R.pipe(
       R.dissoc('system'),
       R.dissoc('catalog'),
+      R.dissoc('category'),
       R.dissoc('information_type'),
       R.dissoc('categorization_system'),
       R.dissoc('integrity_impact_base'),
@@ -194,6 +200,7 @@ class InformationTypesCreationComponent extends Component {
       R.dissoc('confidentiality_impact_selected'),
       R.dissoc('availability_impact_justification'),
       R.dissoc('confidentiality_impact_justification'),
+      R.assoc('categorizations', categorizations),
       R.assoc('integrity_impact', integrityImpact),
       R.assoc('availability_impact', availabilityImpact),
       R.assoc('confidentiality_impact', confidentialityImpact),
@@ -261,12 +268,14 @@ class InformationTypesCreationComponent extends Component {
       R.mergeAll,
     )(selectedInfoType);
     if (type === 'select') {
-      setFieldValue('system', selectedInfoType?.category);
+      setFieldValue('system', selectedInfoType?.system);
+      setFieldValue('category', selectedInfoType?.category);
       setFieldValue('information_type', selectedInfoType?.id);
     }
     if (type === 'search') {
       setFieldValue('catalog', categorization?.catalog?.id);
-      setFieldValue('system', categorization?.information_type?.category);
+      setFieldValue('category', categorization?.information_type?.category);
+      setFieldValue('system', categorization?.system);
       setFieldValue('information_type', categorization?.information_type?.id);
       setFieldValue('description', selectedInfoType?.description);
     }
@@ -317,13 +326,13 @@ class InformationTypesCreationComponent extends Component {
     this.setState({ openEdit: !this.state.openEdit });
   }
 
-  handleDetachInfoType(infoTypeId, field) {
+  handleDetachInfoType(infoTypeId) {
     commitMutation({
       mutation: informationTypesDetachDeleteMutation,
       variables: {
-        id: infoTypeId,
+        id: this.props.informationSystem.id,
         entityId: infoTypeId,
-        field,
+        field: 'information_types',
       },
       pathname: '/defender_hq/assets/information_systems',
       onCompleted: () => {
@@ -494,7 +503,6 @@ class InformationTypesCreationComponent extends Component {
                           onClick={this.handleDetachInfoType.bind(
                             this,
                             informationType.id,
-                            informationType.entity_type
                           )}
                         >
                           <DeleteIcon fontSize="small" />
@@ -518,6 +526,7 @@ class InformationTypesCreationComponent extends Component {
               title: '',
               system: '',
               catalog: '',
+              category: '',
               description: '',
               information_type: '',
               integrity_impact_base: '',

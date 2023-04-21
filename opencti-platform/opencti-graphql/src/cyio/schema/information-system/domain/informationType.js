@@ -631,6 +631,10 @@ export const editInformationTypeById = async ( id, input, dbName, dataSources, s
               entity = objArray;
             }
 
+            // convert impact values for form required for storage
+            if (entity.hasOwnProperty('base_impact')) entity.base_impact = entity.base_impact.replace(/_/g,'-').toLowerCase();
+            if (entity.hasOwnProperty('selected_impact')) entity.selected_impact = entity.selected_impact.replace(/_/g,'-').toLowerCase();
+
             // create the instance of the Impact Definition
             const { iri: impactDefinitionIri, id: impactDefinitionId, query } = insertImpactDefinitionQuery(entity);
             await dataSources.Stardog.create({

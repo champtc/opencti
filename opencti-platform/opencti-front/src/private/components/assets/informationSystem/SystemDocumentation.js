@@ -190,7 +190,7 @@ class SystemDocumentationComponent extends Component {
 
   render() {
     const {
-      t, classes, informationSystem,
+      t, classes, refreshQuery, informationSystem,
     } = this.props;
     return (
       <>
@@ -259,6 +259,7 @@ class SystemDocumentationComponent extends Component {
           && (
             <AuthorizationBoundaryEditionPopover
               openEdit={this.state.openEdit}
+              refreshQuery={refreshQuery}
               handleCloseEdit={this.handleCloseEdit.bind(this)}
               informationSystem={informationSystem}
             />
@@ -268,6 +269,7 @@ class SystemDocumentationComponent extends Component {
           && (
             <NetworkArchitectureEditionPopover
               openEdit={this.state.openEdit}
+              refreshQuery={refreshQuery}
               handleCloseEdit={this.handleCloseEdit.bind(this)}
               informationSystem={informationSystem}
             />
@@ -277,6 +279,7 @@ class SystemDocumentationComponent extends Component {
           && (
             <DataFlowEditionPopover
               openEdit={this.state.openEdit}
+              refreshQuery={refreshQuery}
               handleCloseEdit={this.handleCloseEdit.bind(this)}
               informationSystem={informationSystem}
             />
@@ -286,6 +289,7 @@ class SystemDocumentationComponent extends Component {
           && (
             <AuthorizationBoundaryCreation
               openCreate={this.state.openCreate}
+              refreshQuery={refreshQuery}
               handleCloseCreate={this.handleCloseCreate.bind(this)}
             />
           )}
@@ -294,6 +298,7 @@ class SystemDocumentationComponent extends Component {
           && (
             <NetworkArchitectureCreation
               openCreate={this.state.openCreate}
+              refreshQuery={refreshQuery}
               handleCloseCreate={this.handleCloseCreate.bind(this)}
             />
           )}
@@ -302,6 +307,7 @@ class SystemDocumentationComponent extends Component {
           && (
             <DataFlowCreation
               openCreate={this.state.openCreate}
+              refreshQuery={refreshQuery}
               handleCloseCreate={this.handleCloseCreate.bind(this)}
             />
           )}
@@ -313,6 +319,7 @@ class SystemDocumentationComponent extends Component {
 SystemDocumentationComponent.propTypes = {
   informationSystem: PropTypes.object,
   classes: PropTypes.object,
+  refreshQuery: PropTypes.func,
   t: PropTypes.func,
   fld: PropTypes.func,
 };

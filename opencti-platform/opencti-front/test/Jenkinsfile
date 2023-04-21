@@ -59,7 +59,7 @@ node {
         sh 'CXXFLAGS="--std=c++14" yarn install'
       }
       stage('Start Front') {
-        sh 'yarn start &'
+        sh 'CXXFLAGS="--std=c++14" yarn start &'
         timeout(time: 30, unit: 'MINUTES') {
           //https://stackoverflow.com/questions/42873285/curl-retry-mechanism
           sh 'curl --silent --insecure --retry-connrefused --retry 10 --retry-delay 0 --retry-max-time 120 https://localhost:3000 | grep "</html>"'
@@ -68,7 +68,7 @@ node {
 
       //TODO: See if we can run tests without docker container, more consistent with rest of script
       stage('Test') {
-        sh 'yarn cypress'
+        sh 'CXXFLAGS="--std=c++14" yarn cypress'
       }
 
 /*

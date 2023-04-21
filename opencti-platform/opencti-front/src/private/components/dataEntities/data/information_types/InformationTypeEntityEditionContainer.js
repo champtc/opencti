@@ -165,7 +165,6 @@ class InformationTypeEntityEditionContainer extends Component {
   }
 
   handleSetFieldValues(selectedInfoType, setFieldValue, type) {
-    console.log(selectedInfoType);
     const integrityImpact = R.pathOr({}, ['integrity_impact'], selectedInfoType);
     const availabilityImpact = R.pathOr({}, ['availability_impact'], selectedInfoType);
     const confidentialityImpact = R.pathOr({}, ['confidentiality_impact'], selectedInfoType);

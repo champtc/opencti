@@ -239,6 +239,23 @@ export const createInformationType = async (input, dbName, dataSources, select) 
     if (fieldInfo.values === undefined || fieldInfo.values === null) continue;
     if (!Array.isArray(fieldInfo.values)) fieldInfo.values = [fieldInfo.values];
     for( let fieldValue of fieldInfo.values) {
+      // add missing selected_impact if not supplied
+      switch(fieldName) {
+        case 'confidentiality_impact':
+        case 'integrity_impact':
+        case 'availability_impact':
+          // its for use in a catalog
+          if (fieldValue.hasOwnProperty('explanation') || fieldValue.hasOwnProperty('recommendation')) {
+            break;
+          }
+          // default selected_impact to value of base_impact
+          if (!fieldValue.hasOwnProperty('selected_impact')) {
+            fieldValue['selected_impact'] = fieldValue['base_impact'];
+            break;
+          }
+        default:
+          break;
+      }
       for (let [key, value] of Object.entries(fieldValue)) {
         if (typeof value === 'string') {
           value = value.replace(/\s+/g, ' ')
@@ -972,6 +989,13 @@ export const createImpactDefinition = async (input, dbName, dataSources, select)
 																						.replace(/[\u201C\u201D]/g, '\\"');
   }
 
+  // default selected_impact to value of base_impact if not creating for catalog
+  if (!input.hasOwnProperty('explanation') && !input.hasOwnProperty('recommendation')) {
+    if (!input.hasOwnProperty('selected_impact')) {
+      input['selected_impact'] = input['base_impact'];
+    }
+  }
+  
   // create the Impact Definition object
   let response;
   let {iri, id, query} = insertImpactDefinitionQuery(input);

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
-import { withRouter, Link } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 import {
   compose, last, map, toPairs,
 } from 'ramda';
@@ -11,10 +11,6 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import IconButton from '@material-ui/core/IconButton';
-import InputLabel from '@material-ui/core/InputLabel';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
 import {
   Edit,
   Share,
@@ -26,21 +22,15 @@ import {
 import Chip from '@material-ui/core/Chip';
 import Button from '@material-ui/core/Button';
 import Tooltip from '@material-ui/core/Tooltip';
+import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
 import Alert from '@material-ui/lab/Alert';
-import responsiblePartiesIcon from '../../resources/images/entities/responsible_parties.svg';
-import tasksIcon from '../../resources/images/entities/tasks.svg';
-import locations from '../../resources/images/entities/locations.svg';
-import roles from '../../resources/images/entities/roles.svg';
-import labels from '../../resources/images/entities/labelsImage.svg';
-import notes from '../../resources/images/entities/Notes.svg';
-import parties from '../../resources/images/entities/parties.svg';
-import assessmentPlatform from '../../resources/images/entities/assessment_platform.svg';
-import externalReferenceIcon from '../../resources/images/entities/externalReferenceIcon.svg';
 import inject18n from '../i18n';
 // import Security, { KNOWLEDGE_KNGETEXPORT, KNOWLEDGE_KNUPDATE } from '../../utils/Security';
 import Filters from '../../private/components/common/lists/Filters';
 import { truncate } from '../../utils/String';
+import ItemIcon from '../ItemIcon';
+import DataEntitiesDropDown from '../../private/components/common/form/DataEntitiesDropDown';
 
 const styles = (theme) => ({
   container: {
@@ -108,18 +98,14 @@ const styles = (theme) => ({
     minWidth: '220px',
   },
   views: {
-    // float: 'right',
-    width: '295px',
-    minWidth: '285px',
-    marginTop: '5px',
-    padding: '14px 10px 12px 18px',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '10px 10px 12px 18px',
   },
   selectedViews: {
-    width: '430px',
-    minWidth: '415px',
-    float: 'right',
-    marginTop: '5px',
-    padding: '14px 10px 12px 18px',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '10px 10px 12px 18px',
   },
   iconButton: {
     float: 'left',
@@ -202,6 +188,12 @@ const styles = (theme) => ({
   info: {
     paddingTop: 10,
   },
+  informationSystemIcon: {
+    minWidth: '26px',
+  },
+  informationSystemText: {
+    marginLeft: '10px',
+  },
 });
 
 class CyioListLines extends Component {
@@ -210,6 +202,8 @@ class CyioListLines extends Component {
     this.myRef = React.createRef();
     this.state = {
       scrollValue: true,
+      openInfoPopover: false,
+      anchorEl: null,
     };
   }
 
@@ -231,6 +225,19 @@ class CyioListLines extends Component {
 
   reverse() {
     this.props.handleSort(this.props.sortBy, !this.props.orderAsc);
+  }
+
+  handleInfoNewCreation(event) {
+    this.setState({ openInfoPopover: true, anchorEl: event.currentTarget });
+  }
+
+  handleCloseInfoNewCreation() {
+    this.setState({ openInfoPopover: false, anchorEl: null });
+  }
+
+  handleInfoSystemListItem(type) {
+    this.props.handleNewCreation(type);
+    this.handleCloseInfoNewCreation();
   }
 
   renderHeaderElement(field, label, width, isSortable) {
@@ -296,6 +303,7 @@ class CyioListLines extends Component {
       noHeaders,
       iconExtension,
       selectedDataEntity,
+      location,
       OperationsComponent,
       message,
       handleClearSelectedElements,
@@ -379,148 +387,7 @@ class CyioListLines extends Component {
                 && !noHeaders && <div style={{ height: 38 }}> &nbsp; </div>}
             </div>
             {(filterEntityType === 'Entities' || filterEntityType === 'DataSources') && (
-              <FormControl
-                size='small'
-                fullWidth={true}
-                variant='outlined'
-                className={classes.dataEntities}
-              >
-                <InputLabel>
-                  Data Types
-                </InputLabel>
-                <Select
-                  variant='outlined'
-                  value={selectedDataEntity}
-                  label='Data Types'
-                >
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/responsibility'
-                    value='responsibility'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={roles} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('Responsibility')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/locations'
-                    value='locations'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={locations} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('Locations')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/parties'
-                    value='parties'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={parties} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('Parties')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/responsible_parties'
-                    value='responsible_parties'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={responsiblePartiesIcon} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('Responsible Parties')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/tasks'
-                    value='tasks'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={tasksIcon} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('Tasks')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/assessment_platform'
-                    value='assessment_platform'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={assessmentPlatform} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('Assessment Platform')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/notes'
-                    value='notes'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={notes} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('Notes')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/labels'
-                    value='labels'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={labels} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('Labels')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to='/data/entities/external_references'
-                    value='external_references'
-                  >
-                    <div className={classes.menuItems}>
-                      <div className={classes.iconsContainer}>
-                        <img src={externalReferenceIcon} alt="" />
-                      </div>
-                      <div className={classes.menuItemText}>
-                        {t('External References')}
-                      </div>
-                    </div>
-                  </MenuItem>
-                </Select>
-              </FormControl>
+              <DataEntitiesDropDown selectedDataEntity={selectedDataEntity} />
             )}
             <div className={classes.filters}>
               {map((currentFilter) => {
@@ -566,57 +433,108 @@ class CyioListLines extends Component {
             </div>
           </div>
           <div className={totalElementsSelected > 0 ? classes.selectedViews : classes.views}>
-            <div style={{ float: 'right' }}>
-              {totalElementsSelected > 0 && (
-                <Chip
-                  className={classes.iconButton}
-                  label={
-                    <>
-                      <strong>{totalElementsSelected}</strong> Selected
-                    </>
-                  }
-                  onDelete={handleClearSelectedElements} />
-              )}
-              {typeof handleChangeView === 'function' && (
-                // <Security needs={[KNOWLEDGE_KNUPDATE]}>
-                <>
-                  <Tooltip title={t('Edit')}>
+            {totalElementsSelected > 0 && (
+              <Chip
+                className={classes.iconButton}
+                label={
+                  <>
+                    <strong>{totalElementsSelected}</strong> Selected
+                  </>
+                }
+                onDelete={handleClearSelectedElements} />
+            )}
+            {typeof handleChangeView === 'function' && (
+              // <Security needs={[KNOWLEDGE_KNUPDATE]}>
+              <>
+                <Tooltip title={t('Edit')}>
+                  <Button
+                    variant="contained"
+                    onClick={handleDisplayEdit && handleDisplayEdit.bind(this, selectedElements)}
+                    className={classes.iconButton}
+                    disabled={Boolean(Object.entries(selectedElements || {}).length !== 1)
+                        || disabled}
+                    color="primary"
+                    size="large"
+                  >
+                    <Edit fontSize="inherit" />
+                  </Button>
+                </Tooltip>
+                {(filterEntityType === 'Entities' || filterEntityType === 'DataSources') && (
+                  <Tooltip title={t('Merge')}>
                     <Button
                       variant="contained"
-                      onClick={handleDisplayEdit && handleDisplayEdit.bind(this, selectedElements)}
+                      // onClick={handleDisplayEdit &&
+                      // handleDisplayEdit.bind(this, selectedElements)}
                       className={classes.iconButton}
-                      disabled={Boolean(Object.entries(selectedElements || {}).length !== 1)
-                        || disabled}
+                      // disabled={Boolean(Object.entries(selectedElements || {}).length !== 1)
+                      //   || disabled}
+                      disabled={true}
                       color="primary"
                       size="large"
                     >
-                      <Edit fontSize="inherit" />
+                      <Share fontSize="inherit" />
                     </Button>
                   </Tooltip>
-                  {(filterEntityType === 'Entities' || filterEntityType === 'DataSources') && (
-                    <Tooltip title={t('Merge')}>
+                )}
+                <div style={{ display: 'inline-block' }}>
+                  {OperationsComponent && React.cloneElement(OperationsComponent, {
+                    id: Object.entries(selectedElements || {}).length !== 0
+                      && Object.entries(selectedElements),
+                    isAllselected: selectAll,
+                  })}
+                </div>
+                {location.pathname === '/defender_hq/assets/information_systems' ? (
+                  <div>
+                    <Tooltip title={t('Create New')}>
                       <Button
                         variant="contained"
-                        // onClick={handleDisplayEdit &&
-                        // handleDisplayEdit.bind(this, selectedElements)}
-                        className={classes.iconButton}
-                        // disabled={Boolean(Object.entries(selectedElements || {}).length !== 1)
-                        //   || disabled}
-                        disabled={true}
-                        color="primary"
-                        size="large"
+                        ref={this.state.anchorEl}
+                        size="small"
+                        startIcon={<AddCircleOutline />}
+                        onClick={this.handleInfoNewCreation.bind(this)}
+                        color='primary'
+                        disabled={disabled || false}
                       >
-                        <Share fontSize="inherit" />
+                        {t('New')}
                       </Button>
                     </Tooltip>
-                  )}
-                  <div style={{ display: 'inline-block' }}>
-                    {OperationsComponent && React.cloneElement(OperationsComponent, {
-                      id: Object.entries(selectedElements || {}).length !== 0
-                        && Object.entries(selectedElements),
-                      isAllselected: selectAll,
-                    })}
+                    <Popover
+                      id='simple-popover'
+                      anchorEl={this.state.anchorEl}
+                      open={this.state.openInfoPopover}
+                      onClose={this.handleCloseInfoNewCreation.bind(this)}
+                      anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'center',
+                      }}
+                      transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'center',
+                      }}
+                    >
+                      <List>
+                        <ListItem
+                          button={true}
+                          onClick={this.handleInfoSystemListItem.bind(this, 'graph')}
+                        >
+                          <ListItemIcon className={classes.informationSystemIcon}>
+                            <ItemIcon type='InformationSystemGraph' />
+                          </ListItemIcon>
+                          <ListItemText primary='Graph' className={classes.informationSystemText} />
+                        </ListItem>
+                        <ListItem
+                          button={true}
+                          onClick={this.handleInfoSystemListItem.bind(this, 'form')}
+                        >
+                          <ListItemIcon className={classes.informationSystemIcon}>
+                            <ItemIcon type='InformationSystemForm' />
+                          </ListItemIcon>
+                          <ListItemText primary='Form' className={classes.informationSystemText} />
+                        </ListItem>
+                      </List>
+                    </Popover>
                   </div>
+                ) : (
                   <Tooltip title={t('Create New')}>
                     <Button
                       variant="contained"
@@ -625,27 +543,25 @@ class CyioListLines extends Component {
                       onClick={handleNewCreation && handleNewCreation.bind(this)}
                       color='primary'
                       disabled={disabled || false}
-                      style={{ marginTop: '-22px' }}
                     >
                       {t('New')}
                     </Button>
                   </Tooltip>
-                </>
-                // </Security>
-              )}
-              {typeof handleChangeView === 'function' && !disableCards && (
-                <Tooltip title={t('Cards view')}>
-                  <IconButton
-                    color="primary"
-                    onClick={handleChangeView.bind(this, 'cards')}
-                    style={{ marginTop: '-23px' }}
-                    data-cy='cards view'
-                  >
-                    <AppsOutlined />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </div>
+                )}
+              </>
+              // </Security>
+            )}
+            {typeof handleChangeView === 'function' && !disableCards && (
+              <Tooltip title={t('Cards view')}>
+                <IconButton
+                  color="primary"
+                  onClick={handleChangeView.bind(this, 'cards')}
+                  data-cy='cards view'
+                >
+                  <AppsOutlined />
+                </IconButton>
+              </Tooltip>
+            )}
           </div>
         </div>
         <div className={className}>
@@ -716,7 +632,7 @@ class CyioListLines extends Component {
                 )}
                 <ListItemText
                   primary={
-                    <div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                       {toPairs(dataColumns).map((dataColumn) => this.renderHeaderElement(
                         dataColumn[0],
                         dataColumn[1].label,
@@ -743,6 +659,7 @@ class CyioListLines extends Component {
 
 CyioListLines.propTypes = {
   classes: PropTypes.object,
+  location: PropTypes.object,
   t: PropTypes.func,
   selectedElements: PropTypes.object,
   disablePopover: PropTypes.bool,

@@ -24,10 +24,6 @@ import ErrorNotFound from '../../../../components/ErrorNotFound';
 const subscription = graphql`
   subscription RootVulnerabilitySubscription($id: ID!) {
     stixDomainObject(id: $id) {
-      ... on Vulnerability {
-        ...Vulnerability_vulnerability
-        ...VulnerabilityEditionContainer_vulnerability
-      }
       ...FileImportViewer_entity
       ...FileExportViewer_entity
       ...FileExternalReferencesViewer_entity
@@ -36,18 +32,14 @@ const subscription = graphql`
 `;
 
 const vulnerabilityQuery = graphql`
-  query RootVulnerabilityQuery($id: String!) {
+  query RootVulnerabilityQuery($id: ID!) {
     vulnerability(id: $id) {
       id
       standard_id
-      name
-      x_opencti_graph_data
+      title
       ...Vulnerability_vulnerability
       ...VulnerabilityReports_vulnerability
       ...VulnerabilityKnowledge_vulnerability
-      ...FileImportViewer_entity
-      ...FileExportViewer_entity
-      ...FileExternalReferencesViewer_entity
     }
     connectorsForExport {
       ...FileManager_connectorsExport

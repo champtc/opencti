@@ -140,9 +140,6 @@ const investigationGraphStixCoreObjectQuery = graphql`
       ... on Tool {
         name
       }
-      ... on Vulnerability {
-        name
-      }
       ... on Incident {
         name
         first_seen
@@ -396,9 +393,6 @@ const investigationGraphStixRelationshipsQuery = graphql`
             ... on Tool {
               name
             }
-            ... on Vulnerability {
-              name
-            }
             ... on Incident {
               name
               first_seen
@@ -585,9 +579,6 @@ const investigationGraphStixRelationshipsQuery = graphql`
               last_seen
             }
             ... on Tool {
-              name
-            }
-            ... on Vulnerability {
               name
             }
             ... on Incident {
@@ -1750,9 +1741,6 @@ const InvestigationGraph = createFragmentContainer(
                 last_seen
               }
               ... on Tool {
-                name
-              }
-              ... on Vulnerability {
                 name
               }
               ... on Incident {

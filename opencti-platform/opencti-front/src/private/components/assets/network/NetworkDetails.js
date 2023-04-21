@@ -60,12 +60,15 @@ const styles = (theme) => ({
     display: 'flex',
     minWidth: '50px',
     width: '100%',
+    placeItems: 'center',
   },
   launchIcon: {
-    marginRight: '5%',
+    marginRight: '1%',
   },
   linkTitle: {
     color: '#fff',
+    minWidth: 'fit-content',
+    fontSize: '12px',
   }
 });
 
@@ -234,7 +237,7 @@ class NetworkDetailsComponent extends Component {
                           component="button"
                           variant="body2"
                           className={classes.link}
-                          onClick={() => (history.push(`/defender HQ/assets/devices/${asset.id}`))}
+                          onClick={() => (history.push(`/defender_hq/assets/devices/${asset.id}`))}
                         >
                           <LaunchIcon fontSize='small' className={classes.launchIcon}/> <div className={classes.linkTitle}>{t(asset.name)}</div>
                         </Link>

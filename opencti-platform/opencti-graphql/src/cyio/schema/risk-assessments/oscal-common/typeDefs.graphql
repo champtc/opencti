@@ -231,6 +231,8 @@ interface OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
+  # "Identifies an assessment of the correctness of the information in an Object produced by a different entity."
+  # opinions(first: Int): [CyioOpinions]
 }
 
 ##### OSCAL Metadata
@@ -444,7 +446,7 @@ type OscalParty {
   office: String
   "Identifies that the party object is a member of this organization."
   member_of_organizations: [OscalParty]
-  "Identifes the formal job title of this person"
+  "Identifies the formal job title of this person"
   job_title: String
 }
 input OscalPartyAddInput {
@@ -473,7 +475,7 @@ input OscalPartyAddInput {
   office: String
   "Identifies that the party object is a member of the organization."
   member_of_organizations: [ID]
-  "Identifes the formal job title of this person"
+  "Identifies the formal job title of this person"
   job_title: String
 }
 # Ordering Type
@@ -531,7 +533,7 @@ enum PartyType {
 ##### OSCAL Relationship
 ##
 "Defines identifying information about a relationship in OSCAL"
-type OscalRelationship {
+type OscalRelationship implements BasicObject & LifecycleObject & OscalObject & Relationship{
   # BasicObject
   "Uniquely identifies this object."
   id: ID!
@@ -541,7 +543,7 @@ type OscalRelationship {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
@@ -553,21 +555,32 @@ type OscalRelationship {
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
   remarks: [CyioNote]
-  # OscalRelationship
+  "Identifies one or more relationships to other entities."
+  relationships(
+    first: Int
+    offset: Int
+    orderedBy: OscalRelationshipsOrdering
+    orderMode: OrderingMode
+    filters: [OscalRelationshipsFiltering]
+    filterMode: FilterMode
+    search: String
+  ): OscalRelationshipConnection
+  # "Identifies an assessment of the correctness of the information in an Object produced by a different entity."
+  # opinions(first: Int): [CyioOpinions]
+  # Relationship
   "Identifies the type of the relationship"
   relationship_type: String!
   "Identifies a human-readable description about the relationship"
   description: String
-  "Identifies the source of the relationship"
-  source: ID
-  "Identifies the target of the relationship"
-  target: ID
   "Indicates the time and date when the relationship was first established"
   valid_from: Timestamp
   "Indicates the time and date when the relationship was terminated."
   valid_until: Timestamp
-  "Identifies the level of confidence in the assertion."
-  confidence: PositiveInt
+  # OscalRelationship
+  "Identifies the source of the relationship"
+  source: OscalObject
+  "Identifies the target of the relationship"
+  target: OscalObject
 }
 input OscalRelationshipAddInput {
   # OscalRelationship
@@ -576,15 +589,13 @@ input OscalRelationshipAddInput {
   "Identifies a human-readable description about the relationship"
   description: String
   "Identifies the source of the relationship"
-  source: ID
+  source: ID!
   "Identifies the target of the relationship"
-  target: ID
+  target: ID!
   "Indicates the time and date when the relationship was first established"
-  valid_from: Timestamp
+  valid_from: Timestamp!
   "Indicates the time and date when the relationship was terminated."
   valid_until: Timestamp
-  "Identifies the level of confidence in the assertion."
-  confidence: PositiveInt
 }
 # Ordering
 enum OscalRelationshipsOrdering {
@@ -594,8 +605,6 @@ enum OscalRelationshipsOrdering {
   created
   "Modified"
   modified
-  "Confidence"
-  confidence
   "Valid From"
   valid_from
   "Valid To"
@@ -617,8 +626,6 @@ enum OscalRelationshipsFilter {
   created
   "Modified"
   modified
-  "Confidence"
-  confidence
 }
 # Pagination
 type OscalRelationshipConnection {
@@ -643,15 +650,15 @@ type OscalResource implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
   remarks: [CyioNote]
@@ -854,7 +861,7 @@ type OscalResponsibleParty {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
@@ -940,7 +947,7 @@ type OscalResponsibleRole {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."

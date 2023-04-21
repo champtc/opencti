@@ -288,10 +288,6 @@ const SimpleStixObjectOrStixRelationshipStixCoreRelationshipLineFragment = creat
               name
               description
             }
-            ... on Vulnerability {
-              name
-              description
-            }
             ... on Incident {
               name
               description
@@ -466,10 +462,6 @@ const SimpleStixObjectOrStixRelationshipStixCoreRelationshipLineFragment = creat
               description
             }
             ... on Tool {
-              name
-              description
-            }
-            ... on Vulnerability {
               name
               description
             }

@@ -41,24 +41,6 @@ const styles = (theme) => ({
 
 class ErrorBox extends Component {
 
-  handleErrorResponse(errorMessage) {
-    let FieldName;
-    function title(str) {
-      return str.replace(/(^|\s)\S/g, (s) => s.toUpperCase());
-    }
-    if ((/(enum)\b/).test(errorMessage)) {
-      FieldName = errorMessage.match(/(input)\.\w+/);
-      const FilteredValue = FieldName[0].replace(/(input.)/, '').replace('_', ' ');
-      return `Value of ${title(FilteredValue)} in invalid`;
-    }
-    if ((/; ?(Field)/).test(errorMessage)) {
-      FieldName = errorMessage.match(/; ?(Field).+/)[0].replace(/; ?/, '');
-      return FieldName;
-    }
-    FieldName = errorMessage.match(/\bValue\b.+/);
-    return FieldName[0];
-  }
-
   handleRenderComponent(error) {
     if (Object.keys(error).length) {
       if ((error.every((value) => value.type !== undefined && value.type.includes('CyioError')))) {
@@ -96,20 +78,18 @@ class ErrorBox extends Component {
     return (
       <>
         <DialogTitle classes={{ root: classes.dialogTitle }}>
-          {t('ERROR')}
+          {t('USER INPUT ERROR')}
         </DialogTitle>
-        <DialogContent style={{ overflow: 'hidden' }}>
-          <Typography style={{ marginBottom: '20px' }}>
-            Sorry. Something went wrong and DarkLight Support has been notified. Please try again or contact <strong style={{ color: '#075AD3' }}>Support@darklight.ai</strong> for assistance.
-          </Typography>
+        <DialogContent>
           <List>
             {Object.keys(error).length && error.map((value, key) => {
               return (
                 <ListItem
                   divider
                   key={key}
+                  style={{ fontSize: '16px' }}
                 >
-                  {this.handleErrorResponse(value.message)}
+                  {value.message}
                 </ListItem>
               );
             })}

@@ -235,9 +235,6 @@ const ContainerStixObjectOrStixRelationshipLineFragment = createFragmentContaine
         ... on Tool {
           name
         }
-        ... on Vulnerability {
-          name
-        }
         ... on Incident {
           name
         }
@@ -307,9 +304,6 @@ const ContainerStixObjectOrStixRelationshipLineFragment = createFragmentContaine
             ... on Tool {
               name
             }
-            ... on Vulnerability {
-              name
-            }
             ... on Incident {
               name
             }
@@ -369,9 +363,6 @@ const ContainerStixObjectOrStixRelationshipLineFragment = createFragmentContaine
               name
             }
             ... on Tool {
-              name
-            }
-            ... on Vulnerability {
               name
             }
             ... on Incident {

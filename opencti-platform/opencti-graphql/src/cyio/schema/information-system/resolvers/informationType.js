@@ -25,6 +25,8 @@ import {
   attachToCategorization,
   detachFromCategorization,
 } from '../domain/informationType.js';
+import { findInformationTypeCatalogByIri } from '../domain/informationTypeCatalog';
+import { findDataMarkingByIri } from '../../data-markings/domain/dataMarkings';
 
 const cyioInformationTypeResolvers = {
   Query: {
@@ -106,6 +108,16 @@ const cyioInformationTypeResolvers = {
       if (impact === undefined || impact === null) return null;
       return impact;
 		},
+    object_markings: async (parent, _, { dbName, dataSources, selectMap}) => {
+      if (parent.marking_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.marking_iris) {
+        let result = await findDataMarkingByIri(iri, dbName, dataSources, selectMap.getNode('object_markings'));
+        if (result === undefined || result === null) return null;
+        results.push(result);
+      }
+      return results;
+    },
     links: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.link_iris === undefined) return [];
       let results = []
@@ -118,10 +130,17 @@ const cyioInformationTypeResolvers = {
     },
 	},
   Categorization: {
+    catalog: async (parent, _, { dataSources, selectMap }) => {
+      if (parent.catalog_iri === undefined) return null;
+      let dbName = conf.get('app:database:context') || 'cyber-context';
+      let catalog = await findInformationTypeCatalogByIri(parent.catalog_iri, dbName, dataSources, selectMap.getNode('catalog'));
+      if (catalog === undefined || catalog === null) return null;
+      return catalog;
+    },
     information_type: async (parent, _, { dataSources, selectMap }) => {
       if (parent.information_type_iri === undefined) return null;
       let dbName = conf.get('app:database:context') || 'cyber-context';
-      let infoType = findInformationTypeByIri(parent.information_type_iri, dbName, dataSources, selectMap.getNode('information_type'));
+      let infoType = await findInformationTypeByIri(parent.information_type_iri, dbName, dataSources, selectMap.getNode('information_type'));
       if (infoType === undefined || infoType === null) return null;
       return infoType;
     },

@@ -83,7 +83,7 @@ class EntitiesTasksPopover extends Component {
               cyioCoreObjectOrStixCoreRelationshipId={node.id}
               typename={node.__typename}
               fieldName='remarks'
-              cyioCoreObjectOrStixCoreRelationshipNotes={node.remarks}
+              cyioCoreObjectOrStixCoreRelationshipNotes={node.remarks ?? []}
             />
           </MenuItem>
           <MenuItem
@@ -93,7 +93,7 @@ class EntitiesTasksPopover extends Component {
             <CyioAddExternalReferences
               menuItemName='Add External Reference'
               cyioCoreObjectOrCyioCoreRelationshipId={node.id}
-              cyioCoreObjectOrCyioCoreRelationshipReferences={node.links}
+              cyioCoreObjectOrCyioCoreRelationshipReferences={node.links ?? []}
               fieldName='links'
               typename={node.__typename}
             />
@@ -103,7 +103,7 @@ class EntitiesTasksPopover extends Component {
           >
             <CyioCoreObjectLabelsView
               menuItemName='Add Labels'
-              labels={node.labels}
+              labels={node.labels ?? []}
               history={history}
               marginTop={0}
               id={node.id}

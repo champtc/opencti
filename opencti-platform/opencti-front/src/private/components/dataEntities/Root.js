@@ -11,6 +11,10 @@ import RootLocation from './data/locations/Root';
 import RootResponsibleParty from './data/responsibleParties/Root';
 import RootAssessmentPlatform from './data/assessment_platform/Root';
 import RootExternalReferences from './data/external_references/Root';
+import RootUserTypes from './data/user_types/Root';
+import RootLeveragedAuthorization from './data/leveraged_authorizations/Root';
+import RootInformationType from './data/information_types/Root';
+import RootDataMarking from './data/data_markings/Root';
 import Entities from './Entities';
 import RolesEntities from './data/roles/RolesEntities';
 import NotesEntities from './data/notes/NotesEntities';
@@ -23,6 +27,10 @@ import ExternalReferencesEntities from './data/external_references/ExternalRefer
 import AssessmentPlatformsEntities from './data/assessment_platform/AssessmentPlatformsEntities';
 import DataSources from './data/data_sources/DataSources';
 import RootDataSource from './data/data_sources/Root';
+import UserTypesEntities from './data/user_types/UserTypesEntities';
+import LeveragedAuthorizationsEntities from './data/leveraged_authorizations/LeveragedAuthorizationsEntities';
+import InformationTypesEntities from './data/information_types/InformationTypesEntities';
+import DataMarkingsEntities from './data/data_markings/DataMarkingsEntities';
 
 class Root extends Component {
   render() {
@@ -85,6 +93,29 @@ class Root extends Component {
           path="/data/entities/responsible_parties"
           component={ResponsiblePartiesEntities}
         />
+        <BoundaryRoute
+          exact
+          path="/data/entities/user_types"
+          component={UserTypesEntities}
+        />
+
+        <BoundaryRoute
+          exact
+          path="/data/entities/leveraged_authorizations"
+          component={LeveragedAuthorizationsEntities}
+        />
+
+        <BoundaryRoute
+          exact
+          path="/data/entities/information_types"
+          component={InformationTypesEntities}
+        />
+
+        <BoundaryRoute
+          exact
+          path="/data/entities/data_markings"
+          component={DataMarkingsEntities}
+        />
 
         {/* Data Source Section */}
         <BoundaryRoute
@@ -135,6 +166,26 @@ class Root extends Component {
           exact
           path="/data/entities/assessment_platform/:assessmentPlatformId"
           render={(routeProps) => <RootAssessmentPlatform {...routeProps} me={me} />}
+        />
+        <BoundaryRoute
+          exact
+          path="/data/entities/user_types/:userTypeId"
+          render={(routeProps) => <RootUserTypes {...routeProps} me={me} />}
+        />
+        <BoundaryRoute
+          exact
+          path="/data/entities/leveraged_authorizations/:leveragedAuthorizationId"
+          render={(routeProps) => <RootLeveragedAuthorization {...routeProps} me={me} />}
+        />
+        <BoundaryRoute
+          exact
+          path="/data/entities/information_types/:informationTypeId"
+          render={(routeProps) => <RootInformationType {...routeProps} me={me} />}
+        />
+        <BoundaryRoute
+          exact
+          path="/data/entities/data_markings/:dataMarkingId"
+          render={(routeProps) => <RootDataMarking {...routeProps} me={me} />}
         />
 
         {/* Data Source Root Path Section */}

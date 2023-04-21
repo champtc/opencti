@@ -46,6 +46,8 @@ const oscalUserReducer = (item) => {
     ...(item.roles && { role_iris: item.roles }),
     ...(item.authorized_privileges && { authorized_privilege_iris: item.authorized_privileges }),
     // hints for general lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
+    ...(item.relationships && { relationships: item.relationships }),
     ...(item.labels && { label_iris: item.labels }),
     ...(item.links && { link_iris: item.links }),
     ...(item.remarks && { remark_iris: item.remarks }),
@@ -90,7 +92,7 @@ export const selectOscalUserByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalUser> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#User> .
     ${predicates}
   }`
 }
@@ -121,7 +123,7 @@ export const selectAllOscalUsersQuery = (select, args, parent) => {
   SELECT DISTINCT ?iri ${selectionClause} 
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalUser> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#User> . 
     ${predicates}
     ${constraintClause}
   }
@@ -153,7 +155,7 @@ export const insertOscalUserQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/common#OscalUser> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/common#User> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Object> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
@@ -181,7 +183,7 @@ export const deleteOscalUserByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalUser> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/common#User> .
       ?iri ?p ?o
     }
   }
@@ -197,7 +199,7 @@ export const deleteMultipleOscalUsersQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalUser> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/common#User> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -207,9 +209,10 @@ export const deleteMultipleOscalUsersQuery = (ids) =>{
 }
 
 export const attachToOscalUserQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/oscal-user--${id}>`;
   if (!oscalUserPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/oscal-user--${id}>`;
   const predicate = oscalUserPredicateMap[field].predicate;
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris
@@ -221,13 +224,19 @@ export const attachToOscalUserQuery = (id, field, itemIris) => {
     statements = `${iri} ${predicate} ${itemIris} .`;
   }
 
-  return attachQuery(iri, statements, oscalUserPredicateMap, '<http://csrc.nist.gov/ns/oscal/common#OscalUser>');
+  return attachQuery(
+    iri, 
+    statements, 
+    oscalUserPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#User>'
+  );
 }
 
 export const detachFromOscalUserQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/oscal-user--${id}>`;
   if (!oscalUserPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/oscal-user--${id}>`;
   const predicate = oscalUserPredicateMap[field].predicate;
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris
@@ -239,7 +248,12 @@ export const detachFromOscalUserQuery = (id, field, itemIris) => {
     statements = `${iri} ${predicate} ${itemIris} .`;
   }
 
-  return detachQuery(iri, statements, oscalUserPredicateMap, '<http://csrc.nist.gov/ns/oscal/common#OscalUser>');
+  return detachQuery(
+    iri, 
+    statements, 
+    oscalUserPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#User>'
+  );
 }
 
 //
@@ -470,6 +484,11 @@ export const oscalUserPredicateMap = {
   privilege_level: {
     predicate: "<http://darklight.ai/ns/common#privilege_level>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "privilege_level");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  object_markings: {
+    predicate: "<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "object_markings");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   labels: {

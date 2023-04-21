@@ -1,6 +1,6 @@
 import { UserInputError } from 'apollo-server-errors';
 import { globalSingularizeSchema as singularizeSchema } from '../global-mappings.js';
-import { compareValues, filterValues } from '../../utils.js';
+import { compareValues, filterValues, checkIfValidUUID, attachQuery, detachQuery } from '../../utils.js';
 import { objectMap } from '../global-utils.js';
 import {
   getReducer,
@@ -287,6 +287,9 @@ const cyioGlobalTypeResolvers = {
       if (input.from_type === undefined || input.to_type === undefined)
         throw new UserInputError(`Source and target types must be supplied`);
 
+      if (!checkIfValidUUID(input.from_id)) throw new UserInputError(`Invalid identifier: ${input.from_id}`);
+      if (!checkIfValidUUID(input.to_id)) throw new UserInputError(`Invalid identifier: ${input.to_id}`);
+      
       // Validate source (from) and target (to) are valid types
       if (!objectMap.hasOwnProperty(input.from_type)) {
         let found = false;
@@ -340,16 +343,28 @@ const cyioGlobalTypeResolvers = {
       while (objectMap[to_type].parent !== undefined) {
         to_type = objectMap[to_type].parent;
       }
-      const sourceIri = `<${objectMap[from_type].iriTemplate}-${input.from_id}>`;
-      const targetIri = `<${objectMap[to_type].iriTemplate}-${input.to_id}>`;
 
-      const query = `
-      INSERT DATA {
-        GRAPH ${sourceIri} {
-          ${sourceIri} ${predicate} ${targetIri} .
-        }
-      }
-      `;
+      // WORKAROUND: deal with issues where some IRIs use '-' and others use  '--'
+      // to separate the scope from the id
+      let toSeparator = '-';
+      let fromSeparator = '-'
+      let doubleSeparator = [
+        'marking-definition','connection-information','data-source',
+        'description-block','frequency-timing','description-block',
+        'diagram','information-system','information-type',
+        'impact-definition','categorization','information-type-catalog',
+        'oscal-leveraged-authorization','oscal-user','authorized-privilege',
+        'system-configuration','workspace'
+      ]
+      if (doubleSeparator.includes(to_type)) toSeparator = '--'
+      if (doubleSeparator.includes(from_type)) fromSeparator = '--';
+      const sourceIri = `<${objectMap[from_type].iriTemplate}${fromSeparator}${input.from_id}>`;
+      const targetIri = `<${objectMap[to_type].iriTemplate}${toSeparator}${input.to_id}>`;
+      // END WORKAROUND
+
+      let statements = `${sourceIri} ${predicate} ${targetIri}`;
+      let classIri = objectMap[from_type].classIri;
+      let query = attachQuery(sourceIri, statements, predicateMap, classIri );
       let response;
       try {
         response = await dataSources.Stardog.create({
@@ -369,6 +384,9 @@ const cyioGlobalTypeResolvers = {
       // if the types are not supplied, just return false - this will be removed when the field are required
       if (input.from_type === undefined || input.to_type === undefined)
         throw new UserInputError(`Source and target types must be supplied`);
+
+      if (!checkIfValidUUID(input.from_id)) throw new UserInputError(`Invalid identifier: ${input.from_id}`);
+      if (!checkIfValidUUID(input.to_id)) throw new UserInputError(`Invalid identifier: ${input.to_id}`);  
 
       // Validate source (from) and target (to) are valid types
       if (!objectMap.hasOwnProperty(input.from_type)) {
@@ -423,16 +441,29 @@ const cyioGlobalTypeResolvers = {
       while (objectMap[to_type].parent !== undefined) {
         to_type = objectMap[to_type].parent;
       }
-      const sourceIri = `<${objectMap[from_type].iriTemplate}-${input.from_id}>`;
-      const targetIri = `<${objectMap[to_type].iriTemplate}-${input.to_id}>`;
 
-      const query = `
-      DELETE DATA {
-        GRAPH ${sourceIri} {
-          ${sourceIri} ${predicate} ${targetIri} .
-        }
-      }
-      `;
+      // WORKAROUND: deal with issues where some IRIs use '-' and others use  '--'
+      // to separate the scope from the id
+      let toSeparator = '-';
+      let fromSeparator = '-'
+      let doubleSeparator = [
+        'marking-definition','connection-information','data-source',
+        'description-block','frequency-timing','description-block',
+        'diagram','information-system','information-type',
+        'impact-definition','categorization','information-type-catalog',
+        'oscal-leveraged-authorization','oscal-user','authorized-privilege',
+        'system-configuration','workspace'
+      ]
+      if (doubleSeparator.includes(to_type)) toSeparator = '--'
+      if (doubleSeparator.includes(from_type)) fromSeparator = '--';
+      const sourceIri = `<${objectMap[from_type].iriTemplate}${fromSeparator}${input.from_id}>`;
+      const targetIri = `<${objectMap[to_type].iriTemplate}${toSeparator}${input.to_id}>`;
+      // END WORKAROUND
+
+      let statements = `${sourceIri} ${predicate} ${targetIri}`;
+      let classIri = objectMap[from_type].classIri;
+      let query = detachQuery(sourceIri, statements, predicateMap, classIri );
+
       let response;
       try {
         response = await dataSources.Stardog.delete({

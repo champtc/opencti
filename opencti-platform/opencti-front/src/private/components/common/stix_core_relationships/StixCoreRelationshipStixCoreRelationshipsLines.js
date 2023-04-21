@@ -259,9 +259,6 @@ const StixCoreRelationshipStixCoreRelationshipsLines = createPaginationContainer
                     ... on Tool {
                       name
                     }
-                    ... on Vulnerability {
-                      name
-                    }
                     ... on Incident {
                       name
                     }

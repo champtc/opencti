@@ -92,6 +92,8 @@ type InformationType implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
+  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [DataMarking]
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
   # Information Type
@@ -273,6 +275,8 @@ type Categorization implements ComplexDatatype {
   "Identifies the type of the Object."
   entity_type: String!
   # Categorization
+  "Identifies the information type identification system (catalog) used."
+  catalog: InformationTypeCatalog
   "Identifies the information type identification system used. This represents the catalog from which the information types are from."
   system: URL
    "Identifies a unique identifier, qualified by the given identification system used, for an information type."

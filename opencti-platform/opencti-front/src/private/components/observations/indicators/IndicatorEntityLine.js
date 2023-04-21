@@ -261,10 +261,6 @@ const IndicatorEntityLineFragment = createFragmentContainer(
             name
             description
           }
-          ... on Vulnerability {
-            name
-            description
-          }
           ... on Incident {
             name
             description
@@ -325,9 +321,6 @@ const IndicatorEntityLineFragment = createFragmentContainer(
               ... on Tool {
                 name
               }
-              ... on Vulnerability {
-                name
-              }
               ... on Incident {
                 name
               }
@@ -385,9 +378,6 @@ const IndicatorEntityLineFragment = createFragmentContainer(
                 name
               }
               ... on Tool {
-                name
-              }
-              ... on Vulnerability {
                 name
               }
               ... on Incident {

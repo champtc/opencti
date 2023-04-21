@@ -76,6 +76,8 @@ import inventoryItemIcon from '../resources/images/assets/inventoryItem.svg';
 import resourceIcon from '../resources/images/assets/resource.svg';
 import assetDashboard from '../resources/images/entities/asset_dashboard.svg';
 import riskDashboard from '../resources/images/entities/risk_dashboard.svg';
+import informationSystemGraph from '../resources/images/entities/informationSystem_graph.svg';
+import informationSystemForm from '../resources/images/entities/informationSystem_form.svg';
 
 const iconSelector = (type, variant, fontSize, color) => {
   let style = {};
@@ -115,6 +117,7 @@ const iconSelector = (type, variant, fontSize, color) => {
     case 'component':
       return <img src={softwareIcon} style={style} alt="software-icon" />;
     case 'inventory_item':
+    case 'inventory-item':
       return <img src={inventoryItemIcon} style={style} alt="inventoryItem-icon" />;
     case 'resource':
       return <img src={resourceIcon} style={style} alt="resource-icon" />;
@@ -123,6 +126,7 @@ const iconSelector = (type, variant, fontSize, color) => {
     case 'party':
       return <img src={partiesIcon} style={style} alt="party-icon" />;
     case 'user':
+    case 'oscal-user':
       return <img src={userPersonIcon} style={style} alt="user-icon" />;
     case 'laptop':
       return <img src={deviceIcon} style={style} alt="laptop-icon" />;
@@ -250,6 +254,10 @@ const iconSelector = (type, variant, fontSize, color) => {
       return <BugReportOutlined style={style} fontSize={fontSize} role="img" />;
     case 'Incident':
       return <Fire style={style} fontSize={fontSize} role="img" />;
+    case 'InformationSystemGraph':
+      return <img src={informationSystemGraph} style={style} alt="operatingSystem-icon" />;
+    case 'InformationSystemForm':
+      return <img src={informationSystemForm} style={style} alt="operatingSystem-icon" />;
     case 'Stix-Cyber-Observable':
     case 'Autonomous-System':
     case 'Directory':

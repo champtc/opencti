@@ -1,6 +1,6 @@
 import { UserInputError } from 'apollo-server-errors';
-import { compareValues, filterValues, updateQuery, checkIfValidUUID, validateEnumValue } from '../../utils.js';
 import conf from '../../../../config/conf';
+import { compareValues, filterValues, updateQuery, checkIfValidUUID, validateEnumValue } from '../../utils.js';
 import { selectObjectIriByIdQuery } from '../../global/global-utils.js';
 import {
   getReducer,
@@ -12,8 +12,10 @@ import {
   selectAllInformationTypesQuery,
   insertInformationTypeQuery,
   deleteInformationTypeQuery,
+  deleteInformationTypeByIriQuery,
   attachToInformationTypeQuery,
   detachFromInformationTypeQuery,
+  generateInformationTypeId,
 	// Impact Definition
   impactDefinitionPredicateMap,
   singularizeImpactDefinitionSchema,
@@ -25,6 +27,7 @@ import {
   deleteImpactDefinitionByIriQuery,
   attachToImpactDefinitionQuery,
   detachFromImpactDefinitionQuery,
+  generateImpactDefinitionId,
   // Categorization
   categorizationPredicateMap,
   singularizeCategorizationSchema,
@@ -36,6 +39,7 @@ import {
   deleteCategorizationByIriQuery,
   attachToCategorizationQuery,
   detachFromCategorizationQuery,
+  generateCategorizationId,
   getCategorizationIri,
 } from '../schema/sparql/informationType.js';
 import {
@@ -218,6 +222,12 @@ export const createInformationType = async (input, dbName, dataSources, select) 
 																				.replace(/[\u201C\u201D]/g, '\\"');
   }
 
+  // check if an information type with this same id exists
+  let existSelect = ['id','entity_type','title','created','modified']
+  let checkId = generateInformationTypeId( input );
+  let infoType = await findInformationTypeById(checkId, dbName, dataSources, existSelect);
+  if ( infoType != undefined && infoType != null) throw new UserInputError(`Cannot create information type as entity ${checkId}; already exists`);
+
   // Collect all the nested definitions and remove them from input array
   let nestedDefinitions = {
 		'confidentiality_impact': { values: input.confidentiality_impact, props: {}, objectType: 'impact-definition', insertFunction: insertImpactDefinitionQuery },
@@ -229,6 +239,23 @@ export const createInformationType = async (input, dbName, dataSources, select) 
     if (fieldInfo.values === undefined || fieldInfo.values === null) continue;
     if (!Array.isArray(fieldInfo.values)) fieldInfo.values = [fieldInfo.values];
     for( let fieldValue of fieldInfo.values) {
+      // add missing selected_impact if not supplied
+      switch(fieldName) {
+        case 'confidentiality_impact':
+        case 'integrity_impact':
+        case 'availability_impact':
+          // its for use in a catalog
+          if (fieldValue.hasOwnProperty('explanation') || fieldValue.hasOwnProperty('recommendation')) {
+            break;
+          }
+          // default selected_impact to value of base_impact
+          if (!fieldValue.hasOwnProperty('selected_impact')) {
+            fieldValue['selected_impact'] = fieldValue['base_impact'];
+            break;
+          }
+        default:
+          break;
+      }
       for (let [key, value] of Object.entries(fieldValue)) {
         if (typeof value === 'string') {
           value = value.replace(/\s+/g, ' ')
@@ -238,7 +265,7 @@ export const createInformationType = async (input, dbName, dataSources, select) 
                         .replace(/[\u2019\u2019]/g, "\\'")
                         .replace(/[\u201C\u201D]/g, '\\"');
         }
-        if (value === undefined || value === null) continue;
+        if (value === undefined || value === null || value.length === 0) continue;
         nestedDefinitions[fieldName]['props'][key] = value;
       }
     }
@@ -423,6 +450,68 @@ export const deleteInformationTypeById = async ( id, dbName, dataSources ) => {
   return removedIds;
 };
 
+export const deleteInformationTypeByIri = async ( iri, dbName, dataSources ) => {
+  let select = ['iri','id','object_type','confidentiality_impact','integrity_impact','availability_impact','categorizations'];
+  let response;
+
+  // check if object iw IRI exists
+  let sparqlQuery = selectInformationTypeByIriQuery(iri, select);
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName: dbName,
+      sparqlQuery,
+      queryId: "Select InformationType",
+      singularizeSchema: singularizeInformationTypeSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist: ${iri}`);
+
+  let infoType = response[0];
+  let nestedReferences = {
+    'confidentiality_impact': { iris: infoType.confidentiality_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'integrity_impact': { iris: infoType.integrity_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'availability_impact': { iris: infoType.availability_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'categorizations': { iris: infoType.categorizations, deleteFunction: deleteCategorizationByIriQuery },
+  };
+
+  // delete any nested nodes that are private to the information system
+  for (let [fieldName, fieldInfo] of Object.entries(nestedReferences)) {
+    if (fieldInfo.iris === undefined || fieldInfo.iris === null) continue;
+    if (!Array.isArray(fieldInfo.iris)) fieldInfo.iris = [fieldInfo.iris];
+    for( let nestedIri of fieldInfo.iris) {
+      let sparqlQuery = fieldInfo.deleteFunction(nestedIri);
+      try {
+        let results = await dataSources.Stardog.delete({
+          dbName,
+          sparqlQuery,
+          queryId: `Delete ${fieldName}`
+        });
+      } catch (e) {
+        console.log(e)
+        throw e
+      }
+    }
+  }
+
+  // delete the Information Type
+  sparqlQuery = deleteInformationTypeByIriQuery(iri);
+  try {
+    response = await dataSources.Stardog.delete({
+      dbName,
+      sparqlQuery,
+      queryId: "Delete Information Type"
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  
+  return iri;
+};
+
 export const editInformationTypeById = async ( id, input, dbName, dataSources, select, schema ) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
 
@@ -542,6 +631,10 @@ export const editInformationTypeById = async ( id, input, dbName, dataSources, s
               entity = objArray;
             }
 
+            // convert impact values for form required for storage
+            if (entity.hasOwnProperty('base_impact')) entity.base_impact = entity.base_impact.replace(/_/g,'-').toLowerCase();
+            if (entity.hasOwnProperty('selected_impact')) entity.selected_impact = entity.selected_impact.replace(/_/g,'-').toLowerCase();
+
             // create the instance of the Impact Definition
             const { iri: impactDefinitionIri, id: impactDefinitionId, query } = insertImpactDefinitionQuery(entity);
             await dataSources.Stardog.create({
@@ -618,6 +711,7 @@ export const editInformationTypeById = async ( id, input, dbName, dataSources, s
 
 export const attachToInformationType = async ( id, field, entityId, dbName, dataSources ) => {
   let sparqlQuery;
+  let select = ["id","entity_type",field];
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
@@ -643,7 +737,7 @@ export const attachToInformationType = async ( id, field, entityId, dbName, data
 		'confidentiality_impact': 'impact-definition',
 		'integrity_impact': 'impact-definition',
 		'availability_impact': 'impact-definition',
-    'information_types': 'information-type',
+    'object_markings': 'marking-definition',
     'labels': 'label',
     'links': 'link',
     'remarks': 'remark'
@@ -653,7 +747,7 @@ export const attachToInformationType = async ( id, field, entityId, dbName, data
     // check to see if the entity exists
     sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
     response = await dataSources.Stardog.queryById({
-      dbName,
+      dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
       singularizeSchema: singularizeInformationTypeSchema
@@ -688,6 +782,7 @@ export const attachToInformationType = async ( id, field, entityId, dbName, data
 
 export const detachFromInformationType = async ( id, field, entityId, dbName, dataSources ) => {
   let sparqlQuery;
+  let select = ["id","entity_type",field];
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
@@ -713,7 +808,7 @@ export const detachFromInformationType = async ( id, field, entityId, dbName, da
 		'confidentiality_impact': 'impact-definition',
 		'integrity_impact': 'impact-definition',
 		'availability_impact': 'impact-definition',
-    'information_types': 'information-type',
+    'object_markings': 'marking-definition',
     'labels': 'label',
     'links': 'link',
     'remarks': 'remark'
@@ -723,7 +818,7 @@ export const detachFromInformationType = async ( id, field, entityId, dbName, da
     // check to see if the entity exists
     sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
     response = await dataSources.Stardog.queryById({
-      dbName,
+      dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
       singularizeSchema: singularizeInformationTypeSchema
@@ -875,7 +970,7 @@ export const findAllImpactDefinitions = async (args, dbName, dataSources, select
   }
 };
 
-export const createImpactDefinition = async (input, dbName, dataSources, selectMap) => {
+export const createImpactDefinition = async (input, dbName, dataSources, select) => {
   // TODO: WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -898,6 +993,13 @@ export const createImpactDefinition = async (input, dbName, dataSources, selectM
 																						.replace(/[\u201C\u201D]/g, '\\"');
   }
 
+  // default selected_impact to value of base_impact if not creating for catalog
+  if (!input.hasOwnProperty('explanation') && !input.hasOwnProperty('recommendation')) {
+    if (!input.hasOwnProperty('selected_impact')) {
+      input['selected_impact'] = input['base_impact'];
+    }
+  }
+  
   // create the Impact Definition object
   let response;
   let {iri, id, query} = insertImpactDefinitionQuery(input);
@@ -913,7 +1015,7 @@ export const createImpactDefinition = async (input, dbName, dataSources, selectM
   }
 
   // retrieve the newly created Impact Definition to be returned
-  const selectQuery = selectImpactDefinitionQuery(id, selectMap.getNode("createImpactDefinition"));
+  const selectQuery = selectImpactDefinitionQuery(id, select);
   let result;
   try {
     result = await dataSources.Stardog.queryById({
@@ -1173,10 +1275,6 @@ export const attachToImpactDefinition = async (id, field, entityId, dbName, data
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-		'confidentiality_impact': 'impact-definition',
-		'integrity_impact': 'impact-definition',
-		'availability_impact': 'impact-definition',
-    'information_types': 'information-type',
     'labels': 'label',
     'links': 'link',
     'remarks': 'remark'
@@ -1242,10 +1340,6 @@ export const detachFromImpactDefinition = async (id, field, entityId, dbName, da
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-		'confidentiality_impact': 'impact-definition',
-		'integrity_impact': 'impact-definition',
-		'availability_impact': 'impact-definition',
-    'information_types': 'information-type',
     'labels': 'label',
     'links': 'link',
     'remarks': 'remark'
@@ -1407,7 +1501,7 @@ export const findAllCategorizations = async (args, dbName, dataSources, select )
   }
 };
 
-export const createCategorization = async (input, dbName, dataSources, selectMap) => {
+export const createCategorization = async (input, dbName, dataSources, select) => {
   // WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -1426,8 +1520,8 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   let contextDB = conf.get('app:database:context') || 'cyber-context';
 
   // check if catalog exists
-  if (!checkIfValidUUID(input.system)) throw new UserInputError(`Invalid identifier: ${input.system}`);
-  sparqlQuery = selectInformationTypeCatalogQuery(input.system, selectCheck);
+  if (!checkIfValidUUID(input.catalog)) throw new UserInputError(`Invalid identifier: ${input.catalog}`);
+  sparqlQuery = selectInformationTypeCatalogQuery(input.catalog, selectCheck);
   response = await dataSources.Stardog.queryById({
     dbName: contextDB,
     sparqlQuery,
@@ -1436,7 +1530,7 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   });
   if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
   let catalog_iri = `<${response[0].iri}>`;
-  delete input.system;
+  delete input.catalog;
 
   // check if catalog's information type exists
   if (!checkIfValidUUID(input.information_type)) throw new UserInputError(`Invalid identifier: ${input.information_type}`);
@@ -1452,7 +1546,7 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   delete input.information_type;
 
   // create the Categorization object
-    let {iri, id, query} = insertCategorizationQuery(input);
+  let {iri, id, query} = insertCategorizationQuery(input);
   try {
     response = await dataSources.Stardog.create({
       dbName,
@@ -1465,7 +1559,7 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   }
 
   // attach the reference to the catalog
-  sparqlQuery = attachToCategorizationQuery(id, 'system_catalog', catalog_iri);
+  sparqlQuery = attachToCategorizationQuery(id, 'catalog', catalog_iri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
@@ -1491,7 +1585,7 @@ export const createCategorization = async (input, dbName, dataSources, selectMap
   }
 
   // retrieve the newly created Categorization to be returned
-  const selectQuery = selectCategorizationQuery(id, selectMap.getNode("createCategorization"));
+  const selectQuery = selectCategorizationQuery(id, select);
   let result;
   try {
     result = await dataSources.Stardog.queryById({
@@ -1709,7 +1803,6 @@ export const attachToCategorization = async (id, field, entityId, dbName, dataSo
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'system_catalog': 'information-type-catalog',
     'information_type': 'information-type',
   }
   let objectType = attachableObjects[field];
@@ -1717,7 +1810,7 @@ export const attachToCategorization = async (id, field, entityId, dbName, dataSo
     // check to see if the entity exists
     sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
     response = await dataSources.Stardog.queryById({
-      dbName,
+      dbName: (objectType === 'information-type' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
       singularizeSchema: singularizeCategorizationSchema
@@ -1773,7 +1866,6 @@ export const detachFromCategorization = async (id, field, entityId, dbName, data
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'system_catalog': 'information-type-catalog',
     'information_type': 'information-type',
   }
   let objectType = attachableObjects[field];
@@ -1781,7 +1873,7 @@ export const detachFromCategorization = async (id, field, entityId, dbName, data
     // check to see if the entity exists
     sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
     response = await dataSources.Stardog.queryById({
-      dbName,
+      dbName: (objectType === 'information-type' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
       singularizeSchema: singularizeCategorizationSchema

@@ -248,9 +248,6 @@ const stixSightingRelationshipCreationFromRelationQuery = graphql`
         ... on Tool {
           name
         }
-        ... on Vulnerability {
-          name
-        }
         ... on Incident {
           name
         }
@@ -316,9 +313,6 @@ const stixSightingRelationshipCreationFromRelationQuery = graphql`
           name
         }
         ... on Tool {
-          name
-        }
-        ... on Vulnerability {
           name
         }
         ... on Incident {

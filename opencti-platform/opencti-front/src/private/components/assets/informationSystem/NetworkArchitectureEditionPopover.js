@@ -48,6 +48,12 @@ const networkArchitectureEditionMutation = graphql`
 
 class NetworkArchitectureComponent extends Component {
   onSubmit(values, { setSubmitting, resetForm }) {
+    const adaptedValues = R.evolve(
+      {
+        diagrams: () => values.diagrams.length > 0 ? JSON.stringify(values.diagrams) : [],
+      },
+      values,
+    );
     const finalValues = R.pipe(
       R.toPairs,
       R.map((n) => {
@@ -56,11 +62,11 @@ class NetworkArchitectureComponent extends Component {
           'value': Array.isArray(adaptFieldValue(n[1])) ? adaptFieldValue(n[1]) : [adaptFieldValue(n[1])],
         };
       }),
-    )(values);
+    )(adaptedValues);
     commitMutation({
       mutation: networkArchitectureEditionMutation,
       variables: {
-        id: this.props.informationSystem.id,
+        id: this.props.informationSystem.network_architecture.id,
         input: finalValues,
       },
       setSubmitting,
@@ -68,7 +74,7 @@ class NetworkArchitectureComponent extends Component {
       onCompleted: () => {
         setSubmitting(false);
         resetForm();
-        this.props.history.push('/defender_hq/assets/information_systems');
+        this.props.refreshQuery();
       },
       onError: () => toastGenericError('Failed to create responsibility'),
     });
@@ -88,9 +94,9 @@ class NetworkArchitectureComponent extends Component {
     const networkArchitecture = R.pathOr([], ['network_architecture'], informationSystem);
     const initialValues = R.pipe(
       R.assoc('description', networkArchitecture?.description || ''),
-      R.assoc('diagram', networkArchitecture?.diagram || []),
+      R.assoc('diagrams', networkArchitecture?.diagrams || []),
       R.pick([
-        'diagram',
+        'diagrams',
         'description',
       ]),
     )(networkArchitecture);
@@ -151,7 +157,7 @@ class NetworkArchitectureComponent extends Component {
                         diagramType='network_architecture'
                         title='Diagram(s)'
                         id={informationSystem.id}
-                        name='diagram'
+                        name='diagrams'
                       />
                     </Grid>
                     <Grid item={true} xs={12}>

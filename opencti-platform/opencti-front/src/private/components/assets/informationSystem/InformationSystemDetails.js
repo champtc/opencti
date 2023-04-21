@@ -163,6 +163,7 @@ class InformationSystemDetailsComponent extends Component {
                     <Divider />
                   </Grid>
                   <SystemDocumentation
+                    refreshQuery={refreshQuery}
                     informationSystem={informationSystem}
                   />
                 </Grid>

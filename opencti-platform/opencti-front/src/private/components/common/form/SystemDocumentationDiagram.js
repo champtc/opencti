@@ -262,14 +262,10 @@ class SystemDocumentationDiagram extends Component {
         this.state.selectedDiagram?.diagram?.diagram_link || '',
       ),
       assoc(
-        'entity_type',
-        this.state.selectedDiagram?.diagram?.entity_type || '',
-      ),
-      assoc(
         'diagram_media_type',
         this.state.selectedDiagram?.diagram?.diagram_media_type || '',
       ),
-      pick(['caption', 'description', 'diagram_link', 'entity_type', 'diagram_media_type']),
+      pick(['caption', 'description', 'diagram_link', 'diagram_media_type']),
     )(this.state.selectedDiagram?.diagram);
     const { diagram } = this.state;
     return (

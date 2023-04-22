@@ -91,12 +91,6 @@ const cyioInformationSystemResolvers = {
       return systemImplementation;
     },
     objects: async (parent, args, { dbName, dataSources, selectMap }) => {
-      if (parent.information_types === undefined &&
-          parent.component_iris === undefined && 
-          parent.inventory_item_iris === undefined &&
-          parent.leveraged_authorization_iris === undefined && 
-          parent.user_type_iris === undefined ) return null;
-
       let objects = await findObjects(parent, dbName, dataSources, selectMap);
       if (objects === undefined || objects === null) return null;
       return objects;

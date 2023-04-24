@@ -22,6 +22,8 @@ import TextField from '../../../../components/TextField';
 import MarkDownField from '../../../../components/MarkDownField';
 import { toastGenericError } from '../../../../utils/bakedToast';
 import TaskType from '../../common/form/TaskType';
+import SwitchField from '../../../../components/SwitchField';
+import DatePickerField from '../../../../components/DatePickerField';
 
 const styles = () => ({
   dialogMain: {
@@ -125,8 +127,10 @@ class InformationSystemGraphCreation extends Component {
               system_name: '',
               description: '',
               deployment_model: [],
+              date_authorized: null,
               operational_status: '',
               cloud_service_model: '',
+              privacy_designation: false,
               identify_assurance_level: '',
               federation_assurance_level: '',
               authenticator_assurance_level: '',
@@ -360,6 +364,59 @@ class InformationSystemGraphCreation extends Component {
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
                       />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <div className={classes.textBase}>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ margin: 0 }}
+                        >
+                          {t('Date Authorized')}
+                        </Typography>
+                        <Tooltip title={t('Date Authorized')} >
+                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
+                        </Tooltip>
+                      </div>
+                      <div className='clearfix' />
+                      <Field
+                        component={DatePickerField}
+                        name='date_authorized'
+                        invalidDateMessage={t(
+                          'The value must be a date (YYYY-MM-DD)',
+                        )}
+                        fullWidth={true}
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <div className={classes.textBase}>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ margin: 0 }}
+                        >
+                          {t('Privacy Sensitive System')}
+                        </Typography>
+                        <Tooltip title={t('Privacy Sensitive System')} >
+                          <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
+                        </Tooltip>
+                      </div>
+                      <div className="clearfix" />
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography>No</Typography>
+                        <Field
+                          component={SwitchField}
+                          type="checkbox"
+                          name="privacy_designation"
+                          containerstyle={{ marginLeft: 10, marginRight: '-15px' }}
+                          inputProps={{ 'aria-label': 'ant design' }}
+                        />
+                        <Typography>Yes</Typography>
+                      </div>
                     </Grid>
                   </Grid>
                 </DialogContent>

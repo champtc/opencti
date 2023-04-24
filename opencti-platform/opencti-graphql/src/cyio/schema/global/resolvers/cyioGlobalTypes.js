@@ -483,7 +483,7 @@ const cyioGlobalTypeResolvers = {
   // Map enum GraphQL values to data model required values
   OperationalStatus: {
     under_development: 'under-development',
-    under_major_modification: 'under-major-modifications',
+    under_major_modification: 'under-major-modification',
   },
   CyioLocationType: {
     geo_location: 'geo-location',

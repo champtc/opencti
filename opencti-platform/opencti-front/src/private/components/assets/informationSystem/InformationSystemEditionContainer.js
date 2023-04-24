@@ -171,7 +171,7 @@ class InformationSystemEditionContainer extends Component {
               values,
             }) => (
               <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Task')}</DialogTitle>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Information System')}</DialogTitle>
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={12}>

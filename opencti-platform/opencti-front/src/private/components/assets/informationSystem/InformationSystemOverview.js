@@ -236,7 +236,7 @@ class InformationSystemOverviewComponent extends Component {
                     colorPrimary: classes.switch_primary,
                   }}
                 />
-                <Typography>No</Typography>
+                <Typography>Yes</Typography>
               </div>                
             </Grid>
             <Grid item={true} xs={6}>

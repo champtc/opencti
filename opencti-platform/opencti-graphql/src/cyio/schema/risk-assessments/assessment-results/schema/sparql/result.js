@@ -46,6 +46,18 @@ const resultReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.name && { name: item.name }),
+    ...(item.description && { description: item.description }),
+    ...(item.start && { start: item.start }),
+    ...(item.end && { end: item.end }),
+    ...(item.local_definitions && { local_definitions: item.local_definitions }),
+    ...(item.reviewed_controls && { reviewed_controls: item.reviewed_controls }),
+    ...(item.attestation && { attestation: item.attestation }),
+    ...(item.ingest_status && { ingest_status: item.ingest_status }),
+    ...(item.scan_id && { scan_id: item.scan_id }),
+    ...(item.assessment_type && { assessment_type: item.assessment_type }),
+    ...(item.authenticated_scan && { authenticated_scan: item.authenticated_scan }),
+    ...(item.target_count && { target_count: item.target_count }),
   }
 };
 
@@ -62,6 +74,8 @@ const attestationReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.responsible_parties && { responsible_parties: item.responsible_parties }),
+    ...(item.parts && { parts: item.parts }),
   }
 };
 
@@ -78,6 +92,9 @@ const controlSetReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.description && { description: item.description }),
+    ...(item.control_selections && { control_selections: item.control_selections }),
+    ...(item.control_objective_selections && { control_objective_selections: item.control_objective_selections }),
   }
 };
 
@@ -94,6 +111,10 @@ const controlSelectionReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.description && { description: item.description }),
+    ...(item.include_all_controls && { include_all_controls: item.include_all_controls }),
+    ...(item.include_controls && { include_controls: item.include_controls }),
+    ...(item.exclude_controls && { exclude_controls: item.exclude_controls }),
   }
 };
 
@@ -110,6 +131,8 @@ const selectedControlReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.control && { control: item.control }),
+    ...(item.statements && { statements: item.statements }),
   }
 };
 
@@ -126,6 +149,10 @@ const controlObjectiveSelectionReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.description && { description: item.description }),
+    ...(item.include_all_objectives && { include_all_objectives: item.include_all_objectives }),
+    ...(item.include_objectives && { include_objectives: item.include_objectives }),
+    ...(item.exclude_objectives && { exclude_objectives: item.exclude_objectives }),
   }
 };
 
@@ -142,6 +169,12 @@ const assessmentPartReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.name && { name: item.name }),
+    ...(item.ns && { ns: item.ns }),
+    ...(item.class && { class: item.class }),
+    ...(item.title && { title: item.title }),
+    ...(item.prose && { prose: item.prose }),
+    ...(item.parts && { parts: item.parts }),
   }
 };
 
@@ -248,7 +281,7 @@ export const selectResultByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/result#Result> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
     ${predicates}
   }`
 }
@@ -278,7 +311,7 @@ export const selectAllResultsQuery = (select, args, parent) => {
   SELECT DISTINCT ?iri ${selectionClause} 
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/result#Result> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> . 
     ${predicates}
   }
   `
@@ -306,7 +339,7 @@ export const insertResultQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results/result#Result> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
       ${iri} <http://darklight.ai/ns/common#object_type> "result" . 
@@ -333,7 +366,7 @@ export const deleteResultByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/result#Result> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
       ?iri ?p ?o
     }
   }
@@ -349,7 +382,7 @@ export const deleteMultipleResultsQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/result#Result> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -378,7 +411,7 @@ export const attachToResultQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     resultPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/result#Result>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>'
   );
 }
 
@@ -402,7 +435,7 @@ export const detachFromResultQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     resultPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/result#Result>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>'
   );
 }
 
@@ -421,7 +454,7 @@ export const selectResultLocalDefinitionsByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/result#ResultLocalDefinitions> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#ResultLocalDefinitions> .
     ${predicates}
   }`
 }
@@ -446,7 +479,7 @@ export const attachToResultLocalDefinitionsQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     resultPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/result#ResultLocalDefinitions>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results#ResultLocalDefinitions>'
   );
 }
 
@@ -470,7 +503,7 @@ export const detachFromResultLocalDefinitionsQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     resultPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/result#ResultLocalDefinitions>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results#ResultLocalDefinitions>'
   );
 }
 
@@ -1620,7 +1653,7 @@ export const resultPredicateMap = {
   },
   target_count: {
     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/result#target_count>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "target_count");},
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:integer`: null, this.predicate, "target_count");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   labels: {
@@ -1959,6 +1992,23 @@ export const singularizeResultSchema = {
     "assessment_type": true,
     "authenticated_scan": true,
     "target_count": true,
+  }
+};
+
+export const singularizeResultLocalDefinitionsSchema = { 
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
+    "components": false,
+    "inventory_items": false,
+    "users": false,
+    "assessment_assets": false,
+    "tasks": false,
   }
 };
 

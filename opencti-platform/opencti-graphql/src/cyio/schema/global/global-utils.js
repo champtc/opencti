@@ -101,6 +101,8 @@ import {
 import {
   oscalLeveragedAuthorizationPredicateMap, // attachToOscalLeveragedAuthorizationQuery, detachFromOscalLeveragedAuthorizationQuery,
 } from '../risk-assessments/oscal-common/schema/sparql/oscalLeveragedAuthorization.js';
+import { assessmentResultsPredicateMap } from "../risk-assessments/assessment-results/schema/sparql/assessmentResult.js"; // attachToAssessmentResultsQuery, detachFromAssessmentResultsQuery,
+import { resultPredicateMap } from "../risk-assessments/assessment-results/schema/sparql/result.js"; // attachToResultQuery, detachFromResultQuery,
 
 
 // find id of parent
@@ -266,6 +268,14 @@ export const objectMap = {
     graphQLType: "AssessmentPlatform",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentPlatform",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentPlatform",
+  },
+  "assessment-results": {
+    predicateMap: assessmentResultsPredicateMap,
+    // attachQuery: attachToAssessmentResultsQuery,
+    // detachQuery: detachFromAssessmentResultsQuery,
+    graphQLType: "AssessmentResults",
+    classIri: "http://csrc.nist.gov/ns/oscal/common#AssessmentResults",
+    iriTemplate: "http://cyio.darklight.ai/common#AssessmentResults"
   },
   "assessment-subject": {
     predicateMap: assessmentSubjectPredicateMap,
@@ -708,6 +718,14 @@ export const objectMap = {
     graphQLType: "RequiredAsset",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#RequiredAsset",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#RequiredAsset"
+  },
+  "result": {
+    predicateMap: resultPredicateMap,
+    // attachQuery: attachToResultsQuery,
+    // detachQuery: detachFromResultsQuery,
+    graphQLType: "AssessmentResults",
+    classIri: "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    iriTemplate: "http://cyio.darklight.ai/assessment-results#Result"
   },
   "risk": {
     predicateMap: riskPredicateMap,

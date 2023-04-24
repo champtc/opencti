@@ -109,6 +109,7 @@ import oscalResponsiblePartyResolvers from '../cyio/schema/risk-assessments/osca
 import oscalRoleResolvers from '../cyio/schema/risk-assessments/oscal-common/resolvers/oscalRole.js';
 import assessmentCommonResolvers from '../cyio/schema/risk-assessments/assessment-common/resolvers/assessmentCommon.js';
 import cyioAssessmentResultsResolvers from '../cyio/schema/risk-assessments/assessment-results/resolvers/assessmentResult.js';
+import cyioResultResolvers from '../cyio/schema/risk-assessments/assessment-results/resolvers/result';
 import cyiofindingresolvers from '../cyio/schema/risk-assessments/assessment-results/resolvers/finding.js';
 import activityResolvers from '../cyio/schema/risk-assessments/assessment-common/resolvers/activity.js';
 import actorResolvers from '../cyio/schema/risk-assessments/assessment-common/resolvers/actor.js';
@@ -264,6 +265,7 @@ const createSchema = () => {
     oscalRoleResolvers,
     assessmentCommonResolvers,
     cyioAssessmentResultsResolvers,
+    cyioResultResolvers,
     cyiofindingresolvers,
     activityResolvers,
     actorResolvers,

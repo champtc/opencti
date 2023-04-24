@@ -1,4 +1,7 @@
 import { UserInputError } from 'apollo-server-errors';
+import conf from '../../../../../config/conf';
+import { selectObjectIriByIdQuery } from '../../../global/global-utils.js';
+import { objectTypeMapping } from '../../../assets/asset-mappings';
 import { 
   compareValues, 
   filterValues, 
@@ -32,13 +35,17 @@ import {
   singularizeAssessmentPlanSchema,
   selectAssessmentPlanByIriQuery,
   //Results
-  singularizeResultsSchema,
   selectResultsByIriQuery,
   //Resource
   singularizeResourcesSchema,
   selectResourcesByIriQuery,
 } from '../schema/sparql/assessmentResult.js';
 import { addToInventoryQuery, removeFromInventoryQuery } from '../../../assets/assetUtil.js';
+import { singularizeResultSchema } from '../schema/sparql/result.js'
+// import { findLeveragedAuthorizationById, findLeveragedAuthorizationByIri } from '../../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
+// import { findUserTypeById, findUserTypeByIri } from '../../../risk-assessments/oscal-common/domain/oscalUser.js';
+// import { findComponentById, findComponentByIri } from '../../../risk-assessments/component/domain/component.js';
+// import { findInventoryItemById, findInventoryItemByIri } from '../../../risk-assessments/inventory-item/domain/inventoryItem.js';
 
 // Assessment Result
 export const findAssessmentResultsById = async (id, dbName, dataSources, select) => {
@@ -437,7 +444,7 @@ export const editAssessmentResultsById = async (id, input, dbName, dataSources, 
 
   const query = updateQuery(
     `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    "http://csrc.nist.gov/ns/oscal/common#AssessmentResults",
     input,
     assessmentResultsPredicateMap
   );
@@ -494,6 +501,8 @@ export const attachToAssessmentResults = async (id, field, entityId, dbName, dat
     'document_ids': 'document_ids',
     'assessment_plan': 'assessment_plan',
     'local_definitions': 'local_definitions',
+    'results': 'result',
+    'resources': 'resources',
   }
   let objectType = attachableObjects[field];
   try {
@@ -563,6 +572,8 @@ export const detachFromAssessmentResults = async (id, field, entityId, dbName, d
     'document_ids': 'document_ids',
     'assessment_plan': 'assessment_plan',
     'local_definitions': 'local_definitions',
+    'results': 'result',
+    'resources': 'resources',
   }
   let objectType = attachableObjects[field];
   try {
@@ -688,7 +699,7 @@ export const findResultsByIri = async (iri, dbName, dataSources, select) => {
       dbName,
       sparqlQuery,
       queryId: "Select Results",
-      singularizeSchema: singularizeResultsSchema
+      singularizeSchema: singularizeResultSchema
     });
   } catch (e) {
     console.log(e)

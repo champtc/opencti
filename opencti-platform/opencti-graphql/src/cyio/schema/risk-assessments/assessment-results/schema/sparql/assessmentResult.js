@@ -43,6 +43,8 @@ const AssessmentResultsReducer = (item) => {
       ...(item.shared_metadata && { shared_metadata_iri: item.shared_metadata }),
       ...(item.assessment_plan && { assessment_plan_iri: item.assessment_plan }),
       ...(item.local_definitions && { local_definitions_iri: item.local_definitions }),
+      ...(item.results && { results_iri: item.results }),
+      ...(item.resources && { resources_iri: item.resources }),
     }
 };
 
@@ -67,7 +69,7 @@ export const selectAssessmentResultsByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#AssessmentResults> .
     ${predicates}
   }`
 }
@@ -97,7 +99,7 @@ export const selectAllAssessmentResultsQuery = (select, args, parent) => {
   SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#AssessmentResults> . 
     ${predicates}
   }
   `
@@ -125,7 +127,7 @@ export const insertAssessmentResultsQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/common#AssessmentResults> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
       ${iri} <http://darklight.ai/ns/common#object_type> "assessment-results" . 
@@ -152,7 +154,7 @@ export const deleteAssessmentResultsByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/common#AssessmentResults> .
       ?iri ?p ?o
     }
   }
@@ -168,7 +170,7 @@ export const deleteMultipleAssessmentResultsQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/common#AssessmentResults> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -197,7 +199,7 @@ export const attachToAssessmentResultsQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     assessmentResultsPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>'
+    '<http://csrc.nist.gov/ns/oscal/common#AssessmentResults>'
   );
 }
 
@@ -221,7 +223,7 @@ export const detachFromAssessmentResultsQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     assessmentResultsPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>'
+    '<http://csrc.nist.gov/ns/oscal/common#AssessmentResults>'
   );
 }
   
@@ -300,6 +302,16 @@ export const assessmentResultsPredicateMap = {
   local_definitions: {
     predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#local_definitions>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "local_definitions");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  results: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#Result>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "result");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  resources: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#resources>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "resources");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 };
@@ -420,35 +432,6 @@ export const localDefinitionsPredicateMap = {
 
 };
 
-export const resultsPredicateMap = {
-  id: {
-    predicate: "<http://darklight.ai/ns/common#id>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  },
-  object_type: {
-    predicate: "<http://darklight.ai/ns/common#object_type>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "object_type");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  },
-  entity_type: {
-    predicate: "<http://darklight.ai/ns/common#object_type>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  },
-  created: {
-    predicate: "<http://darklight.ai/ns/common#created>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "created");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  },
-  modified: {
-    predicate: "<http://darklight.ai/ns/common#modified>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  },
-
-};
-
 export const resourcesPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
@@ -498,10 +481,11 @@ export const singularizeAssessmentResultsSchema = {
     "shared_metadata": true,
     "assessment_plan": true,
     "local_definitions": true,
+    "results": false,
+    "resources": false,
   }
 };
 
-// Serialization schema
 export const singularizeRevisionsSchema = { 
   singularizeVariables: {
     "": false, // so there is an object as the root instead of an array
@@ -549,18 +533,6 @@ export const singularizeLocalDefinitionsSchema = {
     "modified": true,
     "objectives_and_methods": true,
     "activities": true,
-  }
-};
-
-export const singularizeResultsSchema = { 
-  singularizeVariables: {
-    "": false, // so there is an object as the root instead of an array
-    "id": true,
-    "iri": true,
-    "object_type": true,
-    "entity_type": true,
-    "created": true,
-    "modified": true,
   }
 };
 
@@ -666,7 +638,7 @@ export const selectResultsByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Results> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#AssessmentResults> .
     ${predicates}
   }`
 }

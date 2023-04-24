@@ -967,7 +967,7 @@ export const editFindingTargetById = async (id, input, dbName, dataSources, sele
 
   const query = updateQuery(
     `http://cyio.darklight.ai/finding-target--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results/result/finding#FindingTarget",
+    "http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget",
     input,
     findingTargetPredicateMap
   );

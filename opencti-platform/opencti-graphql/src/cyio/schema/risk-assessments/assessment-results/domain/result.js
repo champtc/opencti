@@ -98,7 +98,7 @@ export const findResultById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   return findResultByIri(iri, dbName, dataSources, select);
 }
 
@@ -237,6 +237,15 @@ export const createResult = async (input, dbName, dataSources, select) => {
   // Need to escape contents, remove explicit newlines, and collapse multiple what spaces.
   if (input.name !== undefined ) {
     input.name = input.name.replace(/\s+/g, ' ')
+                                        .replace(/\n/g, '\\n')
+                                        .replace(/\"/g, '\\"')
+                                        .replace(/\'/g, "\\'")
+                                        .replace(/[\u2019\u2019]/g, "\\'")
+                                        .replace(/[\u201C\u201D]/g, '\\"');
+  }
+  
+  if (input.description !== undefined ) {
+    input.description = input.description.replace(/\s+/g, ' ')
                                         .replace(/\n/g, '\\n')
                                         .replace(/\"/g, '\\"')
                                         .replace(/\'/g, "\\'")
@@ -489,8 +498,8 @@ export const editResultById = async (id, input, dbName, dataSources, select, sch
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/assessment-results--${id}`,
-    "http://csrc.nist.gov/ns/oscal/assessment-results/result#Result",
+    `http://cyio.darklight.ai/result--${id}`,
+    "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
     input,
     resultPredicateMap
   );
@@ -526,7 +535,7 @@ export const attachToResult = async (id, field, entityId, dbName, dataSources) =
 
   // check to see if the result exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectResultByIriQuery(iri, select);
   let response;
   try {
@@ -595,7 +604,7 @@ export const detachFromResult = async (id, field, entityId, dbName, dataSources)
 
   // check to see if the result exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectResultByIriQuery(iri, select);
   let response;
   try {
@@ -665,7 +674,7 @@ export const attachToResultLocalDefinitions = async (id, field, entityId, dbName
 
   // check to see if the result local definitions exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectResultLocalDefinitionsByIriQuery(iri, select);
   let response;
   try {
@@ -734,7 +743,7 @@ export const detachFromResultLocalDefinitions = async (id, field, entityId, dbNa
 
   // check to see if the result local definitions exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectResultLocalDefinitionsByIriQuery(iri, select);
   let response;
   try {
@@ -801,7 +810,7 @@ export const findAttestationById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   return findAttestationByIri(iri, dbName, dataSources, select);
 }
 
@@ -1192,7 +1201,7 @@ export const editAttestationById = async (id, input, dbName, dataSources, select
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/assessment-results--${id}`,
+    `http://cyio.darklight.ai/result--${id}`,
     "http://csrc.nist.gov/ns/oscal/assessment-results/result#Attestation",
     input,
     attestationPredicateMap
@@ -1229,7 +1238,7 @@ export const attachToAttestation = async (id, field, entityId, dbName, dataSourc
 
   // check to see if the attestation exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectAttestationByIriQuery(iri, select);
   let response;
   try {
@@ -1298,7 +1307,7 @@ export const detachFromAttestation = async (id, field, entityId, dbName, dataSou
 
   // check to see if the attestation exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectAttestationByIriQuery(iri, select);
   let response;
   try {
@@ -1365,7 +1374,7 @@ export const findControlSetById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   return findControlSetByIri(iri, dbName, dataSources, select);
 }
 
@@ -1756,7 +1765,7 @@ export const editControlSetById = async (id, input, dbName, dataSources, select,
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/assessment-results--${id}`,
+    `http://cyio.darklight.ai/result--${id}`,
     "http://csrc.nist.gov/ns/oscal/assessment-results/result#ControlSet",
     input,
     controlSetPredicateMap
@@ -1793,7 +1802,7 @@ export const attachToControlSet = async (id, field, entityId, dbName, dataSource
 
   // check to see if the control set exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectControlSetByIriQuery(iri, select);
   let response;
   try {
@@ -1862,7 +1871,7 @@ export const detachFromControlSet = async (id, field, entityId, dbName, dataSour
 
   // check to see if the control set exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectControlSetByIriQuery(iri, select);
   let response;
   try {
@@ -1929,7 +1938,7 @@ export const findControlSelectionById = async (id, dbName, dataSources, select) 
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   return findControlSelectionByIri(iri, dbName, dataSources, select);
 }
 
@@ -2320,7 +2329,7 @@ export const editControlSelectionById = async (id, input, dbName, dataSources, s
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/assessment-results--${id}`,
+    `http://cyio.darklight.ai/result--${id}`,
     "http://csrc.nist.gov/ns/oscal/assessment-results/result#ControlSelection",
     input,
     controlSelectionPredicateMap
@@ -2357,7 +2366,7 @@ export const attachToControlSelection = async (id, field, entityId, dbName, data
 
   // check to see if the control selection exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectControlSelectionByIriQuery(iri, select);
   let response;
   try {
@@ -2426,7 +2435,7 @@ export const detachFromControlSelection = async (id, field, entityId, dbName, da
 
   // check to see if the control selection exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectControlSelectionByIriQuery(iri, select);
   let response;
   try {
@@ -2493,7 +2502,7 @@ export const findSelectedControlById = async (id, dbName, dataSources, select) =
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   return findSelectedControlByIri(iri, dbName, dataSources, select);
 }
 
@@ -2884,7 +2893,7 @@ export const editSelectedControlById = async (id, input, dbName, dataSources, se
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/assessment-results--${id}`,
+    `http://cyio.darklight.ai/result--${id}`,
     "http://csrc.nist.gov/ns/oscal/assessment-results/result#SelectedControl",
     input,
     selectedControlPredicateMap
@@ -2921,7 +2930,7 @@ export const attachToSelectedControl = async (id, field, entityId, dbName, dataS
 
   // check to see if the selected controls exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectSelectedControlByIriQuery(iri, select);
   let response;
   try {
@@ -2990,7 +2999,7 @@ export const detachFromSelectedControl = async (id, field, entityId, dbName, dat
 
   // check to see if the selected controls exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectSelectedControlByIriQuery(iri, select);
   let response;
   try {
@@ -3057,7 +3066,7 @@ export const findControlObjectiveSelectionById = async (id, dbName, dataSources,
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   return findControlObjectiveSelectionByIri(iri, dbName, dataSources, select);
 }
 
@@ -3448,7 +3457,7 @@ export const editControlObjectiveSelectionById = async (id, input, dbName, dataS
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/assessment-results--${id}`,
+    `http://cyio.darklight.ai/result--${id}`,
     "http://csrc.nist.gov/ns/oscal/assessment-results/result#ControlObjectiveSelection",
     input,
     controlObjectiveSelectionPredicateMap
@@ -3485,7 +3494,7 @@ export const attachToControlObjectiveSelection = async (id, field, entityId, dbN
 
   // check to see if the control objective selections exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectControlObjectiveSelectionByIriQuery(iri, select);
   let response;
   try {
@@ -3554,7 +3563,7 @@ export const detachFromControlObjectiveSelection = async (id, field, entityId, d
 
   // check to see if the control objective selections exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectControlObjectiveSelectionByIriQuery(iri, select);
   let response;
   try {
@@ -3621,7 +3630,7 @@ export const findAssessmentPartById = async (id, dbName, dataSources, select) =>
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   return findAssessmentPartByIri(iri, dbName, dataSources, select);
 }
 
@@ -4012,7 +4021,7 @@ export const editAssessmentPartById = async (id, input, dbName, dataSources, sel
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/assessment-results--${id}`,
+    `http://cyio.darklight.ai/result--${id}`,
     "http://csrc.nist.gov/ns/oscal/assessment-results/result#AssessmentPart",
     input,
     assessmentPartPredicateMap
@@ -4049,7 +4058,7 @@ export const attachToAssessmentPart = async (id, field, entityId, dbName, dataSo
 
   // check to see if the assessment part exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectAssessmentPartByIriQuery(iri, select);
   let response;
   try {
@@ -4118,7 +4127,7 @@ export const detachFromAssessmentPart = async (id, field, entityId, dbName, data
 
   // check to see if the assessment part exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-results--${id}>`;
+  let iri = `<http://cyio.darklight.ai/result--${id}>`;
   sparqlQuery = selectAssessmentPartByIriQuery(iri, select);
   let response;
   try {

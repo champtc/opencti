@@ -99,7 +99,7 @@ export const selectFindingByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#Finding> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> .
     ${predicates}
   }`
 }
@@ -129,7 +129,7 @@ export const selectAllFindingsQuery = (select, args, parent) => {
   SELECT DISTINCT ?iri ${selectionClause} 
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#Finding> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> . 
     ${predicates}
   }
   `
@@ -157,7 +157,7 @@ export const insertFindingQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#Finding> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
       ${iri} <http://darklight.ai/ns/common#object_type> "finding" . 
@@ -184,7 +184,7 @@ export const deleteFindingByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#Finding> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> .
       ?iri ?p ?o
     }
   }
@@ -200,7 +200,7 @@ export const deleteMultipleFindingsQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#Finding> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -229,7 +229,7 @@ export const attachToFindingQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     findingPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#Finding>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding>'
   );
 }
 
@@ -253,7 +253,7 @@ export const detachFromFindingQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     findingPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#Finding>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding>'
   );
 }
 
@@ -276,7 +276,7 @@ export const selectFindingTargetByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#FindingTarget> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> .
     ${predicates}
   }`
 }
@@ -307,7 +307,7 @@ export const selectAllFindingTargetsQuery = (select, args, parent) => {
   SELECT DISTINCT ?iri ${selectionClause} 
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#FindingTarget> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> . 
     ${predicates}
   }
   `
@@ -335,7 +335,7 @@ export const insertFindingTargetQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#FindingTarget> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
       ${iri} <http://darklight.ai/ns/common#object_type> "finding-target" . 
       ${insertPredicates.join(" . \n")}
@@ -359,7 +359,7 @@ export const deleteFindingTargetByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#FindingTarget> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> .
       ?iri ?p ?o
     }
   }
@@ -375,7 +375,7 @@ export const deleteMultipleFindingTargetsQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#FindingTarget> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -404,7 +404,7 @@ export const attachToFindingTargetQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     findingTargetPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#FindingTarget>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget>'
   );
 }
 
@@ -428,7 +428,7 @@ export const detachFromFindingTargetQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     findingTargetPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#FindingTarget>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget>'
   );
 }
 
@@ -460,22 +460,22 @@ export const findingPredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   name: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#name>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   description: {
-      predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#description>",
+      predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#description>",
       binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "description");},
       optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   origin: {
-      predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#origin>",
+      predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#origin>",
       binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "origin");},
       optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   target: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings#target>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#target>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "target");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
@@ -498,47 +498,47 @@ export const findingTargetPredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   target_type: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#target_type>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#target_type>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "target_type");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   title: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#title>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#title>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "title");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   description: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#description>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#description>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "description");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   props: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#props>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#props>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "props");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   links: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#links>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#links>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "links");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   objective_status_state: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#objective_status_state>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#objective_status_state>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "objective_status_state");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   objective_status_reason: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#objective_status_reason>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#objective_status_reason>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "objective_status_reason");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   implementation_status: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#implementation_status>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#implementation_status>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "implementation_status");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   remarks: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results/findings/target#remarks>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#remarks>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "remarks");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },

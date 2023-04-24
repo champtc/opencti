@@ -406,7 +406,7 @@ class InformationTypesCreationComponent extends Component {
       selectedProduct,
     );
     const informationTypes = R.pathOr(
-      {},
+      [],
       ['information_types'],
       informationSystem,
     );
@@ -451,7 +451,7 @@ class InformationTypesCreationComponent extends Component {
         <div className={classes.scrollBg}>
           <div className={classes.scrollDiv}>
             <div className={classes.scrollObj}>
-              {informationTypes.length
+              {informationTypes.length !== 0
                 && informationTypes.map((informationType, key) => (
                   <div key={key} style={{ display: 'grid', gridTemplateColumns: '40% 1fr 1fr 1fr' }}>
                     <div

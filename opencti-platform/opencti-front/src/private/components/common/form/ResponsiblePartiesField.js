@@ -242,12 +242,13 @@ class ResponsiblePartiesField extends Component {
       history,
       classes,
       title,
+      disabled,
     } = this.props;
 
     return (
       <>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Typography>{title && t(title)}</Typography>
+          <Typography variant="h3" color="textSecondary" gutterBottom={true}>{title && t(title)}</Typography>
           <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
             <Tooltip title={t('Responsible Parties')}>
               <Information fontSize="inherit" color="disabled" />
@@ -256,6 +257,7 @@ class ResponsiblePartiesField extends Component {
           <IconButton
             size="small"
             onClick={() => this.setState({ open: true })}
+            disabled={disabled ?? false}
           >
             <InsertLinkIcon />
           </IconButton>

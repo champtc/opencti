@@ -154,7 +154,10 @@ const InformationSystem = createFragmentContainer(InformationSystemComponent, {
       short_name
       system_name
       description
+      date_authorized
       deployment_model
+      operational_status
+      privacy_designation
       cloud_service_model
       identity_assurance_level
       federation_assurance_level

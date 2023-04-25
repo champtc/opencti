@@ -8,19 +8,22 @@ import {
   generateId, 
   DARKLIGHT_NS,
 } from '../../../../utils.js';
-  
+import { resultPredicateMap, resultReducer } from './result.js'
+
   // Reducer Selection
 export function getReducer(type) {
   switch (type) {
     case 'ASSESSMENT-RESULTS':
-      return AssessmentResultsReducer;
+      return assessmentResultsReducer;
+    case 'RESULTS':
+      return resultReducer;
     default:
       throw new UserInputError(`Unsupported reducer type ' ${type}'`)
   }
 }
 
 // Reducers
-const AssessmentResultsReducer = (item) => {
+const assessmentResultsReducer = (item) => {
   // if no object type was returned, compute the type from the IRI
   if (item.object_type === undefined) {
       if (item.entity_type !== undefined) item.object_type = item.entity_type;
@@ -61,7 +64,8 @@ export const selectAssessmentResultsByIriQuery = (iri, select) => {
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
   if (!select.includes('component_type')) select.push('component_type');
-  
+  if (!select.includes('results')) select.push('results');
+
   const { selectionClause, predicates } = buildSelectVariables(assessmentResultsPredicateMap, select);
 
   return `
@@ -626,19 +630,19 @@ export const selectLocalDefinitionsByIriQuery = (iri, select) => {
 
 export const selectResultsByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(resultsPredicateMap);
+  if (select === undefined || select === null) select = Object.keys(resultPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
-  const { selectionClause, predicates } = buildSelectVariables(resultsPredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(resultPredicateMap, select);
   return `
   SELECT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#AssessmentResults> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
     ${predicates}
   }`
 }

@@ -48,6 +48,7 @@ import { singularizeResultSchema } from '../schema/sparql/result.js'
 // import { findInventoryItemById, findInventoryItemByIri } from '../../../risk-assessments/inventory-item/domain/inventoryItem.js';
 
 // Assessment Result
+
 export const findAssessmentResultsById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);

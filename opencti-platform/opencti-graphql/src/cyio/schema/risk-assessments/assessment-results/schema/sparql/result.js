@@ -33,7 +33,7 @@ export function getReducer(type) {
 }
     
 // Reducers
-const resultReducer = (item) => {
+export const resultReducer = (item) => {
   // if no object type was returned, compute the type from the IRI
   if (item.object_type === undefined) {
       if (item.entity_type !== undefined) item.object_type = item.entity_type;

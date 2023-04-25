@@ -9,29 +9,20 @@ import Loader from '../../../../components/Loader';
 import ErrorNotFound from '../../../../components/ErrorNotFound';
 import StixCoreObjectKnowledgeBar from '../../common/stix_core_objects/StixCoreObjectKnowledgeBar';
 import TopBar from '../../nav/TopBar';
-
-// const subscription = graphql`
-//   subscription RootRiskSubscription($id: ID!) {
-//     stixDomainObject(id: $id) {
-//       # ... on ThreatActor {
-//       #   ...Risk_risk
-//       #   ...RiskEditionContainer_risk
-//       # }
-//       ...FileImportViewer_entity
-//       ...FileExportViewer_entity
-//       ...FileExternalReferencesViewer_entity
-//     }
-//   }
-// `;
+import Assessment from './Assessment';
+import AssessmentKnowledge from './AssessmentKnowledge';
+import AssessmentAnalysis from './AssessmentAnalysis';
+import AssessmentActivity from './AssessmentActivity';
 
 const assessmentQuery = graphql`
   query RootAssessmentQuery($id: ID!) {
     risk(id: $id) {
       id
       name
-      #...Risk_risk
-      #...RiskAnalysisContainer_risk
-      # ...Remediations_risk
+      ...Assessment_data
+      ...AssessmentActivity_data
+      ...AssessmentAnalysis_data
+      ...AssessmentKnowledge_data
     }
   }
 `;
@@ -44,28 +35,8 @@ class RootAssessment extends Component {
         params: { assessmentId },
       },
     } = this.props;
-    const link = `/activities/assessments/assessment_results/${assessmentId}/knowledge`;
     return (
       <div>
-        <Route path="/activities/assessments/assessment_results/:assessmentId/knowledge">
-          <StixCoreObjectKnowledgeBar
-            stixCoreObjectLink={link}
-            availableSections={[
-              'victimology',
-              'risks',
-              'network',
-              'software',
-              'incidents',
-              'malwares',
-              'attack_patterns',
-              'tools',
-              'vulnerabilities',
-              'observables',
-              'infrastructures',
-              'sightings',
-            ]}
-          />
-        </Route>
         <TopBar me={me || null} />
         <QueryRenderer
           query={assessmentQuery}
@@ -77,14 +48,47 @@ class RootAssessment extends Component {
                   <Switch>
                     <Route
                       exact
-                      path="/activities/assessments/assessment_results/:assessmentId"
-                      // render={(routeProps) => (
-                      //   <Risk
-                      //     {...routeProps}
-                      //     refreshQuery={retry}
-                      //     risk={props.risk}
-                      //   />
-                      // )}
+                      path='/activities/assessments/assessment_results/:assessmentId'
+                      render={(routeProps) => (
+                        <Assessment
+                          {...routeProps}
+                          refreshQuery={retry}
+                          assessment={props.risk}
+                        />
+                      )}
+                    />
+                    <Route
+                      exact
+                      path='/activities/assessments/assessment_results/:assessmentId/knowledge'
+                      render={(routeProps) => (
+                        <AssessmentKnowledge
+                          {...routeProps}
+                          refreshQuery={retry}
+                          assessment={props.risk}
+                        />
+                      )}
+                    />
+                    <Route
+                      exact
+                      path='/activities/assessments/assessment_results/:assessmentId/analysis'
+                      render={(routeProps) => (
+                        <AssessmentAnalysis
+                          {...routeProps}
+                          refreshQuery={retry}
+                          assessment={props.risk}
+                        />
+                      )}
+                    />
+                    <Route
+                      exact
+                      path='/activities/assessments/assessment_results/:assessmentId/activities'
+                      render={(routeProps) => (
+                        <AssessmentActivity
+                          {...routeProps}
+                          refreshQuery={retry}
+                          assessment={props.risk}
+                        />
+                      )}
                     />
 
                   </Switch>

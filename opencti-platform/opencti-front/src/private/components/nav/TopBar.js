@@ -31,6 +31,7 @@ import TopMenuEvents from './TopMenuEvents';
 import TopMenuIncident from './TopMenuIncident';
 import TopMenuObservedData from './TopMenuObservedData';
 import TopMenuAssets from './TopMenuAssets';
+import TopMenuAssessments from './TopMenuAssessments';
 import TopMenuDataEntities from './TopMenuDataEntities';
 import TopMenuDataRolesEntities from './TopMenuDataRolesEntities';
 import TopMenuDataLabelsEntities from './TopMenuDataLabelsEntities';
@@ -284,6 +285,7 @@ const TopBar = ({
           {(location.pathname === ('/activities/risk_assessment')
             || location.pathname.match('/activities/risk_assessment/[a-z_]+$')) && <TopMenuRiskAssessment />}
           {(location.pathname.includes('/activities/risk_assessment/risks/')) && <TopMenuRisk />}
+          {(location.pathname.includes('/activities/assessments/assessment_results')) && <TopMenuAssessments />}
           {/* Data Entities Section */}
           {(location.pathname === '/data/entities'
             || location.pathname.includes('/data/data_source')) && <TopMenuDataEntities />}

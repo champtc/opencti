@@ -25,6 +25,7 @@ import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesFiel
 import LoggedBy from '../../../common/form/LoggedBy';
 import { parse } from '../../../../../utils/Time';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
+import DataMarkingsField from '../../../common/form/DataMarkingsField';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -57,6 +58,26 @@ const styles = (theme) => ({
     color: theme.palette.header.text,
   },
 });
+
+const EntitiesLeveragedAuthorizationsCreationAttachMutation = graphql`
+  mutation EntitiesLeveragedAuthorizationsCreationAttachMutation(
+    $id: ID!
+    $entityId: ID!
+    $field: String!
+  ) {
+    attachToLeveragedAuthorization(id: $id, entityId: $entityId, field: $field) 
+  }
+`;
+
+const entitiesLeveragedAuthorizationsCreationDetachMutation = graphql`
+  mutation EntitiesLeveragedAuthorizationsCreationDetachMutation(
+    $id: ID!
+    $entityId: ID!
+    $field: String!
+  ) {
+    detachFromLeveragedAuthorization(id: $id, entityId: $entityId, field: $field) 
+  }
+`;
 
 const entitiesLeveragedAuthorizationsCreationMutation = graphql`
   mutation EntitiesLeveragedAuthorizationsCreationMutation($input: OscalLeveragedAuthorizationInput!) {
@@ -375,15 +396,11 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                     </Grid>
                     <Grid item={true} xs={12}>
                       <div style={{ marginTop: '10px' }}>
-                        <ResponsiblePartiesField
-                          title='Markings'
-                          variant='outlined'
-                          name="marking"
-                          fullWidth={true}
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '100%' }}
-                          disabled={true}
-                        />
+                      <DataMarkingsField
+                        title='Markings'
+                        attachTo={EntitiesLeveragedAuthorizationsCreationAttachMutation}
+                        detachTO={entitiesLeveragedAuthorizationsCreationDetachMutation}
+                      />
                       </div>
                     </Grid>
                     <Grid item={true} xs={12}>

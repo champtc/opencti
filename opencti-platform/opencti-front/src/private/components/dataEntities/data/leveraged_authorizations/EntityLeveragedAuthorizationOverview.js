@@ -16,6 +16,7 @@ import rehypeRaw from 'rehype-raw';
 import remarkParse from 'remark-parse';
 import inject18n from '../../../../../components/i18n';
 import CyioCoreObjectLabelsView from '../../../common/stix_core_objects/CyioCoreObjectLabelsView';
+import DataMarkingsField from '../../../common/form/DataMarkingsField';
 
 const styles = (theme) => ({
   paper: {
@@ -74,6 +75,26 @@ const styles = (theme) => ({
   tooltip: { float: 'left', margin: '2px 0 0 5px' },
 
 });
+
+const entityLeveragedAuthorizationOverviewAttachMutation = graphql`
+  mutation EntityLeveragedAuthorizationOverviewAttachMutation(
+    $id: ID!
+    $entityId: ID!
+    $field: String!
+  ) {
+    attachToLeveragedAuthorization(id: $id, entityId: $entityId, field: $field) 
+  }
+`;
+
+const entityLeveragedAuthorizationOverviewDetachMutation = graphql`
+  mutation EntityLeveragedAuthorizationOverviewDetachMutation(
+    $id: ID!
+    $entityId: ID!
+    $field: String!
+  ) {
+    detachFromLeveragedAuthorization(id: $id, entityId: $entityId, field: $field) 
+  }
+`;
 
 class EntityLeveragedAuthorizationOverviewComponent extends Component {
   render() {
@@ -181,19 +202,12 @@ class EntityLeveragedAuthorizationOverviewComponent extends Component {
               </Grid>
               <Grid item={true} xs={12}>
                 <div style={{ marginTop: '20px' }}>
-                  <Typography
-                    variant="h3"
-                    color="textSecondary"
-                    gutterBottom={true}
-                    style={{ float: 'left' }}
-                  >
-                    {t('Markings')}
-                  </Typography>
-                  <div className={classes.tooltip}>
-                    <Tooltip title={t('Markings')}>
-                      <Information fontSize="inherit" color="disabled" />
-                    </Tooltip>
-                  </div>
+                  <DataMarkingsField
+                    title='Markings'
+                    data={leveragedAuthorization.object_markings}
+                    attachTo={entityLeveragedAuthorizationOverviewAttachMutation}
+                    detachTO={entityLeveragedAuthorizationOverviewDetachMutation}
+                   />
                 </div>
               </Grid>
               <Grid item={true} xs={12}>

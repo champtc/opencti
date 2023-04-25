@@ -18,7 +18,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import inject18n from '../../../../components/i18n';
 import { commitMutation } from '../../../../relay/environment';
-import { dateFormat, parse } from '../../../../utils/Time';
+import { parse } from '../../../../utils/Time';
 import { adaptFieldValue } from '../../../../utils/String';
 import TextField from '../../../../components/TextField';
 import MarkDownField from '../../../../components/MarkDownField';
@@ -67,6 +67,8 @@ const informationSystemEditionContainerMutation = graphql`
 
 const InformationSystemValidation = (t) => Yup.object().shape({
   system_name: Yup.string().required(t('This field is required')),
+  description: Yup.string().required(t('This field is required')),
+  operational_status: Yup.string().required(t('This Field is required')),
 });
 
 class InformationSystemEditionContainer extends Component {
@@ -88,13 +90,21 @@ class InformationSystemEditionContainer extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
+    const adaptedValues = R.evolve(
+      {
+        date_authorized: () => (values.date_authorized === null
+          ? null
+          : parse(values.date_authorized).format()),
+      },
+      values,
+    );
     const finalValues = R.pipe(
       R.toPairs,
       R.map((n) => ({
         'key': n[0],
         'value': adaptFieldValue(n[1]),
       })),
-    )(values);
+    )(adaptedValues);
     commitMutation({
       mutation: informationSystemEditionContainerMutation,
       variables: {
@@ -128,9 +138,9 @@ class InformationSystemEditionContainer extends Component {
       R.assoc('description', informationSystem?.description || ''),
       R.assoc('system_name', informationSystem?.system_name || ''),
       R.assoc('date_authorized', informationSystem?.date_authorized || null),
-      R.assoc('deployment_model', informationSystem?.deployment_model || []),
-      R.assoc('operational_status', informationSystem?.operational_status || ''),
-      R.assoc('cloud_service_model', informationSystem?.cloud_service_model || ''),
+      R.assoc('deployment_model', informationSystem?.deployment_model || null),
+      R.assoc('operational_status', informationSystem?.operational_status || null),
+      R.assoc('cloud_service_model', informationSystem?.cloud_service_model || null),
       R.assoc('privacy_designation', informationSystem?.privacy_designation || false),
       R.assoc('identity_assurance_level', informationSystem?.identity_assurance_level || null),
       R.assoc('federation_assurance_level', informationSystem?.federation_assurance_level || null),

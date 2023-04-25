@@ -1,6 +1,14 @@
 @Library('utils@dev') _
 
 node {
+  String cronString = ""
+  String systemType = utils.getSystemType(env.BRANCH_NAME)
+  if('unknown' == systemType || 'dev' == systemType) {
+    // only run test periodically against dev, every 2 hours.
+    cronString = "H 0/2 * * *"
+  }
+  triggers { cron(cronString) }
+
   try {
     stage('Checkout') {
       checkout scm

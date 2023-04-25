@@ -22,6 +22,7 @@ import Slide from '@material-ui/core/Slide';
 import inject18n from '../../../../components/i18n';
 import ItemIcon from '../../../../components/ItemIcon';
 import { truncate } from '../../../../utils/String';
+import RiskRelevantEvidencePopover from './RiskRelevantEvidencePopover';
 
 const styles = (theme) => ({
   scrollBg: {
@@ -446,6 +447,16 @@ class RiskObservationPopover extends Component {
             </Grid>
             <Divider />
           </DialogContentText>
+          <DialogContentText>
+          <RiskRelevantEvidencePopover
+                diagramType='authorization_boundary'
+                title='Relevant Evidence'
+                id={data.id}
+                name='diagram'
+                disabled={true}
+              />
+          </DialogContentText>
+
         </DialogContent>
         <DialogActions
           style={{

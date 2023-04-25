@@ -132,9 +132,9 @@ class InformationSystemEditionContainer extends Component {
       R.assoc('operational_status', informationSystem?.operational_status || ''),
       R.assoc('cloud_service_model', informationSystem?.cloud_service_model || ''),
       R.assoc('privacy_designation', informationSystem?.privacy_designation || false),
-      R.assoc('identity_assurance_level', informationSystem?.identity_assurance_level || ''),
-      R.assoc('federation_assurance_level', informationSystem?.federation_assurance_level || ''),
-      R.assoc('authenticator_assurance_level', informationSystem?.authenticator_assurance_level || ''),
+      R.assoc('identity_assurance_level', informationSystem?.identity_assurance_level || null),
+      R.assoc('federation_assurance_level', informationSystem?.federation_assurance_level || null),
+      R.assoc('authenticator_assurance_level', informationSystem?.authenticator_assurance_level || null),
       R.pick([
         'short_name',
         'system_name',

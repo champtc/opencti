@@ -1,13 +1,19 @@
 @Library('utils@dev') _
 
+  //https://stackoverflow.com/questions/60001629/how-do-i-trigger-jenkis-build-for-every-2hours-through-jenkins-file
+String cronString = ""
+String systemType = utils.getSystemType(env.BRANCH_NAME)
+if('unknown' == systemType || 'dev' == systemType) {
+  // only run test periodically against dev or feature branch, every 2 hours.
+  cronString = 'H */2 * * *'
+}
+properties([
+    pipelineTriggers([
+        cron(cronString)
+    ])
+])
+
 node {
-  String cronString = ""
-  String systemType = utils.getSystemType(env.BRANCH_NAME)
-  if('unknown' == systemType || 'dev' == systemType) {
-    // only run test periodically against dev, every 2 hours.
-    cronString = "H 0/2 * * *"
-  }
-  triggers { cron(cronString) }
 
   try {
     stage('Checkout') {

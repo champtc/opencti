@@ -111,6 +111,7 @@ const EntityLocation = createFragmentContainer(DataSourceComponent, {
       contextual
       description
       entity_type
+      data_source_type
       update_frequency {
         period
         unit

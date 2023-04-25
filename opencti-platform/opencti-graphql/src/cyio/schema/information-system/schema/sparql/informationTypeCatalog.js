@@ -199,9 +199,10 @@ export const deleteMultipleInformationTypeCatalogsQuery = (ids) =>{
 }
 
 export const attachToInformationTypeCatalogQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/information-type-catalog--${id}>`;
   if (!informationTypeCatalogPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/information-type-catalog--${id}>`;
   const predicate = informationTypeCatalogPredicateMap[field].predicate;
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris
@@ -213,13 +214,19 @@ export const attachToInformationTypeCatalogQuery = (id, field, itemIris) => {
     statements = `${iri} ${predicate} ${itemIris} .`;
   }
 
-  return attachQuery(iri, statements, informationTypeCatalogPredicateMap, '<http://nist.gov/ns/sp800-60#InformationTypeCatalog>');
+  return attachQuery(
+    iri, 
+    statements, 
+    informationTypeCatalogPredicateMap, 
+    '<http://nist.gov/ns/sp800-60#InformationTypeCatalog>'
+  );
 }
 
 export const detachFromInformationTypeCatalogQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/information-type-catalog--${id}>`;
   if (!informationTypeCatalogPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/information-type-catalog--${id}>`;
   const predicate = informationTypeCatalogPredicateMap[field].predicate;
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris
@@ -231,7 +238,12 @@ export const detachFromInformationTypeCatalogQuery = (id, field, itemIris) => {
     statements = `${iri} ${predicate} ${itemIris} .`;
   }
 
-  return detachQuery(iri, statements, informationTypeCatalogPredicateMap, '<http://nist.gov/ns/sp800-60#InformationTypeCatalog>');
+  return detachQuery(
+    iri, 
+    statements, 
+    informationTypeCatalogPredicateMap, 
+    '<http://nist.gov/ns/sp800-60#InformationTypeCatalog>'
+  );
 }
 
 // Retrieves all the categories within a catalog
@@ -274,6 +286,7 @@ export const selectCatalogCategoryMembersByIriQuery = (iri, categoryName, select
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
   if (select.includes('display_name')) {
+    if (!select.includes('title')) select.push('title');
     if (!select.includes('identifier')) select.push('identifier');
     if (!select.includes('category')) select.push('category');
     if (!select.includes('system')) select.push('system');  

@@ -73,7 +73,7 @@ import infrastructureResolvers from '../resolvers/infrastructure';
 import campaignResolvers from '../resolvers/campaign';
 import malwareResolvers from '../resolvers/malware';
 import toolResolvers from '../resolvers/tool';
-import vulnerabilityResolvers from '../resolvers/vulnerability';
+// import vulnerabilityResolvers from '../resolvers/vulnerability';
 import reportResolvers from '../resolvers/report';
 import containerResolvers from '../resolvers/container';
 import noteResolvers from '../resolvers/note';
@@ -226,7 +226,7 @@ const createSchema = () => {
     malwareResolvers,
     threatActorResolvers,
     toolResolvers,
-    vulnerabilityResolvers,
+    // vulnerabilityResolvers,
     incidentResolvers,
     // STIX CYBER OBSERVABLE ENTITIES
     stixCyberObservableResolvers,

@@ -197,9 +197,6 @@ const userSubscriptionMutation = graphql`
         ... on Tool {
           name
         }
-        ... on Vulnerability {
-          name
-        }
         ... on Incident {
           name
           first_seen

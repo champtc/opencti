@@ -1,5 +1,5 @@
 import { UserInputError } from 'apollo-server-errors';
-import conf from '../../../../config/conf';
+import conf, {logApp } from '../../../../config/conf';
 import { selectObjectIriByIdQuery } from '../../global/global-utils.js';
 import { objectTypeMapping } from '../../assets/asset-mappings';
 import { 
@@ -23,14 +23,15 @@ import {
   deleteInformationSystemByIriQuery,
   attachToInformationSystemQuery,
   detachFromInformationSystemQuery,
+  generateInformationSystemId,
 } from '../schema/sparql/informationSystem.js';
-import { findLeveragedAuthorizationByIri } from '../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
-import { findUserTypeByIri } from '../../risk-assessments/oscal-common/domain/oscalUser.js';
+import { findLeveragedAuthorizationById, findLeveragedAuthorizationByIri } from '../../risk-assessments/oscal-common/domain/oscalLeveragedAuthorization.js';
+import { findUserTypeById, findUserTypeByIri } from '../../risk-assessments/oscal-common/domain/oscalUser.js';
 import { addToInventoryQuery, removeFromInventoryQuery } from '../../assets/assetUtil.js';
-import { createInformationType, findInformationTypeByIri } from './informationType.js';
+import { createInformationType, findInformationTypeById, findInformationTypeByIri } from './informationType.js';
 import { createDescriptionBlock, deleteDescriptionBlockByIri } from './descriptionBlock.js';
-import { findComponentByIri } from '../../risk-assessments/component/domain/component.js';
-import { findInventoryItemByIri } from '../../risk-assessments/inventory-item/domain/inventoryItem.js';
+import { findComponentById, findComponentByIri } from '../../risk-assessments/component/domain/component.js';
+import { findInventoryItemById, findInventoryItemByIri } from '../../risk-assessments/inventory-item/domain/inventoryItem.js';
 
 
 
@@ -44,6 +45,19 @@ export const findInformationSystemById = async (id, dbName, dataSources, select)
 }
 
 export const findInformationSystemByIri = async (iri, dbName, dataSources, select) => {
+  if (!select.includes('id')) select.push('id');
+  if (!select.includes('entity_type')) select.push('entity_type');
+  if (select.includes('objects') && select.includes('system_implementation')) throw new UserInputError("Can't specify both 'system_implementation' and 'objects' in the same query.");
+  if (select.includes('objects') || select.includes('system_implementation')) {
+    if (!select.includes('components')) select.push('components');
+    if (!select.includes('inventory_items')) select.push('inventory_items');
+    if (!select.includes('leveraged_authorizations')) select.push('leveraged_authorizations');
+    if (!select.includes('users')) select.push('users');
+  }
+  if (select.includes('objects')) {
+    if (!select.includes('information_types')) select.push('information_types');
+  }
+
   const sparqlQuery = selectInformationSystemByIriQuery(iri, select);
   let response;
   try {
@@ -59,7 +73,7 @@ export const findInformationSystemByIri = async (iri, dbName, dataSources, selec
   }
   if (response === undefined || response === null || response.length === 0) return null;
 
-  let { confidentiality, integrity, availability } = await computeSecurityObjectives(response[0].information_types);
+  let { confidentiality, integrity, availability } = await computeSecurityObjectives(response[0].information_types, dbName, dataSources);
   response[0].security_objective_confidentiality = confidentiality;
   response[0].security_objective_integrity = integrity;
   response[0].security_objective_availability = availability;
@@ -124,7 +138,7 @@ export const findAllInformationSystems = async (args, dbName, dataSources, selec
       }
     }
 
-    let { confidentiality, integrity, availability } = await computeSecurityObjectives(item.information_types);
+    let { confidentiality, integrity, availability } = await computeSecurityObjectives(item.information_types, dbName, dataSources);
     item.security_objective_confidentiality = confidentiality;
     item.security_objective_integrity = integrity;
     item.security_objective_availability = availability;
@@ -235,6 +249,12 @@ export const createInformationSystem = async (input, dbName, dataSources, select
   }
   // END WORKAROUND
 
+    // check if an information system with this same id exists
+    let existSelect = ['id','entity_type']
+    let checkId = generateInformationSystemId( input );
+    let infoSys = await findInformationSystemById(checkId, dbName, dataSources, existSelect);
+    if ( infoSys != undefined && infoSys != null) throw new UserInputError(`Cannot create information system as entity ${checkId} already exists`);
+  
   // Compute system ids if not supplied
   if (!input.system_ids && input.system_name) {
     let id_material = {...(input.system_name && {"system_name": input.system_name})};
@@ -268,7 +288,7 @@ export const createInformationSystem = async (input, dbName, dataSources, select
   if (input.federation_assurance_level === undefined) input.federation_assurance_level = 'UNKNOWN';
 
   // If not specified, supply default objectives impact
-  let { confidentiality, integrity, availability } = await computeSecurityObjectives(input.information_types);
+  let { confidentiality, integrity, availability } = await computeSecurityObjectives(input.information_types, dbName, dataSources);
   if (input.security_objective_confidentiality === undefined) input.security_objective_confidentiality = confidentiality;
   if (input.security_objective_integrity === undefined) input.security_objective_integrity = integrity;
   if (input.security_objective_availability === undefined) input.security_objective_availability = availability;
@@ -328,7 +348,7 @@ export const createInformationSystem = async (input, dbName, dataSources, select
                         .replace(/[\u2019\u2019]/g, "\\'")
                         .replace(/[\u201C\u201D]/g, '\\"');
         }
-        if (value === undefined || value === null) continue;
+        if (value === undefined || value === null || value.length === 0) continue;
         nestedDefinitions[fieldName]['props'][key] = value;
       }
     }
@@ -792,6 +812,7 @@ export const attachToInformationSystem = async (id, field, entityId, dbName, dat
     'network_architecture': 'description-block',
     'data_flow': 'description-block',
     'responsible_parties': 'oscal-responsible-party',
+    'object_markings': 'marking-definition',
     'labels': 'label',
     'links': 'link',
     'remarks': 'remark',
@@ -806,7 +827,7 @@ export const attachToInformationSystem = async (id, field, entityId, dbName, dat
     // check to see if the entity exists
     sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
     response = await dataSources.Stardog.queryById({
-      dbName,
+      dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
       singularizeSchema: singularizeInformationSystemSchema
@@ -870,6 +891,7 @@ export const detachFromInformationSystem = async (id, field, entityId, dbName, d
     'network_architecture': 'description-block',
     'data_flow': 'description-block',
     'responsible_parties': 'oscal-responsible-party',
+    'object_markings': 'marking-definition',
     'labels': 'label',
     'links': 'link',
     'remarks': 'remark',
@@ -884,7 +906,7 @@ export const detachFromInformationSystem = async (id, field, entityId, dbName, d
     // check to see if the entity exists
     sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
     response = await dataSources.Stardog.queryById({
-      dbName,
+      dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
       singularizeSchema: singularizeInformationSystemSchema
@@ -939,6 +961,19 @@ export const getInformationSystemSecurityStatus = async (id, dbName, dataSources
     throw e
   }
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
+  
+  // if not specified, supply default for privacy designation
+  if (response[0].privacy_designation === undefined) {
+    response[0].privacy_designation = false;
+  }
+
+  // if not specified, determine if system is deemed critical
+  if (response[0].critical_system_designation === undefined) {
+    response[0].critical_system_designation = await determineCriticalSystemDesignation(
+                                                  response[0].security_sensitivity_level, 
+                                                  response[0].privacy_designation );
+  }
+
   return response[0];
 };
 
@@ -946,26 +981,66 @@ export const addImplementationEntity = async( id, implementation_type, entityId,
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
+  // build the minimal selection 
+  let commonSelect = ["id","entity_type","created","modified","name","title","system_name","component_type","asset_type","date_authorized"];
+
+  // retrieve the information system to ensure it exists and for use as the source of the relationship
+  let infoSystem = await findInformationSystemById(id, dbName, dataSources, commonSelect);
+
+  // retrieve the implementation to ensure it exists and for use as the target of the relationship
+  let entity;
   let field;
+  let relationshipType = 'consists-of';
   switch(implementation_type) {
     case 'component':
+    case 'Component':
+      entity = await findComponentById(entityId, dbName, dataSources, commonSelect);
       field = 'components';
       break;
     case 'inventory_item':
+    case 'inventory-item':
+    case 'InventoryItem':
+      entity = await findInventoryItemById(entityId, dbName, dataSources, commonSelect);
       field = 'inventory_items';
       break;
     case 'leveraged_authorization':
+    case 'oscal-leveraged-authorization':
+    case 'OscalLeveragedAuthorization':
       field = 'leveraged_authorizations';
+      entity = await findLeveragedAuthorizationById(entityId, dbName, dataSources, commonSelect);
       break;
     case 'user_type':
+    case 'oscal-user':
+    case 'OscalUser':
+      entity = await findUserTypeById(entityId, dbName, dataSources, commonSelect);
       field = 'users';
+      break;
+    case 'information-type':
+    case 'InformationType':
+      entity = await findInformationTypeById(entityId, dbName, dataSources, commonSelect);
+      field = 'information_types';
+      relationshipType = 'handles'
       break;
     default:
       throw new UserInputError(`Unknown implementation type '${implementation_type}'`);      
   }
 
   let result = await attachToInformationSystem(id, field, entityId, dbName, dataSources);
-  return result;
+  if (result === true) {
+    let timestamp = new Date().toISOString();
+    let relationship = {
+      id: generateId(),
+      entity_type: 'oscal-relationship',
+      created: timestamp,
+      modified: timestamp,
+      relationship_type: relationshipType,
+      valid_from: timestamp,
+      source: infoSystem,
+      target: entity,
+    };
+    return relationship;
+  }
+  return null;
 }
 
 export const removeImplementationEntity = async( id, implementation_type, entityId, dbName, dataSources) => {
@@ -975,16 +1050,27 @@ export const removeImplementationEntity = async( id, implementation_type, entity
   let field;
   switch(implementation_type) {
     case 'component':
+    case 'Component':
       field = 'components';
       break;
     case 'inventory_item':
+    case 'inventory-item':
+    case 'InventoryItem':
       field = 'inventory_items';
       break;
     case 'leveraged_authorization':
+    case 'oscal-leveraged-authorization':
+    case 'OscalLeveragedAuthorization':
       field = 'leveraged_authorizations';
       break;
     case 'user_type':
+    case 'oscal-user':
+    case 'OscalUser':
       field = 'users';
+      break;
+    case 'information-type':
+    case 'InformationType':
+      field = 'information_types';
       break;
     default:
       throw new UserInputError(`Unknown implementation type '${implementation_type}'`);      
@@ -993,6 +1079,280 @@ export const removeImplementationEntity = async( id, implementation_type, entity
   let result = await detachFromInformationSystem(id, field, entityId, dbName, dataSources);
   return result;
 }
+
+export const findSystemImplementation = async ( parent, dbName, dataSources, selectMap ) => {
+  let systemImplementation = {};
+  let select = selectMap.getNode('system_implementation')
+
+  if (select.includes('components') && parent.component_iris) {
+    let select = selectMap.getNode('components');
+    let results = [];
+    for (let iri of parent.component_iris) {
+      let result = await findComponentByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve component resource ${iri}`);
+        continue;
+      }
+      results.push(result);
+    }
+    if (results.length !== 0) systemImplementation['components'] = results || [];
+  }
+  if (select.includes('inventory_items') && parent.inventory_item_iris) {
+    let select = selectMap.getNode('inventory_items');
+    let results = [];
+    for (let iri of parent.inventory_item_iris) {
+      let result = await findInventoryItemByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve inventory-item resource ${iri}`);
+        continue;
+      }
+      results.push(result);
+    }
+    if (results.length !== 0) systemImplementation['inventory_items'] = results || [];
+  }
+  if (select.includes('leveraged_authorizations') && parent.leveraged_authorization_iris) {
+    let select = selectMap.getNode('leveraged_authorizations');
+    let results = [];
+    for (let iri of parent.leveraged_authorization_iris) {
+      let result = await findLeveragedAuthorizationByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve leveraged authorization resource ${iri}`);
+        continue;
+      }
+      results.push(result);
+    }
+    if (results.length !== 0) systemImplementation['leveraged_authorizations'] = results || [];
+  }
+  if (select.includes('users') && parent.user_iris) {
+    let select = selectMap.getNode('users');
+    let results = [];
+    for (let iri of parent.user_iris) {
+      let result = await findUserTypeByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve user resource ${iri}`);
+        continue;
+      }
+      results.push(result);
+    }
+    if (results.length !== 0) systemImplementation['users'] = results || [];
+  }
+
+  return systemImplementation;
+}
+
+export const findObjects = async ( parent, dbName, dataSources, selectMap ) => {
+  let edges = [];
+  let relationships = [];
+
+  // create an information system from the parent and push it into the edges array
+  let informationSystem = {
+    id: parent.id,
+    entity_type: parent.entity_type,
+    created: parent.created,
+    modified: parent.modified,
+    ...(parent.system_ids && { system_ids: parent.system_ids }),
+    ...(parent.system_name && { system_name: parent.system_name }),
+    ...(parent.created_by && { created_by: parent.created_by }),
+  };
+  let edge = {
+    cursor: parent.iri,
+    node: informationSystem,
+  }
+  edges.push(edge);
+
+  // create a relationship object to be used as a template
+  let relationship = {
+    entity_type: 'oscal-relationship',
+    relationship_type: 'consists-of',
+    source: informationSystem,
+  };
+
+  if (parent.information_type_iris) {
+    let select = selectMap.getNode('information_types');
+    if (select === undefined || select === null) select = ['id','entity_type','title','created','modified'];
+
+    for (let iri of parent.information_type_iris) {
+      let result = await findInformationTypeByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) continue;
+
+      // make copy of relationship template
+      let rel = {...relationship};
+
+      // populate the missing fields of the relationship
+      rel.id = generateId();
+      rel.relationship_type = 'handles';
+      rel.target = result;
+      rel.created = result.created;
+      rel.modified = result.modified;
+      rel.valid_from = result.created
+
+      // add relationship to array of relationships
+      relationships.push(rel);
+
+      // add the information type to the array of edges
+      let edge = {
+        cursor: iri,
+        node: result,
+      }
+      edges.push(edge);
+    }
+  }
+
+  if (parent.component_iris) {
+    let select = selectMap.getNode('components');
+    if (select === undefined || select === null) select = ['id','entity_type','name','created','modified','component_type'];
+
+    for (let iri of parent.component_iris) {
+      let result = await findComponentByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve component resource ${iri}`);
+        continue;
+      }
+
+      // make copy of relationship template
+      let rel = {...relationship};
+
+      // populate the missing fields of the relationship
+      rel.id = generateId();
+      rel.target = result;
+      rel.created = result.created;
+      rel.modified = result.modified;
+      rel.valid_from = result.created
+
+      // add relationship to array of relationships
+      relationships.push(rel);
+
+      // add the component to the array of edges
+      let edge = {
+        cursor: iri,
+        node: result,
+      }
+      edges.push(edge);
+    }
+  }
+
+  if (parent.inventory_item_iris) {
+    let select = selectMap.getNode('inventory_items');
+    if (select === undefined || select === null) select = ['id','entity_type','name','created','modified','asset_type'];
+
+    for (let iri of parent.inventory_item_iris) {
+      let result = await findInventoryItemByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve inventory-item resource ${iri}`);
+        continue;
+      }
+
+      // make copy of relationship template
+      let rel = { ...relationship };
+
+      // populate the missing fields of the relationship
+      rel.id = generateId();
+      rel.target = result;
+      rel.created = result.created;
+      rel.modified = result.modified;
+      rel.valid_from = result.created;
+
+      // add relationship to array of relationships
+      relationships.push(rel);
+
+      // add the component to the array of edges
+      let edge = {
+        cursor: iri,
+        node: result,
+      }
+      edges.push(edge);
+    }
+  }
+
+  if (parent.leveraged_authorization_iris) {
+    let select = selectMap.getNode('leveraged_authorizations');
+    if (select === undefined || select === null) select = ['id','entity_type','title','created','modified','date_authorized'];
+
+    for (let iri of parent.leveraged_authorization_iris) {
+      let result = await findLeveragedAuthorizationByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve leveraged authorization resource ${iri}`);
+        continue;
+      }
+
+      // make copy of relationship template
+      let rel = { ...relationship };
+
+      // populate the missing fields of the relationship
+      rel.id = generateId();
+      rel.target = result;
+      rel.created = result.created;
+      rel.modified = result.modified
+      rel.valid_from = result.created
+
+      // add relationship to array of relationships
+      relationships.push(rel);
+
+      // add the component to the array of edges
+      let edge = {
+        cursor: iri,
+        node: result,
+      }
+      edges.push(edge);
+    }
+  }
+
+  if (parent.user_iris) {
+    let select = selectMap.getNode('users');
+    if (select === undefined || select === null) select = ['id','entity_type','name','created','modified','user_type'];
+
+    for (let iri of parent.user_iris) {
+      let result = await findUserTypeByIri(iri, dbName, dataSources, select);
+      if (result === undefined || result === null) {
+        logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve user resource ${iri}`);
+        continue;
+      }
+
+      // make copy of relationship template
+      let rel = { ...relationship };
+
+      // populate the missing fields of the relationship
+      rel.id = generateId();
+      rel.target = result;
+      rel.created = result.created;
+      rel.modified = result.modified
+      rel.valid_from = result.created
+
+      // add relationship to array of relationships
+      relationships.push(rel);
+
+      // add the component to the array of edges
+      let edge = {
+        cursor: iri,
+        node: result,
+      }
+      edges.push(edge);
+    }
+  }
+
+  // Add each of the relationships to the list of edges
+  for ( relationship of relationships) {
+    let edge = {
+      cursor: `http://cyio.darklight.ai/relationship--${relationship.id}`,
+      node: relationship,
+    }
+    edges.push(edge)
+  }
+
+  if (edges.length === 0) return null;
+  return {
+    pageInfo: {
+      startCursor: edges[0].cursor,
+      endCursor: edges[edges.length-1].cursor,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      globalCount: edges.length,
+    },
+    edges: edges,
+  };
+}
+
+
 
 // Helper Routines
 export const computeSensitivityLevel = ( confidentiality, integrity, availability ) => {
@@ -1006,7 +1366,7 @@ export const computeSensitivityLevel = ( confidentiality, integrity, availabilit
   return sensitivityLevel;
 };
 
-export const computeSecurityObjectives = async ( infoTypes ) => {
+export const computeSecurityObjectives = async ( infoTypes, dbName, dataSources ) => {
   let confidentiality = 'fips-199-low';
   let integrity = 'fips-199-low';
   let availability = 'fips-199-low';
@@ -1019,11 +1379,13 @@ export const computeSecurityObjectives = async ( infoTypes ) => {
   }
 
   // if infoTypes is an array of IRIs
-  if (typeof infoTypes[0] === 'string' && infoTypes[0].includes('information-types--')) {
+  if (typeof infoTypes[0] === 'string' && infoTypes[0].includes('information-type--')) {
     let results = [];
     // retrieve the minimal data required to compute security objectives
-    for (let item of response[0].information_types) {
-      let result = await findInformationTypeByIri(item.iri, dbName, dataSources, null);
+    let infoSelect = ['confidentiality_base_impact','confidentiality_selected_impact','integrity_base_impact','integrity_selected_impact','availability_base_impact','availability_selected_impact']
+    for (let iri of infoTypes) {
+      let result = await findInformationTypeByIri(iri, dbName, dataSources, infoSelect);
+      if (result === null) continue;
       let infoType = {
         confidentiality_impact: {
           base_impact: result.confidentiality_base_impact,
@@ -1085,52 +1447,4 @@ export const impactIsGreater = ( current, latest ) => {
   if (current === 'fips-199-moderate' && latest === 'fips-199-high') return true; // latest is high
   return false;
 };
-
-export const findSystemImplementation = async ( parent, dbName, dataSources, selectMap ) => {
-  let systemImplementation = {};
-  let select = selectMap.getNode('system_implementation')
-
-  if (select.includes('components') && parent.component_iris) {
-    let select = selectMap.getNode('components');
-    let results = [];
-    for (let iri of parent.component_iris) {
-      let result = await findComponentByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
-      results.push(result);
-    }
-    if (results.length !== 0) systemImplementation['components'] = results || [];
-  }
-  if (select.includes('inventory_items') && parent.inventory_item_iris) {
-    let select = selectMap.getNode('inventory_items');
-    let results = [];
-    for (let iri of parent.inventory_item_iris) {
-      let result = await findInventoryItemByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
-      results.push(result);
-    }
-    if (results.length !== 0) systemImplementation['inventory_items'] = results || [];
-  }
-  if (select.includes('leveraged_authorizations') && parent.leveraged_authorization_iris) {
-    let select = selectMap.getNode('leveraged_authorizations');
-    let results = [];
-    for (let iri of parent.leveraged_authorization_iris) {
-      let result = await findLeveragedAuthorizationByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
-      results.push(result);
-    }
-    if (results.length !== 0) systemImplementation['leveraged_authorizations'] = results || [];
-  }
-  if (select.includes('users') && parent.user_iris) {
-    let select = selectMap.getNode('users');
-    let results = [];
-    for (let iri of parent.user_iris) {
-      let result = await findUserTypeByIri(iri, dbName, dataSources, select);
-      if (result === undefined || result === null) continue;
-      results.push(result);
-    }
-    if (results.length !== 0) systemImplementation['users'] = results || [];
-  }
-
-  return systemImplementation;
-}
 

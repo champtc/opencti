@@ -46,6 +46,7 @@ import {
 import CreatedByField from '../form/CreatedByField';
 import ObjectMarkingField from '../form/ObjectMarkingField';
 import CyioCoreObjectLabelsView from '../stix_core_objects/CyioCoreObjectLabelsView';
+import ResponsiblePartiesField from '../form/ResponsiblePartiesField';
 
 const styles = (theme) => ({
   drawerPaper: {
@@ -101,6 +102,7 @@ class CyioDomainObjectAssetEditionOverviewComponent extends Component {
   render() {
     const {
       t,
+      history,
       classes,
       cyioDomainObject,
       context,
@@ -395,30 +397,16 @@ class CyioDomainObjectAssetEditionOverviewComponent extends Component {
                 />
               </div>
             </Grid>
-            <Grid item={true} xs={6}>
+            <Grid item={true} xs={12}>
               <div>
-                <Typography
-                  variant="h3"
-                  color="textSecondary"
-                  gutterBottom={true}
-                  style={{ float: "left", marginTop: 16 }}
-                >
-                  {t("Responsible Parties")}
-                </Typography>
-                <div style={{ float: "left", margin: "17px 0 0 5px" }}>
-                  <Tooltip title={t("Responsible Parties")}>
-                    <Information fontSize="inherit" color="disabled" />
-                  </Tooltip>
-                </div>
-                <div className="clearfix" />
-                <Field
-                  component={SelectField}
-                  variant="outlined"
-                  name="responsible_parties"
-                  size="small"
-                  fullWidth={true}
-                  style={{ height: "38.09px" }}
-                  containerstyle={{ width: "100%", padding: "0 0 1px 0" }}
+                <ResponsiblePartiesField                   
+                  id={cyioDomainObject.id}
+                  fromType={cyioDomainObject.__typename}
+                  toType='OscalResponsibleParty'
+                  name='responsible_parties'
+                  title='Responsible Parties'
+                  data={cyioDomainObject.responsible_parties}
+                  history={history}
                 />
               </div>
             </Grid>

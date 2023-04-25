@@ -365,9 +365,6 @@ const StixDomainObjectGlobalKillChain = createRefetchContainer(
                     }
                   }
                 }
-                ... on Vulnerability {
-                  name
-                }
                 ... on Incident {
                   name
                 }

@@ -313,10 +313,6 @@ const StixCoreRelationshipCreationFromEntityStixDomainObjectsLines = createPagin
                   name
                   description
                 }
-                ... on Vulnerability {
-                  name
-                  description
-                }
                 ... on Incident {
                   name
                   description
@@ -436,10 +432,6 @@ const StixCoreRelationshipCreationFromEntityStixDomainObjectsLines = createPagin
                           last_seen
                         }
                         ... on Tool {
-                          name
-                          description
-                        }
-                        ... on Vulnerability {
                           name
                           description
                         }

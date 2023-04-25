@@ -50,6 +50,7 @@ const informationSystemReducer = (item) => {
       ...(item.date_authorized && { date_authorized: item.date_authorized }),
       ...(item.security_sensitivity_level && { security_sensitivity_level: item.security_sensitivity_level }),
       ...(item.privacy_designation !== undefined && {privacy_designation: item.privacy_designation }),
+      ...(item.critical_system_designation !== undefined && {critical_system_designation: item.critical_system_designation}),
       ...(item.security_objective_confidentiality && { security_objective_confidentiality: item.security_objective_confidentiality }),
       ...(item.security_objective_integrity && { security_objective_integrity: item.security_objective_integrity }),
       ...(item.security_objective_availability && { security_objective_availability: item.security_objective_availability }),
@@ -60,13 +61,14 @@ const informationSystemReducer = (item) => {
       ...(item.network_architecture && { network_architecture_iri: item.network_architecture }),
       ...(item.data_flow && { data_flow_iri: item.data_flow }),
       ...(item.system_implementation && { system_implementation_iri: item.system_implementation }),
+      ...(item.responsible_parties && { responsible_party_iris: item.responsible_parties }),
       // Use instead of system_implementation as the elements are base properties on InformationSystem
       ...(item.components && { component_iris: item.components }),
       ...(item.inventory_items && { inventory_item_iris: item.inventory_items }),
       ...(item.leveraged_authorizations && { leveraged_authorization_iris: item.leveraged_authorizations }),
-      ...(item.users && { users_iris: item.users }),
+      ...(item.users && { user_iris: item.users }),
       // hints for general lists of items
-      ...(item.responsible_parties && { responsible_party_iris: item.responsible_parties }),
+      ...(item.object_markings && {marking_iris: item.object_markings}),
       ...(item.labels && { label_iris: item.labels }),
       ...(item.links && { link_iris: item.links }),
       ...(item.remarks && { remark_iris: item.remarks }),
@@ -79,7 +81,11 @@ const informationSystemReducer = (item) => {
 };
 
 
-// Utility
+// Utility - InformationSystem
+export const generateInformationSystemId = (input) => {
+  let id_material = {...(input.system_name && {"system_name": input.system_name})} ;
+  return generateId( id_material, DARKLIGHT_NS );
+}
 export const getInformationTypeIri = (id) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   return `<http://cyio.darklight.ai/information-system--${id}>`;
@@ -97,8 +103,9 @@ export const selectInformationSystemByIriQuery = (iri, select) => {
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
+  if (!select.includes('created')) select.push('created');
+  if (!select.includes('modified')) select.push('modified');
   if (!select.includes('component_type')) select.push('component_type');
-  if (!select.includes('information_types')) select.push('information_types');
   if (select.includes('system_implementation')) {
     select.push('components');
     select.push('inventory_items');
@@ -202,15 +209,12 @@ export const selectAllInformationSystemsQuery = (select, args, parent) => {
 }
 
 export const insertInformationSystemQuery = (propValues) => {
-  let id_material;
+  // generate a system id based on the system name if they don't exist
   if (!propValues.system_ids && propValues.system_name) {
-    id_material = {...(propValues.system_name && {"system_name": propValues.system_name})};
+    let id_material = {...(propValues.system_name && {"system_name": propValues.system_name})};
     propValues.system_ids = [generateId(id_material, DARKLIGHT_NS)];
   }
-  id_material = {
-    ...(propValues.system_name && {"system_name": propValues.system_name}),
-  } ;
-  const id = generateId( id_material, DARKLIGHT_NS );
+  const id = generateInformationSystemId(propValues);
   const timestamp = new Date().toISOString();
 
   // determine the appropriate ontology class type
@@ -304,13 +308,19 @@ export const attachToInformationSystemQuery = (id, field, itemIris) => {
     statements = `${iri} ${predicate} ${itemIris} .`;
   }
 
-  return attachQuery(iri, statements, informationSystemPredicateMap, '<http://csrc.nist.gov/ns/oscal/info-system#InformationSystem>');
+  return attachQuery(
+    iri, 
+    statements, 
+    informationSystemPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/info-system#InformationSystem>'
+  );
 }
 
 export const detachFromInformationSystemQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/information-system--${id}>`;
   if (!informationSystemPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/information-system--${id}>`;
   const predicate = informationSystemPredicateMap[field].predicate;
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris
@@ -322,7 +332,12 @@ export const detachFromInformationSystemQuery = (id, field, itemIris) => {
     statements = `${iri} ${predicate} ${itemIris} .`;
   }
 
-  return detachQuery(iri, statements, informationSystemPredicateMap, '<http://csrc.nist.gov/ns/oscal/info-system#InformationSystem>');
+  return detachQuery(
+    iri, 
+    statements, 
+    informationSystemPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/info-system#InformationSystem>'
+  );
 }
   
   
@@ -468,6 +483,11 @@ export const informationSystemPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "security_objective_availability");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
+  critical_system_designation: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#critical_system_designation>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value !== undefined ? `"${value}"^^xsd:boolean`: null, this.predicate, "critical_system_designation");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
   privacy_designation: {
     predicate: "<http://csrc.nist.gov/ns/oscal/info-system#privacy_designation>",
     binding: function (iri, value) { return parameterizePredicate(iri, value !== undefined ? `"${value}"^^xsd:boolean`: null, this.predicate, "privacy_designation");},
@@ -488,6 +508,11 @@ export const informationSystemPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "data_flow");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
+  object_markings: {
+    predicate: "<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "object_markings");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
   labels: {
     predicate: "<http://darklight.ai/ns/common#labels>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "labels");},
@@ -506,6 +531,11 @@ export const informationSystemPredicateMap = {
   remarks: {
     predicate: "<http://csrc.nist.gov/ns/oscal/common#remarks>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "remarks");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  graph_data: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/info-system#graph_data>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:base64Binary` : null,  this.predicate, "graph_data");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   // related_risks: {
@@ -594,6 +624,7 @@ export const singularizeInformationSystemSchema = {
     "security_objective_confidentiality": true,
     "security_objective_integrity": true,
     "security_objective_availability": true,
+    "critical_system_designation": true,
     "privacy_designation": true,
     "authorization_boundary": true,
     "network_architecture": true,

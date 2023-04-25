@@ -1,8 +1,10 @@
-import { UserInputError } from 'apollo-server-express';
+import { UserInputError } from 'apollo-server-errors';
 import {
   optionalizePredicate,
   parameterizePredicate,
   buildSelectVariables,
+  attachQuery,
+  detachQuery,
   generateId,
   OSCAL_NS,
 } from '../../../utils.js';
@@ -13,7 +15,7 @@ export function getReducer(type) {
     case 'COMPONENT':
       return componentReducer;
     default:
-      throw new Error(`Unsupported reducer type ' ${type}'`);
+      throw new UserInputError(`Unsupported reducer type ' ${type}'`);
   }
 }
 
@@ -47,16 +49,14 @@ export const componentReducer = (item) => {
   // END WORKAROUND
 
   return {
+    iri: item.iri,
     id: item.id,
     standard_id: item.id,
     entity_type: 'component',
-    ...(item.iri && { parent_iri: item.iri }),
+    // ...(item.iri && { parent_iri: item.iri }),
     ...(item.object_type && { object_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
-    ...(item.labels && { labels_iri: item.labels }),
-    ...(item.links && { links_iri: item.links }),
-    ...(item.remarks && { remarks_iri: item.remarks }),
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
     // component
@@ -98,6 +98,11 @@ export const componentReducer = (item) => {
     ...(item.isa_title && { isa_title: item.isa_title }),
     ...(item.isa_date && { isa_date: item.isa_date }),
     ...(item.isa_remote_system_name && { isa_remote_system_name: item.isa_remote_system_name }),
+    // hints for general lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
+    ...(item.labels && { labels_iri: item.labels }),
+    ...(item.links && { links_iri: item.links }),
+    ...(item.remarks && { remarks_iri: item.remarks }),
   };
 };
 
@@ -139,10 +144,52 @@ export const insertComponentQuery = (propValues) => {
   return { iri, id, query };
 };
 export const selectComponentQuery = (id, select) => {
-  return selectComponentByIriQuery(`http://csrc.nist.gov/ns/oscal/common#Component-${id}`, select);
+  // This query building function is unusual because the IRI for Components can be
+  // different since there are different types of objects.  Thus we build a query that 
+  // looks up components with a specific id instead of with a specific IRI
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'component_type','name','description','purpose','operational_status',
+      'responsible_roles','protocols'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(componentPredicateMap);
+  }
+  if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
+  const { selectionClause, predicates } = buildSelectVariables(componentPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#Component> .
+    ?iri <http://darklight.ai/ns/common#id> "${id}" .
+    ${predicates}
+    {
+      SELECT DISTINCT ?iri
+      WHERE {
+          ?inventory a <http://csrc.nist.gov/ns/oscal/common#AssetInventory> ;
+              <http://csrc.nist.gov/ns/oscal/common#assets> ?iri .
+      }
+    }
+  }
+  `;
 };
 export const selectComponentByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'component_type','name','description','purpose','operational_status',
+      'responsible_roles','protocols'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(componentPredicateMap);
+  }
   if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
   if (!select.includes('component_type')) select.push('component_type');
   if (!select.includes('asset_type')) select.push('asset_type');
@@ -160,8 +207,18 @@ export const selectComponentByIriQuery = (iri, select) => {
 };
 export const selectAllComponents = (select, args, parent) => {
   let constraintClause = '';
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'component_type','name','description','purpose','operational_status',
+      'responsible_roles','protocols'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(componentPredicateMap);
+  }
   if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
-  if (select.includes('props')) select = Object.keys(componentPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('component_type')) select.push('component_type');
   if (!select.includes('asset_type')) select.push('asset_type');
@@ -240,42 +297,44 @@ export const deleteComponentByIriQuery = (iri) => {
   `;
 };
 export const attachToComponentQuery = (id, field, itemIris) => {
+  if (!componentPredicateMap.hasOwnProperty(field)) return null;
   const iri = `<http://csrc.nist.gov/ns/oscal/common#Component-${id}>`;
-  if (!activityPredicateMap.hasOwnProperty(field)) return null;
-  const { predicate } = activityPredicateMap[field];
+  const { predicate } = componentPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  INSERT DATA {
-    GRAPH ${iri} {
-      ${statements}
-    }
-  }
-  `;
+
+  return attachQuery(
+    iri, 
+    statements, 
+    componentPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#Component>'
+  );
 };
 export const detachFromComponentQuery = (id, field, itemIris) => {
-  const iri = `<http://csrc.nist.gov/ns/oscal/common#Component-${id}>`;
   if (!componentPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://csrc.nist.gov/ns/oscal/common#Component-${id}>`;
   const { predicate } = componentPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  DELETE DATA {
-    GRAPH ${iri} {
-      ${statements}
-    }
-  }
-  `;
+
+  return detachQuery(
+    iri, 
+    statements, 
+    componentPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#Component>'
+  );
 };
 
 // Predicate Maps
@@ -362,7 +421,7 @@ export const componentPredicateMap = {
     },
   },
   name: {
-    predicate: '<http://scap.nist.gov/ns/asset-identification#name>',
+    predicate: '<http://scap.nist.gov/ns/asset-identification#name>|<http://csrc.nist.gov/ns/oscal/info-system#system_name>',
     binding(iri, value) {
       return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'name');
     },
@@ -396,6 +455,11 @@ export const componentPredicateMap = {
     optional(iri, value) {
       return optionalizePredicate(this.binding(iri, value));
     },
+  },
+  object_markings: {
+    predicate: "<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "object_markings");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   inherited_uuid: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#inherited_uuid>',
@@ -706,6 +770,8 @@ export function convertAssetToComponent(asset) {
     id: asset.id,
     entity_type: 'component',
     ...(asset.iri && { iri: asset.iri }),
+    ...(asset.created && { created: asset.created }),
+    ...(asset.modified && { modified: asset.modified }),
     ...(asset.component_type && { component_type: asset.component_type }),
     ...(asset.name && { name: asset.name }),
     ...(asset.description && { description: asset.description }),

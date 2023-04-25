@@ -172,12 +172,12 @@ class NetworkEditionContainer extends Component {
         input: finalValues,
       },
       setSubmitting,
-      pathname: '/defender HQ/assets/network',
+      pathname: '/defender_hq/assets/network',
       onCompleted: (data) => {
         setSubmitting(false);
         resetForm();
         this.handleClose();
-        this.props.history.push('/defender HQ/assets/network');
+        this.props.history.push('/defender_hq/assets/network');
       },
       onError: (err) => console.error(err),
     });
@@ -224,7 +224,7 @@ class NetworkEditionContainer extends Component {
 
   render() {
     const {
-      t, classes, network, refreshQuery,
+      t, classes, network, refreshQuery, history
     } = this.props;
     // const { editContext } = network;
     const initialValues = R.pipe(
@@ -337,6 +337,7 @@ class NetworkEditionContainer extends Component {
                       cyioDomainObject={network}
                       refreshQuery={refreshQuery}
                       assetType="Network"
+                      history={history}
                     // enableReferences={this.props.enableReferences}
                     // context={editContext}
                     // handleClose={handleClose.bind(this)}
@@ -445,10 +446,14 @@ const NetworkEditionFragment = createFragmentContainer(
         asset_id
         network_id
         description
+        version
         locations {
           description
         }
-        version
+        responsible_parties {
+          id
+          name
+        }
         labels {
           __typename
           id

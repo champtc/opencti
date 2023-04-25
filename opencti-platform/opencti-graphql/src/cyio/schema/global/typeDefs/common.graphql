@@ -1,1155 +1,1284 @@
-  # declares the query entry-points for this type
-  extend type Query {
-    cyioNote(id: ID!): CyioNote  @hasPermission(resources: "Cyio:view")
-    cyioNotes( 
-      first: Int
-      offset: Int
-      orderedBy: CyioNotesOrdering
-      orderMode: OrderingMode
-      filters: [CyioNotesFiltering]
-      filterMode: FilterMode
-      search: String
-    ): CyioNoteConnection  @hasPermission(resources: "Cyio:view")
-    cyioExternalReference(id: ID!): CyioExternalReference @hasPermission(resources: "Cyio:view")
-    cyioExternalReferences(
-      first: Int
-      offset: Int
-      orderedBy: CyioExternalReferencesOrdering
-      orderMode: OrderingMode
-      filters: [CyioExternalReferencesFiltering]
-      filterMode: FilterMode
-    ): CyioExternalReferenceConnection  @hasPermission(resources: "Cyio:view")
-    cyioLabel(id: ID!): CyioLabel  @hasPermission(resources: "Cyio:view")
-    cyioLabels(
-      first: Int
-      offset: Int
-      orderBy: CyioLabelsOrdering
-      orderMode: OrderingMode
-      filters: [CyioLabelsFiltering]
-      filterMode: FilterMode
-      search: String
-    ): CyioLabelConnection  @hasPermission(resources: "Cyio:view")
-    civicAddress(id: ID!): CivicAddress  @hasPermission(resources: "Cyio:view")
-    civicAddresses(
-      first: Int
-      offset: Int
-      orderBy: CivicAddressOrdering
-      orderMode: OrderingMode
-      filters: [CivicAddressFiltering]
-      filterMode: FilterMode
-      search: String
-    ): CivicAddressConnection  @hasPermission(resources: "Cyio:view")
-    telephoneNumber(id: ID!): TelephoneNumber  @hasPermission(resources: "Cyio:view")
-    telephoneNumbers(
-      first: Int
-      offset: Int
-      orderBy: TelephoneNumberOrdering
-      orderMode: OrderingMode
-      filters: [TelephoneNumberFiltering]
-      filterMode: FilterMode
-      search: String
-    ): TelephoneNumberConnection  @hasPermission(resources: "Cyio:view")
-  }
-
-  # declares the mutation entry-points for this type
-  extend type Mutation {
-    addReference(input: ReferenceAddInput): Boolean  
-    removeReference( input: ReferenceAddInput): Boolean  
-    createCyioNote(input: CyioNoteAddInput): CyioNote  @hasPermission(resources: "Note:update")
-    deleteCyioNote(id: ID!): String!  @hasPermission(resources: "Note:delete")
-    editCyioNote(id: ID!, input: [EditInput]!, commitMessage: String): CyioNote  @hasPermission(resources: "Node:update")
-    createCyioExternalReference(input: CyioExternalReferenceAddInput): CyioExternalReference  @hasPermission(resources: "ExtReference:update")
-    deleteCyioExternalReference(id: ID!): String!  @hasPermission(resources: "ExtReference:delete")
-    editCyioExternalReference(id: ID!, input: [EditInput]!, commitMessage: String): CyioExternalReference  @hasPermission(resources: "ExtReference:update")
-    createCyioLabel(input: CyioLabelAddInput): CyioLabel  @hasPermission(resources: "Label:update")
-    deleteCyioLabel(id: ID!): String!  @hasPermission(resources: "Label:delete")
-    editCyioLabel(id: ID!, input: [EditInput]!, commitMessage: String): CyioLabel  @hasPermission(resources: "Label:update")
-  }
-
-  type TargetObjectAddInput {
-    object_type: String!
-    target_id: ID!
-  }
-
-  "Defines the identifying information about a complex type"
-  interface ComplexDatatype {
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the type of the Object."
-    entity_type: String!
-  }
-  
-  "Defines the identifying information about a lifecycle object"
-  interface LifecycleObject {
-    "Identities the date and time at which the object was originally created."
-    created: Timestamp
-    "Identifies the date and time at which the object was last modified."
-    modified: Timestamp
-  }
-
-  "Defines the identifying information about a Core object"
-  interface CoreObject {
-    labels: [CyioLabel]
-    external_references: [CyioExternalReference]
-    notes: [CyioNote]
-  }
-
-  "Reference input to add a reference between two different objects"
-  input ReferenceAddInput {
-    field_name: String! # this is the name of the field
-    from_id: ID!
-    from_type: String   # from __typename or entity_type
-    to_id: ID!
-    to_type: String     # from __typename or entity_type
-  }
-
-
-  ############## CyioExternalReferences
-  type CyioExternalReference implements BasicObject & LifecycleObject {
-    # BasicObject
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the identifier defined by the standard."
-    standard_id: String!
-    "Identifies the type of the Object."
-    entity_type: String!
-    "Identifies the parent types of this object."
-    parent_types: [String]!
-    # LifecycleObject
-    "Identities the date and time at which the object was originally created."
-    created: Timestamp
-    "Identifies the date and time at which the object was last modified."
-    modified: Timestamp
-    # CyioExternalReference
-    source_name: String
-    description: String
-    url: URL
-    hashes: [HashInfo]
-    external_id: String
-    # OSCAL Link
-    reference_purpose: ReferencePurposeType
-    media_type: String
-  }
-  input CyioExternalReferenceAddInput {
-    source_name: String!
-    description: String
-    url: URL
-    hashes: [HashInfoAddInput]
-    external_id: String
-    # OSCAL Link
-    reference_purpose: ReferencePurposeType
-    media_type: String
-  }
-  enum CyioExternalReferencesOrdering {
-    "Created"
-    created
-    "Modified"
-    modified
-    "Source Name"
-    source_name
-    "URL"
-    url
-    "Hash"
-    hash
-    "External ID"
-    external_id
-  }
-  enum CyioExternalReferencesFilter {
-    "Created"
-    created
-    "Modified"
-    modified
-    "URL"
-    url
-    "Source Name"
-    source_name
-    "External ID"
-    external_id
-  }
-  input CyioExternalReferencesFiltering {
-    key: CyioExternalReferencesFilter!
-    values: [String]
-    operator: String
+# declares the query entry-points for this type
+extend type Query {
+  cyioNote(id: ID!): CyioNote  @hasPermission(resources: "Cyio:view")
+  cyioNotes( 
+    first: Int
+    offset: Int
+    orderedBy: CyioNotesOrdering
+    orderMode: OrderingMode
+    filters: [CyioNotesFiltering]
     filterMode: FilterMode
-  }
-  # Pagination Types
-  type CyioExternalReferenceConnection {
-    pageInfo: PageInfo!
-    edges: [CyioExternalReferenceEdge]
-  }
-  type CyioExternalReferenceEdge {
-    cursor: String!
-    node: CyioExternalReference!
-  }
+    search: String
+  ): CyioNoteConnection  @hasPermission(resources: "Cyio:view")
+  cyioExternalReference(id: ID!): CyioExternalReference @hasPermission(resources: "Cyio:view")
+  cyioExternalReferences(
+    first: Int
+    offset: Int
+    orderedBy: CyioExternalReferencesOrdering
+    orderMode: OrderingMode
+    filters: [CyioExternalReferencesFiltering]
+    filterMode: FilterMode
+  ): CyioExternalReferenceConnection  @hasPermission(resources: "Cyio:view")
+  cyioLabel(id: ID!): CyioLabel  @hasPermission(resources: "Cyio:view")
+  cyioLabels(
+    first: Int
+    offset: Int
+    orderBy: CyioLabelsOrdering
+    orderMode: OrderingMode
+    filters: [CyioLabelsFiltering]
+    filterMode: FilterMode
+    search: String
+  ): CyioLabelConnection  @hasPermission(resources: "Cyio:view")
+  civicAddress(id: ID!): CivicAddress  @hasPermission(resources: "Cyio:view")
+  civicAddresses(
+    first: Int
+    offset: Int
+    orderBy: CivicAddressOrdering
+    orderMode: OrderingMode
+    filters: [CivicAddressFiltering]
+    filterMode: FilterMode
+    search: String
+  ): CivicAddressConnection  @hasPermission(resources: "Cyio:view")
+  telephoneNumber(id: ID!): TelephoneNumber  @hasPermission(resources: "Cyio:view")
+  telephoneNumbers(
+    first: Int
+    offset: Int
+    orderBy: TelephoneNumberOrdering
+    orderMode: OrderingMode
+    filters: [TelephoneNumberFiltering]
+    filterMode: FilterMode
+    search: String
+  ): TelephoneNumberConnection  @hasPermission(resources: "Cyio:view")
+}
 
-  type HashInfo {
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the type of the Object."
-    entity_type: String!
-    algorithm: HashAlgorithm!
-    value: String!
-  }
-  input HashInfoAddInput {
-    algorithm: HashAlgorithm!
-    value: String!
-  }
+# declares the mutation entry-points for this type
+extend type Mutation {
+  addReference(input: ReferenceAddInput): Boolean  
+  removeReference( input: ReferenceAddInput): Boolean  
+  createCyioNote(input: CyioNoteAddInput): CyioNote  @hasPermission(resources: "Note:update")
+  deleteCyioNote(id: ID!): String!  @hasPermission(resources: "Note:delete")
+  editCyioNote(id: ID!, input: [EditInput]!, commitMessage: String): CyioNote  @hasPermission(resources: "Node:update")
+  createCyioExternalReference(input: CyioExternalReferenceAddInput): CyioExternalReference  @hasPermission(resources: "ExtReference:update")
+  deleteCyioExternalReference(id: ID!): String!  @hasPermission(resources: "ExtReference:delete")
+  editCyioExternalReference(id: ID!, input: [EditInput]!, commitMessage: String): CyioExternalReference  @hasPermission(resources: "ExtReference:update")
+  createCyioLabel(input: CyioLabelAddInput): CyioLabel  @hasPermission(resources: "Label:update")
+  deleteCyioLabel(id: ID!): String!  @hasPermission(resources: "Label:delete")
+  editCyioLabel(id: ID!, input: [EditInput]!, commitMessage: String): CyioLabel  @hasPermission(resources: "Label:update")
+}
 
-  enum ReferencePurposeType {
-    "Identifies a reference to an external resource."
-    reference
-    "Identifies the authoritative location for this file."
-    canonical
-    "Identifies an alternative location or format for this file."
-    alternative
-  }
+type TargetObjectAddInput {
+  object_type: String!
+  target_id: ID!
+}
 
-  enum HashAlgorithm {
-    "The SHA-224 algorithm as defined by NIST FIPS 180-4."
-    SHA_224
-    "The SHA-256 algorithm as defined by NIST FIPS 180-4."
-    SHA_256
-    "The SHA-384 algorithm as defined by NIST FIPS 180-4."
-    SHA_384
-    "The SHA-512 algorithm as defined by NIST FIPS 180-4."
-    SHA_512
-    "The SHA3-224 algorithm as defined by NIST FIPS 202."
-    SHA3_224
-    "The SHA3-256 algorithm as defined by NIST FIPS 202."
-    SHA3_256
-    "The SHA3-384 algorithm as defined by NIST FIPS 202."
-    SHA3_384
-    "The SHA3-512 algorithm as defined by NIST FIPS 202."
-    SHA3_512
-  }
+"Defines the identifying information about a complex type"
+interface ComplexDatatype {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+}
+
+"Defines the identifying information about a lifecycle object"
+interface LifecycleObject {
+  "Identities the date and time at which the object was originally created."
+  created: Timestamp
+  "Identifies the date and time at which the object was last modified."
+  modified: Timestamp
+}
+
+"Defines the identifying information about a Core object"
+interface CoreObject {
+  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
+  labels: [CyioLabel]
+  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  external_references: [CyioExternalReference]
+  "Identifies one or more references to additional commentary on the Model."
+  notes: [CyioNote]
+  "Identifies one or more relationships to other entities."
+  relationships(
+    first: Int
+    offset: Int
+    orderedBy: OscalRelationshipsOrdering
+    orderMode: OrderingMode
+    filters: [OscalRelationshipsFiltering]
+    filterMode: FilterMode
+    search: String
+  ): CyioRelationshipConnection
+  # "Identifies an assessment of the correctness of the information in an Object produced by a different entity."
+  # opinions(first: Int): [CyioOpinions]
+}
+
+interface Relationship {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # Lifecycle
+  "Indicates the date and time at which the object was originally created."
+  created: Timestamp
+  "Indicates the date and time that this particular version of the object was last modified."
+  modified: Timestamp
+  # Relationship
+  "Identifies the type of the relationship"
+  relationship_type: String!
+  "Identifies a human-readable description about the relationship"
+  description: String
+  "Indicates the time and date when the relationship was first established"
+  valid_from: Timestamp
+  "Indicates the time and date when the relationship was terminated."
+  valid_until: Timestamp
+  # "Identifies the source of the relationship"
+  # source: BasicObject
+  # "Identifies the target of the relationship"
+  # target: BasicObject
+}
+
+type CyioRelationship implements BasicObject & LifecycleObject & CoreObject & Relationship {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  created: Timestamp
+  modified: Timestamp
+  # CoreObject
+  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
+  labels: [CyioLabel]
+  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  external_references: [CyioExternalReference]
+  "Identifies one or more references to additional commentary on the Model."
+  notes: [CyioNote]
+  relationships(
+    first: Int
+    offset: Int
+    orderedBy: OscalRelationshipsOrdering
+    orderMode: OrderingMode
+    filters: [OscalRelationshipsFiltering]
+    filterMode: FilterMode
+    search: String
+  ): CyioRelationshipConnection
+  # "Identifies an assessment of the correctness of the information in an Object produced by a different entity."
+  # opinions(first: Int): [CyioOpinions]
+  # Relationship
+  "Identifies the type of the relationship"
+  relationship_type: String!
+  "Identifies a human-readable description about the relationship"
+  description: String
+  "Indicates the time and date when the relationship was first established"
+  valid_from: Timestamp
+  "Indicates the time and date when the relationship was terminated."
+  valid_until: Timestamp
+  # CyioRelationship
+  "Identifies the source of the relationship"
+  source: BasicObject
+  "Identifies the target of the relationship"
+  target: BasicObject
+}
+
+input CyioRelationshipInput {
+  "Identifies the type of the relationship"
+  relationship_type: String!
+  "Identifies a human-readable description about the relationship"
+  description: String
+  "Identifies the source of the relationship"
+  source: ID
+  "Identifies the target of the relationship"
+  target: ID
+  "Indicates the time and date when the relationship was first established"
+  valid_from: Timestamp
+  "Indicates the time and date when the relationship was terminated."
+  valid_until: Timestamp
+}
+
+type CyioRelationshipConnection {
+  pageInfo: PageInfo!
+  edges: [CyioRelationshipEdge]
+}
+type CyioRelationshipEdge {
+  cursor: String,
+  node: CyioRelationship!
+}
+
+"Reference input to add a reference between two different objects"
+input ReferenceAddInput {
+  field_name: String! # this is the name of the field
+  from_id: ID!
+  from_type: String   # from __typename or entity_type
+  to_id: ID!
+  to_type: String     # from __typename or entity_type
+}
+
+
+############## CyioExternalReferences
+type CyioExternalReference implements BasicObject & LifecycleObject {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  "Identities the date and time at which the object was originally created."
+  created: Timestamp
+  "Identifies the date and time at which the object was last modified."
+  modified: Timestamp
+  # CyioExternalReference
+  source_name: String
+  description: String
+  url: URL
+  hashes: [HashInfo]
+  external_id: String
+  # OSCAL Link
+  reference_purpose: ReferencePurposeType
+  media_type: String
+}
+input CyioExternalReferenceAddInput {
+  source_name: String!
+  description: String
+  url: URL
+  hashes: [HashInfoAddInput]
+  external_id: String
+  # OSCAL Link
+  reference_purpose: ReferencePurposeType
+  media_type: String
+}
+enum CyioExternalReferencesOrdering {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Source Name"
+  source_name
+  "URL"
+  url
+  "Hash"
+  hash
+  "External ID"
+  external_id
+}
+enum CyioExternalReferencesFilter {
+  "Created"
+  created
+  "Modified"
+  modified
+  "URL"
+  url
+  "Source Name"
+  source_name
+  "External ID"
+  external_id
+}
+input CyioExternalReferencesFiltering {
+  key: CyioExternalReferencesFilter!
+  values: [String]
+  operator: String
+  filterMode: FilterMode
+}
+# Pagination Types
+type CyioExternalReferenceConnection {
+  pageInfo: PageInfo!
+  edges: [CyioExternalReferenceEdge]
+}
+type CyioExternalReferenceEdge {
+  cursor: String!
+  node: CyioExternalReference!
+}
+
+type HashInfo {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  algorithm: HashAlgorithm!
+  value: String!
+}
+input HashInfoAddInput {
+  algorithm: HashAlgorithm!
+  value: String!
+}
+
+enum ReferencePurposeType {
+  "Identifies a reference to an external resource."
+  reference
+  "Identifies the authoritative location for this file."
+  canonical
+  "Identifies an alternative location or format for this file."
+  alternative
+}
+
+enum HashAlgorithm {
+  "The SHA-224 algorithm as defined by NIST FIPS 180-4."
+  SHA_224
+  "The SHA-256 algorithm as defined by NIST FIPS 180-4."
+  SHA_256
+  "The SHA-384 algorithm as defined by NIST FIPS 180-4."
+  SHA_384
+  "The SHA-512 algorithm as defined by NIST FIPS 180-4."
+  SHA_512
+  "The SHA3-224 algorithm as defined by NIST FIPS 202."
+  SHA3_224
+  "The SHA3-256 algorithm as defined by NIST FIPS 202."
+  SHA3_256
+  "The SHA3-384 algorithm as defined by NIST FIPS 202."
+  SHA3_384
+  "The SHA3-512 algorithm as defined by NIST FIPS 202."
+  SHA3_512
+}
 
 ############## Labels
-  type CyioLabel implements BasicObject & LifecycleObject {
-    # BasicObject
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the identifier defined by the standard."
-    standard_id: String!
-    "Identifies the type of the Object."
-    entity_type: String!
-    "Identifies the parent types of this object."
-    parent_types: [String]!
-    # Lifecycle Object
-    "Identities the date and time at which the object was originally created."
-    created: Timestamp
-    "Identifies the date and time at which the object was last modified."
-    modified: Timestamp
-    # Cyio Label
-    "Identifies the text value of the label."
-    name: String!
-    "Identifies the color to be applied to the label."
-    color: String!
-    "Identifies a human-readable description of the meaning of the label"
-    description: String
-  }
-  input CyioLabelAddInput {
-    name: String!
-    color: String!
-    description: String
-  }
-  enum CyioLabelsOrdering {
-    "Created"
-    created
-    "Modified"
-    modified
-    "Name"
-    name
-  }
-  enum CyioLabelsFilter {
-    "Created"
-    created
-    "Modified"
-    modified
-    "Name"
-    name
-  }
-  input CyioLabelsFiltering {
-    key: LabelsFilter!
-    values: [String]
-    operator: String
-    filterMode: FilterMode
-  }
-  type CyioLabelConnection {
-    pageInfo: PageInfo!
-    edges: [CyioLabelEdge]
-  }
-  type CyioLabelEdge {
-    cursor: String!
-    node: CyioLabel!
-  }
+type CyioLabel implements BasicObject & LifecycleObject {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # Lifecycle Object
+  "Identities the date and time at which the object was originally created."
+  created: Timestamp
+  "Identifies the date and time at which the object was last modified."
+  modified: Timestamp
+  # Cyio Label
+  "Identifies the text value of the label."
+  name: String!
+  "Identifies the color to be applied to the label."
+  color: String!
+  "Identifies a human-readable description of the meaning of the label"
+  description: String
+}
+input CyioLabelAddInput {
+  name: String!
+  color: String!
+  description: String
+}
+enum CyioLabelsOrdering {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Name"
+  name
+}
+enum CyioLabelsFilter {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Name"
+  name
+}
+input CyioLabelsFiltering {
+  key: LabelsFilter!
+  values: [String]
+  operator: String
+  filterMode: FilterMode
+}
+type CyioLabelConnection {
+  pageInfo: PageInfo!
+  edges: [CyioLabelEdge]
+}
+type CyioLabelEdge {
+  cursor: String!
+  node: CyioLabel!
+}
 
 ############## Notes
-  type CyioNote implements BasicObject & LifecycleObject {
-    # BasicObject
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the identifier defined by the standard."
-    standard_id: String!
-    "Identifies the type of the Object."
-    entity_type: String!
-    "Identifies the parent types of this object."
-    parent_types: [String]!
-    # Lifecycle
-    created: Timestamp
-    modified: Timestamp
-    labels: [CyioLabel]
-    # CyioNote
-    abstract: String
-    content: String!
-    authors: [String]
-  }
-  # Mutation
-  input CyioNoteAddInput {
-    # CyioNote
-    abstract: String
-    content: String!
-    authors: [String]
-  }
-  # slicing 
-  enum CyioNotesOrdering {
-    "Created"
-    created
-    "Modified"
-    modified
-    "Label"
-    label_name
-    "Author"
-    author_name
-    "Abstract"
-    abstract
-  }
-  # filtering
-  enum CyioNotesFilter {
-    "Created"
-    created
-    "Modified"
-    modified
-    "Label"
-    label_name
-    "Author"
-    author
-  }
-  input CyioNotesFiltering {
-    key: CyioNotesFilter!
-    values: [String]!
-    operator: String
-    filterMode: FilterMode
-  }
-  # Pagination Types
-  type CyioNoteConnection {
-    pageInfo: PageInfo!
-    edges: [CyioNoteEdge]
-  }
-  type CyioNoteEdge {
-    cursor: String!
-    node: CyioNote!
-  }
+type CyioNote implements BasicObject & LifecycleObject {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # Lifecycle
+  created: Timestamp
+  modified: Timestamp
+  labels: [CyioLabel]
+  # CyioNote
+  abstract: String
+  content: String!
+  authors: [String]
+}
+# Mutation
+input CyioNoteAddInput {
+  # CyioNote
+  abstract: String
+  content: String!
+  authors: [String]
+}
+# slicing 
+enum CyioNotesOrdering {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Label"
+  label_name
+  "Author"
+  author_name
+  "Abstract"
+  abstract
+}
+# filtering
+enum CyioNotesFilter {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Label"
+  label_name
+  "Author"
+  author
+}
+input CyioNotesFiltering {
+  key: CyioNotesFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
+}
+# Pagination Types
+type CyioNoteConnection {
+  pageInfo: PageInfo!
+  edges: [CyioNoteEdge]
+}
+type CyioNoteEdge {
+  cursor: String!
+  node: CyioNote!
+}
 
 ############## Cyio Location
-  interface CyioLocation {
-    # BasicObject
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the identifier defined by the standard."
-    standard_id: String!
-    "Identifies the type of the Object."
-    entity_type: String!
-    "Identifies the parent types of this object."
-    parent_types: [String]!
-    # CoreObject
-    created: Timestamp
-    modified: Timestamp
-    labels: [CyioLabel]
-    external_references: [CyioExternalReference]
-    notes: [CyioNote]
-    # CyioLocation
-    name: String!
-    description: String
-  }
-  input CyioLocationAddInput {
-    # CyioLocation
-    location_type: CyioLocationType
-    name: String!
-    description: String
-  }
-  interface CyioIdentity {
-    # BasicObject
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the identifier defined by the standard."
-    standard_id: String!
-    "Identifies the type of the Object."
-    entity_type: String!
-    "Identifies the parent types of this object."
-    parent_types: [String]!
-    # LifecycleObject
-    created: Timestamp
-    modified: Timestamp
-    # CyioIdentity
-    name: String!
-    description: String
-  }
-  enum CyioLocationType {
-    "GeoLocation"
-    geo_location
-    "City"
-    city
-    "Country"
-    country
-    "Region"
-    region
-    "Civic Address"
-    civic_address
-  }
-
-  "Defines the set of Region names"
-  enum RegionName {
-    "Africa"
-    africa
-    "Eastern Africa"
-    eastern_africa
-    "Middle Africa"
-    middle_africa
-    "Nothern Africa"
-    northern_africa
-    "Southern Africa"
-    southern_africa
-    "Western Africa"
-    western_africa
-    "Americas"
-    americas
-    "Caribbean"
-    caribbean
-    "Central America"
-    central_america
-    "Latin America-Caribbean"
-    latin_america_caribbean
-    "Northern America"
-    northern_america
-    "South Amercia"
-    south_america
-    "Asia"
-    asia
-    "Central Asia"
-    central_asia
-    "Eastern Asia"
-    eastern_asia
-    "Southern Asia"
-    southern_asia
-    "South Eastern Asia"
-    south_eastern_asia
-    "Western Asia"
-    western_asia
-    "Europe"
-    europe
-    "Eastern Europe"
-    eastern_europe
-    "Northern Europe"
-    northern_europe
-    "Southern Europe"
-    southern_europe
-    "Western Europe"
-    western_europe
-    "Oceania"
-    oceania
-    "Antarctica"
-    antarctica
-    "Australia-New Zealand"
-    australia_new_zealand
-    "Melanesia"
-    melanesia
-    "Micronesia"
-    micronesia
-    "Polynesia"
-    polynesia
-  }
-
-  #  ISO 3166-ALPHA2 Country Code
-  "Defines the ISO 3166-ALPHA2 country code"
-  enum Iso3166CountryCode {
-    "Andorra"
-    AD
-    "United Arab Emirates"
-    AE
-    "Afghanistan"
-    AF
-    "Antigua and Barbuda"
-    AG
-    "Anguilla"
-    AI
-    "Albania"
-    AL
-    "Armenia"
-    AM
-    "Angola"
-    AO
-    "Antarctica"
-    AQ
-    "Argentina"
-    AR
-    "American Samoa"
-    AS
-    "Austria"
-    AT
-    "Australia"
-    AU
-    "Aruba"
-    AW
-    "Aland Islands"
-    AX
-    "Azerbaijan"
-    AZ
-    "Bosnia and Herzegovina"
-    BA
-    "Barbados"
-    BB
-    "Bangladesh"
-    BD
-    "Belgium"
-    BE
-    "Burkina Faso"
-    BF
-    "Bulgaria"
-    BG
-    "Bahrain"
-    BH
-    "Burundi"
-    BI
-    "Benin"
-    BJ
-    "Saint Barthelemy"
-    BL
-    "Bermuda"
-    BM
-    "Brunei Darussalam"
-    BN
-    "Bolivia"
-    BO
-    "Bonaire, Saint Eustatius and Saba "
-    BQ
-    "Brazil"
-    BR
-    "Bahamas"
-    BS
-    "Bhutan"
-    BT
-    "Bouvet Island"
-    BV
-    "Botswana"
-    BW
-    "Belarus"
-    BY
-    "Belize"
-    BZ
-    "Canada"
-    CA
-    "Cocos Islands"
-    CC
-    "Democratic Republic of the Congo"
-    CD
-    "Central African Republic"
-    CF
-    "Congo"
-    CG
-    "Switzerland"
-    CH
-    "Côte d’Ivoire"
-    CI
-    "Cook Islands"
-    CK
-    "Chile"
-    CL
-    "Cameroon"
-    CM
-    "China"
-    CN
-    "Colombia"
-    CO
-    "Costa Rica"
-    CR
-    "Cuba"
-    CU
-    "Cape Verde"
-    CV
-    "Curacao"
-    CW
-    "Christmas Island"
-    CX
-    "Cyprus"
-    CY
-    "Czechia"
-    CZ
-    "Germany"
-    DE
-    "Djibouti"
-    DJ
-    "Denmark"
-    DK
-    "Dominica"
-    DM
-    "Dominican Republic"
-    DO
-    "Algeria"
-    DZ
-    "Ecuador"
-    EC
-    "Estonia"
-    EE
-    "Egypt"
-    EG
-    "Western Sahara"
-    EH
-    "Eritrea"
-    ER
-    "Spain"
-    ES
-    "Ethiopia"
-    ET
-    "Finland"
-    FI
-    "Fiji"
-    FJ
-    "Falkland Islands"
-    FK
-    "Micronesia"
-    FM
-    "Faroe Islands"
-    FO
-    "France"
-    FR
-    "Gabon"
-    GA
-    "United Kingdom of Great Britain and Norther Ireland"
-    GB
-    "Grenada"
-    GD
-    "Georgia"
-    GE
-    "French Guiana"
-    GF
-    "Guernsey"
-    GG
-    "Ghana"
-    GH
-    "Gibraltar"
-    GI
-    "Greenland"
-    GL
-    "Gambia"
-    GM
-    "Guinea"
-    GN
-    "Guadeloupe"
-    GP
-    "Equatorial Guinea"
-    GQ
-    "Greece"
-    GR
-    "South Georgia and the South Sandwich Islands"
-    GS
-    "Guatemala"
-    GT
-    "Guam"
-    GU
-    "Guinea-Bissau"
-    GW
-    "Guyana"
-    GY
-    "Hong Kong"
-    HK
-    "Heard Island and McDonald Islands"
-    HM
-    "Honduras"
-    HN
-    "Croatia"
-    HR
-    "Haiti"
-    HT
-    "Hungary"
-    HU
-    "Indonesia"
-    ID
-    "Ireland"
-    IE
-    "Israel"
-    IL
-    "Isle of Man"
-    IM
-    "India"
-    IN
-    "British Indian Ocean Territory"
-    IO
-    "Iraq"
-    IQ
-    "Iran"
-    IR
-    "Iceland"
-    IS
-    "Italy"
-    IT
-    "Jersey"
-    JE
-    "Jamaica"
-    JM
-    "Jordan"
-    JO
-    "Japan"
-    JP
-    "Kenya"
-    KE
-    "Kyrgyzstan"
-    KG
-    "Cambodia"
-    KH
-    "Kiribati"
-    KI
-    "Comoros"
-    KM
-    "Saint Kitts and Nevis"
-    KN
-    "Democratic People's Republic of Korea"
-    KP
-    "Republic of Korea"
-    KR
-    "Kuwait"
-    KW
-    "Cayman Islands"
-    KY
-    "Kazakhstan"
-    KZ
-    "Laos People's Democratic Republic"
-    LA
-    "Lebanon"
-    LB
-    "Saint Lucia"
-    LC
-    "Liechtenstein"
-    LI
-    "Sri Lanka"
-    LK
-    "Liberia"
-    LR
-    "Lesotho"
-    LS
-    "Lithuania"
-    LT
-    "Luxembourg"
-    LU
-    "Latvia"
-    LV
-    "Libya"
-    LY
-    "Morocco"
-    MA
-    "Monaco"
-    MC
-    "Republic of Moldova"
-    MD
-    "Montenegro"
-    ME
-    "Saint Martin"
-    MF
-    "Madagascar"
-    MG
-    "Marshall Islands"
-    MH
-    "North Macedonia"
-    MK
-    "Mali"
-    ML
-    "Myanmar"
-    MM
-    "Mongolia"
-    MN
-    "Macao"
-    MO
-    "Northern Mariana Islands"
-    MP
-    "Martinique"
-    MQ
-    "Mauritania"
-    MR
-    "Montserrat"
-    MS
-    "Malta"
-    MT
-    "Mauritius"
-    MU
-    "Maldives"
-    MV
-    "Malawi"
-    MW
-    "Mexico"
-    MX
-    "Malaysia"
-    MY
-    "Mozambique"
-    MZ
-    "Namibia"
-    NA
-    "New Caledonia"
-    NC
-    "Niger"
-    NE
-    "Norfolk Island"
-    NF
-    "Nigeria"
-    NG
-    "Nicaragua"
-    NI
-    "Netherlands"
-    NL
-    "Norway"
-    NO
-    "Nepal"
-    NP
-    "Nauru"
-    NR
-    "Niue"
-    NU
-    "New Zealand"
-    NZ
-    "Oman"
-    OM
-    "Panama"
-    PA
-    "Peru"
-    PE
-    "French Polynesia"
-    PF
-    "Papua New Guinea"
-    PG
-    "Philippines"
-    PH
-    "Pakistan"
-    PK
-    "Poland"
-    PL
-    "Saint Pierre and Miquelon"
-    PM
-    "Pitcairn"
-    PN
-    "Puerto Rico"
-    PR
-    "State of Palestine"
-    PS
-    "Portugal"
-    PT
-    "Palau"
-    PW
-    "Paraguay"
-    PY
-    "Qatar"
-    QA
-    "Reunion"
-    RE
-    "Romania"
-    RO
-    "Serbia"
-    RS
-    "Russian Federation"
-    RU
-    "Rwanda"
-    RW
-    "Saudi Arabia"
-    SA
-    "Solomon Islands"
-    SB
-    "Seychelles"
-    SC
-    "Sudan"
-    SD
-    "Sweden"
-    SE
-    "Singapore"
-    SG
-    "Saint Helena"
-    SH
-    "Slovenia"
-    SI
-    "Svalbard and Jan Mayen Islands"
-    SJ
-    "Slovakia"
-    SK
-    "Sierra Leone"
-    SL
-    "San Marino"
-    SM
-    "Senegal"
-    SN
-    "Somalia"
-    SO
-    "Suriname"
-    SR
-    "South Sudan"
-    SS
-    "Sao Tome and Principe"
-    ST
-    "El Salvador"
-    SV
-    "Sint Maarten"
-    SX
-    "Syria Arab Republic"
-    SY
-    "Eswatini"
-    SZ
-    "Turks and Caicos Islands"
-    TC
-    "Chad"
-    TD
-    "French Southern Territories"
-    TF
-    "Togo"
-    TG
-    "Thailand"
-    TH
-    "Tajikistan"
-    TJ
-    "Tokelau"
-    TK
-    "Timor-Leste"
-    TL
-    "Turkmenistan"
-    TM
-    "Tunisia"
-    TN
-    "Tonga"
-    TO
-    "Turkey"
-    TR
-    "Trinidad and Tobago"
-    TT
-    "Tuvalu"
-    TV
-    "Taiwan, Province of China"
-    TW
-    "United Republic of Tanzania"
-    TZ
-    "Ukraine"
-    UA
-    "Uganda"
-    UG
-    "United States Minor Outlying Islands"
-    UM
-    "United States"
-    US
-    "Uruguay"
-    UY
-    "Uzbekistan"
-    UZ
-    "Holy See"
-    VA
-    "Saint Vincent and the Grenadines"
-    VC
-    "Venezuela"
-    VE
-    "British Virgin Islands"
-    VG
-    "United States Virgin Islands"
-    VI
-    "Viet Nam"
-    VN
-    "Vanuatu"
-    VU
-    "Wallis and Futuna Islands"
-    WF
-    "Samoa"
-    WS
-    "Republic of Kosovo"
-    XK
-    "Yemen"
-    YE
-    "Mayotte"
-    YT
-    "South Africa"
-    ZA
-    "Zambia"
-    ZM
-    "Zimbabwe"
-    ZW  
-  }
-
-  # Page Info
-  type PageInfo {
-    startCursor: String!
-    endCursor: String!
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-    globalCount: Int!
-  }
-  enum OrderingMode {
-    asc
-    desc
-  }
-  enum FilterMode {
-    and
-    or
-  }
-  enum EditOperation {
-    add
-    replace
-    remove
-  }
-
-  # Editing
-  input EditInput {
-    key: String!              # Field name to change
-    value: [String]!          # Values to apply
-    operation: EditOperation  # Undefined = REPLACE
-  }
-
-  enum OperationalStatus {
-    "operational"
-    operational
-    "under development"
-    under_development
-    "under major modification"
-    under_major_modification
-    "disposition"
-    disposition
-    "other"
-    other
-  }
-  enum ImplementationPoint {
-    "internal"
-    internal
-    "external"
-    external
-  }
-  enum UsageType {
-    "Home"
-    home
-    "Office"
-    office
-    "Mobile"
-    mobile
-  }
-
-  "Defines the identifying information about a civic street address"
-  type CivicAddress {
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the type of the Object."
-    entity_type: String!
-    "Identifies the type of the address."
-    address_type: UsageType
-    "Identifies the street address, including number as a single line."
-    street_address: String
-    "Identfiies the city, town or geographical region for the mailing address."
-    city: String
-    "Identifes the state, province or analogous geographical region for mailing address"
-    administrative_area: String
-    "Identifies the ISO 3166-1 alpha-2 country code for the mailing address."
-    country_code: Iso3166CountryCode!
-    "Identifies the postal or ZIP code for mailing address"
-    postal_code: PostalCode
-  }
-  input CivicAddressAddInput {
-    "Identifies the type of the address."
-    address_type: UsageType!
-    "Identifies the street address, including number as a single line."
-    street_address: String
-    "Identfiies the city, town or geographical region for the mailing address."
-    city: String
-    "Identifes the state, province or analogous geographical region for mailing address"
-    administrative_area: String
-    "Identifies the ISO 3166-1 alpha-2 country code for the mailing address."
-    country_code: Iso3166CountryCode!
-    "Identifies the postal or ZIP code for mailing address"
-    postal_code: PostalCode
-  }
-  # Ordering type
-  enum CivicAddressOrdering {
-    "Address Type"
-    address_type
-    "City"
-    city
-    "Administrative Area"
-    administrative_area
-    "Country"
-    country_code
-  }
-  # Filtering Types
-  enum CivicAddressFilter {
-    "Address Type"
-    address_type
-    "City"
-    city
-    "Administrative Area"
-    administrative_area
-    "Country"
-    country_code
-  }
-  input CivicAddressFiltering {
-    key: CivicAddressFilter!
-    values: [String]!
-    operator: String
+interface CyioLocation {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  created: Timestamp
+  modified: Timestamp
+  # CoreObject
+  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
+  labels: [CyioLabel]
+  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  external_references: [CyioExternalReference]
+  "Identifies one or more references to additional commentary on the Model."
+  notes: [CyioNote]
+  relationships(
+    first: Int
+    offset: Int
+    orderedBy: OscalRelationshipsOrdering
+    orderMode: OrderingMode
+    filters: [OscalRelationshipsFiltering]
     filterMode: FilterMode
-  }
-  # Pagination Types
-  type CivicAddressConnection {
-    pageInfo: PageInfo!
-    edges: [CivicAddressEdge]
-  }
-  type CivicAddressEdge {
-    cursor: String!
-    node: CivicAddress!
-  }
+    search: String
+  ): CyioRelationshipConnection
+  # CyioLocation
+  name: String!
+  description: String
+}
+input CyioLocationAddInput {
+  # CyioLocation
+  location_type: CyioLocationType
+  name: String!
+  description: String
+}
+interface CyioIdentity {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  created: Timestamp
+  modified: Timestamp
+  # CyioIdentity
+  name: String!
+  description: String
+}
+enum CyioLocationType {
+  "GeoLocation"
+  geo_location
+  "City"
+  city
+  "Country"
+  country
+  "Region"
+  region
+  "Civic Address"
+  civic_address
+}
+
+"Defines the set of Region names"
+enum RegionName {
+  "Africa"
+  africa
+  "Eastern Africa"
+  eastern_africa
+  "Middle Africa"
+  middle_africa
+  "Nothern Africa"
+  northern_africa
+  "Southern Africa"
+  southern_africa
+  "Western Africa"
+  western_africa
+  "Americas"
+  americas
+  "Caribbean"
+  caribbean
+  "Central America"
+  central_america
+  "Latin America-Caribbean"
+  latin_america_caribbean
+  "Northern America"
+  northern_america
+  "South Amercia"
+  south_america
+  "Asia"
+  asia
+  "Central Asia"
+  central_asia
+  "Eastern Asia"
+  eastern_asia
+  "Southern Asia"
+  southern_asia
+  "South Eastern Asia"
+  south_eastern_asia
+  "Western Asia"
+  western_asia
+  "Europe"
+  europe
+  "Eastern Europe"
+  eastern_europe
+  "Northern Europe"
+  northern_europe
+  "Southern Europe"
+  southern_europe
+  "Western Europe"
+  western_europe
+  "Oceania"
+  oceania
+  "Antarctica"
+  antarctica
+  "Australia-New Zealand"
+  australia_new_zealand
+  "Melanesia"
+  melanesia
+  "Micronesia"
+  micronesia
+  "Polynesia"
+  polynesia
+}
+
+#  ISO 3166-ALPHA2 Country Code
+"Defines the ISO 3166-ALPHA2 country code"
+enum Iso3166CountryCode {
+  "Andorra"
+  AD
+  "United Arab Emirates"
+  AE
+  "Afghanistan"
+  AF
+  "Antigua and Barbuda"
+  AG
+  "Anguilla"
+  AI
+  "Albania"
+  AL
+  "Armenia"
+  AM
+  "Angola"
+  AO
+  "Antarctica"
+  AQ
+  "Argentina"
+  AR
+  "American Samoa"
+  AS
+  "Austria"
+  AT
+  "Australia"
+  AU
+  "Aruba"
+  AW
+  "Aland Islands"
+  AX
+  "Azerbaijan"
+  AZ
+  "Bosnia and Herzegovina"
+  BA
+  "Barbados"
+  BB
+  "Bangladesh"
+  BD
+  "Belgium"
+  BE
+  "Burkina Faso"
+  BF
+  "Bulgaria"
+  BG
+  "Bahrain"
+  BH
+  "Burundi"
+  BI
+  "Benin"
+  BJ
+  "Saint Barthelemy"
+  BL
+  "Bermuda"
+  BM
+  "Brunei Darussalam"
+  BN
+  "Bolivia"
+  BO
+  "Bonaire, Saint Eustatius and Saba "
+  BQ
+  "Brazil"
+  BR
+  "Bahamas"
+  BS
+  "Bhutan"
+  BT
+  "Bouvet Island"
+  BV
+  "Botswana"
+  BW
+  "Belarus"
+  BY
+  "Belize"
+  BZ
+  "Canada"
+  CA
+  "Cocos Islands"
+  CC
+  "Democratic Republic of the Congo"
+  CD
+  "Central African Republic"
+  CF
+  "Congo"
+  CG
+  "Switzerland"
+  CH
+  "Côte d’Ivoire"
+  CI
+  "Cook Islands"
+  CK
+  "Chile"
+  CL
+  "Cameroon"
+  CM
+  "China"
+  CN
+  "Colombia"
+  CO
+  "Costa Rica"
+  CR
+  "Cuba"
+  CU
+  "Cape Verde"
+  CV
+  "Curacao"
+  CW
+  "Christmas Island"
+  CX
+  "Cyprus"
+  CY
+  "Czechia"
+  CZ
+  "Germany"
+  DE
+  "Djibouti"
+  DJ
+  "Denmark"
+  DK
+  "Dominica"
+  DM
+  "Dominican Republic"
+  DO
+  "Algeria"
+  DZ
+  "Ecuador"
+  EC
+  "Estonia"
+  EE
+  "Egypt"
+  EG
+  "Western Sahara"
+  EH
+  "Eritrea"
+  ER
+  "Spain"
+  ES
+  "Ethiopia"
+  ET
+  "Finland"
+  FI
+  "Fiji"
+  FJ
+  "Falkland Islands"
+  FK
+  "Micronesia"
+  FM
+  "Faroe Islands"
+  FO
+  "France"
+  FR
+  "Gabon"
+  GA
+  "United Kingdom of Great Britain and Norther Ireland"
+  GB
+  "Grenada"
+  GD
+  "Georgia"
+  GE
+  "French Guiana"
+  GF
+  "Guernsey"
+  GG
+  "Ghana"
+  GH
+  "Gibraltar"
+  GI
+  "Greenland"
+  GL
+  "Gambia"
+  GM
+  "Guinea"
+  GN
+  "Guadeloupe"
+  GP
+  "Equatorial Guinea"
+  GQ
+  "Greece"
+  GR
+  "South Georgia and the South Sandwich Islands"
+  GS
+  "Guatemala"
+  GT
+  "Guam"
+  GU
+  "Guinea-Bissau"
+  GW
+  "Guyana"
+  GY
+  "Hong Kong"
+  HK
+  "Heard Island and McDonald Islands"
+  HM
+  "Honduras"
+  HN
+  "Croatia"
+  HR
+  "Haiti"
+  HT
+  "Hungary"
+  HU
+  "Indonesia"
+  ID
+  "Ireland"
+  IE
+  "Israel"
+  IL
+  "Isle of Man"
+  IM
+  "India"
+  IN
+  "British Indian Ocean Territory"
+  IO
+  "Iraq"
+  IQ
+  "Iran"
+  IR
+  "Iceland"
+  IS
+  "Italy"
+  IT
+  "Jersey"
+  JE
+  "Jamaica"
+  JM
+  "Jordan"
+  JO
+  "Japan"
+  JP
+  "Kenya"
+  KE
+  "Kyrgyzstan"
+  KG
+  "Cambodia"
+  KH
+  "Kiribati"
+  KI
+  "Comoros"
+  KM
+  "Saint Kitts and Nevis"
+  KN
+  "Democratic People's Republic of Korea"
+  KP
+  "Republic of Korea"
+  KR
+  "Kuwait"
+  KW
+  "Cayman Islands"
+  KY
+  "Kazakhstan"
+  KZ
+  "Laos People's Democratic Republic"
+  LA
+  "Lebanon"
+  LB
+  "Saint Lucia"
+  LC
+  "Liechtenstein"
+  LI
+  "Sri Lanka"
+  LK
+  "Liberia"
+  LR
+  "Lesotho"
+  LS
+  "Lithuania"
+  LT
+  "Luxembourg"
+  LU
+  "Latvia"
+  LV
+  "Libya"
+  LY
+  "Morocco"
+  MA
+  "Monaco"
+  MC
+  "Republic of Moldova"
+  MD
+  "Montenegro"
+  ME
+  "Saint Martin"
+  MF
+  "Madagascar"
+  MG
+  "Marshall Islands"
+  MH
+  "North Macedonia"
+  MK
+  "Mali"
+  ML
+  "Myanmar"
+  MM
+  "Mongolia"
+  MN
+  "Macao"
+  MO
+  "Northern Mariana Islands"
+  MP
+  "Martinique"
+  MQ
+  "Mauritania"
+  MR
+  "Montserrat"
+  MS
+  "Malta"
+  MT
+  "Mauritius"
+  MU
+  "Maldives"
+  MV
+  "Malawi"
+  MW
+  "Mexico"
+  MX
+  "Malaysia"
+  MY
+  "Mozambique"
+  MZ
+  "Namibia"
+  NA
+  "New Caledonia"
+  NC
+  "Niger"
+  NE
+  "Norfolk Island"
+  NF
+  "Nigeria"
+  NG
+  "Nicaragua"
+  NI
+  "Netherlands"
+  NL
+  "Norway"
+  NO
+  "Nepal"
+  NP
+  "Nauru"
+  NR
+  "Niue"
+  NU
+  "New Zealand"
+  NZ
+  "Oman"
+  OM
+  "Panama"
+  PA
+  "Peru"
+  PE
+  "French Polynesia"
+  PF
+  "Papua New Guinea"
+  PG
+  "Philippines"
+  PH
+  "Pakistan"
+  PK
+  "Poland"
+  PL
+  "Saint Pierre and Miquelon"
+  PM
+  "Pitcairn"
+  PN
+  "Puerto Rico"
+  PR
+  "State of Palestine"
+  PS
+  "Portugal"
+  PT
+  "Palau"
+  PW
+  "Paraguay"
+  PY
+  "Qatar"
+  QA
+  "Reunion"
+  RE
+  "Romania"
+  RO
+  "Serbia"
+  RS
+  "Russian Federation"
+  RU
+  "Rwanda"
+  RW
+  "Saudi Arabia"
+  SA
+  "Solomon Islands"
+  SB
+  "Seychelles"
+  SC
+  "Sudan"
+  SD
+  "Sweden"
+  SE
+  "Singapore"
+  SG
+  "Saint Helena"
+  SH
+  "Slovenia"
+  SI
+  "Svalbard and Jan Mayen Islands"
+  SJ
+  "Slovakia"
+  SK
+  "Sierra Leone"
+  SL
+  "San Marino"
+  SM
+  "Senegal"
+  SN
+  "Somalia"
+  SO
+  "Suriname"
+  SR
+  "South Sudan"
+  SS
+  "Sao Tome and Principe"
+  ST
+  "El Salvador"
+  SV
+  "Sint Maarten"
+  SX
+  "Syria Arab Republic"
+  SY
+  "Eswatini"
+  SZ
+  "Turks and Caicos Islands"
+  TC
+  "Chad"
+  TD
+  "French Southern Territories"
+  TF
+  "Togo"
+  TG
+  "Thailand"
+  TH
+  "Tajikistan"
+  TJ
+  "Tokelau"
+  TK
+  "Timor-Leste"
+  TL
+  "Turkmenistan"
+  TM
+  "Tunisia"
+  TN
+  "Tonga"
+  TO
+  "Turkey"
+  TR
+  "Trinidad and Tobago"
+  TT
+  "Tuvalu"
+  TV
+  "Taiwan, Province of China"
+  TW
+  "United Republic of Tanzania"
+  TZ
+  "Ukraine"
+  UA
+  "Uganda"
+  UG
+  "United States Minor Outlying Islands"
+  UM
+  "United States"
+  US
+  "Uruguay"
+  UY
+  "Uzbekistan"
+  UZ
+  "Holy See"
+  VA
+  "Saint Vincent and the Grenadines"
+  VC
+  "Venezuela"
+  VE
+  "British Virgin Islands"
+  VG
+  "United States Virgin Islands"
+  VI
+  "Viet Nam"
+  VN
+  "Vanuatu"
+  VU
+  "Wallis and Futuna Islands"
+  WF
+  "Samoa"
+  WS
+  "Republic of Kosovo"
+  XK
+  "Yemen"
+  YE
+  "Mayotte"
+  YT
+  "South Africa"
+  ZA
+  "Zambia"
+  ZM
+  "Zimbabwe"
+  ZW  
+}
+
+# Page Info
+type PageInfo {
+  startCursor: String!
+  endCursor: String!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  globalCount: Int!
+}
+enum OrderingMode {
+  asc
+  desc
+}
+enum FilterMode {
+  and
+  or
+}
+enum EditOperation {
+  add
+  replace
+  remove
+}
+
+# Editing
+input EditInput {
+  key: String!              # Field name to change
+  value: [String]!          # Values to apply
+  operation: EditOperation  # Undefined = REPLACE
+}
+
+enum OperationalStatus {
+  "operational"
+  operational
+  "under development"
+  under_development
+  "under major modification"
+  under_major_modification
+  "disposition"
+  disposition
+  "other"
+  other
+}
+enum ImplementationPoint {
+  "internal"
+  internal
+  "external"
+  external
+}
+enum UsageType {
+  "Home"
+  home
+  "Office"
+  office
+  "Mobile"
+  mobile
+}
+
+"Defines the identifying information about a civic street address"
+type CivicAddress {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the type of the address."
+  address_type: UsageType
+  "Identifies the street address, including number as a single line."
+  street_address: String
+  "Identfiies the city, town or geographical region for the mailing address."
+  city: String
+  "Identifes the state, province or analogous geographical region for mailing address"
+  administrative_area: String
+  "Identifies the ISO 3166-1 alpha-2 country code for the mailing address."
+  country_code: Iso3166CountryCode!
+  "Identifies the postal or ZIP code for mailing address"
+  postal_code: PostalCode
+}
+input CivicAddressAddInput {
+  "Identifies the type of the address."
+  address_type: UsageType!
+  "Identifies the street address, including number as a single line."
+  street_address: String
+  "Identfiies the city, town or geographical region for the mailing address."
+  city: String
+  "Identifes the state, province or analogous geographical region for mailing address"
+  administrative_area: String
+  "Identifies the ISO 3166-1 alpha-2 country code for the mailing address."
+  country_code: Iso3166CountryCode!
+  "Identifies the postal or ZIP code for mailing address"
+  postal_code: PostalCode
+}
+# Ordering type
+enum CivicAddressOrdering {
+  "Address Type"
+  address_type
+  "City"
+  city
+  "Administrative Area"
+  administrative_area
+  "Country"
+  country_code
+}
+# Filtering Types
+enum CivicAddressFilter {
+  "Address Type"
+  address_type
+  "City"
+  city
+  "Administrative Area"
+  administrative_area
+  "Country"
+  country_code
+}
+input CivicAddressFiltering {
+  key: CivicAddressFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
+}
+# Pagination Types
+type CivicAddressConnection {
+  pageInfo: PageInfo!
+  edges: [CivicAddressEdge]
+}
+type CivicAddressEdge {
+  cursor: String!
+  node: CivicAddress!
+}
 
 
-  type TelephoneNumber {
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the type of the Object."
-    entity_type: String!
-    "Identifies the type of usage"
-    usage_type: UsageType
-    "Identifies the phone number"
-    phone_number: PhoneNumber
-  }
-  input TelephoneNumberAddInput {
-    "Identifies the type of usage"
-    usage_type: UsageType!
-    "Identifies the phone number"
-    phone_number: PhoneNumber!
-  }
-  # Ordering Type
-  enum TelephoneNumberOrdering {
-    "Usage Type"
-    usage_type
-  }
-  #Filtering Types
-  enum TelephoneNumberFilter {
-    "Usage Type"
-    usage_type
-  }
-  input TelephoneNumberFiltering{
-    key: TelephoneNumberFilter!
-    values: [String]!
-    operator: String
-    filterMode: FilterMode
+type TelephoneNumber {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the type of usage"
+  usage_type: UsageType
+  "Identifies the phone number"
+  phone_number: PhoneNumber
+}
+input TelephoneNumberAddInput {
+  "Identifies the type of usage"
+  usage_type: UsageType!
+  "Identifies the phone number"
+  phone_number: PhoneNumber!
+}
+# Ordering Type
+enum TelephoneNumberOrdering {
+  "Usage Type"
+  usage_type
+}
+#Filtering Types
+enum TelephoneNumberFilter {
+  "Usage Type"
+  usage_type
+}
+input TelephoneNumberFiltering{
+  key: TelephoneNumberFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
 
-  }
-  # Pagination Types
-  type TelephoneNumberConnection {
-    pageInfo: PageInfo!
-    edges: [TelephoneNumberEdge]
-  }
-  type TelephoneNumberEdge {
-    cursor: String!
-    node: TelephoneNumber!
-  }
+}
+# Pagination Types
+type TelephoneNumberConnection {
+  pageInfo: PageInfo!
+  edges: [TelephoneNumberEdge]
+}
+type TelephoneNumberEdge {
+  cursor: String!
+  node: TelephoneNumber!
+}
 
-  type ContactInfo {
-    "Uniquely identifies this object."
-    id: ID!
-    "Identifies the type of the Object."
-    entity_type: String!
-    email_addresses: [EmailAddress]
-    telephone_numbers: [TelephoneNumber]
-  }
+type ContactInfo {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  email_addresses: [EmailAddress]
+  telephone_numbers: [TelephoneNumber]
+}

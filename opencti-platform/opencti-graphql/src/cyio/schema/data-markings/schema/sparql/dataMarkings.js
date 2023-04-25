@@ -1,10 +1,12 @@
+import { UserInputError } from 'apollo-server-errors';
 import {
   optionalizePredicate,
   parameterizePredicate,
   buildSelectVariables,
+  attachQuery,
+  detachQuery,
   generateId,
   DARKLIGHT_NS,
-  CyioError,
 } from '../../../utils.js';
 
 // Reducer Selection
@@ -13,7 +15,7 @@ export function getReducer(type) {
     case 'DATA-MARKING':
       return dataMarkingReducer;
     default:
-      throw new CyioError(`Unsupported reducer type ' ${type}'`);
+      throw new UserInputError(`Unsupported reducer type ' ${type}'`);
   }
 }
 
@@ -54,10 +56,17 @@ const dataMarkingReducer = (item) => {
     ...(item.created_by_ref && { created_by_ref_iri: item.created_by_ref }),
     ...(item.external_references && { external_references_iri: item.external_references }),
     ...(item.notes && { notes_iri: item.notes }),
-    ...(item.object_marking_refs && { object_marking_ref_iris: item.object_marking_refs }),
-    ...(item.granular_markings && { granular_markings_iri: item.granular_markings_ref }),
+    ...(item.object_markings && { marking_iris: item.object_markings }),
+    ...(item.granular_markings && { granular_marking_iris: item.granular_markings }),
   };
 };
+
+// Utility
+export const getDataMarkingIri = (id) => {
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  return `<http://cyio.darklight.ai/marking-definition--${id}>`;
+}
+
 
 // Query Builders
 export const insertDataMarkingQuery = (propValues) => {
@@ -93,7 +102,7 @@ export const insertDataMarkingQuery = (propValues) => {
       iriType = `${propValues.definition_type.toUpperCase()}Marking`;
       break;
     default:
-      throw new CyioError(`Unknown type of Data Marking '${propValues.definition_type}'`);
+      throw new UserInputError(`Unknown type of Data Marking '${propValues.definition_type}'`);
   }
 
   const query = `
@@ -103,11 +112,11 @@ export const insertDataMarkingQuery = (propValues) => {
       ${iri} a <http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition> .
       ${iri} a <http://docs.oasis-open.org/ns/cti#Object> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
-      ${iri} <http://darklight.ai/ns/common#id> "${id}".
-      ${iri} <http://darklight.ai/ns/common#object_type> "marking-definition" . 
-      ${iri} <http://darklight.ai/ns/common#created> "${timestamp}"^^xsd:dateTime . 
-      ${iri} <http://darklight.ai/ns/common#modified> "${timestamp}"^^xsd:dateTime . 
-      ${insertPredicates.join('. \n')}
+      ${iri} <http://docs.oasis-open.org/ns/cti#id> "${id}".
+      ${iri} <http://docs.oasis-open.org/ns/cti#object_type> "marking-definition" . 
+      ${iri} <http://docs.oasis-open.org/ns/cti#created> "${timestamp}"^^xsd:dateTime . 
+      ${iri} <http://docs.oasis-open.org/ns/cti#modified> "${timestamp}"^^xsd:dateTime . 
+      ${insertPredicates.join(' . \n')}
     }
   }
   `;
@@ -120,7 +129,10 @@ export const selectDataMarkingQuery = (id, select) => {
 
 export const selectDataMarkingByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(dataMarkingPredicateMap);
+
+  // due to a limitation in the selectMap.getNode capability, its possible to only get back 
+  // a reference to the __typename meta type if all the other members are fragments.
+  if (select === undefined || select === null || (select.length === 1 && select.includes('__typename'))) select = Object.keys(dataMarkingPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
@@ -141,7 +153,11 @@ export const selectDataMarkingByIriQuery = (iri, select) => {
 
 export const selectAllDataMarkingsQuery = (select, args, parent) => {
   let constraintClause = '';
-  if (select === undefined || select === null) select = Object.keys(dataMarkingPredicateMap);
+
+  // due to a limitation in the selectMap.getNode capability, its possible to only get back 
+  // a reference to the __typename meta type if all the other members are fragments.
+  if (select === undefined || select === null || (select.length === 1 && select.includes('__typename'))) select = Object.keys(dataMarkingPredicateMap);
+  
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
   if (!select.includes('definition_type')) select.push('definition_type');
@@ -186,7 +202,7 @@ export const selectAllDataMarkingsQuery = (select, args, parent) => {
 
 export const deleteDataMarkingQuery = (id) => {
   const iri = `http://cyio.darklight.ai/marking-definition--${id}`;
-  return deleteDataSourceByIriQuery(iri);
+  return deleteDataMarkingByIriQuery(iri);
 };
 
 export const deleteDataMarkingByIriQuery = (iri) => {
@@ -224,45 +240,43 @@ export const deleteMultipleDataMarkingsQuery = (ids) => {
 };
 
 export const attachToDataMarkingQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
-
   if (!dataMarkingPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
   const { predicate } = dataMarkingPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  INSERT DATA {
-      GRAPH ${iri} {
-      ${statements}
-      }
-  }
-  `;
+  return attachQuery(
+    iri, 
+    statements, 
+    dataMarkingPredicateMap, 
+    '<http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition>'
+  );
 };
 
 export const detachFromDataMarkingQuery = (id, field, itemIris) => {
-  const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
-
   if (!dataMarkingPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/marking-definition--${id}>`;
   const { predicate } = dataMarkingPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  DELETE DATA {
-      GRAPH ${iri} {
-      ${statements}
-      }
-  }
-  `;
+  return detachQuery(
+    iri, 
+    statements, 
+    dataMarkingPredicateMap, 
+    '<http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition>'
+  );
 };
 
 // Data Marking Predicate Map
@@ -294,15 +308,6 @@ export const dataMarkingPredicateMap = {
       return optionalizePredicate(this.binding(iri, value));
     },
   },
-  spec_version: {
-    predicate: '<http://docs.oasis-open.org/ns/cti#spec_version>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'spec_version');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
-  },
   created: {
     predicate: '<http://docs.oasis-open.org/ns/cti#created>',
     binding(iri, value) {
@@ -325,6 +330,15 @@ export const dataMarkingPredicateMap = {
     predicate: '<http://docs.oasis-open.org/ns/cti#modified>',
     binding(iri, value) {
       return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'modified');
+    },
+    optional(iri, value) {
+      return optionalizePredicate(this.binding(iri, value));
+    },
+  },
+  spec_version: {
+    predicate: '<http://docs.oasis-open.org/ns/cti#spec_version>',
+    binding(iri, value) {
+      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'spec_version');
     },
     optional(iri, value) {
       return optionalizePredicate(this.binding(iri, value));
@@ -389,10 +403,10 @@ export const dataMarkingPredicateMap = {
       return optionalizePredicate(this.binding(iri, value));
     },
   },
-  object_marking_refs: {
-    predicate: '<http://docs.oasis-open.org/ns/cti/data-marking#object_marking_refs>',
+  object_markings: {
+    predicate: '<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>',
     binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'object_marking_refs');
+      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'object_markings');
     },
     optional(iri, value) {
       return optionalizePredicate(this.binding(iri, value));

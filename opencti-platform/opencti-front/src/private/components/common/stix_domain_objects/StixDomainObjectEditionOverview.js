@@ -505,10 +505,6 @@ const StixDomainObjectEditionFragment = createFragmentContainer(
           description
           aliases
         }
-        ... on Vulnerability {
-          name
-          description
-        }
         ... on Incident {
           name
           description

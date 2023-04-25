@@ -200,9 +200,6 @@ const StixDomainObjectTimeline = createRefetchContainer(
                     }
                   }
                 }
-                ... on Vulnerability {
-                  name
-                }
                 ... on Incident {
                   name
                 }
@@ -308,9 +305,6 @@ const StixDomainObjectTimeline = createRefetchContainer(
                       }
                     }
                   }
-                }
-                ... on Vulnerability {
-                  name
                 }
                 ... on Incident {
                   name

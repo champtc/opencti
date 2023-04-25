@@ -1,7 +1,10 @@
+import { UserInputError } from 'apollo-server-errors';
 import {
   optionalizePredicate,
   parameterizePredicate,
   buildSelectVariables,
+  attachQuery,
+  detachQuery,
   generateId,
   OSCAL_NS,
 } from '../../../utils.js';
@@ -13,7 +16,7 @@ export function getReducer(type) {
     case 'INVENTORY-ITEM':
       return inventoryItemReducer;
     default:
-      throw new Error(`Unsupported reducer type ' ${type}'`);
+      throw new UserInputError(`Unsupported reducer type ' ${type}'`);
   }
 }
 
@@ -25,20 +28,19 @@ export const inventoryItemReducer = (item) => {
   }
 
   return {
+    iri: item.iri,
     id: item.id,
     standard_id: item.id,
     entity_type: 'inventory-item',
-    ...(item.iri && { parent_iri: item.iri }),
+    // ...(item.iri && { parent_iri: item.iri }),
+    ...(item.object_type && { object_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
-    ...(item.labels && { labels_iri: item.labels }),
-    ...(item.links && { links_iri: item.links }),
-    ...(item.remarks && { remarks_iri: item.remarks }),
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
     // inventory-item
-    ...(item.responsible_parties && { responsible_parties_iri: item.responsible_parties }),
-    ...(item.implemented_components && { implemented_components_iri: item.implemented_components }),
+    ...(item.responsible_parties && { responsible_party_iris: item.responsible_parties }),
+    ...(item.implemented_components && { implemented_component_iris: item.implemented_components }),
     // Asset
     ...(item.asset_id && { asset_id: item.asset_id }),
     // ItAsset
@@ -80,6 +82,11 @@ export const inventoryItemReducer = (item) => {
     ...(item.installed_software && { installed_sw_iri: item.installed_software }),
     ...(item.ports && { ports_iri: item.ports }),
     ...(item.connected_to_network && { conn_network_iri: item.connected_to_network }),
+      // hints for general lists of items
+      ...(item.object_markings && {marking_iris: item.object_markings}),
+      ...(item.labels && { labels_iri: item.labels }),
+      ...(item.links && { links_iri: item.links }),
+      ...(item.remarks && { remarks_iri: item.remarks }),
   };
 };
 
@@ -121,14 +128,68 @@ export const insertInventoryItemQuery = (propValues) => {
   return { iri, id, query };
 };
 export const selectInventoryItemQuery = (id, select) => {
-  return selectInventoryItemByIriQuery(`http://csrc.nist.gov/ns/oscal/common#InventoryItem-${id}`, select);
-};
-export const selectInventoryItemByIriQuery = (iri, select) => {
-  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  // This query building function is unusual because the IRI for InventoryItems can be
+  // different since there are different types of objects.  Thus we build a query that 
+  // looks up inventory items with a specific id instead of with a specific IRI
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'name','description','responsible_parties','implemented_components'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(inventoryItemPredicateMap);
+    if (select.includes('label_name')) select = select.filter((i) => i !== 'label_name');
+    if (select.includes('locations')) select = select.filter((i) => i !== 'locations');
+    if (select.includes('installed_operating_system')) select = select.filter((i) => i !== 'installed_operating_system');
+    if (select.includes('installed_software')) select = select.filter((i) => i !== 'installed_software');
+    if (select.includes('ip_address')) select = select.filter((i) => i !== 'ip_address');
+    if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
+    // if (select.includes('implemented_components')) delete select.implemented_components;
+  }
   if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(inventoryItemPredicateMap, select);
   return `
-  SELECT ${selectionClause}
+  SELECT ?iri ${selectionClause}
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#InventoryItem> .
+    ?iri <http://darklight.ai/ns/common#id> "${id}" .
+    ${predicates}
+    {
+      SELECT DISTINCT ?iri
+      WHERE {
+          ?inventory a <http://csrc.nist.gov/ns/oscal/common#AssetInventory> ;
+              <http://csrc.nist.gov/ns/oscal/common#assets> ?iri .
+      }
+    }
+  }
+  `;
+};
+export const selectInventoryItemByIriQuery = (iri, select) => {
+  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'name','description','responsible_parties','implemented_components'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
+    select = Object.keys(inventoryItemPredicateMap);
+    if (select.includes('label_name')) select = select.filter((i) => i !== 'label_name');
+    if (select.includes('locations')) select = select.filter((i) => i !== 'locations');
+    if (select.includes('installed_operating_system')) select = select.filter((i) => i !== 'installed_operating_system');
+    if (select.includes('installed_software')) select = select.filter((i) => i !== 'installed_software');
+    if (select.includes('ip_address')) select = select.filter((i) => i !== 'ip_address');
+    if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
+    // if (select.includes('implemented_components')) delete select.implemented_components;
+  }
+  if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
+  const { selectionClause, predicates } = buildSelectVariables(inventoryItemPredicateMap, select);
+  return `
+  SELECT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -138,8 +199,14 @@ export const selectInventoryItemByIriQuery = (iri, select) => {
   `;
 };
 export const selectAllInventoryItems = (select, args) => {
-  if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
-  if (select.includes('props')) {
+  if (select !== null && select.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'name','description','responsible_parties','implemented_components'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
+    }
     select = Object.keys(inventoryItemPredicateMap);
     if (select.includes('label_name')) select = select.filter((i) => i !== 'label_name');
     if (select.includes('locations')) select = select.filter((i) => i !== 'locations');
@@ -150,7 +217,9 @@ export const selectAllInventoryItems = (select, args) => {
     if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
     // if (select.includes('implemented_components')) delete select.implemented_components;
   }
+  if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
   if (!select.includes('id')) select.push('id');
+  if (!select.includes('entity_type')) select.push('entity_type');
   if (!select.includes('asset_type')) select.push('asset_type');
 
   if (args !== undefined) {
@@ -203,42 +272,44 @@ export const deleteInventoryItemByIriQuery = (iri) => {
   `;
 };
 export const attachToInventoryItemQuery = (id, field, itemIris) => {
-  const iri = `<http://csrc.nist.gov/ns/oscal/common#InventorItem-${id}>`;
   if (!inventoryItemPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://csrc.nist.gov/ns/oscal/common#InventorItem-${id}>`;
   const { predicate } = inventoryItemPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  INSERT DATA {
-    GRAPH ${iri} {
-      ${statements}
-    }
-  }
-  `;
+
+  return attachQuery(
+    iri, 
+    statements, 
+    inventoryItemPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#InventoryItem>'
+  );
 };
 export const detachFromInventoryItemQuery = (id, field, itemIris) => {
-  const iri = `<http://csrc.nist.gov/ns/oscal/assessment/common#InventoryItem-${id}>`;
   if (!inventoryItemPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://csrc.nist.gov/ns/oscal/assessment/common#InventoryItem-${id}>`;
   const { predicate } = inventoryItemPredicateMap[field];
+
   let statements;
   if (Array.isArray(itemIris)) {
     statements = itemIris.map((itemIri) => `${iri} ${predicate} ${itemIri}`).join('.\n        ');
   } else {
     if (!itemIris.startsWith('<')) itemIris = `<${itemIris}>`;
-    statements = `${iri} ${predicate} ${itemIris}`;
+    statements = `${iri} ${predicate} ${itemIris} .`;
   }
-  return `
-  DELETE DATA {
-    GRAPH ${iri} {
-      ${statements}
-    }
-  }
-  `;
+
+  return detachQuery(
+    iri, 
+    statements, 
+    inventoryItemPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#InventoryItem>'
+  );
 };
 
 // Predicate Maps
@@ -278,6 +349,11 @@ export const inventoryItemPredicateMap = {
     optional(iri, value) {
       return optionalizePredicate(this.binding(iri, value));
     },
+  },
+  object_markings: {
+    predicate: "<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "object_markings");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   labels: {
     predicate: '<http://darklight.ai/ns/common#labels>',
@@ -849,13 +925,15 @@ export function convertAssetToInventoryItem(asset) {
     entity_type: 'inventory-item',
     ...(asset.iri && { iri: asset.iri }),
     ...(asset.id && { id: asset.id }),
+    ...(asset.created && { created: asset.created }),
+    ...(asset.modified && { modified: asset.modified }),
     ...(asset.name && { name: asset.name }),
     ...(asset.description && { description: asset.description }),
     props: propList,
     ...(asset.links && { links_iri: asset.links }),
-    ...(asset.responsible_parties && { responsible_parties_iri: asset.responsible_parties }),
+    ...(asset.responsible_parties && { responsible_party_iris: asset.responsible_parties }),
     ...(implementedComponents.length > 0 && { implemented_components: implementedComponents }),
-    ...(asset.implemented_components && { implemented_components_iri: asset.implemented_components }),
+    ...(asset.implemented_components && { implemented_component_iris: asset.implemented_components }),
     ...(asset.remarks && { remarks_iri: asset.remarks }),
   };
 }

@@ -1,4 +1,4 @@
-import { UserInputError } from 'apollo-server-express';
+import { UserInputError } from 'apollo-server-errors';
 import { riskSingularizeSchema as singularizeSchema } from '../../risk-mappings.js';
 import { compareValues, updateQuery, filterValues } from '../../../utils.js';
 import {
@@ -13,11 +13,16 @@ import {
   detachFromInventoryItemQuery,
   convertAssetToInventoryItem,
 } from './sparql-query.js';
+import { findDataMarkingByIri } from '../../../data-markings/domain/dataMarkings.js';
+import { findResponsiblePartyByIri } from '../../oscal-common/domain/oscalResponsibleParty.js';
 
 const inventoryItemResolvers = {
   Query: {
     inventoryItemList: async (_, args, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectAllInventoryItems(selectMap.getNode('node'), args);
+      let select = selectMap.getNode('node');
+      let reducer = getReducer("INVENTORY-ITEM");
+
+      const sparqlQuery = selectAllInventoryItems(select, args);
       let response;
       try {
         response = await dataSources.Stardog.queryAll({
@@ -81,7 +86,11 @@ const inventoryItemResolvers = {
           }
 
           // convert the asset into a component
-          inventoryItem = convertAssetToInventoryItem(inventoryItem);
+          if (select.includes('props')) {
+            inventoryItem = convertAssetToInventoryItem(inventoryItem);
+          } else {
+            inventoryItem = reducer(inventoryItem);
+          }
 
           // if haven't reached limit to be returned
           if (limit) {
@@ -123,7 +132,8 @@ const inventoryItemResolvers = {
       }
     },
     inventoryItem: async (_, { id }, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectInventoryItemQuery(id, selectMap.getNode('inventoryItem'));
+      let select = selectMap.getNode('inventoryItem');
+      const sparqlQuery = selectInventoryItemQuery(id, select);
       let response;
       try {
         response = await dataSources.Stardog.queryById({
@@ -148,7 +158,9 @@ const inventoryItemResolvers = {
 
       if (Array.isArray(response) && response.length > 0) {
         // convert the asset into a component
-        return convertAssetToInventoryItem(response[0]);
+        if (select.includes('props')) return convertAssetToInventoryItem(response[0]);
+        const reducer = getReducer("INVENTORY-ITEM");
+        return reducer(response[0]);
       }
     },
   },
@@ -158,6 +170,30 @@ const inventoryItemResolvers = {
     editInventoryItem: async (_, { id, input }, { dbName, dataSources, selectMap }) => {},
   },
   InventoryItem: {
+    responsible_parties: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.responsible_party_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.responsible_party_iris) {
+        let result = await findResponsiblePartyByIri(iri, dbName, dataSources, selectMap.getNode('responsible_parties'));
+        if (result === undefined || result === null) continue;
+        results.push(result);
+      }
+      return results;
+    },
+    implemented_components: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.implemented_components !== undefined) return parent.implemented_components;
+      if (parent.implemented_components_iri === undefined) return [];
+    },
+    object_markings: async (parent, _, { dbName, dataSources, selectMap}) => {
+      if (parent.marking_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.marking_iris) {
+        let result = await findDataMarkingByIri(iri, dbName, dataSources, selectMap.getNode('object_markings'));
+        if (result === undefined || result === null) return null;
+        results.push(result);
+      }
+      return results;
+    },
     labels: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.labels_iri === undefined) return [];
       const iriArray = parent.labels_iri;
@@ -271,45 +307,6 @@ const inventoryItemResolvers = {
         return results;
       }
       return [];
-    },
-    responsible_parties: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.responsible_parties_iri === undefined) return [];
-      const reducer = getCommonReducer('RESPONSIBLE-PARTY');
-      const results = [];
-      const sparqlQuery = selectAllResponsibleParties(selectMap.getNode('node'), args, parent);
-      let response;
-      try {
-        response = await dataSources.Stardog.queryById({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select Referenced Responsible Parties',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-      if (response === undefined || response.length === 0) return null;
-
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
-
-      for (const item of response) {
-        results.push(reducer(item));
-      }
-
-      // check if there is data to be returned
-      if (results.length === 0) return [];
-      return results;
-    },
-    implemented_components: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.implemented_components !== undefined) return parent.implemented_components;
-      if (parent.implemented_components_iri === undefined) return [];
     },
   },
 };

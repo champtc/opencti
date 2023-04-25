@@ -1,7 +1,7 @@
 # declares the query entry-points for this type
 extend type Query {
   controlCatalog(id: ID = "22f2ad37-4f07-5182-bf4e-59ea197a73dc"): ControlCatalog  @hasPermission(resources:"ControlCatalog:view")
-  listControlCatalogs(
+  controlCatalogs(
     first: Int
     offset: Int
     orderedBy: ControlCatalogOrdering
@@ -16,14 +16,20 @@ extend type Query {
 }
 
 # =========== declares the mutation entry-points for this type ====================
-# extend type Mutation {
-# }
+extend type Mutation {
+  # GeneralPart
+  createGeneralPart(input: GeneralPartInput!): GeneralPart @hasPermission(resources: "AssessmentResults:update")
+  deleteGeneralPart(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  editGeneralPart(id: ID!, input: [EditInput]!, commitMessage: String): GeneralPart @hasPermission(resources: "AssessmentResults:update")
+  attachToGeneralPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromGeneralPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+}
 
 # ================== Types ==============
 """
 ControlCatalog model provides a structured representation of control information.
 """
-type ControlCatalog implements BasicObject & LifecycleObject & OscalObject & OscalModel {
+type ControlCatalog implements BasicObject & LifecycleObject & OscalModel {
   # BasicObject
   "Uniquely identifies this object."
   id: ID!
@@ -38,23 +44,6 @@ type ControlCatalog implements BasicObject & LifecycleObject & OscalObject & Osc
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
-  # OscalObject
-  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-  "Identifies one or more relationships to other entities."
-  relationships(
-    first: Int
-    offset: Int
-    orderedBy: OscalRelationshipsOrdering
-    orderMode: OrderingMode
-    filters: [OscalRelationshipsFiltering]
-    filterMode: FilterMode
-    search: String
-  ): OscalRelationshipConnection
   # Metadata
   "Identifies the name given to the document."
   name: String!
@@ -72,13 +61,14 @@ type ControlCatalog implements BasicObject & LifecycleObject & OscalObject & Osc
   document_ids: [ID]
   "Provides information about the containing document, and defines concepts that are shared across the document."
   shared_metadata: OscalMetadata!
-  # Params
+  # Catalog
+  "Identifies the set of parameters used to support the dynamic assignment of value(s) in a control."
   params: ControlParameterConnection
-  # Controls
+  "Identifies a structured information object representing a security or privacy control. Each security or privacy control within the Catalog is defined by a distinct control instance."
   controls: ControlConnection
-  # Groups
+  "Identifies a group of controls, or of groups of controls."
   groups: ControlGroupConnection
-  # Backmatter
+  # Back-matter
   "Identifies one or more Resources that are associated with this POAM."
   resources(first: Int, offset: Int): OscalResourceConnection
 }
@@ -148,10 +138,8 @@ interface Control {
   props: [Property]
   "Identifies values in a control that are dynamically assigned."
   params: [ControlParameter]
-  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
   "Identifies sub-controls"
@@ -213,7 +201,7 @@ enum ControlOrdering {
 """
 SecurityControl 
 """
-type SecurityControl implements BasicObject & LifecycleObject & OscalObject & Control {
+type SecurityControl implements BasicObject & LifecycleObject & Control {
   # BasicObject
   "Uniquely identifies this object."
   id: ID!
@@ -223,28 +211,11 @@ type SecurityControl implements BasicObject & LifecycleObject & OscalObject & Co
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
-  # OscalObject
-  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-  "Identifies one or more relationships to other entities."
-  relationships(
-    first: Int
-    offset: Int
-    orderedBy: OscalRelationshipsOrdering
-    orderMode: OrderingMode
-    filters: [OscalRelationshipsFiltering]
-    filterMode: FilterMode
-    search: String
-  ): OscalRelationshipConnection
   # Control
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
@@ -254,6 +225,8 @@ type SecurityControl implements BasicObject & LifecycleObject & OscalObject & Co
   name: String!
   "Identifies values in a control that are dynamically assigned."
   params: [ControlParameter]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
   "Identifies sub-controls"
@@ -268,7 +241,7 @@ type SecurityControl implements BasicObject & LifecycleObject & OscalObject & Co
 """
 PrivacyControl 
 """
-type PrivacyControl implements BasicObject & LifecycleObject & OscalObject & Control {
+type PrivacyControl implements BasicObject & LifecycleObject & Control {
   # BasicObject
   "Uniquely identifies this object."
   id: ID!
@@ -278,28 +251,11 @@ type PrivacyControl implements BasicObject & LifecycleObject & OscalObject & Con
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
-  # OscalObject
-  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-  "Identifies one or more relationships to other entities."
-  relationships(
-    first: Int
-    offset: Int
-    orderedBy: OscalRelationshipsOrdering
-    orderMode: OrderingMode
-    filters: [OscalRelationshipsFiltering]
-    filterMode: FilterMode
-    search: String
-  ): OscalRelationshipConnection
   # Control
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
@@ -309,6 +265,8 @@ type PrivacyControl implements BasicObject & LifecycleObject & OscalObject & Con
   name: String!
   "Identifies values in a control that are dynamically assigned."
   params: [ControlParameter]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
   "Identifies sub-controls"
@@ -347,7 +305,7 @@ type ControlParameter implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
@@ -355,7 +313,7 @@ type ControlParameter implements BasicObject & LifecycleObject & OscalObject {
   # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  "Identifies a list of references to a local or remote resource."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
   remarks: [CyioNote]
@@ -377,7 +335,7 @@ type ControlParameter implements BasicObject & LifecycleObject & OscalObject {
   "Describes the purpose and use of a parameter."
   usage: String
   "Identifies a formal or informal expression of a constraint or test"
-  containts: [OscalConstraint]
+  constraints: [OscalConstraint]
   # "Specifies a set of prose statements that provides a recommendation for the use of a parameter."
   # guidelines: [Guideline]
   # choice
@@ -435,11 +393,10 @@ enum ControlParameterOrdering {
 }
 
 
-
 """
 ControlGroup
 """
-type ControlGroup implements BasicObject & LifecycleObject & OscalObject {
+type ControlGroup implements BasicObject & LifecycleObject {
   # BasicObject
   "Uniquely identifies this object."
   id: ID!
@@ -449,28 +406,11 @@ type ControlGroup implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
-  # OscalObject
-  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-  "Identifies one or more relationships to other entities."
-  relationships(
-    first: Int
-    offset: Int
-    orderedBy: OscalRelationshipsOrdering
-    orderMode: OrderingMode
-    filters: [OscalRelationshipsFiltering]
-    filterMode: FilterMode
-    search: String
-  ): OscalRelationshipConnection
   # Group
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
@@ -480,6 +420,8 @@ type ControlGroup implements BasicObject & LifecycleObject & OscalObject {
   name: String!
   "Identifies values in a control that are dynamically assigned."
   params: [ControlParameter]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
   "Identifies sub-controls"
@@ -580,10 +522,6 @@ as standards to their user community. If no ns is provided, the name is expected
 in the "OSCAL" namespace.
 """
 interface OscalPart {
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
   "Specifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
   ns: URL
   "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
@@ -596,8 +534,59 @@ interface OscalPart {
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
+}
+
+type GeneralPart implements BasicObject & LifecycleObject & OscalPart {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  "Indicates the date and time at which the object was originally created."
+  created: Timestamp
+  "Indicates the date and time that this particular version of the object was last modified."
+  modified: Timestamp
+  # OscalPart
+  "Identifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
+  ns: URL
+  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
+  class: String
+  "Identifies A name given to the part, which may be used by a tool for display and navigation."
+  title: String!
+  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
+  props: [Property]
+  "Identifies multiple paragraphs, lists, tables etc."
+  prose: String
+  "Identifies a partition of a control's definition or a child of another part."
+  parts: [OscalPart]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
+  # GeneralPart
+  "Identifies a textual label that uniquely identifies the part's semantic type."
+  name: String!
+}
+input GeneralPartInput {
+  "Identifies a textual label that uniquely identifies the part's semantic type."
+  name: String!
+  "Identifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
+  ns: URL
+  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
+  class: String
+  "Identifies A name given to the part, which may be used by a tool for display and navigation."
+  title: String!
+  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
+  props: [PropertyAddInput]
+  "Identifies multiple paragraphs, lists, tables etc."
+  prose: String
+  "Identifies a partition of a control's definition or a child of another part."
+  parts: [GeneralPartInput]
 }
 
 """
@@ -633,8 +622,8 @@ type ControlOverview implements BasicObject & LifecycleObject {
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
 }
 
 """
@@ -670,8 +659,8 @@ type ControlStatement implements BasicObject & LifecycleObject {
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
 }
 
 """
@@ -707,8 +696,8 @@ type ControlAssessmentObjective implements BasicObject & LifecycleObject {
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
 }
 
 """
@@ -744,8 +733,8 @@ type ControlAssessmentObjective implements BasicObject & LifecycleObject {
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
 }
 
 
@@ -782,8 +771,8 @@ type ControlGuidance implements BasicObject & LifecycleObject {
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
 }
 
 """
@@ -819,10 +808,9 @@ type ControlAssessmentMethod implements BasicObject & LifecycleObject {
   prose: String
   "Identifies a partition of a control's definition or a child of another part."
   parts: [OscalPart]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
+  "Identifies a list of references to a local or remote resource."
+  links: [Link]
 }
-
 
 
 """

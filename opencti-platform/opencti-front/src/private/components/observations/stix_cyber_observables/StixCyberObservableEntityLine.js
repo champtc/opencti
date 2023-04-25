@@ -289,10 +289,6 @@ const StixCyberObservableEntityLineFragment = createFragmentContainer(
             name
             description
           }
-          ... on Vulnerability {
-            name
-            description
-          }
           ... on Incident {
             name
             description
@@ -381,10 +377,6 @@ const StixCyberObservableEntityLineFragment = createFragmentContainer(
                 name
                 description
               }
-              ... on Vulnerability {
-                name
-                description
-              }
               ... on Incident {
                 name
                 description
@@ -470,10 +462,6 @@ const StixCyberObservableEntityLineFragment = createFragmentContainer(
                 description
               }
               ... on Tool {
-                name
-                description
-              }
-              ... on Vulnerability {
                 name
                 description
               }
@@ -567,10 +555,6 @@ const StixCyberObservableEntityLineFragment = createFragmentContainer(
             name
             description
           }
-          ... on Vulnerability {
-            name
-            description
-          }
           ... on Incident {
             name
             description
@@ -659,10 +643,6 @@ const StixCyberObservableEntityLineFragment = createFragmentContainer(
                 name
                 description
               }
-              ... on Vulnerability {
-                name
-                description
-              }
               ... on Incident {
                 name
                 description
@@ -748,10 +728,6 @@ const StixCyberObservableEntityLineFragment = createFragmentContainer(
                 description
               }
               ... on Tool {
-                name
-                description
-              }
-              ... on Vulnerability {
                 name
                 description
               }

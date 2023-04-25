@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import * as PropTypes from 'prop-types';
 import { withRouter, Link } from 'react-router-dom';
 import { compose } from 'ramda';
@@ -38,6 +38,7 @@ import TopMenuDataPartiesEntities from './TopMenuDataPartiesEntities';
 import TopMenuDataTasksEntities from './TopMenuDataTasksEntities';
 import TopMenuDataNotesEntities from './TopMenuDataNotesEntities';
 import TopMenuDataLocationsEntities from './TopMenuDataLocationsEntities';
+import TopMenuDataUserTypesEntities from './TopMenuDataUserTypesEntities';
 import TopMenuObservations from './TopMenuObservations';
 import TopMenuIndicator from './TopMenuIndicator';
 import TopMenuInfrastructure from './TopMenuInfrastructure';
@@ -72,6 +73,7 @@ import { commitMutation } from '../../../relay/environment';
 import Security, {
   KNOWLEDGE,
   EXPLORE,
+  LeftBarContext,
 } from '../../../utils/Security';
 import AboutModal from '../../../components/AboutModal';
 import TopMenuCourseOfAction from './TopMenuCourseOfAction';
@@ -81,6 +83,9 @@ import Export from '../../../components/Export';
 import ExportPoam from '../../../components/ExportPoam';
 import TopMenuRiskAssessment from './TopMenuRiskAssessment';
 import TopMenuRisk from './TopMenuRisk';
+import TopMenuDataLeveragedAuthorizationEntities from './TopMenuDataLeveragedAuthorizationEntities';
+import TopMenuDataInformationTypeEntities from './TopMenuDataInformationTypeEntities';
+import TopMenuDataMarkingsEntities from './TopMenuDataMarkingsEntities';
 
 const styles = (theme) => ({
   appBar: {
@@ -163,9 +168,10 @@ const logoutMutation = graphql`
 `;
 
 const TopBar = ({
-  t, classes, location, history, theme, drawer, dashboard, handleChangeDashboard,
+  t, classes, location, history, theme, dashboard, handleChangeDashboard,
 }) => {
   const [menuOpen, setMenuOpen] = useState({ open: false, anchorEl: null });
+  const { drawer } = useContext(LeftBarContext);
   const handleOpenMenu = (event) => {
     event.preventDefault();
     setMenuOpen({ open: true, anchorEl: event.currentTarget });
@@ -191,12 +197,7 @@ const TopBar = ({
       style={{ backgroundColor: theme.palette.header.background }}
     >
       <Toolbar>
-        {/* <div className={classes.logoContainer}>
-          <Link to="/dashboard">
-            <img src={theme.logo} alt="logo" className={classes.logo} />
-          </Link>
-        </div> */}
-        <div className={drawer ? classes.menuContainerClose : classes.menuContainer}>
+        <div className={drawer ? classes.menuContainer : classes.menuContainerClose}>
           {(location.pathname === '/dashboard'
             || location.pathname === '/dashboard/import')
             && <TopMenuDashboard
@@ -278,8 +279,8 @@ const TopBar = ({
             && (
               <TopMenuVsacCompare />
             )} */}
-          {(location.pathname.includes('/defender HQ/assets')
-            || location.pathname.match('/defender HQ/assets/[a-z_]+$')) && <TopMenuAssets />}
+          {(location.pathname.includes('/defender_hq/assets')
+            || location.pathname.match('/defender_hq/assets/[a-z_]+$')) && <TopMenuAssets />}
           {(location.pathname === ('/activities/risk_assessment')
             || location.pathname.match('/activities/risk_assessment/[a-z_]+$')) && <TopMenuRiskAssessment />}
           {(location.pathname.includes('/activities/risk_assessment/risks/')) && <TopMenuRisk />}
@@ -302,8 +303,16 @@ const TopBar = ({
             || location.pathname === '/data/data_source/assessment_platform') && <TopMenuDataAssessmentPlatformsEntities />}
           {(location.pathname === '/data/entities/responsible_parties'
             || location.pathname === '/data/data_source/responsible_parties') && <TopMenuDataResponsiblePartiesEntities />}
+          {(location.pathname === '/data/entities/user_types'
+            || location.pathname === '/data/data_source/user_types') && <TopMenuDataUserTypesEntities />}
           {(location.pathname === '/data/entities/external_references'
             || location.pathname === '/data/data_source/external_references') && <TopMenuDataExternalReferenceEntities />}
+          {(location.pathname === '/data/entities/leveraged_authorizations'
+            || location.pathname === '/data/data_source/leveraged_authorizations') && <TopMenuDataLeveragedAuthorizationEntities />}
+          {(location.pathname === '/data/entities/information_types'
+            || location.pathname === '/data/data_source/information_types') && <TopMenuDataInformationTypeEntities />}
+          {(location.pathname === '/data/entities/data_markings'
+            || location.pathname === '/data/data_source/data_markings') && <TopMenuDataMarkingsEntities />}
           {(location.pathname === '/dashboard/arsenal'
             || location.pathname.match('/dashboard/arsenal/[a-z_]+$')) && <TopMenuArsenal />}
           {location.pathname.includes('/dashboard/arsenal/malwares/') && <TopMenuMalware />}
@@ -493,7 +502,6 @@ const TopBar = ({
 
 TopBar.propTypes = {
   dashboard: PropTypes.string,
-  drawer: PropTypes.bool,
   keyword: PropTypes.string,
   theme: PropTypes.object,
   classes: PropTypes.object,

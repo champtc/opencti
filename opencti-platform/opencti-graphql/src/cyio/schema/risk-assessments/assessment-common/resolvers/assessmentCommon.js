@@ -45,12 +45,12 @@ const assessmentCommonResolvers = {
     INTERVIEW: 'INTERVIEW',
     TEST: 'TEST',
   },
-  ObjectiveStatusReason: {
+  ObjectiveStatusReasonType: {
     pass: 'pass',
     fail: 'fail',
     other: 'other',
   },
-  ObjectiveStatusState: {
+  ObjectiveStatusStateType: {
     satisfied: 'satisfied',
     not_satisfied: 'not-satisfied',
   },

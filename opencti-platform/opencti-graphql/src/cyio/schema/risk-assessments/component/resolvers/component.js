@@ -13,11 +13,16 @@ import {
   detachFromComponentQuery,
   convertAssetToComponent,
 } from './sparql-query.js';
+import { findDataMarkingByIri } from '../../../data-markings/domain/dataMarkings.js';
+
 
 const componentResolvers = {
   Query: {
     componentList: async (_, args, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectAllComponents(selectMap.getNode('node'), args);
+      let select = selectMap.getNode('node');
+      let reducer = getReducer("COMPONENT");
+
+      const sparqlQuery = selectAllComponents(select, args);
       let response;
       try {
         response = await dataSources.Stardog.queryAll({
@@ -60,6 +65,10 @@ const componentResolvers = {
           // filter out network assets
           if (component.asset_type === 'network') continue;
           let { name } = component;
+          if (name === undefined || name === null) {
+            console.error(`[CYIO] INVALID-COMPONENT: (${dbName}) Unknown component name is unspecified for object ${component.iri}`);
+            continue;
+          }
           if (component.hasOwnProperty('vendor_name')) {
             if (!component.name.startsWith(component.vendor_name)) name = `${component.vendor_name} ${component.name}`;
           }
@@ -132,7 +141,11 @@ const componentResolvers = {
           }
 
           // convert the asset into a component
-          component = convertAssetToComponent(component);
+          if (select.includes('props')) {
+            component = convertAssetToComponent(component);
+          } else {
+            component = reducer(component);
+          }
 
           // if haven't reached limit to be returned
           if (limit) {
@@ -174,7 +187,8 @@ const componentResolvers = {
       }
     },
     component: async (_, { id }, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectComponentQuery(id, selectMap.getNode('component'));
+      let select = selectMap.getNode('component');
+      const sparqlQuery = selectComponentQuery(id, select);
       let response;
       try {
         response = await dataSources.Stardog.queryById({
@@ -199,10 +213,9 @@ const componentResolvers = {
 
       if (Array.isArray(response) && response.length > 0) {
         // convert the asset into a component
-        const component = convertAssetToComponent(response[0]);
-        return component;
-        // const reducer = getReducer("COMPONENT");
-        // return reducer(response[0]);
+        if (select.includes('props')) return convertAssetToComponent(response[0]);
+        const reducer = getReducer("COMPONENT");
+        return reducer(response[0]);
       }
     },
   },
@@ -212,6 +225,54 @@ const componentResolvers = {
     editComponent: async (_, { id, input }, { dbName, dataSources, selectMap }) => {},
   },
   Component: {
+    responsible_roles: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.responsible_roles_iri === undefined) return [];
+      const reducer = getCommonReducer('RESPONSIBLE-ROLE');
+      const results = [];
+      const sparqlQuery = selectAllResponsibleRoles(selectMap.getNode('node'), args, parent);
+      let response;
+      try {
+        response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: 'Select Referenced Responsible Roles',
+          singularizeSchema,
+        });
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+      if (response === undefined || response.length === 0) return null;
+
+      // Handle reporting Stardog Error
+      if (typeof response === 'object' && 'body' in response) {
+        throw new UserInputError(response.statusText, {
+          error_details: response.body.message ? response.body.message : response.body,
+          error_code: response.body.code ? response.body.code : 'N/A',
+        });
+      }
+
+      for (const item of response) {
+        results.push(reducer(item));
+      }
+
+      // check if there is data to be returned
+      if (results.length === 0) return [];
+      return results;
+    },
+    protocols: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.protocols_iri === undefined) return [];
+    },
+    object_markings: async (parent, _, { dbName, dataSources, selectMap}) => {
+      if (parent.marking_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.marking_iris) {
+        let result = await findDataMarkingByIri(iri, dbName, dataSources, selectMap.getNode('object_markings'));
+        if (result === undefined || result === null) return null;
+        results.push(result);
+      }
+      return results;
+    },
     labels: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.labels_iri === undefined) return [];
       const iriArray = parent.labels_iri;
@@ -325,44 +386,6 @@ const componentResolvers = {
         return results;
       }
       return [];
-    },
-    responsible_roles: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.responsible_roles_iri === undefined) return [];
-      const reducer = getCommonReducer('RESPONSIBLE-ROLE');
-      const results = [];
-      const sparqlQuery = selectAllResponsibleRoles(selectMap.getNode('node'), args, parent);
-      let response;
-      try {
-        response = await dataSources.Stardog.queryById({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select Referenced Responsible Roles',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-      if (response === undefined || response.length === 0) return null;
-
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
-
-      for (const item of response) {
-        results.push(reducer(item));
-      }
-
-      // check if there is data to be returned
-      if (results.length === 0) return [];
-      return results;
-    },
-    protocols: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.protocols_iri === undefined) return [];
     },
   },
 };

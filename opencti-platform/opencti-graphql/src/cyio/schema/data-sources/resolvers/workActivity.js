@@ -23,24 +23,12 @@ const cyioWorkActivityResolvers = {
   // Mutation: {
   // },
 
-  // IngestActivity: {
-  //   messages: async (parent, _, { dbName, dataSources, selectMap}) => {
-  //     if (parent.message_ids === undefined) return [];
-  //     return findActivityMessagesById(parent, dbName, dataSources, selectMap);
-  //   },
-  //   errors: async (parent, _, { dbName, dataSources, selectMap }) => {
-  //     if (parent.error_ids === undefined) return [];
-  //     return findActivityErrorsById(parent, dbName, dataSources, selectMap);
-  //   },
-  //   tracking: async (parent, _, { dbName, dataSources, selectMap }) => {
-  //     if (parent.tracking_ids === undefined) return null;
-  //     return findActivityTrackingById(parent, dbName, dataSources, selectMap);
-  //   },
-  //   initiator: async (parent, _, { dbName, dataSources, selectMap }) => {
-  //       if (parent.initiator_iri === undefined) return null;
-  //       return findInitiatorById(parent, dbName, dataSources, selectMap);
-  //   },
-  // },
+  // Map enum GraphQL values to data model required values
+  WorkActivityStatus: {
+    completed: 'completed',
+    failed: 'failed',
+    in_progress: 'in-progress',
+  },
 };
 
 export default cyioWorkActivityResolvers;

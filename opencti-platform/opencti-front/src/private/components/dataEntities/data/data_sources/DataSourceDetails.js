@@ -10,6 +10,7 @@ import Paper from '@material-ui/core/Paper';
 import {
   CogOutline,
 } from 'mdi-material-ui';
+import * as _ from 'lodash';
 import LaunchIcon from '@material-ui/icons/Launch';
 import Typography from '@material-ui/core/Typography';
 import { Button, Grid, Chip, Tooltip } from '@material-ui/core';
@@ -66,7 +67,18 @@ const styles = (theme) => ({
     borderRadius: '1.8rem',
     margin: '0 5px 10px 0',
   },
-  chip: { borderRadius: '4px' }
+  chip: { borderRadius: '4px' },
+  btnFlexContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    marginTop: '10px',
+  },
+  btns: {
+    margin: '0 20px 0 0',
+  },
+   btnContainer: {
+    marginBottom: '10px',
+   },
 });
 
 class DataSourceDetailsComponent extends Component {
@@ -217,7 +229,7 @@ class DataSourceDetailsComponent extends Component {
                       {t('Type')}
                     </Typography>
                     <div className="clearfix" />
-                    <Chip variant="outlined" label={dataSource.entity_type} style={{ backgroundColor: 'rgba(211, 19, 74, 0.2)' }} classes={{ root: classes.chip }} />
+                    <Chip variant="outlined" label={_.startCase(dataSource.data_source_type)} style={{ backgroundColor: 'rgba(211, 19, 74, 0.2)' }} classes={{ root: classes.chip }} />
                   </div>
                 </Grid>
                 <Grid item={true} xs={12}>
@@ -320,21 +332,20 @@ class DataSourceDetailsComponent extends Component {
                 </Grid>
               </Grid>
               <Grid container item xs={12}>
-                <Grid item={true} xs={4}>
-                  <div style={{ marginTop: '20px' }}>
+                <div className={classes.btnFlexContainer}>
+                  <div className={classes.btnContainer}>
                     <Button
                       color='primary'
                       variant='contained'
                       startIcon={<CogOutline />}
-                      sx={{ mr: 5 }}
+                      className={classes.btns}
                       onClick={this.handleOpenConfiguration.bind(this)}
+                      gutterBottom
                     >
                       {t('Connection Info')}
                     </Button>
                   </div>
-                </Grid>
-                <Grid item={true} xs={8}>
-                  <div style={{ marginTop: '20px' }}>
+                  <div className={classes.btnContainer}>
                     <Button
                       color='primary'
                       variant='contained'
@@ -344,7 +355,7 @@ class DataSourceDetailsComponent extends Component {
                       {t('Data Usage Restrictions')}
                     </Button>
                   </div>
-                </Grid>
+                </div> 
               </Grid>
             </Paper>
           </Grid>
@@ -352,17 +363,17 @@ class DataSourceDetailsComponent extends Component {
             dataSourceId={dataSource.id}
           />
         </Grid>
-        <DataSourceConnectionPopover
-          dataSource={dataSource}
-          openConnection={this.state.openConnection}
-          handleCloseConnection={this.handleCloseConnection.bind(this)}
-        />
-        <DataSourceDataUsageRestrictionsPopover
-          dataSource={dataSource}
-          refreshQuery={refreshQuery}
-          openDataUsageRestrictions={this.state.openDataUsageRestrictions}
-          handleCloseDataUsageRestrictions={this.handleCloseDataUsageRestrictions.bind(this)}
-        />
+          <DataSourceConnectionPopover
+            dataSource={dataSource}
+            openConnection={this.state.openConnection}
+            handleCloseConnection={this.handleCloseConnection.bind(this)}
+          />
+          <DataSourceDataUsageRestrictionsPopover
+            dataSource={dataSource}
+            refreshQuery={refreshQuery}
+            openDataUsageRestrictions={this.state.openDataUsageRestrictions}
+            handleCloseDataUsageRestrictions={this.handleCloseDataUsageRestrictions.bind(this)}
+          />       
       </div>
     );
   }
@@ -391,6 +402,7 @@ const DataSourceDetails = createFragmentContainer(
         contextual
         description
         entity_type
+        data_source_type
         update_frequency {
           period
           unit

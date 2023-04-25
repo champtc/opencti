@@ -1,5 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import { formatError as apolloFormatError } from 'apollo-errors';
+import { ApolloError} from 'apollo-server-errors';
 import { execute, GraphQLError, subscribe } from 'graphql';
 import { dissocPath } from 'ramda';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
@@ -110,6 +111,7 @@ const createApolloServer = async (app, httpServer) => {
     introspection: true,
     mocks: false,
     preserveResolvers: true,
+    persistedQueries: false,
     mockEntireSchema: false,
     dataSources: () => ({
       Stardog: new StardogKB(),
@@ -167,15 +169,28 @@ const createApolloServer = async (app, httpServer) => {
             });
         }
 
-        const errorCode = e.extensions.exception.code;
+        let errorCode;
+        if (e.extensions.hasOwnProperty('code')) {
+          errorCode = e.extensions.code;
+        } else if (e.extensions.exception.hasOwnProperty('code')) {
+          errorCode = e.extensions.exception.code;
+        }
+        
         if (errorCode === 'ERR_GRAPHQL_CONSTRAINT_VALIDATION') {
           const { fieldName } = e.extensions.exception;
           const ConstraintError = ValidationError(fieldName);
           e = apolloFormatError(ConstraintError);
+        } else if (!DEV_MODE && error.hasOwnProperty('originalError')) {
+          // this if condition is to handle the issue where the Apollo Server will
+          // convert GraphQL exceptions thrown by resolvers to an INTERNAL_SERVER_ERROR 
+          // if the NODE_ENV is set to 'production'.  To get around this, retrieve the
+          // original error thrown by the resolver via the originalError property
+          let err = error.originalError;
+          if (err instanceof ApolloError) e = apolloFormatError(err);
         }
       }
-      // Remove the exception stack in production.
-      return DEV_MODE ? e : dissocPath(['extensions'], e);
+
+      return e;
     },
   });
 

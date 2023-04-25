@@ -303,14 +303,14 @@ type Activity implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -334,8 +334,8 @@ type Activity implements BasicObject & LifecycleObject & OscalObject {
   methods: [MethodTypes!]!
   # "Identifies one or more steps related to an activity."
   # steps: [Step]
-  # "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
-  # related_controls: [ControlReview]
+  "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
+  related_controls: ControlSet
   "Identifies the person or organization responsible for performing a specific role related to the task."
   responsible_roles: [OscalResponsibleParty]
 }
@@ -346,11 +346,12 @@ input ActivityAddInput {
   description: String!
   "Identifies the assessment method used."
   methods: [MethodTypes!]!
-  # "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
-  # related_controls: [ControlReview]
+  "Identifies the optional set of controls and control objectives that are assessed or remediated by this activity."
+  related_controls: [ControlSetInput]
   "Identifies the person or organization responsible for performing a specific role related to the task."
   responsible_roles: [OscalResponsibleRoleAddInput]
 }
+
 # Ordering Types
 enum ActivityOrdering {
   "Created"
@@ -480,14 +481,14 @@ type AssessmentPlatform implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -789,15 +790,11 @@ input OnDateTimingAddInput {
 ## Evidence
 #
 "Defines identifying information about evidence relevant to this observation."
-type Evidence {
+type Evidence implements ComplexDatatype{
   "Uniquely identifies this object."
   id: ID!
   "Identifies the type of the Object."
   entity_type: String!
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
   "Identifies a resolvable URL reference to the relevant evidence."
   href: URL
   "Identifies a human-readable description of the evidence."
@@ -918,32 +915,6 @@ type FacetEdge {
   node: Facet!
 }
 
-## Finding Target
-#
-"Defines identifying information about the target of a finding."
-type FindingTarget {
-  # "Identifies the type of the finding target."
-  # target_type: FindingTargetType!
-  # "Identifies the specific target."
-  # target: StatementOrObjective!
-  "Identifies a name for this objective status."
-  name: String
-  "Identifies a human-readable description of the assessor's conclusions regarding the degree to which an objective is satisfied."
-  description: String
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies whether the objective is satisfied or not within a given system."
-  objective_status_state: ObjectiveStatusState!
-  "Identifies the reason the objective was given it's status."
-  objective_status_reason: ObjectiveStatusReason
-  "Identifies an explanation as to why the objective was not satisfied."
-  objective_status_explanation: String
-  "Indicates the degree to which the given control was implemented."
-  implementation_status: ImplementationStatus
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-}
-
 ## LogEntry
 #
 "Defines an abstract interface for identifying information about a log entry for actions taken."
@@ -957,14 +928,14 @@ interface LogEntry {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -1056,14 +1027,14 @@ type AssessmentLogEntry implements BasicObject & LifecycleObject & OscalObject &
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -1079,6 +1050,8 @@ type AssessmentLogEntry implements BasicObject & LifecycleObject & OscalObject &
     search: String
   ): OscalRelationshipConnection
   # LogEntry
+  "Identifies the type of assessment tracking entry."
+  assessment_activity_type: [AssessmentActivityType]
   "Identifies the name for the risk log entry."
   name: String!
   "Identifies a human-readable description of of what was done regarding the risk."
@@ -1097,6 +1070,8 @@ input AssessmentLogEntryAddInput {
   "Identifies a reference to the Result for which this is a log entry so that it can be attached."
   result_id: ID
   # Entry
+  "Identifies the type of assessment tracking entry."
+  assessment_activity_type: [AssessmentActivityType!]!
   "Identifies the name for the risk log entry."
   name: String!
   "Identifies a human-readable description of of what was done regarding the risk."
@@ -1169,7 +1144,7 @@ type RiskLogEntry implements BasicObject & LifecycleObject & OscalObject & LogEn
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
@@ -1300,14 +1275,14 @@ type MitigatingFactor implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -1389,7 +1364,7 @@ type Observation implements BasicObject & LifecycleObject & OscalObject {
   standard_id: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
@@ -1563,14 +1538,14 @@ type OscalTask implements BasicObject & LifecycleObject & OscalObject {
   standard_id: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -1686,14 +1661,14 @@ type RequiredAsset implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -1782,7 +1757,7 @@ type Risk implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
@@ -1965,14 +1940,14 @@ type RiskResponse implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -2162,7 +2137,6 @@ type ThreatReference {
 
 ## Unions
 #
-# union StatementOrObjects = ControlStatement | ControlObjective
 union ActorTarget = OscalParty | AssessmentPlatform | Component
 # union PartyOrComponent =
 #     OscalParty
@@ -2192,6 +2166,18 @@ enum ActorType {
   assessment_platform
   "A reference to an assessment-platform defined with the assessment assets."
   party
+}
+
+"Defines the type of assessment activity entry. Can be multi-valued."
+enum AssessmentActivityType {
+  "Information related to the current state of the assessment."
+  status_update
+  "A significant step in the assessment activities has been achieved."
+  milestone_complete
+  "Assessors attestations completed"
+  attestation_completed
+  "Controls have been reviewed"
+  controls_reviewed
 }
 
 "Defines the type of remediation tracking entry. Can be multi-valued."
@@ -2265,7 +2251,7 @@ enum MethodTypes {
 }
 
 "Defines the reasons for the objective status"
-enum ObjectiveStatusReason {
+enum ObjectiveStatusReasonType {
   "The target system or system component satisfied all the conditions."
   pass
   "The target system or system component did not satisfy all the conditions."
@@ -2275,7 +2261,7 @@ enum ObjectiveStatusReason {
 }
 
 "Defines the states of the objective status"
-enum ObjectiveStatusState {
+enum ObjectiveStatusStateType {
   "The objective has been completely satisfied"
   satisfied
   "The objective has not been completely satisfied, but may be partially satisfied"

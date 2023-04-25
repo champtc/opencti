@@ -1,0 +1,164 @@
+# declares the query entry-points for this type
+extend type Query {
+  assessmentPlan(id: ID = "22f2ad37-4f07-5182-bf4e-59ea197a73dc"): AssessmentResults  @hasPermission(resources:"AssessmentResults:view")
+  assessmentPlanList(
+    first: Int
+    offset: Int
+    orderedBy: AssessmentPlanOrdering
+    orderMode: OrderingMode
+    filters: [AssessmentPlanFiltering]
+    filterMode: FilterMode
+    search: String
+  ): AssessmentPlanConnection  @hasPermission(resources:"AssessmentResults:view")
+}
+
+# declares the mutation entry-points for this type
+# extend type Mutation {
+# }
+
+# ================== Types ==============
+"""
+AssessmentPlan provides a representation of the information contained within an
+assessment plan, and is typically used by anyone planning to perform an 
+assessment or continuous monitoring activities on an information system to 
+determine the degree to which that system complies with a given control baseline 
+used by the system.
+
+It is designed to use identical syntax to the assessment results model, for 
+overlapping assemblies (Objectives, Assessment Subject, Assets, and Assessment 
+Activities).
+"""
+type AssessmentPlan implements BasicObject & LifecycleObject & OscalModel {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  "Indicates the date and time at which the object was originally created."
+  created: Timestamp
+  "Indicates the date and time that this particular version of the object was last modified."
+  modified: Timestamp
+  # Metadata
+  "Identifies the name given to the document."
+  name: String!
+  "Identifies the date and time the document was published."
+  published: Timestamp
+  "Identifies the date and time the document as last modified."
+  last_modified: Timestamp
+  "Identifies the current version of the document."
+  version: String!
+  "Identifies the OSCAL model version the document was authored against."
+  oscal_version: String!
+  "Identifies a list of revisions to the containing document."
+  revisions: [Revision]
+  "Identifies references to previous versions of this document."
+  document_ids: [ID]
+  "Provides information about the containing document, and defines concepts that are shared across the document."
+  shared_metadata: OscalMetadata!
+  # AssessmentPlan
+  system_security_plan: SystemSecurityPlan!
+  "Identifies data objects that are used in the assessment plan, that do not appear in the referenced SSP."
+  local_definitions: APLocalDefinitions!
+  "Identifies the  various terms and conditions under which an assessment, described by the plan, can be performed. Each child part defines a different type of term or condition."
+  terms_and_conditions: [OscalPart]
+  "Identifies the controls being assessed and their control objectives."
+  reviewed_controls: [ControlSelection!]
+  "Identifies system elements being assessed, such as components, inventory items, and locations. In the assessment plan, this identifies a planned assessment subject."
+  assessment_subjects: [AssessmentSubject]
+  "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
+  assessment_assets: AssessmentAsset
+  # Back-matter
+  "Identifies one or more Resources that are associated with this POAM."
+  resources(first: Int, offset: Int): OscalResourceConnection
+}
+
+input AssessmentPlanInput {
+  "Identifies the name given to the document."
+  name: String!
+  "Identifies the date and time the document was published."
+  published: Timestamp
+  "Identifies the date and time the document as last modified."
+  last_modified: Timestamp
+  "Identifies the current version of the document."
+  version: String!
+  "Identifies the OSCAL model version the document was authored against."
+  oscal_version: String!
+  "Identifies a list of revisions to the containing document."
+  revisions: [RevisionAddInput]
+  "Identifies references to previous versions of this document."
+  document_ids: [ID]
+  # AssessmentPlan
+  "Identifies the controls being assessed and their control objectives."
+  reviewed_controls: [ControlSelectionInput!]
+  "Identifies system elements being assessed, such as components, inventory items, and locations. In the assessment plan, this identifies a planned assessment subject."
+  assessment_subjects: [AssessmentSubjectAddInput]
+}
+
+# Pagination Types
+type AssessmentPlanConnection {
+  pageInfo: PageInfo!
+  edges: [AssessmentPlanEdge]
+}
+type AssessmentPlanEdge {
+  cursor: String!
+  node: AssessmentPlan!
+}
+# Filtering Types
+input AssessmentPlanFiltering {
+  key: AssessmentPlanFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
+}
+enum AssessmentPlanFilter {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Label"
+  label_name
+  "Name"
+  name
+  "Published"
+  published
+}
+# Ordering Enum
+enum AssessmentPlanOrdering {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Label"
+  label_name
+  "Name"
+  name
+  "Published"
+  published
+}
+
+"""
+Defines data objects that are used in the assessment plan, that do not appear in the referenced SSP.
+"""
+type APLocalDefinitions implements ComplexDatatype {
+  # ComplexDatatype
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  # APLocalDefinitions
+  "Identifies defined component that can be part of an implemented system."
+  components(first: Int, offset: Int): ComponentConnection
+  "Identifies managed inventory items within the system."
+  inventory_items(first: Int, offset: Int): InventoryItemConnection
+  "Identifies a type of user that interacts with the system based on an associated role."
+  users: OscalUserConnection
+  "Identifies a scheduled event or milestone, which may be associated with a series of assessment actions."
+  tasks: OscalTaskConnection
+  "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
+  assessment_assets: AssessmentAsset
+}

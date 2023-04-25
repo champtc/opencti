@@ -122,10 +122,6 @@ const entityStixCoreRelationshipsListDistributionQuery = graphql`
           name
           description
         }
-        ... on Vulnerability {
-          name
-          description
-        }
         ... on Incident {
           name
           description

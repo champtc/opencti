@@ -358,10 +358,6 @@ export const stixDomainObjectsLinesSearchQuery = graphql`
             name
             description
           }
-          ... on Vulnerability {
-            name
-            description
-          }
           ... on Incident {
             name
             description
@@ -493,10 +489,6 @@ const StixDomainObjectsLines = createPaginationContainer(
                 description
               }
               ... on Tool {
-                name
-                description
-              }
-              ... on Vulnerability {
                 name
                 description
               }

@@ -58,14 +58,14 @@ type OscalUser implements BasicObject & LifecycleObject & OscalObject {
   entity_type: String!
   "Identifies the parent types of this object."
   parent_types: [String]!
-  # CoreObject
+  # LifecycleObject
   "Indicates the date and time at which the object was originally created."
   created: Timestamp
   "Indicates the date and time that this particular version of the object was last modified."
   modified: Timestamp
+  # OscalObject
   "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
   labels: [CyioLabel]
-  # OscalObject
   "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
   links: [CyioExternalReference]
   "Identifies one or more references to additional commentary on the Model."
@@ -80,6 +80,8 @@ type OscalUser implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
+  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [DataMarking]
   # OSCAL SystemAsset User
   "Identifies type of user, such as internal, external, or general-public."
   user_type: UserType
@@ -99,7 +101,7 @@ type OscalUser implements BasicObject & LifecycleObject & OscalObject {
 input OscalUserInput {
   # OSCAL User
   "Identifies type of user, such as internal, external, or general-public."
-  user_type: UserType
+  user_type: UserType!
   "Identifies a name given to the user, which may be used by a tool for display and navigation."
   name: String!
   "Identifies a short common name, abbreviation, or acronym for the user."

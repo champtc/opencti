@@ -463,9 +463,6 @@ const UserSubscriptionEditionFragment = createFragmentContainer(
           ... on Tool {
             name
           }
-          ... on Vulnerability {
-            name
-          }
           ... on Incident {
             name
             first_seen

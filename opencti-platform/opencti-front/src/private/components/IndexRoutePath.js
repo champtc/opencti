@@ -11,6 +11,7 @@ import RootObservations from './observations/Root';
 import RootThreats from './threats/Root';
 import RootAssets from './assets/Root';
 import RootRiskAssessment from './riskAssessment/Root';
+import RootAssessments from './assessment/Root';
 import RootDataEntities from './dataEntities/Root';
 import RootArsenal from './arsenal/Root';
 import RootEntities from './entities/Root';
@@ -59,6 +60,7 @@ const IndexRoutePath = (me) => (
       path="/dashboard/workspaces"
       component={RootWorkspaces}
     />
+    <BoundaryRoute path="/activities/assessments" component={RootAssessments} />
     <FeatureFlag tag={'RISK_ASSESSMENT'}>
       <BoundaryRoute path="/activities/risk_assessment" component={RootRiskAssessment} />
     </FeatureFlag>

@@ -391,20 +391,6 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
                     </Grid>
                     <Grid item={true} xs={12}>
                       <div style={{ marginTop: '10px' }}>
-                        <Typography
-                          variant="h3"
-                          color="textSecondary"
-                          gutterBottom={true}
-                          style={{ float: 'left' }}
-                        >
-                          {t('Marking')}
-                        </Typography>
-                        <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
-                          <Tooltip title={t('Marking')} >
-                            <Information fontSize="inherit" color="disabled" />
-                          </Tooltip>
-                        </div>
-                        <div className="clearfix" />
                         <ResponsiblePartiesField
                           title='Markings'
                           variant='outlined'
@@ -412,6 +398,7 @@ class LeveragedAuthorizationEntityEditionContainer extends Component {
                           fullWidth={true}
                           style={{ height: '38.09px' }}
                           containerstyle={{ width: '100%' }}
+                          disabled={true}
                         />
                       </div>
                     </Grid>

@@ -13,15 +13,15 @@ class Root extends Component {
         <BoundaryRoute
           exact
           path="/activities/assessments"
-          render={() => <Redirect to="/activities/assessment/assessment_results" />}
+          render={() => <Redirect to="/activities/assessments/assessment_results" />}
         />
         <BoundaryRoute
           exact
-          path="/activities/assessment/assessment_results"
+          path="/activities/assessments/assessment_results"
           component={Assessments}
         />
         <BoundaryRoute
-          path="/activities/assessment/assessment_results/:assessmentId"
+          path="/activities/assessments/assessment_results/:assessmentId"
           render={(routeProps) => <RootAssessment {...routeProps} me={me} />}
         />
       </Switch>

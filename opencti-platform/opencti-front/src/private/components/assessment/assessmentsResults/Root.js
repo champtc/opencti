@@ -24,13 +24,13 @@ import TopBar from '../../nav/TopBar';
 //   }
 // `;
 
-const riskQuery = graphql`
-  query RootRiskQuery($id: ID!) {
+const assessmentQuery = graphql`
+  query RootAssessmentQuery($id: ID!) {
     risk(id: $id) {
       id
       name
-      ...Risk_risk
-      ...RiskAnalysisContainer_risk
+      #...Risk_risk
+      #...RiskAnalysisContainer_risk
       # ...Remediations_risk
     }
   }
@@ -41,13 +41,13 @@ class RootAssessment extends Component {
     const {
       me,
       match: {
-        params: { riskId },
+        params: { assessmentId },
       },
     } = this.props;
-    const link = `/activities/risk_assessment/risks/${riskId}/knowledge`;
+    const link = `/activities/assessments/assessment_results/${assessmentId}/knowledge`;
     return (
       <div>
-        <Route path="/activities/risk_assessment/risks/:riskId/knowledge">
+        <Route path="/activities/assessments/assessment_results/:assessmentId/knowledge">
           <StixCoreObjectKnowledgeBar
             stixCoreObjectLink={link}
             availableSections={[
@@ -68,8 +68,8 @@ class RootAssessment extends Component {
         </Route>
         <TopBar me={me || null} />
         <QueryRenderer
-          query={riskQuery}
-          variables={{ id: riskId }}
+          query={assessmentQuery}
+          variables={{ id: assessmentId }}
           render={({ props, retry }) => {
             if (props) {
               if (props.risk) {
@@ -77,7 +77,7 @@ class RootAssessment extends Component {
                   <Switch>
                     <Route
                       exact
-                      path="/activities/risk_assessment/risks/:riskId"
+                      path="/activities/assessments/assessment_results/:assessmentId"
                       // render={(routeProps) => (
                       //   <Risk
                       //     {...routeProps}

@@ -6,8 +6,8 @@ import { createPaginationContainer } from 'react-relay';
 import graphql from 'babel-plugin-relay/macro';
 import { pathOr } from 'ramda';
 import CyioListCardsContent from '../../../../components/list_cards/CyioListCardsContent';
-import { RiskCard, RiskCardDummy } from './RiskCard';
 import { setNumberOfElements } from '../../../../utils/Number';
+import { AssessmentsCard, AssessmentsCardDummy } from './AssessmentsCard';
 
 const nbOfCardsToLoad = 50;
 
@@ -86,8 +86,8 @@ class AssessmentsCards extends Component {
           this.props.data,
         )}
         offset={offset}
-        CardComponent={<RiskCard history={history} />}
-        DummyCardComponent={<RiskCardDummy />}
+        CardComponent={<AssessmentsCard history={history} />}
+        DummyCardComponent={<AssessmentsCardDummy />}
         nbOfCardsToLoad={nbOfCardsToLoad}
         selectAll={selectAll}
         selectedElements={selectedElements}

@@ -396,8 +396,8 @@ const LeftBar = ({
                     <MenuList component="nav" disablePadding={true}>
                       <MenuItem
                         component={Link}
-                        to="/dashboard/assessment_results"
-                        selected={location.pathname.includes('/dashboard/assessment_results')}
+                        to="/activities/assessments"
+                        selected={location.pathname.includes('/activities/assessments')}
                         dense={false}
                         classes={{ root: classes.menuItemNested }}
                       >

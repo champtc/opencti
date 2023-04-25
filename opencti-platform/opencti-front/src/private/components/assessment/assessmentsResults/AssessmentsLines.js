@@ -6,8 +6,8 @@ import { createPaginationContainer } from 'react-relay';
 import graphql from 'babel-plugin-relay/macro';
 import { pathOr } from 'ramda';
 import ListLinesContent from '../../../../components/list_lines/ListLinesContent';
-import { RiskLine, RiskLineDummy } from './RiskLine';
 import { setNumberOfElements } from '../../../../utils/Number';
+import { AssessmentsLine, AssessmentsLineDummy } from './AssessmentsLine';
 
 const nbOfRowsToLoad = 50;
 
@@ -72,8 +72,8 @@ class AssessmentsLines extends Component {
           this.props.data,
         )}
         offset={this.state.offset}
-        LineComponent={<RiskLine history={history} />}
-        DummyLineComponent={<RiskLineDummy />}
+        LineComponent={<AssessmentsLine history={history} />}
+        DummyLineComponent={<AssessmentsLineDummy />}
         selectAll={selectAll}
         dataColumns={dataColumns}
         nbOfRowsToLoad={nbOfRowsToLoad}
@@ -153,7 +153,7 @@ export default createPaginationContainer(
               id
               name
               description
-              ...RiskLine_node
+              ...AssessmentsLine_node
             }
           }
           pageInfo {

@@ -131,7 +131,7 @@ class InformationSystemGraphCreation extends Component {
               operational_status: '',
               cloud_service_model: '',
               privacy_designation: false,
-              identify_assurance_level: '',
+              identity_assurance_level: '',
               federation_assurance_level: '',
               authenticator_assurance_level: '',
             }}
@@ -285,7 +285,7 @@ class InformationSystemGraphCreation extends Component {
                       </div>
                       <div className="clearfix" />
                       <TaskType
-                        name="identify_assurance_level"
+                        name="identity_assurance_level"
                         taskType='IdentityAssuranceLevel'
                         fullWidth={true}
                         style={{ height: '38.09px' }}

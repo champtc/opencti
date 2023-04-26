@@ -1,8 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import { formatError as apolloFormatError } from 'apollo-errors';
-import { ApolloError} from 'apollo-server-errors';
 import { execute, GraphQLError, subscribe } from 'graphql';
-import { dissocPath } from 'ramda';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { createPrometheusExporterPlugin } from '@bmatei/apollo-prometheus-exporter';
 import nconf from 'nconf';
@@ -14,7 +12,7 @@ import {
 import createSchema from './schema';
 import conf, { basePath, DEV_MODE, logApp } from '../config/conf';
 import { authenticateUserFromRequest, userWithOrigin } from '../domain/user';
-import { UnknownError, ValidationError } from '../config/errors';
+import { ValidationError } from '../config/errors';
 import loggerPlugin from './loggerPlugin';
 import httpResponsePlugin from './httpResponsePlugin';
 import { checkSystemDependencies } from '../initialization';
@@ -30,6 +28,7 @@ import {
   permissionDirectiveTransformer,
   roleDirectiveTransformer,
 } from '../service/keycloak';
+import { sendStacktrace } from '../utils/teams';
 
 const onHealthCheck = () => checkSystemDependencies().then(() => getSettings());
 
@@ -140,34 +139,7 @@ const createApolloServer = async (app, httpServer) => {
     formatError: (error) => {
       let e = apolloFormatError(error);
       if (e instanceof GraphQLError) {
-        if (process.env.MS_TEAMS_WEBHOOK) {
-          axios
-            .post(process.env.MS_TEAMS_WEBHOOK, {
-              '@type': 'MessageCard',
-              '@Context': 'http://schema.org/extensions',
-              title: 'Error',
-              text: `${e.message}`,
-              sections: [
-                {
-                  facts: [
-                    {
-                      name: 'Stacktrace',
-                      value: JSON.stringify(e),
-                    },
-                  ],
-                },
-              ],
-            })
-            .then((response) => {
-              logApp.debug('GraphQL error sent to Teams', {
-                status: response.status,
-                statusText: response.statusText,
-              });
-            })
-            .catch((axiosError) => {
-              logApp.error(axiosError);
-            });
-        }
+        sendStacktrace('Error', e.message, e);
 
         let errorCode;
         if (e.extensions.hasOwnProperty('code')) {
@@ -175,7 +147,7 @@ const createApolloServer = async (app, httpServer) => {
         } else if (e.extensions.exception.hasOwnProperty('code')) {
           errorCode = e.extensions.exception.code;
         }
-        
+
         if (errorCode === 'ERR_GRAPHQL_CONSTRAINT_VALIDATION') {
           const { fieldName } = e.extensions.exception;
           const ConstraintError = ValidationError(fieldName);

@@ -795,6 +795,8 @@ type Evidence implements ComplexDatatype{
   id: ID!
   "Identifies the type of the Object."
   entity_type: String!
+  "Identifies a human-readable title for the evidence"
+  title: String
   "Identifies a resolvable URL reference to the relevant evidence."
   href: URL
   "Identifies a human-readable description of the evidence."
@@ -807,10 +809,12 @@ type Evidence implements ComplexDatatype{
 input EvidenceAddInput {
   "Identifies a reference to the Observation to which this evidence is to be attached."
   observation_id: ID
+  "Identifies a human-readable title for the evidence"
+  title: String
   "Identifies a resolvable URL reference to the relevant evidence."
   href: URL
   "Identifies a human-readable description of the evidence."
-  description: String
+  description: String!
 }
 # Ordering Types
 enum EvidenceOrdering {

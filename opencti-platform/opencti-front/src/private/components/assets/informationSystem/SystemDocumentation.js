@@ -8,11 +8,7 @@ import Grid from '@material-ui/core/Grid';
 import AddIcon from '@material-ui/icons/Add';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
-import {
-  Button,
-  Menu,
-  MenuItem,
-} from '@material-ui/core';
+import { Button, Menu, MenuItem } from '@material-ui/core';
 import Tooltip from '@material-ui/core/Tooltip';
 import { Information } from 'mdi-material-ui';
 import Typography from '@material-ui/core/Typography';
@@ -43,7 +39,14 @@ const styles = () => ({
   textBase: {
     display: 'flex',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: '-1rem',
+  },
+  popoverContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  popoverContent: {
+    margin: '1% 0',
   },
 });
 
@@ -121,11 +124,7 @@ class SystemDocumentationComponent extends Component {
   }
 
   renderButtons(name, title) {
-    const {
-      t,
-      classes,
-      informationSystem,
-    } = this.props;
+    const { t, classes, informationSystem } = this.props;
     return (
       <>
         <Button
@@ -197,120 +196,118 @@ class SystemDocumentationComponent extends Component {
         <Grid item={true} xs={12}>
           <div className={classes.textBase}>
             <Typography
-              variant="h3"
-              color="textSecondary"
+              variant='h3'
+              color='textSecondary'
               gutterBottom={true}
               style={{ margin: 0 }}
             >
               {t('System Documentation')}
             </Typography>
-            <Tooltip title={t('Identifies a description of this system\'s authorization boundary, network architecture, and data flow.')}>
+            <Tooltip
+              title={t(
+                "Identifies a description of this system's authorization boundary, network architecture, and data flow.",
+              )}
+            >
               <Information
                 style={{ marginLeft: '5px' }}
-                fontSize="inherit"
-                color="disabled"
+                fontSize='inherit'
+                color='disabled'
               />
             </Tooltip>
           </div>
         </Grid>
         <Grid item={true} xs={12}>
-          {this.renderButtons(
-            'authorization_boundary',
-            'Authorization Boundary',
-          )}
-          {this.renderButtons(
-            'network_architecture',
-            'Network Architecture',
-          )}
-          {this.renderButtons(
-            'data_flow',
-            'Data Flow',
-          )}
+          <div className={classes.popoverContainer}>
+            <div className={classes.popoverContent}>
+              {this.renderButtons(
+                'authorization_boundary',
+                'Authorization Boundary',
+              )}
+            </div>
+            <div className={classes.popoverContent}>
+              {this.renderButtons(
+                'network_architecture',
+                'Network Architecture',
+              )}
+            </div>
+            <div className={classes.popoverContent}>
+              {this.renderButtons('data_flow', 'Data Flow')}
+            </div>
+          </div>
         </Grid>
-        {(this.state.mode === 'view'
-          && this.state.modal === 'authorization_boundary')
-          && (
+        {this.state.mode === 'view'
+          && this.state.modal === 'authorization_boundary' && (
             <AuthorizationBoundaryPopover
               openView={this.state.openView}
               informationSystem={informationSystem}
               handleCloseView={this.handleCloseView.bind(this)}
             />
-          )}
-        {(this.state.mode === 'view'
-          && this.state.modal === 'network_architecture')
-          && (
+        )}
+        {this.state.mode === 'view'
+          && this.state.modal === 'network_architecture' && (
             <NetworkArchitecturePopover
               openView={this.state.openView}
               informationSystem={informationSystem}
               handleCloseView={this.handleCloseView.bind(this)}
             />
-          )}
-        {(this.state.mode === 'view'
-          && this.state.modal === 'data_flow')
-          && (
-            <DataFlowPopover
-              openView={this.state.openView}
-              informationSystem={informationSystem}
-              handleCloseView={this.handleCloseView.bind(this)}
-            />
-          )}
-        {(this.state.mode === 'edit'
-          && this.state.modal === 'authorization_boundary')
-          && (
+        )}
+        {this.state.mode === 'view' && this.state.modal === 'data_flow' && (
+          <DataFlowPopover
+            openView={this.state.openView}
+            informationSystem={informationSystem}
+            handleCloseView={this.handleCloseView.bind(this)}
+          />
+        )}
+        {this.state.mode === 'edit'
+          && this.state.modal === 'authorization_boundary' && (
             <AuthorizationBoundaryEditionPopover
               openEdit={this.state.openEdit}
               refreshQuery={refreshQuery}
               handleCloseEdit={this.handleCloseEdit.bind(this)}
               informationSystem={informationSystem}
             />
-          )}
-        {(this.state.mode === 'edit'
-          && this.state.modal === 'network_architecture')
-          && (
+        )}
+        {this.state.mode === 'edit'
+          && this.state.modal === 'network_architecture' && (
             <NetworkArchitectureEditionPopover
               openEdit={this.state.openEdit}
               refreshQuery={refreshQuery}
               handleCloseEdit={this.handleCloseEdit.bind(this)}
               informationSystem={informationSystem}
             />
-          )}
-        {(this.state.mode === 'edit'
-          && this.state.modal === 'data_flow')
-          && (
-            <DataFlowEditionPopover
-              openEdit={this.state.openEdit}
-              refreshQuery={refreshQuery}
-              handleCloseEdit={this.handleCloseEdit.bind(this)}
-              informationSystem={informationSystem}
-            />
-          )}
-        {(this.state.mode === 'create'
-          && this.state.modal === 'authorization_boundary')
-          && (
+        )}
+        {this.state.mode === 'edit' && this.state.modal === 'data_flow' && (
+          <DataFlowEditionPopover
+            openEdit={this.state.openEdit}
+            refreshQuery={refreshQuery}
+            handleCloseEdit={this.handleCloseEdit.bind(this)}
+            informationSystem={informationSystem}
+          />
+        )}
+        {this.state.mode === 'create'
+          && this.state.modal === 'authorization_boundary' && (
             <AuthorizationBoundaryCreation
               openCreate={this.state.openCreate}
               refreshQuery={refreshQuery}
               handleCloseCreate={this.handleCloseCreate.bind(this)}
             />
-          )}
-        {(this.state.mode === 'create'
-          && this.state.modal === 'network_architecture')
-          && (
+        )}
+        {this.state.mode === 'create'
+          && this.state.modal === 'network_architecture' && (
             <NetworkArchitectureCreation
               openCreate={this.state.openCreate}
               refreshQuery={refreshQuery}
               handleCloseCreate={this.handleCloseCreate.bind(this)}
             />
-          )}
-        {(this.state.mode === 'create'
-          && this.state.modal === 'data_flow')
-          && (
-            <DataFlowCreation
-              openCreate={this.state.openCreate}
-              refreshQuery={refreshQuery}
-              handleCloseCreate={this.handleCloseCreate.bind(this)}
-            />
-          )}
+        )}
+
+        {this.state.mode === 'create' && this.state.modal === 'data_flow' && (
+          <DataFlowCreation
+            openCreate={this.state.openCreate}
+            refreshQuery={refreshQuery}
+            handleCloseCreate={this.handleCloseCreate.bind(this)}
+          />
+        )}
       </>
     );
   }
@@ -324,27 +321,30 @@ SystemDocumentationComponent.propTypes = {
   fld: PropTypes.func,
 };
 
-const SystemDocumentation = createFragmentContainer(SystemDocumentationComponent, {
-  informationSystem: graphql`
-    fragment SystemDocumentation_information on InformationSystem {
-      id
-      authorization_boundary {
+const SystemDocumentation = createFragmentContainer(
+  SystemDocumentationComponent,
+  {
+    informationSystem: graphql`
+      fragment SystemDocumentation_information on InformationSystem {
         id
+        authorization_boundary {
+          id
+        }
+        network_architecture {
+          id
+        }
+        data_flow {
+          id
+        }
+        ...DataFlowPopover_information
+        ...DataFlowEditionPopover_information
+        ...NetworkArchitecturePopover_information
+        ...AuthorizationBoundaryPopover_information
+        ...NetworkArchitectureEditionPopover_information
+        ...AuthorizationBoundaryEditionPopover_information
       }
-      network_architecture {
-        id
-      }
-      data_flow {
-        id
-      }
-      ...DataFlowPopover_information
-      ...DataFlowEditionPopover_information
-      ...NetworkArchitecturePopover_information
-      ...AuthorizationBoundaryPopover_information
-      ...NetworkArchitectureEditionPopover_information
-      ...AuthorizationBoundaryEditionPopover_information
-    }
-  `,
-});
+    `,
+  },
+);
 
 export default compose(inject18n, withStyles(styles))(SystemDocumentation);

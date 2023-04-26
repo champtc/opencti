@@ -25,10 +25,11 @@ import Link from '@material-ui/core/Link';
 import LaunchIcon from '@material-ui/icons/Launch';
 import IconButton from '@material-ui/core/IconButton';
 import {
-  Dialog, DialogContent, DialogActions,
+  Dialog, DialogContent, DialogActions, DialogTitle,
 } from '@material-ui/core';
 import inject18n from '../../../../components/i18n';
 import { commitMutation, fetchQuery } from '../../../../relay/environment';
+import { toastGenericError } from '../../../../utils/bakedToast';
 
 const styles = (theme) => ({
   scrollBg: {
@@ -116,9 +117,9 @@ class DataMarkingsField extends Component {
     this.state = {
       open: false,
       error: false,
-      parties: [],
+      markings: [],
       currentMarkings: this.props.data ? [...this.props.data] : [],
-      party: null,
+      marking: null,
     };
   }
 
@@ -137,61 +138,47 @@ class DataMarkingsField extends Component {
             color: n.node.color,
           })),
         )(data);
-        this.setState({ parties: [...transformLabels] });
+        this.setState({ markings: [...transformLabels] });
       });
   }
 
   handleAdd() {
     this.setState({
-      currentMarkings: uniq([...this.state.currentMarkings, this.state.party]),
+      currentMarkings: uniq([...this.state.currentMarkings, this.state.marking]),
       open: false,
     });
     commitMutation({
         mutation: this.props.attachTo,
         variables: {
           id: this.props.id,
-          entityId: this.state.party?.id,
+          entityId: this.state.marking?.id,
           field: this.props.name,
         },
+        onError: () => {
+            toastGenericError('Failed to attach data markings');
+          },
       });
   }
 
   handleDelete(id) {
-    if (this.props.entityType === 'informationSystem') {
-      commitMutation({
-        mutation: responsiblePartiesDetachToInformationMutation,
+    commitMutation({
+        mutation: this.props.detachTo,
         variables: {
           id: this.props.id,
           entityId: id,
           field: this.props.name,
         },
         onCompleted: () => {
-          const newParties = this.state.currentMarkings.filter((item) => item.id !== id);
+          const newMarkings = this.state.currentMarkings.filter((item) => item.id !== id);
           this.setState({
             open: false,
-            currentMarkings: newParties,
+            currentMarkings: newMarkings,
           });
         },
+        onError: () => {
+            toastGenericError('Failed to detach data markings');
+          },
       });
-    } else {
-      commitMutation({
-        mutation: responsiblePartiesFieldRemoveMutation,
-        variables: {
-          toId: id,
-          fromId: this.props.id,
-          fieldName: this.props.name,
-          from_type: this.props.fromType,
-          to_type: this.props.toType,
-        },
-        onCompleted: () => {
-          const newParties = this.state.currentMarkings.filter((item) => item.id !== id);
-          this.setState({
-            open: false,
-            currentMarkings: newParties,
-          });
-        },
-      });
-    }
   }
 
   render() {
@@ -208,7 +195,7 @@ class DataMarkingsField extends Component {
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Typography variant="h3" color="textSecondary" gutterBottom={true}>{title && t(title)}</Typography>
           <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
-            <Tooltip title={t('Responsible Parties')}>
+            <Tooltip title={t(title ?? 'Data Markings')}>
               <Information fontSize="inherit" color="disabled" />
             </Tooltip>
           </div>
@@ -249,20 +236,20 @@ class DataMarkingsField extends Component {
           fullWidth={true}
           maxWidth='sm'
         >
-          <DialogContent>{title && t(title)}</DialogContent>
+          <DialogTitle>{title && t(title)}</DialogTitle>
           <DialogContent style={{ overflow: 'hidden' }}>
             <Autocomplete
               size='small'
-              loading={this.state.parties === []}
+              loading={this.state.markings === []}
               loadingText='Searching...'
               className={classes.autocomplete}
               classes={{
                 popupIndicatorOpen: classes.popupIndicator,
               }}
               noOptionsText={t('No available options')}
-              options={this.state.parties}
+              options={this.state.markings}
               getOptionLabel={(option) => (option.name ? option.name : option)}
-              onChange={(event, value) => this.setState({ party: value })}
+              onChange={(event, value) => this.setState({ marking: value })}
               selectOnFocus={true}
               autoHighlight={true}
               forcePopupIcon={true}
@@ -289,7 +276,7 @@ class DataMarkingsField extends Component {
           <DialogActions className={classes.dialogAction}>
             <Button
               variant='outlined'
-              onClick={() => this.setState({ open: false, party: null })}
+              onClick={() => this.setState({ open: false, marking: null })}
             >
               {t('Cancel')}
             </Button>
@@ -297,7 +284,7 @@ class DataMarkingsField extends Component {
               variant='contained'
               onClick={this.handleAdd.bind(this)}
               color='primary'
-              disabled={this.state.party === null}
+              disabled={this.state.marking === null}
             >
               {t('Add')}
             </Button>

@@ -204,9 +204,11 @@ class EntityLeveragedAuthorizationOverviewComponent extends Component {
                 <div style={{ marginTop: '20px' }}>
                   <DataMarkingsField
                     title='Markings'
+                    name='object_markings'
                     data={leveragedAuthorization.object_markings}
                     attachTo={entityLeveragedAuthorizationOverviewAttachMutation}
-                    detachTO={entityLeveragedAuthorizationOverviewDetachMutation}
+                    detachTo={entityLeveragedAuthorizationOverviewDetachMutation}
+                    id={leveragedAuthorization?.id}
                    />
                 </div>
               </Grid>
@@ -247,13 +249,22 @@ const EntityLeveragedAuthorizationOverview = createFragmentContainer(
         modified
         description
         object_markings {
-            ... on TLPMarking {
-              color
-              id
-              name
-              tlp
-            }
+          ... on StatementMarking {
+            color
+            id
+            name
           }
+          ... on TLPMarking {
+            id
+            name
+            color
+          }
+          ... on IEPMarking {
+            color
+            id
+            name
+          }
+        }
         labels {
           __typename
           id

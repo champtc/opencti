@@ -57,27 +57,10 @@ const styles = (theme) => ({
     lineHeight: '24px',
     color: theme.palette.header.text,
   },
+  notesContainer: {
+    marginTop: '-40px',
+  },
 });
-
-const EntitiesLeveragedAuthorizationsCreationAttachMutation = graphql`
-  mutation EntitiesLeveragedAuthorizationsCreationAttachMutation(
-    $id: ID!
-    $entityId: ID!
-    $field: String!
-  ) {
-    attachToLeveragedAuthorization(id: $id, entityId: $entityId, field: $field) 
-  }
-`;
-
-const entitiesLeveragedAuthorizationsCreationDetachMutation = graphql`
-  mutation EntitiesLeveragedAuthorizationsCreationDetachMutation(
-    $id: ID!
-    $entityId: ID!
-    $field: String!
-  ) {
-    detachFromLeveragedAuthorization(id: $id, entityId: $entityId, field: $field) 
-  }
-`;
 
 const entitiesLeveragedAuthorizationsCreationMutation = graphql`
   mutation EntitiesLeveragedAuthorizationsCreationMutation($input: OscalLeveragedAuthorizationInput!) {
@@ -315,7 +298,7 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
-                      <div>
+                      <div style={{ marginTop: '5px' }}>
                         <Typography
                           variant="h3"
                           color="textSecondary"
@@ -339,7 +322,7 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                           invalidDateMessage={t(
                             'The value must be a date (YYYY-MM-DD)',
                           )}
-                          style={{ height: '38.09px' }}
+                          style={{ height: '38.09px', marginTop: '5px' }}
                           containerstyle={{ width: '100%' }}
                         />
                       </div>
@@ -395,16 +378,35 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
-                      <div style={{ marginTop: '10px' }}>
-                      <DataMarkingsField
-                        title='Markings'
-                        attachTo={EntitiesLeveragedAuthorizationsCreationAttachMutation}
-                        detachTO={entitiesLeveragedAuthorizationsCreationDetachMutation}
-                      />
+                    <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ float: 'left' }}
+                      >
+                        {t('Markings')}
+                      </Typography>
+                      <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                        <Tooltip title={t('Party')} >
+                          <Information fontSize="inherit" color="disabled" />
+                        </Tooltip>
                       </div>
+                      <div className="clearfix" />
+                      <LoggedBy
+                        variant='outlined'
+                        name='party'
+                        size='small'
+                        fullWidth={true}
+                        multiple={false}
+                        disabled={true}
+                        style={{ height: '38.09px', marginBottom: '3px' }}
+                        containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
+                      />
                     </Grid>
                     <Grid item={true} xs={12}>
-                      <CyioCoreObjectOrCyioCoreRelationshipNotes disableAdd={true} />
+                      <div className={classes.notesContainer}>
+                        <CyioCoreObjectOrCyioCoreRelationshipNotes disableAdd={true} />
+                      </div>
                     </Grid>
                   </Grid>
                 </DialogContent>

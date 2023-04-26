@@ -666,6 +666,11 @@ export const editInformationSystemById = async (id, input, dbName, dataSources, 
     let value, fieldType, objectType, objArray, iris=[];
     for (value of editItem.value) {
       switch(editItem.key) {
+        case 'date_authorized':
+          if (value !== undefined && value.length > 0) {
+            if (value.indexOf('T') > -1 ) editItem.value[0] = value.substr(0,value.indexOf('T'));
+          }
+          break;
         case 'deployment_model':
           if (!validateEnumValue(value, 'DeploymentModelType', schema)) throw new UserInputError(`Invalid value "${value}" for field "${editItem.key}".`);
           editItem.value[0] = value.replace(/_/g,'-').toLowerCase();

@@ -176,6 +176,37 @@ class RiskObservationPopover extends Component {
         <DialogContent classes={{ root: classes.dialogContent }}>
           <DialogContentText>
             <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
+              <Grid item={true} xs={2}>
+                <Typography
+                  className={classes.observationHeading}
+                  color='textSecondary'
+                  variant='h3'
+                  style={{ float: 'left' }}
+                >
+                  ID
+                </Typography>
+                <Tooltip title={t('Uniquely identifies this object')}>
+                  <Information
+                    style={{ marginLeft: '5px' }}
+                    fontSize='inherit'
+                    color='disabled'
+                  />
+                </Tooltip>
+              </Grid>
+              <Grid item={true} xs={10}>
+                <Grid container={true}>
+                  <Grid item={true} xs={6} style={{ marginLeft: '40px' }}>
+                    <Typography variang='h2' style={{ color: 'white' }}>
+                      {data.id && t(data.id)}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Divider />
+          </DialogContentText>
+          <DialogContentText>
+            <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
               <Grid item={true} xs={3}>
                 <Typography
                   className={classes.observationHeading}
@@ -191,16 +222,36 @@ class RiskObservationPopover extends Component {
               </Grid>
               <Grid item={true} xs={9}>
                 <Grid container={true}>
-                  <Grid item={true} xs={6}>
-                    <DialogContentText>{t('Collected')}</DialogContentText>
+                  <Grid item={true} xs={6} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div>
+                      <DialogContentText style={{ float: 'left' }}>
+                        {t('Collected')}
+                      </DialogContentText>
+                      <Tooltip title={t('Identifies a Date/time stamp identifying when the finding information was collected.')}>
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
+                      </Tooltip>
+                    </div>
                     <Typography variang='h2' style={{ color: 'white' }}>
                       {data.collected && fd(data.collected)}
                     </Typography>
                   </Grid>
-                  <Grid item={true} xs={6}>
-                    <DialogContentText>
-                      {t('Expiration Date')}
-                    </DialogContentText>
+                  <Grid item={true} xs={6} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div>
+                      <DialogContentText style={{ float: 'left' }}>
+                        {t('Expiration')}
+                      </DialogContentText>
+                      <Tooltip title={t('Identifies Date/time identifying when the finding information is out-of-date and no longer valid.')}>
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
+                      </Tooltip>
+                    </div>
                     <Typography variang='h2' style={{ color: 'white' }}>
                       {data.expires && fd(data.expires)}
                     </Typography>
@@ -226,9 +277,20 @@ class RiskObservationPopover extends Component {
                 </Typography>
               </Grid>
               <Grid item={true} xs={9}>
-                <DialogContentText>
+                <DialogContentText style={{ float: 'left' }}>
                   {t('Source of Observation')}
                 </DialogContentText>
+                <Tooltip
+                  title={t(
+                    'Identifies one or more sources of the finding, such as a tool, interviewed person, or activity.',
+                  )}
+                >
+                  <Information
+                    style={{ marginLeft: '5px' }}
+                    fontSize='inherit'
+                    color='disabled'
+                  />
+                </Tooltip>
                 <div className={classes.scrollBg}>
                   <div className={classes.scrollDiv}>
                     <div className={classes.scrollObj}>
@@ -262,7 +324,20 @@ class RiskObservationPopover extends Component {
                   container={true}
                 >
                   <Grid item={true} xs={6}>
-                    <DialogContentText>{t('Methods')}</DialogContentText>
+                   <div style={{ display: 'flex' }}>
+                      <DialogContentText style={{ float: 'left' }}>{t('Methods')}</DialogContentText>
+                      <Tooltip
+                        title={t(
+                          'Defined the types of methods for making an observation.',
+                        )}
+                      >
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
+                      </Tooltip>
+                    </div>
                     {data?.methods
                       && data.methods.map((value, i) => (
                         <Button
@@ -283,7 +358,16 @@ class RiskObservationPopover extends Component {
                     </Typography>
                   </Grid>
                   <Grid item={true} xs={6}>
-                    <DialogContentText>{t('Type')}</DialogContentText>
+                    <div style={{ display: 'flex' }}>
+                      <DialogContentText style={{ float: 'left' }}>{t('Type')}</DialogContentText>
+                      <Tooltip title={t('Defines the types of observations')}>
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
+                      </Tooltip>
+                    </div>
                     {data?.observation_types
                       && data.observation_types.map((value, i) => (
                         <Button
@@ -312,7 +396,7 @@ class RiskObservationPopover extends Component {
           <DialogContentText style={{ display: 'flex' }}>
             <Grid style={{ margin: '25px 0px' }} container={true} xs={12}>
               <Grid item={true} xs={2}>
-              <Typography
+                <Typography
                   className={classes.observationHeading}
                   color='textSecondary'
                   variant='h3'
@@ -322,9 +406,20 @@ class RiskObservationPopover extends Component {
                 </Typography>
               </Grid>
               <Grid item={true} xs={4}>
-                <DialogContentText>
+                <DialogContentText style={{ float: 'left' }}>
                   {t('Observation Target(s)')}
                 </DialogContentText>
+                <Tooltip
+                  title={t(
+                    'Identifies a reference to a component, inventory-item, location, party, user, or resource.',
+                  )}
+                >
+                  <Information
+                    style={{ marginLeft: '5px' }}
+                    fontSize='inherit'
+                    color='disabled'
+                  />
+                </Tooltip>
                 <div className={classes.scrollBg}>
                   <div className={classes.scrollDiv}>
                     <div className={classes.scrollObj}>
@@ -358,7 +453,7 @@ class RiskObservationPopover extends Component {
                     </div>
                   </div>
                 </div>
-                </Grid>
+              </Grid>
               <Grid item={true} xs={2}>
                 <Typography
                   className={classes.observationHeading}
@@ -368,9 +463,22 @@ class RiskObservationPopover extends Component {
                   <LayersIcon fontSize='small' style={{ marginRight: '8px' }} />
                   What
                 </Typography>
-                </Grid>
+              </Grid>
               <Grid item={true} xs={4}>
-                <DialogContentText>{t('Component(s)')}</DialogContentText>
+                <DialogContentText style={{ float: 'left' }}>
+                  {t('Component(s)')}
+                </DialogContentText>
+                <Tooltip
+                  title={t(
+                    'Identifies a reference to a component, inventory-item, location, party, user, or resource.',
+                  )}
+                >
+                  <Information
+                    style={{ marginLeft: '5px' }}
+                    fontSize='inherit'
+                    color='disabled'
+                  />
+                </Tooltip>
                 <div className={classes.scrollBg}>
                   <div className={classes.scrollDiv}>
                     <div className={classes.scrollObj}>
@@ -414,7 +522,7 @@ class RiskObservationPopover extends Component {
                     </div>
                   </div>
                 </div>
-                </Grid>
+              </Grid>
             </Grid>
             <Divider />
           </DialogContentText>
@@ -422,9 +530,12 @@ class RiskObservationPopover extends Component {
             <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
               <div className={classes.relevantContainer}>
                 <div className={classes.relevantContentBox}>
-                  <Typography>{'Relevant Evidence'}</Typography>
+                  <Typography style={{ display: 'flex' }}>
+                    <LayersIcon fontSize='small' style={{ marginRight: '8px' }} />
+                    {'RELEVANT EVIDENCE'}
+                  </Typography>
                   <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
-                    <Tooltip title={t('Baseline Configuration Name')}>
+                    <Tooltip title={t('Identifies relevant evidence collected as part of this observation.')}>
                       <Information fontSize='inherit' color='disabled' />
                     </Tooltip>
                   </div>
@@ -444,7 +555,7 @@ class RiskObservationPopover extends Component {
                 </div>
               </div>
               <div className={classes.scrollBg}>
-                <div className={classes.scrollDiv}>
+                <div className={classes.scrollDiv} style={{ height: '70px' }}>
                   <div className={classes.scrollObj}>
                     {data.relevant_evidence
                       && data.relevant_evidence.map((evidence, key) => (
@@ -465,10 +576,12 @@ class RiskObservationPopover extends Component {
                               window.open(evidence?.href, '_blank');
                             }}
                           >
-                            <LaunchIcon
-                              fontSize='small'
-                              className={classes.launchIcon}
-                            />
+                            {evidence?.href && (
+                              <LaunchIcon
+                                fontSize='small'
+                                className={classes.launchIcon}
+                              />
+                            )}
                             <div className={classes.linkTitle}>
                               {evidence?.href && evidence?.href}
                             </div>

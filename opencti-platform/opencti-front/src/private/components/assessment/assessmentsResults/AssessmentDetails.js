@@ -9,15 +9,14 @@ import Typography from '@material-ui/core/Typography';
 import {
   Divider,
   Grid,
-  Switch,
   Tooltip,
 } from '@material-ui/core';
+import { Information } from 'mdi-material-ui';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import remarkParse from 'remark-parse';
 import inject18n from '../../../../components/i18n';
-import CyioCoreObjectLabelsView from '../../common/stix_core_objects/CyioCoreObjectLabelsView';
 
 const styles = (theme) => ({
   paper: {
@@ -68,6 +67,7 @@ const styles = (theme) => ({
     textAlign: 'center',
     padding: '3px 0',
   },
+  tooltip: { float: 'left', margin: '2px 0 0 5px' },
 });
 
 class AssessmentDetailsComponent extends Component {
@@ -75,15 +75,13 @@ class AssessmentDetailsComponent extends Component {
     const {
       t,
       classes,
-      refreshQuery,
       assessment,
-      fldt,
-      history,
+      fd,
     } = this.props;
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
-          {t('Basic Information')}
+          {t('Details')}
         </Typography>
         <Paper classes={{ root: classes.paper }} elevation={2}>
           <Grid container={true} spacing={3}>
@@ -93,11 +91,17 @@ class AssessmentDetailsComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
-                  {t('Name')}
+                  {t('Assessment Start Date')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Assessment Start Date')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
-                {assessment.name && t(assessment.name)}
+                {assessment.created && fd(assessment.created)}
               </div>
             </Grid>
             <Grid item={true} xs={6}>
@@ -106,11 +110,17 @@ class AssessmentDetailsComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
-                  {t('ID')}
+                  {t('Assessment End Date')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Assessment End Date')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
-                {assessment.id && (assessment.id)}
+                {assessment.modified && fd(assessment.modified)}
               </div>
             </Grid>
             <Grid item={true} xs={12}>

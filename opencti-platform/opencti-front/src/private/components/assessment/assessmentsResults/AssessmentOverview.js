@@ -9,12 +9,14 @@ import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { Grid, Switch, Tooltip } from '@material-ui/core';
+import { Information } from 'mdi-material-ui';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import remarkParse from 'remark-parse';
 import inject18n from '../../../../components/i18n';
 import CyioCoreObjectLabelsView from '../../common/stix_core_objects/CyioCoreObjectLabelsView';
+
 const styles = (theme) => ({
   paper: {
     height: '100%',
@@ -63,7 +65,8 @@ const styles = (theme) => ({
     width: '100px',
     textAlign: 'center',
     padding: '3px 0',
-  }
+  },
+  tooltip: { float: 'left', margin: '2px 0 0 5px' },
 });
 
 class AssessmentOverviewComponent extends Component {
@@ -76,6 +79,7 @@ class AssessmentOverviewComponent extends Component {
       fldt,
       history,
     } = this.props;
+    console.log(assessment);
     return (
       <div style={{ height: '100%' }}>
         <Typography variant="h4" gutterBottom={true}>
@@ -89,11 +93,17 @@ class AssessmentOverviewComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
-                  {t('Name')}
+                  {t('ID')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Uniquely identifies this object')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
-                {assessment.name && t(assessment.name)}
+                {assessment.id && (assessment.id)}
               </div>
             </Grid>
             <Grid item={true} xs={6}>
@@ -102,11 +112,55 @@ class AssessmentOverviewComponent extends Component {
                   variant="h3"
                   color="textSecondary"
                   gutterBottom={true}
+                  style={{ float: 'left' }}
                 >
-                  {t('ID')}
+                  {t('Type')}
                 </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Type')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
+                <div className='clearfix' />
+                {assessment.entity_type && t(assessment.entity_type)}
+              </div>
+            </Grid>
+            <Grid item={true} xs={6}>
+              <div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Created')}
+                </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Created')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
                 <div className="clearfix" />
-                {assessment.id && (assessment.id)}
+                {assessment.created && fldt(assessment.created)}
+              </div>
+            </Grid>
+            <Grid item={true} xs={6}>
+              <div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Modified')}
+                </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Modified')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
+                <div className="clearfix" />
+                {assessment.modified && fldt(assessment.modified)}
               </div>
             </Grid>
             <Grid item={true} xs={12}>
@@ -114,9 +168,15 @@ class AssessmentOverviewComponent extends Component {
                 variant="h3"
                 color="textSecondary"
                 gutterBottom={true}
+                style={{ float: 'left' }}
               >
                 {t('Description')}
               </Typography>
+              <div className={classes.tooltip}>
+                <Tooltip title={t('Description')}>
+                  <Information fontSize='inherit' color='disabled' />
+                </Tooltip>
+              </div>
               <div className="clearfix" />
               <div className={classes.scrollBg}>
                 <div className={classes.scrollDiv}>
@@ -131,6 +191,29 @@ class AssessmentOverviewComponent extends Component {
 
                     </Markdown>
                   </div>
+                </div>
+              </div>
+            </Grid>
+            <Grid item={true} xs={6}>
+              <div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Authenticated')}
+                </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Authenticated')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
+                <div className="clearfix" />
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                  <Typography>No</Typography>
+                  <Switch disabled defaultChecked={assessment?.accepted} inputProps={{ 'aria-label': 'ant design' }} />
+                  <Typography>Yes</Typography>
                 </div>
               </div>
             </Grid>
@@ -169,6 +252,8 @@ const AssessmentOverview = createFragmentContainer(
         modified
         name
         description
+        entity_type
+        accepted
         labels {
           __typename
           id

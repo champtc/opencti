@@ -6,6 +6,12 @@ import { createFragmentContainer } from 'react-relay';
 import { withStyles } from '@material-ui/core/styles/index';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
+import AddIcon from '@material-ui/icons/Add';
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+import IconButton from '@material-ui/core/IconButton';
+import { Information } from 'mdi-material-ui';
+import Tooltip from '@material-ui/core/Tooltip';
 import Grid from '@material-ui/core/Grid';
 import { Link } from '@material-ui/core';
 import AccessTimeIcon from '@material-ui/icons/AccessTime';
@@ -22,7 +28,6 @@ import Slide from '@material-ui/core/Slide';
 import inject18n from '../../../../components/i18n';
 import ItemIcon from '../../../../components/ItemIcon';
 import { truncate } from '../../../../utils/String';
-import RiskRelevantEvidencePopover from './RiskRelevantEvidencePopover';
 
 const styles = (theme) => ({
   scrollBg: {
@@ -113,6 +118,24 @@ const styles = (theme) => ({
   },
   componentContainer: {
     marginLeft: '15px',
+    marginRight: '15px',
+  },
+  relevantContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+  },
+  relevantContentBox: { display: 'flex', alignItems: 'center' },
+  relevantTitle: {
+    display: 'grid',
+    gridTemplateColumns: '20% 1fr 1.5fr 0.5fr',
+    width: '100%',
+    padding: '10px 0 10px 12px',
+  },
+  relevantDisplay: {
+    display: 'grid',
+    gridTemplateColumns: '20% 1fr 1.5fr 0.5fr',
+    width: '100%',
   },
 });
 
@@ -288,8 +311,8 @@ class RiskObservationPopover extends Component {
 
           <DialogContentText style={{ display: 'flex' }}>
             <Grid style={{ margin: '25px 0px' }} container={true} xs={12}>
-              <div className={classes.observationTitle}>
-                <Typography
+              <Grid item={true} xs={2}>
+              <Typography
                   className={classes.observationHeading}
                   color='textSecondary'
                   variant='h3'
@@ -297,8 +320,8 @@ class RiskObservationPopover extends Component {
                   <MapIcon fontSize='small' style={{ marginRight: '8px' }} />
                   Where
                 </Typography>
-              </div>
-              <div>
+              </Grid>
+              <Grid item={true} xs={4}>
                 <DialogContentText>
                   {t('Observation Target(s)')}
                 </DialogContentText>
@@ -335,8 +358,8 @@ class RiskObservationPopover extends Component {
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className={classes.componentContainer}>
+                </Grid>
+              <Grid item={true} xs={2}>
                 <Typography
                   className={classes.observationHeading}
                   color='textSecondary'
@@ -345,8 +368,8 @@ class RiskObservationPopover extends Component {
                   <LayersIcon fontSize='small' style={{ marginRight: '8px' }} />
                   What
                 </Typography>
-              </div>
-              <div>
+                </Grid>
+              <Grid item={true} xs={4}>
                 <DialogContentText>{t('Component(s)')}</DialogContentText>
                 <div className={classes.scrollBg}>
                   <div className={classes.scrollDiv}>
@@ -391,72 +414,89 @@ class RiskObservationPopover extends Component {
                     </div>
                   </div>
                 </div>
-              </div>
+                </Grid>
             </Grid>
             <Divider />
           </DialogContentText>
           <DialogContentText>
             <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
-              <Grid item={true} xs={12}>
-                <Typography
-                  className={classes.observationHeading}
-                  color='textSecondary'
-                  variant='h3'
-                >
-                  <LayersIcon fontSize='small' style={{ marginRight: '8px' }} />
-                  RELEVANT EVIDENCE
-                </Typography>
-              </Grid>
-              <Grid item={true} xs={12}>
-                <div className={classes.scrollBg}>
-                  <div className={classes.scrollDiv}>
-                    <div className={classes.scrollObj}>
-                      {data.relevant_evidence
-                        && data.relevant_evidence.map((item, i) => (
-                            <div key={i} className={classes.observationContainer}>
-                                {/* <div
-                                  style={{
-                                    height: '26px',
-                                    padding: '0 10px 0 0',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                  }}
-                                >
-                                  <ItemIcon
-                                    key={i}
-                                    type={subject.subject_type}
-                                  />
-                                </div> */}
-                                <Link
-                                  component='button'
-                                  variant='body2'
-                                  className={classes.link}
-                                  onClick={() => history.push(
-                                    `/defender_hq/assets/software/${item?.href}`,
-                                  )
-                                  }
-                                >
-                                  {truncate(t(item?.description), 30)}
-                                </Link>
-                              </div>
-                        ))}
-                    </div>
+              <div className={classes.relevantContainer}>
+                <div className={classes.relevantContentBox}>
+                  <Typography>{'Relevant Evidence'}</Typography>
+                  <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
+                    <Tooltip title={t('Baseline Configuration Name')}>
+                      <Information fontSize='inherit' color='disabled' />
+                    </Tooltip>
+                  </div>
+                  <IconButton
+                    size='small'
+                    // onClick={this.handleCreateDiagram.bind(this)}
+                    disabled={true}
+                  >
+                    <AddIcon fontSize='small' />
+                  </IconButton>
+                </div>
+                <div className='clearfix' />
+                <div className={classes.relevantTitle}>
+                  <Typography>Title</Typography>
+                  <Typography>Description</Typography>
+                  <Typography>Referenced Attachment</Typography>
+                </div>
+              </div>
+              <div className={classes.scrollBg}>
+                <div className={classes.scrollDiv}>
+                  <div className={classes.scrollObj}>
+                    {data.relevant_evidence
+                      && data.relevant_evidence.map((evidence, key) => (
+                        <div key={key} className={classes.relevantDisplay}>
+                          <div>{evidence?.title && evidence?.title}</div>
+                          <div>
+                            {evidence?.description
+                              && truncate(evidence?.description, 10)}
+                          </div>
+                          <Link
+                            key={key}
+                            component='button'
+                            variant='body2'
+                            className={classes.link}
+                            rel='noopener noreferrer'
+                            onClick={(event) => {
+                              event.preventDefault();
+                              window.open(evidence?.href, '_blank');
+                            }}
+                          >
+                            <LaunchIcon
+                              fontSize='small'
+                              className={classes.launchIcon}
+                            />
+                            <div className={classes.linkTitle}>
+                              {evidence?.href && evidence?.href}
+                            </div>
+                          </Link>
+                          <div style={{ display: 'flex' }}>
+                            <IconButton
+                              size='small'
+                              // onClick={this.handleOpenEdit.bind()}
+                              disabled={true}
+                            >
+                              <EditIcon fontSize='small' />
+                            </IconButton>
+                            <IconButton
+                              size='small'
+                              // onClick={this.handleDeleteDialog.bind(this, key)}
+                              disabled={true}
+                            >
+                              <DeleteIcon fontSize='small' />
+                            </IconButton>
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </div>
-              </Grid>
+              </div>
             </Grid>
             <Divider />
           </DialogContentText>
-          <DialogContentText>
-          <RiskRelevantEvidencePopover
-                diagramType='authorization_boundary'
-                title='Relevant Evidence'
-                id={data.id}
-                name='diagram'
-                disabled={true}
-              />
-          </DialogContentText>
-
         </DialogContent>
         <DialogActions
           style={{

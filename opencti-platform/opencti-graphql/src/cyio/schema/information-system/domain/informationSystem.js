@@ -330,7 +330,7 @@ export const createInformationSystem = async (input, dbName, dataSources, select
 
   // TODO: WORKAROUND
   if (input.date_authorized !== undefined && input.date_authorized.length > 0) {
-    input.date_authorized = input.date_authorized.substr(0,input.date_authorized.indexOf('T'));
+    if (input.date_authorized.indexOf('T') > -1 ) input.date_authorized = input.date_authorized.substr(0,input.date_authorized.indexOf('T'));
   }
 
   // Collect all the nested definitions and remove them from input array

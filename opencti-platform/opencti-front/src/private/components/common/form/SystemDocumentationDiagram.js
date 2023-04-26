@@ -18,7 +18,9 @@ import graphql from 'babel-plugin-relay/macro';
 import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
-import { Dialog, DialogContent, DialogActions } from '@material-ui/core';
+import {
+  Dialog, DialogContent, DialogActions, DialogTitle, MenuItem,
+} from '@material-ui/core';
 import inject18n from '../../../../components/i18n';
 import { truncate } from '../../../../utils/String';
 import TextField from '../../../../components/TextField';
@@ -73,6 +75,9 @@ const styles = (theme) => ({
   dialogAction: {
     margin: '15px 20px 15px 0',
   },
+  dialogTitle: {
+    padding: '24px 0 16px 24px',
+  },
   link: {
     textAlign: 'left',
     fontSize: '1rem',
@@ -111,6 +116,7 @@ const SystemDocumentationDiagramQuery = graphql`
           description
           caption
           diagram_link
+          diagram_media_type
         }
       }
       network_architecture {
@@ -215,6 +221,36 @@ class SystemDocumentationDiagram extends Component {
     const {
       t, classes, title, disabled,
     } = this.props;
+    const mediaTypes = [
+      {
+        value: 'image/png',
+        title: 'image/png (.png)',
+      },
+      {
+        value: 'image/svg+xml',
+        title: 'image/svg+xml (.svg)',
+      }, {
+        value: 'image/bmp',
+        title: 'image/bmp (.bmp)',
+      },
+      {
+        value: 'image/jpg',
+        title: 'image/jpg (.jpg, .jpeg)',
+      }, {
+        value: 'text/html',
+        title: 'text/html (.html)',
+      },
+      {
+        value: 'application/pdf',
+        title: 'application/pdf (.pdf)',
+      }, {
+        value: 'application/vnd.drawio+xml',
+        title: 'application/vnd.drawio+xml (.drawio)',
+      },
+      {
+        value: 'application/vnd.visio',
+        title: 'application/vnd.visio (.vsdx)',
+      }];
     const initialValues = pipe(
       assoc('caption', this.state.selectedDiagram?.diagram?.caption || ''),
       assoc(
@@ -226,10 +262,10 @@ class SystemDocumentationDiagram extends Component {
         this.state.selectedDiagram?.diagram?.diagram_link || '',
       ),
       assoc(
-        'entity_type',
-        this.state.selectedDiagram?.diagram?.entity_type || '',
+        'diagram_media_type',
+        this.state.selectedDiagram?.diagram?.diagram_media_type || '',
       ),
-      pick(['caption', 'description', 'diagram_link', 'entity_type']),
+      pick(['caption', 'description', 'diagram_link', 'diagram_media_type']),
     )(this.state.selectedDiagram?.diagram);
     const { diagram } = this.state;
     return (
@@ -314,7 +350,7 @@ class SystemDocumentationDiagram extends Component {
         >
           {({ submitForm, handleReset, isSubmitting }) => (
             <Dialog open={this.state.open} fullWidth={true} maxWidth='sm'>
-              <DialogContent>{t('Diagram')}</DialogContent>
+              <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Diagram')}</DialogTitle>
               <DialogContent style={{ overflowY: 'true' }}>
                 <Grid container spacing={3}>
                   <Grid item={true} xs={12}>
@@ -414,11 +450,17 @@ class SystemDocumentationDiagram extends Component {
                     <Field
                       component={SelectField}
                       variant='outlined'
-                      name='entity_type'
+                      name='diagram_media_type'
                       fullWidth={true}
                       style={{ height: '38.09px' }}
                       containerstyle={{ width: '100%' }}
-                    />
+                    >
+                    {mediaTypes.map((item, key) => (
+                      <MenuItem key={key} value={item.value}>
+                        {t(item.title)}
+                      </MenuItem>
+                    ))}
+                    </Field>
                   </Grid>
                   <Grid item={true} xs={12}>
                     <CyioCoreObjectExternalReferences disableAdd={true} />
@@ -550,11 +592,17 @@ class SystemDocumentationDiagram extends Component {
                     <Field
                       component={SelectField}
                       variant='outlined'
-                      name='entity_type'
+                      name='diagram_media_type'
                       fullWidth={true}
                       style={{ height: '38.09px' }}
                       containerstyle={{ width: '100%' }}
-                    />
+                    >
+                      {mediaTypes.map((item, key) => (
+                        <MenuItem key={key} value={item.value}>
+                          {t(item.title)}
+                        </MenuItem>
+                      ))}
+                    </Field>
                   </Grid>
                   <Grid item={true} xs={12}>
                     <CyioCoreObjectExternalReferences disableAdd={true} />

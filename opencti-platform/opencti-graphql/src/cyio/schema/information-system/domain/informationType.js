@@ -12,6 +12,7 @@ import {
   selectAllInformationTypesQuery,
   insertInformationTypeQuery,
   deleteInformationTypeQuery,
+  deleteInformationTypeByIriQuery,
   attachToInformationTypeQuery,
   detachFromInformationTypeQuery,
   generateInformationTypeId,
@@ -222,10 +223,10 @@ export const createInformationType = async (input, dbName, dataSources, select) 
   }
 
   // check if an information type with this same id exists
-  let existSelect = ['id','entity_type']
+  let existSelect = ['id','entity_type','title','created','modified']
   let checkId = generateInformationTypeId( input );
   let infoType = await findInformationTypeById(checkId, dbName, dataSources, existSelect);
-  if ( infoType != undefined && infoType != null) throw new UserInputError(`Cannot create information type as entity ${checkId} already exists`);
+  if ( infoType != undefined && infoType != null) throw new UserInputError(`Cannot create information type as entity ${checkId}; already exists`);
 
   // Collect all the nested definitions and remove them from input array
   let nestedDefinitions = {
@@ -238,6 +239,23 @@ export const createInformationType = async (input, dbName, dataSources, select) 
     if (fieldInfo.values === undefined || fieldInfo.values === null) continue;
     if (!Array.isArray(fieldInfo.values)) fieldInfo.values = [fieldInfo.values];
     for( let fieldValue of fieldInfo.values) {
+      // add missing selected_impact if not supplied
+      switch(fieldName) {
+        case 'confidentiality_impact':
+        case 'integrity_impact':
+        case 'availability_impact':
+          // its for use in a catalog
+          if (fieldValue.hasOwnProperty('explanation') || fieldValue.hasOwnProperty('recommendation')) {
+            break;
+          }
+          // default selected_impact to value of base_impact
+          if (!fieldValue.hasOwnProperty('selected_impact')) {
+            fieldValue['selected_impact'] = fieldValue['base_impact'];
+            break;
+          }
+        default:
+          break;
+      }
       for (let [key, value] of Object.entries(fieldValue)) {
         if (typeof value === 'string') {
           value = value.replace(/\s+/g, ' ')
@@ -247,7 +265,7 @@ export const createInformationType = async (input, dbName, dataSources, select) 
                         .replace(/[\u2019\u2019]/g, "\\'")
                         .replace(/[\u201C\u201D]/g, '\\"');
         }
-        if (value === undefined || value === null) continue;
+        if (value === undefined || value === null || value.length === 0) continue;
         nestedDefinitions[fieldName]['props'][key] = value;
       }
     }
@@ -432,6 +450,68 @@ export const deleteInformationTypeById = async ( id, dbName, dataSources ) => {
   return removedIds;
 };
 
+export const deleteInformationTypeByIri = async ( iri, dbName, dataSources ) => {
+  let select = ['iri','id','object_type','confidentiality_impact','integrity_impact','availability_impact','categorizations'];
+  let response;
+
+  // check if object iw IRI exists
+  let sparqlQuery = selectInformationTypeByIriQuery(iri, select);
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName: dbName,
+      sparqlQuery,
+      queryId: "Select InformationType",
+      singularizeSchema: singularizeInformationTypeSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist: ${iri}`);
+
+  let infoType = response[0];
+  let nestedReferences = {
+    'confidentiality_impact': { iris: infoType.confidentiality_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'integrity_impact': { iris: infoType.integrity_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'availability_impact': { iris: infoType.availability_impact, deleteFunction: deleteImpactDefinitionByIriQuery },
+    'categorizations': { iris: infoType.categorizations, deleteFunction: deleteCategorizationByIriQuery },
+  };
+
+  // delete any nested nodes that are private to the information system
+  for (let [fieldName, fieldInfo] of Object.entries(nestedReferences)) {
+    if (fieldInfo.iris === undefined || fieldInfo.iris === null) continue;
+    if (!Array.isArray(fieldInfo.iris)) fieldInfo.iris = [fieldInfo.iris];
+    for( let nestedIri of fieldInfo.iris) {
+      let sparqlQuery = fieldInfo.deleteFunction(nestedIri);
+      try {
+        let results = await dataSources.Stardog.delete({
+          dbName,
+          sparqlQuery,
+          queryId: `Delete ${fieldName}`
+        });
+      } catch (e) {
+        console.log(e)
+        throw e
+      }
+    }
+  }
+
+  // delete the Information Type
+  sparqlQuery = deleteInformationTypeByIriQuery(iri);
+  try {
+    response = await dataSources.Stardog.delete({
+      dbName,
+      sparqlQuery,
+      queryId: "Delete Information Type"
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  
+  return iri;
+};
+
 export const editInformationTypeById = async ( id, input, dbName, dataSources, select, schema ) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
 
@@ -550,6 +630,10 @@ export const editInformationTypeById = async ( id, input, dbName, dataSources, s
             else {
               entity = objArray;
             }
+
+            // convert impact values for form required for storage
+            if (entity.hasOwnProperty('base_impact')) entity.base_impact = entity.base_impact.replace(/_/g,'-').toLowerCase();
+            if (entity.hasOwnProperty('selected_impact')) entity.selected_impact = entity.selected_impact.replace(/_/g,'-').toLowerCase();
 
             // create the instance of the Impact Definition
             const { iri: impactDefinitionIri, id: impactDefinitionId, query } = insertImpactDefinitionQuery(entity);
@@ -886,7 +970,7 @@ export const findAllImpactDefinitions = async (args, dbName, dataSources, select
   }
 };
 
-export const createImpactDefinition = async (input, dbName, dataSources, selectMap) => {
+export const createImpactDefinition = async (input, dbName, dataSources, select) => {
   // TODO: WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -909,6 +993,13 @@ export const createImpactDefinition = async (input, dbName, dataSources, selectM
 																						.replace(/[\u201C\u201D]/g, '\\"');
   }
 
+  // default selected_impact to value of base_impact if not creating for catalog
+  if (!input.hasOwnProperty('explanation') && !input.hasOwnProperty('recommendation')) {
+    if (!input.hasOwnProperty('selected_impact')) {
+      input['selected_impact'] = input['base_impact'];
+    }
+  }
+  
   // create the Impact Definition object
   let response;
   let {iri, id, query} = insertImpactDefinitionQuery(input);
@@ -924,7 +1015,7 @@ export const createImpactDefinition = async (input, dbName, dataSources, selectM
   }
 
   // retrieve the newly created Impact Definition to be returned
-  const selectQuery = selectImpactDefinitionQuery(id, selectMap.getNode("createImpactDefinition"));
+  const selectQuery = selectImpactDefinitionQuery(id, select);
   let result;
   try {
     result = await dataSources.Stardog.queryById({

@@ -81,7 +81,7 @@ class EntityDataMarkingIEPDetails extends Component {
         </Typography>
         <Paper classes={{ root: classes.paper }} elevation={2}>
           <Grid container={true}>
-            <Grid item xs={6}>
+          <Grid item xs={6}>
               <div>
                 <Typography
                   variant='h3'
@@ -89,16 +89,16 @@ class EntityDataMarkingIEPDetails extends Component {
                   gutterBottom={true}
                   style={{ float: 'left' }}
                 >
-                  {t('Encrypt In Transit')}
+                  {t('Start Date')}
                 </Typography>
                 <div className={classes.tooltip}>
-                  <Tooltip title={t('Encrypt In Transit')}>
+                  <Tooltip title={t('Indicates the date that the IEP is effective from. If none supplied, the IEP is applicable up until the end date.')}>
                     <Information fontSize='inherit' color='disabled' />
                   </Tooltip>
                 </div>
                 <div className='clearfix' />
-                {dataMarking.encrypt_in_transit
-                  && fd(dataMarking.encrypt_in_transit)}
+                {dataMarking.start_date
+                  && fd(dataMarking.start_date)}
               </div>
             </Grid>
             <Grid item xs={6}>
@@ -109,10 +109,50 @@ class EntityDataMarkingIEPDetails extends Component {
                   gutterBottom={true}
                   style={{ float: 'left' }}
                 >
+                  {t('End Date')}
+                </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('Indicates the date that the IEP is effective until. If none supplied, the IEP is applicable in perpetuity.')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
+                <div className='clearfix' />
+                {dataMarking.end_date
+                  && fd(dataMarking.end_date)}
+              </div>
+            </Grid>
+            <Grid item xs={6}>
+              <div style={{ marginTop: '20px' }}>
+                <Typography
+                  variant='h3'
+                  color='textSecondary'
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Encrypt In Transit')}
+                </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('States whether the received information has to be encrypted when it is retransmitted by the recipient.')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
+                <div className='clearfix' />
+                {dataMarking.encrypt_in_transit
+                  && t(dataMarking.encrypt_in_transit)}
+              </div>
+            </Grid>
+            <Grid item xs={6}>
+              <div style={{ marginTop: '20px' }}>
+                <Typography
+                  variant='h3'
+                  color='textSecondary'
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
                   {t('Permitted Actions')}
                 </Typography>
                 <div className={classes.tooltip}>
-                  <Tooltip title={t('Permitted Actions')}>
+                  <Tooltip title={t('States the permitted actions that Recipients can take upon information received.')}>
                     <Information fontSize='inherit' color='disabled' />
                   </Tooltip>
                 </div>
@@ -132,13 +172,13 @@ class EntityDataMarkingIEPDetails extends Component {
                   {t('Affected Party Notifications')}
                 </Typography>
                 <div className={classes.tooltip}>
-                  <Tooltip title={t('Affected Party Notifications')}>
+                  <Tooltip title={t('States whether recipients are permitted to notify affected third parties of a compromise or threat.')}>
                     <Information fontSize='inherit' color='disabled' />
                   </Tooltip>
                 </div>
                 <div className='clearfix' />
                 {dataMarking?.affected_party_notifications
-                  && fd(dataMarking.affected_party_notifications)}
+                  && t(dataMarking.affected_party_notifications)}
               </div>
             </Grid>
             <Grid item xs={6}>
@@ -152,7 +192,7 @@ class EntityDataMarkingIEPDetails extends Component {
                   {t('Sharing')}
                 </Typography>
                 <div className={classes.tooltip}>
-                  <Tooltip title={t('Sharing')}>
+                  <Tooltip title={t('States whether recipients are permitted to redistribute the information received within the redistribution scope as defined by the enumerations.')}>
                     <Information fontSize='inherit' color='disabled' />
                   </Tooltip>
                 </div>
@@ -178,7 +218,7 @@ class EntityDataMarkingIEPDetails extends Component {
                   </Tooltip>
                 </div>
                 <div className='clearfix' />
-                {dataMarking?.iep_version && fd(dataMarking.iep_version)}
+                {dataMarking?.iep_version && t(dataMarking.iep_version)}
               </div>
             </Grid>
             <Grid item xs={6}>
@@ -192,13 +232,33 @@ class EntityDataMarkingIEPDetails extends Component {
                   {t('Unmodified Resale')}
                 </Typography>
                 <div className={classes.tooltip}>
-                  <Tooltip title={t('Unmodified Resale')}>
+                  <Tooltip title={t('States whether the recipient MAY or MUST NOT resell the information received unmodified or in a semantically equivalent format.')}>
                     <Information fontSize='inherit' color='disabled' />
                   </Tooltip>
                 </div>
                 <div className='clearfix' />
                 {dataMarking?.unmodified_resale
                   && t(dataMarking.unmodified_resale)}
+              </div>
+            </Grid>
+            <Grid item xs={6}>
+              <div style={{ marginTop: '20px' }}>
+                <Typography
+                  variant='h3'
+                  color='textSecondary'
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Provider Attribution')}
+                </Typography>
+                <div className={classes.tooltip}>
+                  <Tooltip title={t('States whether recipients could be required to attribute or anonymize the Provider when redistributing the information received.')}>
+                    <Information fontSize='inherit' color='disabled' />
+                  </Tooltip>
+                </div>
+                <div className='clearfix' />
+                {dataMarking?.attribution
+                  && t(dataMarking.attribution)}
               </div>
             </Grid>
           </Grid>

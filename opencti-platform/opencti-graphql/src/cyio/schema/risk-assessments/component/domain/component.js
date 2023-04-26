@@ -1,5 +1,6 @@
 import { UserInputError } from 'apollo-server-errors';
 import { riskSingularizeSchema } from '../../risk-mappings.js';
+import { checkIfValidUUID } from '../../../utils.js';
 import { 
   getReducer, 
   selectComponentQuery, 

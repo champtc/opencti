@@ -32,7 +32,7 @@ query SecurityCategorizationInformationTypeQuery(
 ) {
   getCategoryMembers(id: $id, categoryName: $categoryName) {
     id
-    title
+    display_name
   }
 }
 `;
@@ -82,13 +82,23 @@ class SecurityCategorization extends Component {
     };
   }
 
+  componentDidMount() {
+    const { values } = this.props;
+    if (values.catalog) {
+      this.handleCategoryChange('catalog', values.catalog);
+    }
+    if (values.category) {
+      this.handleCategoryChange('category', values.category);
+    }
+  }
+
   componentDidUpdate(prevState) {
     const { values } = this.props;
     if (prevState.values.catalog !== values.catalog) {
       this.handleCategoryChange('catalog', values.catalog);
     }
-    if (prevState.values.system !== values.system) {
-      this.handleCategoryChange('system', values.system);
+    if (prevState.values.category !== values.category) {
+      this.handleCategoryChange('category', values.category);
     }
   }
 
@@ -105,7 +115,7 @@ class SecurityCategorization extends Component {
           });
         });
     }
-    if (name === 'system') {
+    if (name === 'category') {
       fetchQuery(securityCategorizationInformationTypeQuery, {
         id: this.state.selectedCategorization || this.props.values.catalog,
         categoryName: value,
@@ -185,12 +195,12 @@ class SecurityCategorization extends Component {
           <div className='clearfix' />
           <SecurityCategorizationField
             values={values}
-            name='system'
+            name='category'
             fullWidth={true}
             variant='outlined'
             style={{ height: '38.09px' }}
             containerstyle={{ width: '100%' }}
-            defaultValue={values.system}
+            defaultValue={values.category}
             categoryField={this.state.categoryField}
             onChange={this.handleCategoryChange.bind(this)}
             disabled={disabled}
@@ -237,6 +247,7 @@ SecurityCategorization.propTypes = {
   t: PropTypes.func,
   values: PropTypes.object,
   classes: PropTypes.object,
+  disabled: PropTypes.bool,
   handleInformationType: PropTypes.func,
 };
 

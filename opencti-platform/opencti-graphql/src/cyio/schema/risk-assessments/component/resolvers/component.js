@@ -144,7 +144,7 @@ const componentResolvers = {
           if (select.includes('props')) {
             component = convertAssetToComponent(component);
           } else {
-            component = reducer(response[0]);
+            component = reducer(component);
           }
 
           // if haven't reached limit to be returned

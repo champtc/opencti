@@ -4,12 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 // import semver from 'semver';
 import { booleanConf, logApp } from './config/conf';
 import { elCreateIndexes, elIndexExists, elIsAlive } from './database/elasticSearch';
-import { initializeAdminUser } from './config/providers';
+// import { initializeAdminUser } from './config/providers';
 import { isStorageAlive } from './database/s3';
 import { amqpIsAlive } from './database/amqp';
-import { artemisAlive } from './service/artemis';
+import artemisAlive from './service/artemis';
 import { keycloakAlive } from './service/keycloak';
-import { stardogAlive } from './service/stardog';
+import stardogAlive from './service/stardog';
 import { addMarkingDefinition } from './domain/markingDefinition';
 import { addSettings } from './domain/settings';
 import { ROLE_DEFAULT, STREAMAPI, TAXIIAPI } from './domain/user';
@@ -116,25 +116,25 @@ export const CAPABILITIES = [
 export const checkSystemDependencies = async () => {
   // Check if stardog is alive
   if (await stardogAlive()) {
-    logApp.info('[Check] Stardog service is alive');
+    logApp.info('[CHECK] Stardog service is alive');
   } else {
-    logApp.info('[Check] Stardog service is not available.');
+    logApp.info('[CHECK] Stardog service is not available.');
   }
   // Check if keycloak is alive
   if (await keycloakAlive()) {
-    logApp.info('[Check] Keycloak service is alive');
+    logApp.info('[CHECK] Keycloak service is alive');
   } else {
-    logApp.info('[Check] Keycloak service did not load.');
+    logApp.info('[CHECK] Keycloak service did not load.');
   }
   // Check if ActiveMQ Artemis REST API is alive
   if (await artemisAlive()) {
-    logApp.info('[Check] ActiveMQ Artemis REST service is alive');
+    logApp.info('[CHECK] ActiveMQ Artemis REST service is alive');
   } else {
-    logApp.info('[Check] ActiveMQ Artemis REST service did not load.');
+    logApp.info('[CHECK] ActiveMQ Artemis REST service did not load.');
   }
   // Check if elasticsearch is available
   await elIsAlive();
-  logApp.info(`[CHECK] ElasticSearch is alive`);
+  logApp.info('[CHECK] ElasticSearch is alive');
   // Check if s3 is accessible
   if (await isStorageAlive()) {
     logApp.info(`[CHECK] S3 is alive`);
@@ -382,19 +382,6 @@ const isExistingPlatform = async () => {
   }
 };
 
-// const isCompatiblePlatform = async () => {
-//   const migration = await loadEntity(SYSTEM_USER, [ENTITY_TYPE_MIGRATION_STATUS]);
-//   const { platformVersion } = migration;
-//   // For old platform, version is not set yet, continue
-//   if (!platformVersion) return;
-//   // Runtime version must be >= of the stored runtime
-//   if (semver.lt(PLATFORM_VERSION, platformVersion)) {
-//     throw UnsupportedError(
-//       `Your platform data (${PLATFORM_VERSION}) are too old to start on version ${platformVersion}`
-//     );
-//   }
-// };
-
 // eslint-disable-next-line
 const platformInit = async (withMarkings = true) => {
   let lock;
@@ -409,11 +396,8 @@ const platformInit = async (withMarkings = true) => {
       await initializeSchema();
       await initializeMigration();
       await initializeData(withMarkings);
-      await initializeAdminUser();
     } else {
       logApp.info('[INIT] Existing platform detected, initialization...');
-      // await isCompatiblePlatform();
-      await initializeAdminUser();
       await alignMigrationLastRun();
       await applyMigration();
     }

@@ -11,12 +11,12 @@ const password = conf.get('artemis:rest:passcode');
 const key = conf.get('app:https_cert:key');
 const crt = conf.get('app:https_cert:crt');
 
-export const artemisAlive = async () => {
+const artemisAlive = async () => {
   const credentials = Buffer.from(`${username}:${password}`).toString('base64');
-  const server_url = `https://${host}:${port}/rest/`;
+  const endpoint = `https://${host}:${port}/rest/`;
 
   try {
-    const url = `${server_url}queues/cyio.tasks.export`;
+    const url = `${endpoint}queues/cyio.tasks.export`;
     let httpsAgent = null;
 
     if (key || crt) {
@@ -44,4 +44,7 @@ export const artemisAlive = async () => {
   } catch (e) {
     return false;
   }
+  return false;
 };
+
+export default artemisAlive;

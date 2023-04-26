@@ -18,12 +18,14 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import inject18n from '../../../../components/i18n';
 import { commitMutation } from '../../../../relay/environment';
-import { dateFormat, parse } from '../../../../utils/Time';
+import { parse } from '../../../../utils/Time';
 import { adaptFieldValue } from '../../../../utils/String';
 import TextField from '../../../../components/TextField';
 import MarkDownField from '../../../../components/MarkDownField';
 import { toastGenericError } from "../../../../utils/bakedToast";
 import TaskType from '../../common/form/TaskType';
+import DatePickerField from '../../../../components/DatePickerField';
+import SwitchField from '../../../../components/SwitchField';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -65,6 +67,8 @@ const informationSystemEditionContainerMutation = graphql`
 
 const InformationSystemValidation = (t) => Yup.object().shape({
   system_name: Yup.string().required(t('This field is required')),
+  description: Yup.string().required(t('This field is required')),
+  operational_status: Yup.string().required(t('This Field is required')),
 });
 
 class InformationSystemEditionContainer extends Component {
@@ -86,13 +90,21 @@ class InformationSystemEditionContainer extends Component {
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
+    const adaptedValues = R.evolve(
+      {
+        date_authorized: () => (values.date_authorized === null
+          ? null
+          : parse(values.date_authorized).format()),
+      },
+      values,
+    );
     const finalValues = R.pipe(
       R.toPairs,
       R.map((n) => ({
         'key': n[0],
         'value': adaptFieldValue(n[1]),
       })),
-    )(values);
+    )(adaptedValues);
     commitMutation({
       mutation: informationSystemEditionContainerMutation,
       variables: {
@@ -122,19 +134,25 @@ class InformationSystemEditionContainer extends Component {
       informationSystem,
     } = this.props;
     const initialValues = R.pipe(
-      R.assoc('system_name', informationSystem?.system_name || ''),
       R.assoc('short_name', informationSystem?.short_name || ''),
       R.assoc('description', informationSystem?.description || ''),
-      R.assoc('deployment_model', informationSystem?.deployment_model || []),
-      R.assoc('cloud_service_model', informationSystem?.cloud_service_model || ''),
-      R.assoc('identity_assurance_level', informationSystem?.identity_assurance_level || ''),
-      R.assoc('federation_assurance_level', informationSystem?.federation_assurance_level || ''),
-      R.assoc('authenticator_assurance_level', informationSystem?.authenticator_assurance_level || ''),
+      R.assoc('system_name', informationSystem?.system_name || ''),
+      R.assoc('date_authorized', informationSystem?.date_authorized || null),
+      R.assoc('deployment_model', informationSystem?.deployment_model || null),
+      R.assoc('operational_status', informationSystem?.operational_status || null),
+      R.assoc('cloud_service_model', informationSystem?.cloud_service_model || null),
+      R.assoc('privacy_designation', informationSystem?.privacy_designation || false),
+      R.assoc('identity_assurance_level', informationSystem?.identity_assurance_level || null),
+      R.assoc('federation_assurance_level', informationSystem?.federation_assurance_level || null),
+      R.assoc('authenticator_assurance_level', informationSystem?.authenticator_assurance_level || null),
       R.pick([
         'short_name',
         'system_name',
         'description',
+        'date_authorized',
         'deployment_model',
+        'operational_status',
+        'privacy_designation',
         'cloud_service_model',
         'identity_assurance_level',
         'federation_assurance_level',
@@ -163,7 +181,7 @@ class InformationSystemEditionContainer extends Component {
               values,
             }) => (
               <Form>
-                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Task')}</DialogTitle>
+                <DialogTitle classes={{ root: classes.dialogTitle }}>{t('Information System')}</DialogTitle>
                 <DialogContent classes={{ root: classes.dialogContent }}>
                   <Grid container={true} spacing={3}>
                     <Grid item={true} xs={12}>
@@ -358,6 +376,83 @@ class InformationSystemEditionContainer extends Component {
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
                       />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <div className={classes.textBase}>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ margin: 0 }}
+                        >
+                          {t('Status')}
+                        </Typography>
+                        <Tooltip title={t('Status')} >
+                          <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
+                        </Tooltip>
+                      </div>
+                      <div className="clearfix" />
+                      <TaskType
+                        name="operational_status"
+                        taskType='OperationalStatus'
+                        fullWidth={true}
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
+                        variant='outlined'
+                      />
+                    </Grid>
+                    <Grid item={true} xs={6}>
+                      <div className={classes.textBase}>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ margin: 0 }}
+                        >
+                          {t('Date Authorized')}
+                        </Typography>
+                        <Tooltip title={t('Date Authorized')} >
+                          <Information style={{ marginLeft: '5px' }} fontSize='inherit' color='disabled' />
+                        </Tooltip>
+                      </div>
+                      <div className='clearfix' />
+                      <Field
+                        fullWidth={true}
+                        name='date_authorized'
+                        component={DatePickerField}
+                        invalidDateMessage={t(
+                          'The value must be a date (YYYY-MM-DD)',
+                        )}
+                        style={{ height: '38.09px' }}
+                        containerstyle={{ width: '100%' }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <div className={classes.textBase}>
+                        <Typography
+                          variant="h3"
+                          color="textSecondary"
+                          gutterBottom={true}
+                          style={{ margin: 0 }}
+                        >
+                          {t('Privacy Sensitive System')}
+                        </Typography>
+                        <Tooltip title={t('Privacy Sensitive System')} >
+                          <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
+                        </Tooltip>
+                      </div>
+                      <div className="clearfix" />
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography>No</Typography>
+                        <Field
+                          component={SwitchField}
+                          type="checkbox"
+                          name="privacy_designation"
+                          containerstyle={{ marginLeft: 10, marginRight: '-15px' }}
+                          inputProps={{ 'aria-label': 'ant design' }}
+                        />
+                        <Typography>Yes</Typography>
+                      </div>
                     </Grid>
                   </Grid>
                 </DialogContent>

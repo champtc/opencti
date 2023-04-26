@@ -879,29 +879,9 @@ export const impactDefinitionPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "recommendation");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
 	},
-	identifier: {
-    predicate: "<http://nist.gov/ns/sp800-60#identifier>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "recommendation");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-	},
-  labels: {
-    predicate: "<http://darklight.ai/ns/common#labels>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "labels");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  },
-  label_name: {
-    predicate: "<http://darklight.ai/ns/common#labels>/<http://darklight.ai/ns/common#name>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "label_name");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  },
   links: {
     predicate: "<http://csrc.nist.gov/ns/oscal/common#links>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "links");},
-    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  },
-  remarks: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/common#remarks>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "remarks");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 };

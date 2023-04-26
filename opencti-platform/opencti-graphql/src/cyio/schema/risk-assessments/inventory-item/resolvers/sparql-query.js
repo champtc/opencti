@@ -28,10 +28,11 @@ export const inventoryItemReducer = (item) => {
   }
 
   return {
+    iri: item.iri,
     id: item.id,
     standard_id: item.id,
     entity_type: 'inventory-item',
-    ...(item.iri && { parent_iri: item.iri }),
+    // ...(item.iri && { parent_iri: item.iri }),
     ...(item.object_type && { object_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),

@@ -13,7 +13,7 @@ const conn = new Connection({
   password,
 });
 
-export const stardogAlive = async () => {
+const stardogAlive = async () => {
   try {
     await server.status(conn, { databases: false });
     return true;
@@ -21,3 +21,5 @@ export const stardogAlive = async () => {
     return false;
   }
 };
+
+export default stardogAlive;

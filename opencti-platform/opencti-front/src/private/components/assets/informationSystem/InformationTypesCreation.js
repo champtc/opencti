@@ -36,6 +36,7 @@ import InformationTypeEdition, {
   InformationTypeEditionQuery,
 } from './InformationTypeEdition';
 import RiskLevel from '../../common/form/RiskLevel';
+import InformationTypeDetailsPopover from './InformationTypeDetailsPopover';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -155,12 +156,19 @@ class InformationTypesCreationComponent extends Component {
     this.state = {
       open: false,
       openEdit: false,
+      openDetails: false,
       selectedProduct: {},
       informationTypeId: '',
+      informationTypeDetails: {},
     };
   }
 
   onSubmit(values, { setSubmitting, resetForm }) {
+    const categorizations = {
+      catalog: values.catalog,
+      system: values.system,
+      information_type: values.information_type,
+    }
     const confidentialityImpact = {
       base_impact: values.confidentiality_impact_base,
       selected_impact: values.confidentiality_impact_selected,
@@ -180,6 +188,7 @@ class InformationTypesCreationComponent extends Component {
     const finalValues = R.pipe(
       R.dissoc('system'),
       R.dissoc('catalog'),
+      R.dissoc('category'),
       R.dissoc('information_type'),
       R.dissoc('categorization_system'),
       R.dissoc('integrity_impact_base'),
@@ -191,6 +200,7 @@ class InformationTypesCreationComponent extends Component {
       R.dissoc('confidentiality_impact_selected'),
       R.dissoc('availability_impact_justification'),
       R.dissoc('confidentiality_impact_justification'),
+      R.assoc('categorizations', categorizations),
       R.assoc('integrity_impact', integrityImpact),
       R.assoc('availability_impact', availabilityImpact),
       R.assoc('confidentiality_impact', confidentialityImpact),
@@ -258,12 +268,14 @@ class InformationTypesCreationComponent extends Component {
       R.mergeAll,
     )(selectedInfoType);
     if (type === 'select') {
-      setFieldValue('system', selectedInfoType?.category);
+      setFieldValue('system', selectedInfoType?.system);
+      setFieldValue('category', selectedInfoType?.category);
       setFieldValue('information_type', selectedInfoType?.id);
     }
     if (type === 'search') {
       setFieldValue('catalog', categorization?.catalog?.id);
-      setFieldValue('system', categorization?.information_type?.category);
+      setFieldValue('category', categorization?.information_type?.category);
+      setFieldValue('system', categorization?.system);
       setFieldValue('information_type', categorization?.information_type?.id);
       setFieldValue('description', selectedInfoType?.description);
     }
@@ -314,13 +326,13 @@ class InformationTypesCreationComponent extends Component {
     this.setState({ openEdit: !this.state.openEdit });
   }
 
-  handleDetachInfoType(infoTypeId, field) {
+  handleDetachInfoType(infoTypeId) {
     commitMutation({
       mutation: informationTypesDetachDeleteMutation,
       variables: {
-        id: infoTypeId,
+        id: this.props.informationSystem.id,
         entityId: infoTypeId,
-        field,
+        field: 'information_types',
       },
       pathname: '/defender_hq/assets/information_systems',
       onCompleted: () => {
@@ -352,20 +364,29 @@ class InformationTypesCreationComponent extends Component {
 
   renderRiskLevel(baseTitle) {
     const { t, classes } = this.props;
-    return (
-      <div className={classes.impactContent}>
-        <RiskLevel risk={baseTitle} />
-        <span className={classes.impactText}>
-          {baseTitle.includes('low') && t('Low')}
-          {baseTitle.includes('moderate') && t('Moderate')}
-          {baseTitle.includes('high') && t('High')}
-        </span>
-      </div>
-    )
+    if (baseTitle) {
+      return (
+        <div className={classes.impactContent}>
+          <RiskLevel risk={baseTitle} />
+          <span className={classes.impactText}>
+            {baseTitle.includes('low') && t('Low')}
+            {baseTitle.includes('moderate') && t('Moderate')}
+            {baseTitle.includes('high') && t('High')}
+          </span>
+        </div>
+      )
+    }
+    return <></>;
   }
 
   handleChangeDialog() {
     this.setState({ open: !this.state.open });
+  }
+
+  handleOpenDetails(details) {
+    this.setState({
+      openDetails: !this.state.openDetails,
+    });
   }
 
   render() {
@@ -385,7 +406,7 @@ class InformationTypesCreationComponent extends Component {
       selectedProduct,
     );
     const informationTypes = R.pathOr(
-      {},
+      [],
       ['information_types'],
       informationSystem,
     );
@@ -430,35 +451,35 @@ class InformationTypesCreationComponent extends Component {
         <div className={classes.scrollBg}>
           <div className={classes.scrollDiv}>
             <div className={classes.scrollObj}>
-              {informationTypes.length
+              {informationTypes.length !== 0
                 && informationTypes.map((informationType, key) => (
                   <div key={key} style={{ display: 'grid', gridTemplateColumns: '40% 1fr 1fr 1fr' }}>
-                    <div>
+                    <div
+                      onClick={() => {
+                        this.setState({
+                          informationTypeDetails: informationType,
+                        });
+                        this.handleOpenDetails();
+                      }}
+                      style={{
+                        cursor: 'pointer',
+                      }}
+                    >
                       {informationType.title && t(informationType.title)}
                     </div>
                     <div>
                       {informationType.confidentiality_impact && (
-                        <RiskLevel
-                          risk={
-                            informationType.confidentiality_impact.base_impact
-                          }
-                        />
+                        this.renderRiskLevel(informationType.confidentiality_impact.selected_impact)
                       )}
                     </div>
                     <div>
                       {informationType.integrity_impact && (
-                        <RiskLevel
-                          risk={informationType.integrity_impact.base_impact}
-                        />
+                        this.renderRiskLevel(informationType.integrity_impact.selected_impact)
                       )}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       {informationType.availability_impact && (
-                        <RiskLevel
-                          risk={
-                            informationType.availability_impact.base_impact
-                          }
-                        />
+                        this.renderRiskLevel(informationType.availability_impact.selected_impact)
                       )}
                       <div>
                         <IconButton
@@ -475,7 +496,6 @@ class InformationTypesCreationComponent extends Component {
                           onClick={this.handleDetachInfoType.bind(
                             this,
                             informationType.id,
-                            informationType.entity_type
                           )}
                         >
                           <DeleteIcon fontSize="small" />
@@ -499,6 +519,7 @@ class InformationTypesCreationComponent extends Component {
               title: '',
               system: '',
               catalog: '',
+              category: '',
               description: '',
               information_type: '',
               integrity_impact_base: '',
@@ -984,6 +1005,13 @@ class InformationTypesCreationComponent extends Component {
             }}
           />
         )}
+        {this.state.openDetails && (
+          <InformationTypeDetailsPopover
+            openDetails={this.state.openDetails}
+            informationType={this.state.informationTypeDetails}
+            handleDisplay={this.handleOpenDetails.bind(this)}
+          />
+        )}
       </div>
     );
   }
@@ -1007,14 +1035,38 @@ const InformationTypesCreation = createFragmentContainer(
           id
           title
           entity_type
+          description
+          categorizations {
+            id
+            entity_type
+            information_type {
+              title
+              id
+              category
+            }
+            catalog {
+              id
+              system
+              title
+            }
+          }
           confidentiality_impact {
             base_impact
+            selected_impact
+            adjustment_justification
+            explanation
           }
           integrity_impact {
             base_impact
+            selected_impact
+            adjustment_justification
+            explanation
           }
           availability_impact {
             base_impact
+            selected_impact
+            adjustment_justification
+            explanation
           }
         }
       }

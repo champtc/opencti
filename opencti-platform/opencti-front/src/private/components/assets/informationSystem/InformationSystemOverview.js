@@ -236,7 +236,7 @@ class InformationSystemOverviewComponent extends Component {
                     colorPrimary: classes.switch_primary,
                   }}
                 />
-                <Typography>No</Typography>
+                <Typography>Yes</Typography>
               </div>                
             </Grid>
             <Grid item={true} xs={6}>
@@ -331,6 +331,8 @@ class InformationSystemOverviewComponent extends Component {
               toType='OscalResponsibleParty'
               name='responsible_parties'
               title='Responsible Parties'
+              entityType='informationSystem'
+              data={informationSystem.responsible_parties}
             />
             </Grid>
           </Grid>

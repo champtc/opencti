@@ -1,4 +1,4 @@
-import { UserInputError } from 'apollo-server-errors';
+import { ApolloError, UserInputError } from 'apollo-server-errors';
 import { compareValues, filterValues, updateQuery, checkIfValidUUID } from '../../utils.js';
 import conf from '../../../../config/conf';
 import { selectObjectIriByIdQuery } from '../../global/global-utils.js';
@@ -21,6 +21,7 @@ import {
 import {
   createInformationType,
   deleteInformationTypeById,
+  deleteInformationTypeByIri,
   editInformationTypeById
 } from '../domain/informationType.js';
 import {
@@ -232,16 +233,13 @@ export const deleteInformationTypeCatalogById = async ( id, dbName, dataSources 
     // delete any entries in the Catalog
     if (response[0].entries !== undefined && response[0].entries !== null) {
       for (let entryIri of response[0].entries) {
-        let query = deleteInformationTypeByIriQuery(entryIri);
         try {
-          response = await dataSources.Stardog.delete({
-            dbName: contextDB,
-            sparqlQuery: query,
-            queryId: "Delete Information Type in Catalog"
-          });
+          await deleteInformationTypeByIri(entryIri, contextDB, dataSources);
         } catch (e) {
-          console.log(e)
-          throw e    
+          if (e instanceof ApolloError && e.extensions.code === 'BAD_USER_INPUT' ) {
+            continue;
+          }
+          throw (e);
         }
       }
     }

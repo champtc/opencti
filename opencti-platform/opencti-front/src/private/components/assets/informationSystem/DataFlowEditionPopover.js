@@ -61,6 +61,12 @@ const dataFlowEditionMutation = graphql`
 
 class DataFlowEdition extends Component {
   onSubmit(values, { setSubmitting, resetForm }) {
+    const adaptedValues = R.evolve(
+      {
+        diagrams: () => values.diagrams.length > 0 ? JSON.stringify(values.diagrams) : [],
+      },
+      values,
+    );
     const finalValues = R.pipe(
       R.toPairs,
       R.map((n) => {
@@ -69,11 +75,11 @@ class DataFlowEdition extends Component {
           'value': Array.isArray(adaptFieldValue(n[1])) ? adaptFieldValue(n[1]) : [adaptFieldValue(n[1])],
         }
       }),
-    )(values);
+    )(adaptedValues);
     commitMutation({
       mutation: dataFlowEditionMutation,
       variables: {
-        id: this.props.informationSystem.id,
+        id: this.props.informationSystem.data_flow.id,
         input: finalValues,
       },
       setSubmitting,
@@ -81,7 +87,7 @@ class DataFlowEdition extends Component {
       onCompleted: () => {
         setSubmitting(false);
         resetForm();
-        this.props.history.push('/defender_hq/assets/information_systems');
+        this.props.refreshQuery();
       },
       onError: () => {
         toastGenericError('Failed to edit Data Flow');
@@ -103,9 +109,9 @@ class DataFlowEdition extends Component {
     const dataFlow = R.pathOr([], ['data_flow'], informationSystem);
     const initialValues = R.pipe(
       R.assoc('description', dataFlow?.description || ''),
-      R.assoc('diagram', dataFlow?.diagram || []),
+      R.assoc('diagrams', dataFlow?.diagrams || []),
       R.pick([
-        'diagram',
+        'diagrams',
         'description',
       ]),
     )(dataFlow);
@@ -166,7 +172,7 @@ class DataFlowEdition extends Component {
                         diagramType='data_flow'
                         title='Diagram(s)'
                         id={informationSystem.id}
-                        name='diagram'
+                        name='diagrams'
                       />
                     </Grid>
                     <Grid item={true} xs={12}>

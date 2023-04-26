@@ -20,6 +20,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import inject18n from '../../../../components/i18n';
 import MarkDownField from '../../../../components/MarkDownField';
 import HyperLinkField from '../../common/form/HyperLinkField';
+import { commitMutation } from '../../../../relay/environment';
 import SystemDocumentationDiagram from '../../common/form/SystemDocumentationDiagram';
 import CyioCoreObjectExternalReferences from '../../analysis/external_references/CyioCoreObjectExternalReferences';
 
@@ -77,7 +78,7 @@ class AuthorizationBoundaryCreation extends Component {
       onCompleted: () => {
         setSubmitting(false);
         resetForm();
-        this.props.history.push('/defender_hq/assets/information_systems');
+        this.props.refreshQuery();
       },
       onError: () => {
         toastGenericError('Failed to create Authorization Boundary');
@@ -100,7 +101,7 @@ class AuthorizationBoundaryCreation extends Component {
           <Formik
             initialValues={{
               description: '',
-              diagram: [],
+              diagrams: [],
             }}
             enableReinitialize={true}
             onSubmit={this.onSubmit.bind(this)}
@@ -153,7 +154,7 @@ class AuthorizationBoundaryCreation extends Component {
                         values={values}
                         diagramType='authorization_type'
                         title='Diagram(s)'
-                        name='diagram'
+                        name='diagrams'
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
@@ -195,6 +196,7 @@ AuthorizationBoundaryCreation.propTypes = {
   fldt: PropTypes.func,
   classes: PropTypes.object,
   openCreate: PropTypes.bool,
+  refreshQuery: PropTypes.func,
   handleCloseCreate: PropTypes.func,
 
 };

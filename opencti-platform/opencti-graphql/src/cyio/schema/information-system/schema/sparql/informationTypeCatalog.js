@@ -286,6 +286,7 @@ export const selectCatalogCategoryMembersByIriQuery = (iri, categoryName, select
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
   if (select.includes('display_name')) {
+    if (!select.includes('title')) select.push('title');
     if (!select.includes('identifier')) select.push('identifier');
     if (!select.includes('category')) select.push('category');
     if (!select.includes('system')) select.push('system');  

@@ -61,6 +61,12 @@ const authorizationBoundaryEditionMutation = graphql`
 
 class AuthorizationBoundaryEdition extends Component {
   onSubmit(values, { setSubmitting, resetForm }) {
+    const adaptedValues = R.evolve(
+      {
+        diagrams: () => values.diagrams.length > 0 ? JSON.stringify(values.diagrams) : [],
+      },
+      values,
+    );
     const finalValues = R.pipe(
       R.toPairs,
       R.map((n) => {
@@ -69,11 +75,11 @@ class AuthorizationBoundaryEdition extends Component {
           'value': Array.isArray(adaptFieldValue(n[1])) ? adaptFieldValue(n[1]) : [adaptFieldValue(n[1])],
         }
       }),
-    )(values);
+    )(adaptedValues);
     commitMutation({
       mutation: authorizationBoundaryEditionMutation,
       variables: {
-        id: this.props.informationSystem.id,
+        id: this.props.informationSystem.authorization_boundary.id,
         input: finalValues,
       },
       setSubmitting,
@@ -81,10 +87,10 @@ class AuthorizationBoundaryEdition extends Component {
       onCompleted: () => {
         setSubmitting(false);
         resetForm();
-        this.props.history.push('/defender_hq/assets/information_systems');
+        this.props.refreshQuery();
       },
       onError: () => {
-        toastGenericError('Failed to edit Data Flow');
+        toastGenericError('Failed to edit Authorization Boundary');
       },
     });
   }
@@ -103,9 +109,9 @@ class AuthorizationBoundaryEdition extends Component {
     const authorizationBoundary = R.pathOr([], ['authorization_boundary'], informationSystem);
     const initialValues = R.pipe(
       R.assoc('description', authorizationBoundary?.description || ''),
-      R.assoc('diagram', authorizationBoundary?.diagram || []),
+      R.assoc('diagrams', authorizationBoundary?.diagrams || []),
       R.pick([
-        'diagram',
+        'diagrams',
         'description',
       ]),
     )(authorizationBoundary);
@@ -166,7 +172,7 @@ class AuthorizationBoundaryEdition extends Component {
                         diagramType='authorization_boundary'
                         title='Diagram(s)'
                         id={informationSystem.id}
-                        name='diagram'
+                        name='diagrams'
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
@@ -211,6 +217,7 @@ AuthorizationBoundaryEdition.propTypes = {
   t: PropTypes.func,
   fldt: PropTypes.func,
   classes: PropTypes.object,
+  refreshQuery: PropTypes.func,
   refreshQuery: PropTypes.func,
   handleCloseEdit: PropTypes.func,
 };

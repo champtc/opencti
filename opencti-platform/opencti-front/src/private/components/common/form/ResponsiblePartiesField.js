@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import {
@@ -64,7 +66,7 @@ const styles = (theme) => ({
     margin: '15px 20px 15px 0',
   },
   addIcon: {
-    marginRight: '-20px',
+    marginRight: '-10px',
     padding: '5px',
   },
   linkTitle: {
@@ -103,6 +105,26 @@ const responsiblePartiesFieldAddMutation = graphql`
     $from_type: String
   ) {
     addReference(input: {field_name: $fieldName, from_id: $fromId, to_id: $toId, to_type: $to_type, from_type: $from_type})
+  }
+`;
+
+const responsiblePartiesAttachToInformationMutation = graphql`
+  mutation ResponsiblePartiesFieldAttachToInformationMutation(
+    $id: ID!
+    $entityId: ID!
+    $field: String!
+  ) {
+    attachToInformationSystem(id: $id, entityId: $entityId, field: $field) 
+  }
+`;
+
+const responsiblePartiesDetachToInformationMutation = graphql`
+  mutation ResponsiblePartiesFieldDetachToInformationMutation(
+    $id: ID!
+    $entityId: ID!
+    $field: String!
+  ) {
+    detachFromInformationSystem(id: $id, entityId: $entityId, field: $field) 
   }
 `;
 
@@ -153,40 +175,65 @@ class ResponsiblePartiesField extends Component {
       currentParties: uniq([...this.state.currentParties, this.state.party]),
       open: false,
     });
-
-    commitMutation({
-      mutation: responsiblePartiesFieldAddMutation,
-      variables: {
-        toId: this.state.party?.id,
-        fromId: this.props.id,
-        fieldName: 'responsible_parties',
-        from_type: this.props.fromType,
-        to_type: this.props.toType,
-      },
-    });
+    if (this.props.entityType === 'informationSystem') {
+      commitMutation({
+        mutation: responsiblePartiesAttachToInformationMutation,
+        variables: {
+          id: this.props.id,
+          entityId: this.state.party?.id,
+          field: this.props.name,
+        },
+      });
+    } else {
+      commitMutation({
+        mutation: responsiblePartiesFieldAddMutation,
+        variables: {
+          toId: this.state.party?.id,
+          fromId: this.props.id,
+          fieldName: this.props.name,
+          from_type: this.props.fromType,
+          to_type: this.props.toType,
+        }
+      });
+    }
   }
 
   handleDelete(id) {
-    const newParties = this.state.currentParties.filter((item) => item.id !== id);
-    this.setState({
-      currentParties: newParties,
-    });
-
-    commitMutation({
-      mutation: responsiblePartiesFieldRemoveMutation,
-      variables: {
-        toId: id,
-        fromId: this.props.id,
-        fieldName: 'responsible_parties',
-        from_type: this.props.fromType,
-        to_type: this.props.toType,
-      },
-      onCompleted: () => {
-        this.setState({
-          open: false,
-        });
-      },
-    });
+    if (this.props.entityType === 'informationSystem') {
+      commitMutation({
+        mutation: responsiblePartiesDetachToInformationMutation,
+        variables: {
+          id: this.props.id,
+          entityId: id,
+          field: this.props.name,
+        },
+        onCompleted: () => {
+          const newParties = this.state.currentParties.filter((item) => item.id !== id);
+          this.setState({
+            open: false,
+            currentParties: newParties,
+          });
+        },
+      });
+    } else {
+      commitMutation({
+        mutation: responsiblePartiesFieldRemoveMutation,
+        variables: {
+          toId: id,
+          fromId: this.props.id,
+          fieldName: this.props.name,
+          from_type: this.props.fromType,
+          to_type: this.props.toType,
+        },
+        onCompleted: () => {
+          const newParties = this.state.currentParties.filter((item) => item.id !== id);
+          this.setState({
+            open: false,
+            currentParties: newParties,
+          });
+        },
+      });
+    }
   }
 
   render() {
@@ -195,12 +242,13 @@ class ResponsiblePartiesField extends Component {
       history,
       classes,
       title,
+      disabled,
     } = this.props;
 
     return (
       <>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Typography>{title && t(title)}</Typography>
+          <Typography variant="h3" color="textSecondary" gutterBottom={true}>{title && t(title)}</Typography>
           <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
             <Tooltip title={t('Responsible Parties')}>
               <Information fontSize="inherit" color="disabled" />
@@ -209,6 +257,7 @@ class ResponsiblePartiesField extends Component {
           <IconButton
             size="small"
             onClick={() => this.setState({ open: true })}
+            disabled={disabled ?? false}
           >
             <InsertLinkIcon />
           </IconButton>
@@ -225,8 +274,8 @@ class ResponsiblePartiesField extends Component {
                         component="button"
                         variant="body2"
                         onClick={() => history.push(`/data/entities/responsible_parties/${party.id}`)}
-                        >
-                          <LaunchIcon fontSize="small" className={classes.launchIcon} />
+                      >
+                        <LaunchIcon fontSize="small" className={classes.launchIcon} />
                       </Link>
                       <div className={classes.linkTitle}>{party && t(party?.name)}</div>
                     </div>
@@ -307,10 +356,16 @@ class ResponsiblePartiesField extends Component {
 }
 
 ResponsiblePartiesField.propTypes = {
+  t: PropTypes.func,
+  id: PropTypes.string,
+  data: PropTypes.array,
   name: PropTypes.string,
+  title: PropTypes.string,
+  toType: PropTypes.string,
   device: PropTypes.object,
   classes: PropTypes.object,
-  t: PropTypes.func,
+  fromType: PropTypes.string,
+  entityType: PropTypes.string,
 };
 
 export default compose(inject18n, withStyles(styles))(ResponsiblePartiesField);

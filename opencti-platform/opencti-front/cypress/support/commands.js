@@ -34,7 +34,9 @@ Cypress.Commands.add('login', (email, password) => {
 });
 
 Cypress.Commands.add('logout', () => {
-  cy.get('[data-cy="menu"]').click();
-  cy.get('[data-cy="logout"]').click();
+  //     cy.get('[class="MuiGrid... "]').last() - rightmost button at top nav
+  //     should('be.visible')                   - ensure it's clickable
+  cy.get('[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-auto"]').last().should('be.visible').click();
+  cy.contains('Logout').click();
   cy.clearCookies();
 });

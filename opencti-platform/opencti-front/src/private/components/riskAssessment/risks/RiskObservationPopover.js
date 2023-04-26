@@ -551,6 +551,7 @@ export const RiskObservationPopoverComponent = createFragmentContainer(
           id
           description
           entity_type
+          title
         }
         origins {
           origin_actors {

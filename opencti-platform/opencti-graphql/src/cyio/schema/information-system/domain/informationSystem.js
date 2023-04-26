@@ -330,7 +330,7 @@ export const createInformationSystem = async (input, dbName, dataSources, select
 
   // TODO: WORKAROUND
   if (input.date_authorized !== undefined && input.date_authorized.length > 0) {
-    input.date_authorized = input.date_authorized.substr(0,input.date_authorized.indexOf('T'));
+    if (input.date_authorized.indexOf('T') > -1 ) input.date_authorized = input.date_authorized.substr(0,input.date_authorized.indexOf('T'));
   }
 
   // Collect all the nested definitions and remove them from input array
@@ -666,6 +666,11 @@ export const editInformationSystemById = async (id, input, dbName, dataSources, 
     let value, fieldType, objectType, objArray, iris=[];
     for (value of editItem.value) {
       switch(editItem.key) {
+        case 'date_authorized':
+          if (value !== undefined && value.length > 0) {
+            if (value.indexOf('T') > -1 ) editItem.value[0] = value.substr(0,value.indexOf('T'));
+          }
+          break;
         case 'deployment_model':
           if (!validateEnumValue(value, 'DeploymentModelType', schema)) throw new UserInputError(`Invalid value "${value}" for field "${editItem.key}".`);
           editItem.value[0] = value.replace(/_/g,'-').toLowerCase();

@@ -6,6 +6,14 @@ import {
   editSharedMetadataById,
   attachToSharedMetadata,
   detachFromSharedMetadata,
+  // // Document Ids
+  // findDocumentIdByIri,
+  // // Links
+  // findLinkByIri,
+  // // Parties
+  // findPartyByIri,
+  // // Responsible Parties
+  // findResponsiblePartyByIri,
 } from '../domain/sharedMetadata.js';
 
 const cyioSharedMetadataResolvers = {
@@ -24,46 +32,45 @@ const cyioSharedMetadataResolvers = {
   },
   SharedMetadata: {
     document_ids: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.link_iris === undefined) return [];
-      let results = []
-      for (let iri of parent.document_id_iris) {
-        let result = await findDocumentIdByIri(iri, dbName, dataSources, selectMap.getNode('document_ids'));
-        if (result === undefined || result === null) return null;
-        results.push(result);
-      }
-      return results;
+      // if (parent.link_iris === undefined) return [];
+      // let results = []
+      // for (let iri of parent.document_id_iris) {
+      //   let result = await findDocumentIdByIri(iri, dbName, dataSources, selectMap.getNode('document_ids'));
+      //   if (result === undefined || result === null) return null;
+      //   results.push(result);
+      // }
+      // return results;
     },
     links: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.link_iris === undefined) return [];
-      let results = []
-      for (let iri of parent.link_iris) {
-        let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
-        if (result === undefined || result === null) return null;
-        results.push(result);
-      }
-      return results;
+      // if (parent.link_iris === undefined) return [];
+      // let results = []
+      // for (let iri of parent.link_iris) {
+      //   let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+      //   if (result === undefined || result === null) return null;
+      //   results.push(result);
+      // }
+      // return results;
     },
     parties: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.link_iris === undefined) return [];
-      let results = []
-      for (let iri of parent.party_iris) {
-        let result = await findPartyByIri(iri, dbName, dataSources, selectMap.getNode('parties'));
-        if (result === undefined || result === null) return null;
-        results.push(result);
-      }
-      return results;
+      // if (parent.link_iris === undefined) return [];
+      // let results = []
+      // for (let iri of parent.party_iris) {
+      //   let result = await findPartyByIri(iri, dbName, dataSources, selectMap.getNode('parties'));
+      //   if (result === undefined || result === null) return null;
+      //   results.push(result);
+      // }
+      // return results;
     },
     responsible_parties: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.responsible_party_iris === undefined) return [];
-      let results = []
-      for (let iri of parent.responsible_party_iris) {
-        let result = await findResponsiblePartyByIri(iri, dbName, dataSources, selectMap.getNode('responsible_parties'));
-        if (result === undefined || result === null) continue;
-        results.push(result);
-      }
-      return results;
+      // if (parent.responsible_party_iris === undefined) return [];
+      // let results = []
+      // for (let iri of parent.responsible_party_iris) {
+      //   let result = await findResponsiblePartyByIri(iri, dbName, dataSources, selectMap.getNode('responsible_parties'));
+      //   if (result === undefined || result === null) continue;
+      //   results.push(result);
+      // }
+      // return results;
     },
-  
   },
 };
 

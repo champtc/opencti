@@ -11,39 +11,38 @@ import {
 } from '../../../utils.js';
 import {
   getReducer,
-  //Shared Metadata
-  sharedMetadataPredicateMap,
-  singularizeSharedMetadataSchema,
-  selectSharedMetadataQuery,
-  selectSharedMetadataByIriQuery,
-  selectAllSharedMetadataQuery,
-  insertSharedMetadataQuery,
-  deleteSharedMetadataQuery,
-  deleteSharedMetadataByIriQuery,
-  attachToSharedMetadataQuery,
-  detachFromSharedMetadataQuery,
-} from '../schema/sparql/sharedMetadata.js';
+  //Assessment Plan
+  assessmentPlanPredicateMap,
+  singularizeAssessmentPlanSchema,
+  selectAssessmentPlanQuery,
+  selectAssessmentPlanByIriQuery,
+  selectAllAssessmentPlanQuery,
+  insertAssessmentPlanQuery,
+  deleteAssessmentPlanQuery,
+  deleteAssessmentPlanByIriQuery,
+  attachToAssessmentPlanQuery,
+  detachFromAssessmentPlanQuery,
+} from '../schema/sparql/assessmentPlan.js';
 import { addToInventoryQuery, removeFromInventoryQuery } from '../../../assets/assetUtil.js';
 
-// Shared Metadata
-
-export const findSharedMetadataById = async (id, dbName, dataSources, select) => {
+// Assessment Plan
+export const findAssessmentPlanById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  return findSharedMetadataByIri(iri, dbName, dataSources, select);
+  let iri = `<http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan-${id}>`;
+  return findAssessmentPlanByIri(iri, dbName, dataSources, select);
 }
 
-export const findSharedMetadataByIri = async (iri, dbName, dataSources, select) => {
-  const sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+export const findAssessmentPlanByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Shared Metadata",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select Assessment Plan",
+      singularizeSchema: singularizeAssessmentPlanSchema
     });
   } catch (e) {
     console.log(e)
@@ -51,19 +50,19 @@ export const findSharedMetadataByIri = async (iri, dbName, dataSources, select) 
   }
   if (response === undefined || response === null || response.length === 0) return null;
 
-  const reducer = getReducer("SHARED-METADATA");
+  const reducer = getReducer("ASSESSMENT-PLAN");
   return reducer(response[0]);  
 };
 
-export const findAllSharedMetadata = async (args, dbName, dataSources, select ) => {
-  const sparqlQuery = selectAllSharedMetadataQuery(select, args);
+export const findAllAssessmentPlan = async (args, dbName, dataSources, select ) => {
+  const sparqlQuery = selectAllAssessmentPlanQuery(select, args);
   let response;
   try {
     response = await dataSources.Stardog.queryAll({
       dbName,
       sparqlQuery,
-      queryId: "Select List of Shared Metadata",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select List of Assessment Plan",
+      singularizeSchema: singularizeAssessmentPlanSchema
     });
   } catch (e) {
     console.log(e)
@@ -74,7 +73,7 @@ export const findAllSharedMetadata = async (args, dbName, dataSources, select ) 
   if (response === undefined || (Array.isArray(response) && response.length === 0)) return null;
 
   const edges = [];
-  const reducer = getReducer("SHARED-METADATA");
+  const reducer = getReducer("ASSESSMENT-PLAN");
   let skipCount = 0,filterCount = 0, resultCount = 0, limit, offset, limitSize, offsetSize;
   limitSize = limit = (args.first === undefined ? response.length : args.first) ;
   offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
@@ -82,8 +81,8 @@ export const findAllSharedMetadata = async (args, dbName, dataSources, select ) 
   let resultList ;
   let sortBy;
   if (args.orderedBy !== undefined ) {
-    if (args.orderedBy === 'title') {
-      sortBy = 'title';
+    if (args.orderedBy === 'name') {
+      sortBy = 'name';
     } else {
       sortBy = args.orderedBy;
     }
@@ -154,7 +153,7 @@ export const findAllSharedMetadata = async (args, dbName, dataSources, select ) 
   }
 };
 
-export const createSharedMetadata = async (input, dbName, dataSources, select) => {
+export const createAssessmentPlan = async (input, dbName, dataSources, select) => {
   // WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -168,8 +167,8 @@ export const createSharedMetadata = async (input, dbName, dataSources, select) =
   // END WORKAROUND
 
   // Need to escape contents, remove explicit newlines, and collapse multiple what spaces.
-  if (input.title !== undefined ) {
-    input.title = input.title.replace(/\s+/g, ' ')
+  if (input.name !== undefined ) {
+    input.name = input.name.replace(/\s+/g, ' ')
                                         .replace(/\n/g, '\\n')
                                         .replace(/\"/g, '\\"')
                                         .replace(/\'/g, "\\'")
@@ -177,40 +176,40 @@ export const createSharedMetadata = async (input, dbName, dataSources, select) =
                                         .replace(/[\u201C\u201D]/g, '\\"');
   }
 
-  // create the Shared Metadata object
+  // create the Assessment Plan object
   let response;
-  let {iri, id, query} = insertSharedMetadataQuery(input);
+  let {iri, id, query} = insertAssessmentPlanQuery(input);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery: query,
-      queryId: "Create Shared Metadata object"
+      queryId: "Create Assessment Plan object"
       });
   } catch (e) {
     console.log(e)
     throw e
   }
 
-  // retrieve the newly created Shared Metadata to be returned
-  const selectQuery = selectSharedMetadataQuery(id, select);
+  // retrieve the newly created Assessment Plan to be returned
+  const selectQuery = selectAssessmentPlanQuery(id, select);
   let result;
   try {
     result = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery: selectQuery,
-      queryId: "Select Shared Metadata object",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select Assessment Plan object",
+      singularizeSchema: singularizeAssessmentPlanSchema
     });
   } catch (e) {
     console.log(e)
     throw e
   }
   if (result === undefined || result === null || result.length === 0) return null;
-  const reducer = getReducer("SHARED-METADATA");
+  const reducer = getReducer("ASSESSMENT-PLAN");
   return reducer(result[0]);
 };
 
-export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
+export const deleteAssessmentPlanById = async ( id, dbName, dataSources) => {
   let select = ['iri','id'];
   let idArray = [];
   if (!Array.isArray(id)) {
@@ -225,13 +224,13 @@ export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
     if (!checkIfValidUUID(itemId)) throw new UserInputError(`Invalid identifier: ${itemId}`);  
 
     // check if object with id exists
-    let sparqlQuery = selectSharedMetadataQuery(itemId, select);
+    let sparqlQuery = selectAssessmentPlanQuery(itemId, select);
     try {
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select Shared Metadata",
-        singularizeSchema: singularizeSharedMetadataSchema
+        queryId: "Select Assessment Plan",
+        singularizeSchema: singularizeAssessmentPlanSchema
       });
     } catch (e) {
       console.log(e)
@@ -241,20 +240,20 @@ export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
     let AsseResult = response[0];
 
-    // Removing Shared Metadata Asset from Asset Inventory
+    // Removing Assessment Plan Asset from Asset Inventory
     const invQuery = removeFromInventoryQuery(AsseResult.iri);
     await dataSources.Stardog.create({
       dbName,
       sparqlQuery: invQuery,
-      queryId: 'Removing Shared Metadata Asset from Inventory',
+      queryId: 'Removing Assessment Plan Asset from Inventory',
     });
 
-    sparqlQuery = deleteSharedMetadataQuery(itemId);
+    sparqlQuery = deleteAssessmentPlanQuery(itemId);
     try {
       response = await dataSources.Stardog.delete({
         dbName,
         sparqlQuery,
-        queryId: "Delete Shared Metadata"
+        queryId: "Delete Assessment Plan"
       });
     } catch (e) {
       console.log(e)
@@ -268,17 +267,17 @@ export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
   return removedIds;
 };
 
-export const deleteSharedMetadataByIri = async ( iri, dbName, dataSources) => {
+export const deleteAssessmentPlanByIri = async ( iri, dbName, dataSources) => {
     // check if object with iri exists
     let select = ['iri','id'];
     let response;
     try {
-      let sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+      let sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select Shared Metadata",
-        singularizeSchema: singularizeSharedMetadataSchema
+        queryId: "Select Assessment Plan",
+        singularizeSchema: singularizeAssessmentPlanSchema
       });
     } catch (e) {
       console.log(e)
@@ -288,20 +287,20 @@ export const deleteSharedMetadataByIri = async ( iri, dbName, dataSources) => {
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with IRI ${iri}`);
     let AsseResult = response[0];
 
-    // Removing Shared Metadata Asset from Asset Inventory
+    // Removing Assessment Plan Asset from Asset Inventory
     const connectQuery = removeFromInventoryQuery(AsseResult.iri);
     await dataSources.Stardog.create({
       dbName,
       sparqlQuery: connectQuery,
-      queryId: 'Removing Shared Metadata Asset from Inventory',
+      queryId: 'Removing Assessment Plan Asset from Inventory',
     });
 
-    sparqlQuery = deleteSharedMetadataByIriQuery(iri);
+    sparqlQuery = deleteAssessmentPlanByIriQuery(iri);
     try {
       response = await dataSources.Stardog.delete({
         dbName,
         sparqlQuery,
-        queryId: "Delete Shared Metadata"
+        queryId: "Delete Assessment Plan"
       });
     } catch (e) {
       console.log(e)
@@ -311,7 +310,7 @@ export const deleteSharedMetadataByIri = async ( iri, dbName, dataSources) => {
   return iri;
 };
 
-export const editSharedMetadataById = async (id, input, dbName, dataSources, select, schema) => {
+export const editAssessmentPlanById = async (id, input, dbName, dataSources, select, schema) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
 
   // make sure there is input data containing what is to be edited
@@ -326,12 +325,12 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
     editSelect.push(editItem.key);
   }
 
-  const sparqlQuery = selectSharedMetadataQuery(id, editSelect );
+  const sparqlQuery = selectAssessmentPlanQuery(id, editSelect );
   let response = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery,
-    queryId: "Select Shared Metadata",
-    singularizeSchema: singularizeSharedMetadataSchema
+    queryId: "Select Assessment Plan",
+    singularizeSchema: singularizeAssessmentPlanSchema
   });
   if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
@@ -374,22 +373,38 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
     let value, fieldType, objectType, objArray, iris=[];
     for (value of editItem.value) {
       switch(editItem.key) {
+        case 'revisions':
+          objectType = 'revisions';
+          fieldType = 'id';
+          break;
         case 'document_ids':
           objectType = 'document_ids';
           fieldType = 'id';
           break;
-        case 'links':
-          objectType = 'links';
+        case 'sysetm_security_plan':
+          objectType = 'sysetm_security_plan';
           fieldType = 'id';
           break;
-        case 'parties':
-          objectType = 'parties';
+        case 'local_definitions':
+          objectType = 'local_definitions';
           fieldType = 'id';
           break;
-        case 'responsible_parties':
-          objectType = 'responsible_parties';
+        case 'reviewed_controls':
+          objectType = 'reviewed_controls';
           fieldType = 'id';
           break;
+        case 'assessment_subjects':
+          objectType = 'assessment_subjects';
+          fieldType = 'id';
+          break;
+        case 'assessment_assets':
+          objectType = 'assessment_assets';
+          fieldType = 'id';
+          break;  
+        case 'resources':
+          objectType = 'resources';
+          fieldType = 'id';
+          break;      
         default:
           fieldType = 'simple';
           break;
@@ -404,7 +419,7 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
           dbName,
           sparqlQuery,
           queryId: "Obtaining IRI for the object with id",
-          singularizeSchema: singularizeSharedMetadataSchema
+          singularizeSchema: singularizeAssessmentPlanSchema
         });
         if (result === undefined || result.length === 0) throw new UserInputError(`Entity does not exist with ID ${value}`);
         iris.push(`<${result[0].iri}>`);
@@ -414,10 +429,10 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/shared-metadata--${id}`,
-    "http://csrc.nist.gov/ns/oscal/common#SharedMetadata",
+    `http://cyio.darklight.ai/assessment-plan--${id}`,
+    "http://csrc.nist.gov/ns/oscal/common#AssessmentPlan",
     input,
-    sharedMetadataPredicateMap
+    assessmentPlanPredicateMap
   );
   if (query !== null) {
     let response;
@@ -425,7 +440,7 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
       response = await dataSources.Stardog.edit({
         dbName,
         sparqlQuery: query,
-        queryId: "Update Shared Metadata"
+        queryId: "Update Assessment Plan"
       });  
     } catch (e) {
       console.log(e)
@@ -433,33 +448,33 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
     }
   }
 
-  const selectQuery = selectSharedMetadataQuery(id, select);
+  const selectQuery = selectAssessmentPlanQuery(id, select);
   const result = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery: selectQuery,
-    queryId: "Select Shared Metadata",
-    singularizeSchema: singularizeSharedMetadataSchema
+    queryId: "Select Assessment Plan",
+    singularizeSchema: singularizeAssessmentPlanSchema
   });
-  const reducer = getReducer("SHARED-METADATA");
+  const reducer = getReducer("ASSESSMENT-PLAN");
   return reducer(result[0]);
 };
 
-export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSources) => {
+export const attachToAssessmentPlan = async (id, field, entityId, dbName, dataSources) => {
   let sparqlQuery;
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
-  // check to see if the shared metadata exists
+  // check to see if the assessment plan exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+  let iri = `<http://cyio.darklight.ai/assessment-plan--${id}>`;
+  sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Shared Metadata",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select Assessment Plan",
+      singularizeSchema: singularizeAssessmentPlanSchema
     });
   } catch (e) {
     console.log(e)
@@ -468,10 +483,14 @@ export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSo
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
+    'revisions': 'revisions',
     'document_ids': 'document_ids',
-    'links': 'links',
-    'parties': 'parties',
-    'responsible_parties': 'responsible_parties',
+    'system_security_plan': 'system_security_plan',
+    'local_definitions': 'local_definitions',
+    'reviewed_controls': 'reviewed_controls',
+    'assessment_subjects': 'assessment_subjects',
+    'assessment_assets': 'assessment_assets',
+    'resources': 'resources',
   }
   let objectType = attachableObjects[field];
   try {
@@ -481,7 +500,7 @@ export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSo
       dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
-      singularizeSchema: singularizeSharedMetadataSchema
+      singularizeSchema: singularizeAssessmentPlanSchema
     });
   } catch (e) {
     console.log(e)
@@ -497,13 +516,13 @@ export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSo
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the shared metadata
-  sparqlQuery = attachToSharedMetadataQuery(id, field, entityIri);
+  // Attach the object to the assessment plan
+  sparqlQuery = attachToAssessmentPlanQuery(id, field, entityIri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Attach ${field} to Shared Metadata`
+      queryId: `Attach ${field} to Assessment Plan`
       });
   } catch (e) {
     console.log(e)
@@ -513,22 +532,22 @@ export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSo
   return true;
 };
 
-export const detachFromSharedMetadata = async (id, field, entityId, dbName, dataSources) => {
+export const detachFromAssessmentPlan = async (id, field, entityId, dbName, dataSources) => {
   let sparqlQuery;
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
-  // check to see if the shared metadata exists
+  // check to see if the assessment plan exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+  let iri = `<http://cyio.darklight.ai/assessment-plan--${id}>`;
+  sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Shared Metadata",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select Assessment Plan",
+      singularizeSchema: singularizeAssessmentPlanSchema
     });
   } catch (e) {
     console.log(e)
@@ -537,10 +556,14 @@ export const detachFromSharedMetadata = async (id, field, entityId, dbName, data
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
+    'revisions': 'revisions',
     'document_ids': 'document_ids',
-    'links': 'links',
-    'parties': 'parties',
-    'responsible_parties': 'responsible_parties',
+    'system_security_plan': 'system_security_plan',
+    'local_definitions': 'local_definitions',
+    'reviewed_controls': 'reviewed_controls',
+    'assessment_subjects': 'assessment_subjects',
+    'assessment_assets': 'assessment_assets',
+    'resources': 'resources',
   }
   let objectType = attachableObjects[field];
   try {
@@ -550,7 +573,7 @@ export const detachFromSharedMetadata = async (id, field, entityId, dbName, data
       dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
-      singularizeSchema: singularizeSharedMetadataSchema
+      singularizeSchema: singularizeAssessmentPlanSchema
     });
   } catch (e) {
     console.log(e)
@@ -566,13 +589,13 @@ export const detachFromSharedMetadata = async (id, field, entityId, dbName, data
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the shared metadata
-  sparqlQuery = detachFromSharedMetadataQuery(id, field, entityIri);
+  // Attach the object to the assessment plan
+  sparqlQuery = detachFromAssessmentPlanQuery(id, field, entityIri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Detach ${field} from Shared Metadata`
+      queryId: `Detach ${field} from Assessment Plan`
       });
   } catch (e) {
     console.log(e)

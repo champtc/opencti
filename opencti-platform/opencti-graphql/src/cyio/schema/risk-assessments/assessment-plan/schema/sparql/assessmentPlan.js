@@ -14,19 +14,19 @@ import {
 // Reducer Selection
 export function getReducer(type) {
   switch (type) {
-    case 'SHARED-METADATA':
-      return sharedMetadataReducer;
+    case 'ASSESSMENT-PLAN':
+      return assessmentPlanReducer;
     default:
       throw new UserInputError(`Unsupported reducer type ' ${type}'`)
   }
 }
 
 // Reducers
-const sharedMetadataReducer = (item) => {
+const assessmentPlanReducer = (item) => {
   // if no object type was returned, compute the type from the IRI
   if (item.object_type === undefined) {
       if (item.entity_type !== undefined) item.object_type = item.entity_type;
-      if (item.iri.includes('shared-metadata')) item.object_type = 'shared-metadata';
+      if (item.iri.includes('assessment-plan')) item.object_type = 'assessment-plan';
   }
 
   return {
@@ -35,60 +35,66 @@ const sharedMetadataReducer = (item) => {
       ...(item.object_type && { entity_type: item.object_type }),
       ...(item.created && { created: item.created }),
       ...(item.modified && { modified: item.modified }),
-      ...(item.title && { title: item.title }),
+      ...(item.name && { name: item.name }),
       ...(item.published && { published: item.published }),
       ...(item.last_modified && { last_modified: item.last_modified }),
       ...(item.version && { version: item.version }),
       ...(item.oscal_version && { oscal_version: item.oscal_version }),
+      ...(item.revisions && { revision_iris: item.revisions }),
       ...(item.document_ids && { document_id_iris: item.document_ids }),
-      ...(item.links && { link_iris: item.links }),
-      ...(item.parties && { party_iris: item.parties }),
-      ...(item.responsible_parties && { responsible_party_iris: item.responsible_parties }),
+      ...(item.shared_metadata && { shared_metadata_iris: item.shared_metadata }),
+      ...(item.system_security_plan && { system_security_plan_iris: item.system_security_plan }),
+      ...(item.local_definitions && { local_definition_iris: item.local_definitions }),
+      ...(item.terms_and_conitions && { terms_and_conitions_iris: item.terms_and_conitions }),
+      ...(item.reviewed_controls && { reviewed_control_iris: item.reviewed_controls }),
+      ...(item.assessment_subjects && { assessment_subject_iris: item.assessment_subjects }),
+      ...(item.assessment_assets && { assessment_asset_iris: item.assessment_assets }),
+      ...(item.resources && { resource_iris: item.resources }),
     }
 };
 
-// Utilities - Shared Metadata
-export const generateSharedMetadataId = (input) => {
+// Utilities - Assessment Plan
+export const generateAssessmentPlanId = (input) => {
   const id_material = {
-    ...(input.title && {"title": input.title}),
+    ...(input.name && {"name": input.name}),
   };
   const id = generateId( id_material, OSCAL_NS );
   return id;
 }
 
-export const getSharedMetadataIri = (id) => {
+export const getAssessmentPlanIri = (id) => {
   if(!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
-  return `http://cyio.darklight.ai/shared-metadata--${id}`;
+  return `http://cyio.darklight.ai/assessment-plan--${id}`;
 }
 
-// Query Builders - Shared Metadata
-export const selectSharedMetadataQuery = (id, select) => {
+// Query Builders - Assessment Plan
+export const selectAssessmentPlanQuery = (id, select) => {
   if(!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
-  return selectSharedMetadataByIriQuery(getSharedMetadataIri(id), select);
+  return selectAssessmentPlanByIriQuery(getAssessmentPlanIri(id), select);
 }
 
-export const selectSharedMetadataByIriQuery = (iri, select) => {
+export const selectAssessmentPlanByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(sharedMetadataPredicateMap);
+  if (select === undefined || select === null) select = Object.keys(assessmentPlanPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
-  const { selectionClause, predicates } = buildSelectVariables(sharedMetadataPredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(assessmentPlanPredicateMap, select);
 
   return `
   SELECT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan> .
     ${predicates}
   }`
 }
 
-export const selectAllSharedMetadataQuery = (select, args, parent) => {
-  if (select === undefined || select === null) select = Object.keys(sharedMetadataPredicateMap);
+export const selectAllAssessmentPlanQuery = (select, args, parent) => {
+  if (select === undefined || select === null) select = Object.keys(assessmentPlanPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
@@ -106,36 +112,35 @@ export const selectAllSharedMetadataQuery = (select, args, parent) => {
   }
 
   // build lists of selection variables and predicates
-  const { selectionClause, predicates } = buildSelectVariables(sharedMetadataPredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(assessmentPlanPredicateMap, select);
 
   return `
   SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan> . 
     ${predicates}
   }
   `
 }
 
-export const insertSharedMetadataQuery = (propValues) => {
-  const id = generateSharedMetadataId( propValues );
+export const insertAssessmentPlanQuery = (propValues) => {
+  const id = generateAssessmentPlanId( propValues );
   const iri = getAssessmentPlanIri(id);
   const timestamp = new Date().toISOString();
 
   // set last_modified if not in propValues
   if(!('last_modified' in propValues)) propValues('last_modified') = timestamp;
 
-  // determine the appropriate ontology class type
   const insertPredicates = [];
   Object.entries(propValues).forEach((propPair) => {
-    if (sharedMetadataPredicateMap.hasOwnProperty(propPair[0])) {
+    if (assessmentPlanPredicateMap.hasOwnProperty(propPair[0])) {
       if (Array.isArray(propPair[1])) {
         for (let value of propPair[1]) {
-          insertPredicates.push(sharedMetadataPredicateMap[propPair[0]].binding(iri, value));
+          insertPredicates.push(assessmentPlanPredicateMap[propPair[0]].binding(iri, value));
         }  
       } else {
-        insertPredicates.push(sharedMetadataPredicateMap[propPair[0]].binding(iri, propPair[1]));
+        insertPredicates.push(assessmentPlanPredicateMap[propPair[0]].binding(iri, propPair[1]));
       }
     }
   });
@@ -143,12 +148,12 @@ export const insertSharedMetadataQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/common#AssessmentPlan> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Model> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Object> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
-      ${iri} <http://darklight.ai/ns/common#object_type> "shared-metadata" . 
+      ${iri} <http://darklight.ai/ns/common#object_type> "assessment-plan" . 
       ${iri} <http://darklight.ai/ns/common#created> "${timestamp}"^^xsd:dateTime . 
       ${iri} <http://darklight.ai/ns/common#modified> "${timestamp}"^^xsd:dateTime . 
       ${insertPredicates.join(" . \n")}
@@ -158,12 +163,12 @@ export const insertSharedMetadataQuery = (propValues) => {
   return {iri, id, query}
 }
     
-export const deleteSharedMetadataQuery = (id) => {
-  const iri = `http://cyio.darklight.ai/shared-metadata--${id}`;
-  return deleteSharedMetadataByIriQuery(iri);
+export const deleteAssessmentPlanQuery = (id) => {
+  const iri = `http://cyio.darklight.ai/assessment-plan--${id}`;
+  return deleteAssessmentPlanByIriQuery(iri);
 }
 
-export const deleteSharedMetadataByIriQuery = (iri) => {
+export const deleteAssessmentPlanByIriQuery = (iri) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
   return `
   DELETE {
@@ -172,14 +177,14 @@ export const deleteSharedMetadataByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan> .
       ?iri ?p ?o
     }
   }
   `
 }
 
-export const deleteMultipleSharedMetadataQuery = (ids) =>{
+export const deleteMultipleAssessmentPlanQuery = (ids) =>{
   const values = ids ? (ids.map((id) => `"${id}"`).join(' ')) : "";
   return `
   DELETE {
@@ -188,7 +193,7 @@ export const deleteMultipleSharedMetadataQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -197,10 +202,10 @@ export const deleteMultipleSharedMetadataQuery = (ids) =>{
   `
 }
 
-export const attachToSharedMetadataQuery = (id, field, itemIris) => {
-  if (!sharedMetadataPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  const predicate = sharedMetadataPredicateMap[field].predicate;
+export const attachToAssessmentPlanQuery = (id, field, itemIris) => {
+  if (!assessmentPlanPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/assessment-plan--${id}>`;
+  const predicate = assessmentPlanPredicateMap[field].predicate;
 
   let statements;
   if (Array.isArray(itemIris)) {
@@ -216,15 +221,15 @@ export const attachToSharedMetadataQuery = (id, field, itemIris) => {
   return attachQuery(
     iri, 
     statements, 
-    sharedMetadataPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/common#SharedMetadata>'
+    assessmentPlanPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan>'
   );
 }
 
-export const detachFromSharedMetadataQuery = (id, field, itemIris) => {
-  if (!sharedMetadataPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  const predicate = sharedMetadataPredicateMap[field].predicate;
+export const detachFromAssessmentPlanQuery = (id, field, itemIris) => {
+  if (!assessmentPlanPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/assessment-plan--${id}>`;
+  const predicate = assessmentPlanPredicateMap[field].predicate;
 
   let statements;
   if (Array.isArray(itemIris)) {
@@ -240,13 +245,13 @@ export const detachFromSharedMetadataQuery = (id, field, itemIris) => {
   return detachQuery(
     iri, 
     statements, 
-    sharedMetadataPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/common#SharedMetadata>'
+    assessmentPlanPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan>'
   );
 }
   
 // Predicate Maps
-export const sharedMetadataPredicateMap = {
+export const assessmentPlanPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
@@ -272,55 +277,85 @@ export const sharedMetadataPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  title: {
-    predicate: "<http://darklight.ai/ns/oscal/common#title>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "title");},
+  name: {
+    predicate: "<http://darklight.ai/ns/common#name>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "name");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   published: {
-    predicate: "<http://darklight.ai/ns/oscal/common#published>",
+    predicate: "<http://darklight.ai/ns/common#published>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "published");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   last_modified: {
-    predicate: "<http://darklight.ai/ns/oscal/common#last_modified>",
+    predicate: "<http://darklight.ai/ns/common#last_modified>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null,  this.predicate, "last_modified");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   version: {
-    predicate: "<http://darklight.ai/ns/oscal/common#version>",
+    predicate: "<http://darklight.ai/ns/common#version>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "version");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   oscal_version: {
-    predicate: "<http://darklight.ai/ns/oscal/common#oscal_version>",
+    predicate: "<http://darklight.ai/ns/common#oscal_version>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "oscal_version");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
+  revisions: {
+    predicate: "<http://darklight.ai/ns/common#revisions>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "revisions");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
   document_ids: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/common#document_ids>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#document_ids>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "document_ids");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  links: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/common#links>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "links");},
+  shared_metadata: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#shared_metadata>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "shared_metadata");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  parties: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/common#parties>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "parties");},
+  system_security_plan: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#system_security_plan>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "system_security_plan");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  responsible_parties: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/common#responsible_parties>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "responsible_parties");},
+  local_definitions: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#local_definitions>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "local_definitions");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  terms_and_conditions: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#terms_and_conditions>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "terms_and_conditions");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  reviewed_controls: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#reviewed_controls>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "reviewed_controls");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  assessment_subjects: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#assessment_subjects>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "assessment_subjects");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  assessment_assets: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#assessment_assets>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "assessment_assets");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  resources: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#resources>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "resources");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 };
 
 // Serialization schema
-export const singularizeSharedMetadataSchema = { 
+export const singularizeAssessmentPlanSchema = { 
   singularizeVariables: {
     "": false, // so there is an object as the root instead of an array
     "id": true,
@@ -329,14 +364,20 @@ export const singularizeSharedMetadataSchema = {
     "entity_type": true,
     "created": true,
     "modified": true,
-    "title": true,
+    "name": true,
     "published": true,
     "last-modified": true,
     "version": true,
     "oscal-version": true,
+    "revisions": false,
     "document-ids": false,
-    "links": false,
-    "parties": false,
-    "responsible-parties": false,
+    "shared_metadata": false,
+    "system_security_plan": false,
+    "local_definitions": false,
+    "terms_and_conditions": false,
+    "reviewed_controls": false,
+    "assessment_subjects": false,
+    "assessment_assets": false,
+    "resources": false,
   }
 };

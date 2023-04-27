@@ -68,7 +68,7 @@ const informationSystemGraphCreationMutation = graphql`
 const InformationSystemValidation = (t) => Yup.object().shape({
   system_name: Yup.string().required(t('This field is required')),
   description: Yup.string().required(t('This field is required')),
-  operational_status: Yup.string().required(t('This Field is required')),
+  operational_status: Yup.string().required(t('This Field is required')).nullable(),
 });
 
 const Transition = React.forwardRef((props, ref) => (
@@ -151,6 +151,7 @@ class InformationSystemGraphCreation extends Component {
             onReset={this.onReset.bind(this)}
           >
             {({
+              values,
               handleReset,
               submitForm,
               isSubmitting,
@@ -254,6 +255,7 @@ class InformationSystemGraphCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -278,6 +280,8 @@ class InformationSystemGraphCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
+                        disabled={values.deployment_model && values.deployment_model.includes('cloud')}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -302,6 +306,7 @@ class InformationSystemGraphCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -326,6 +331,7 @@ class InformationSystemGraphCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -350,6 +356,7 @@ class InformationSystemGraphCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -374,6 +381,7 @@ class InformationSystemGraphCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        required={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>

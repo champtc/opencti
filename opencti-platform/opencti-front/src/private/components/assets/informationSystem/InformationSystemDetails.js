@@ -26,7 +26,7 @@ const styles = () => ({
     margin: '10px 0 0 0',
     padding: '24px 24px 32px 24px',
     borderRadius: 6,
-    maxHeight: '850px',
+    maxHeight: 'fit-content',
   },
   textBase: {
     display: 'flex',
@@ -37,13 +37,16 @@ const styles = () => ({
     minWidth: '50px',
     display: 'flex',
     flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
   },
   impactTitle: {
     marginRight: '30px',
-    minWidth: '30%',
+    minWidth: '40%',
   },
   impactContent: {
-    minWidth: '10%',
+    minWidth: '60%',
+    display: 'flex',
   },
   impactText: {
     marginLeft: '10px',
@@ -67,11 +70,11 @@ class InformationSystemDetailsComponent extends Component {
               risk={impact}
             />
           )}
-          <span className={classes.impactText}>
+          <div className={classes.impactText}>
             {impact && impact.includes('low') && t('Low')}
             {impact && impact.includes('moderate') && t('Moderate')}
             {impact && impact.includes('high') && t('High')}
-          </span>
+          </div>
         </div>
       </div>
     );

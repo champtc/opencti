@@ -69,6 +69,8 @@ class TaskType extends Component {
       disabled,
       helperText,
       required,
+      isDisabled,
+      hasNull,
     } = this.props;
     const TaskTypeList = R.pathOr(
       [],
@@ -85,22 +87,26 @@ class TaskType extends Component {
           fullWidth={true}
           containerstyle={containerstyle}
           variant={variant}
-          disabled={disabled || false}
+          disabled={disabled ? disabled : false}
           size={size}
           style={style}
           helperText={helperText}
         >
-          {!required && (
+          {required === false && (
             <MenuItem value={''}>
+              <em>None</em>
+            </MenuItem>
+          )}
+          {hasNull && (
+            <MenuItem value={null}>
               <em>None</em>
             </MenuItem>
           )}
           {TaskTypeList.map(
             (et, key) =>            
              {
-              const isDisabled = et.value === 'tlp' || false;
               return  et.value && (
-                <MenuItem key={key} value={et.value} disabled={isDisabled}>
+                <MenuItem key={key} value={et.value} disabled={isDisabled ? isDisabled(et.value) : false}>
                   {_.startCase(et.value)}
                 </MenuItem>
               )

@@ -94,7 +94,7 @@ class InformationSystemEditionContainer extends Component {
       {
         date_authorized: () => (values.date_authorized === null
           ? null
-          : parse(values.date_authorized).format()),
+          : parse(values.date_authorized).format('YYYY-MM-DD')),
       },
       values,
     );

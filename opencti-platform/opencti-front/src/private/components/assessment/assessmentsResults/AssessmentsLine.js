@@ -155,20 +155,20 @@ class AssessmentsLineComponent extends Component {
             <div className={classes.bodyContainer}>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.poam_id.width }}
+                style={{ width: dataColumns.title.width }}
               >
                 {node.poam_id && t(node.poam_id)}
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.name.width }}
+                style={{ width: dataColumns.type.width }}
               >
                 {node.name && t(node.name)}
               </div>
               <div
                 style={{
                   display: 'flex',
-                  width: dataColumns.risk_level.width,
+                  width: dataColumns.start_date.width,
                   marginRight: '20px',
                   paddingLeft: '24px',
                 }}
@@ -179,7 +179,7 @@ class AssessmentsLineComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.risk_status.width }}
+                style={{ width: dataColumns.uploaded.width }}
               >
                 <Button
                   variant="outlined"
@@ -192,7 +192,7 @@ class AssessmentsLineComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.response_type.width }}
+                style={{ width: dataColumns.authenticated.width }}
               >
                 <Button
                   variant="outlined"
@@ -205,7 +205,7 @@ class AssessmentsLineComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.lifecycle.width }}
+                style={{ width: dataColumns.targets.width }}
               >
                 <Button
                   variant="outlined"
@@ -218,13 +218,13 @@ class AssessmentsLineComponent extends Component {
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.occurrences.width, display: 'grid', placeContent: 'center' }}
+                style={{ width: dataColumns.risks.width, display: 'grid', placeContent: 'center' }}
               >
                 {node.occurrences && t(node.occurrences)}
               </div>
               <div
                 className={classes.bodyItem}
-                style={{ width: dataColumns.deadline.width }}
+                style={{ width: dataColumns.observations.width }}
               >
                 {node?.deadline && fd(node?.deadline)}
               </div>
@@ -300,7 +300,7 @@ class AssessmentsLineDummyComponent extends Component {
             <div>
               <div
                 className={classes.dummyBodyItem}
-                style={{ width: dataColumns.poam_id.width }}
+                style={{ width: dataColumns.title.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -311,7 +311,7 @@ class AssessmentsLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.dummyBodyItem}
-                style={{ width: dataColumns.name.width }}
+                style={{ width: dataColumns.type.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -322,7 +322,7 @@ class AssessmentsLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.dummyBodyItem}
-                style={{ width: dataColumns.risk_level.width }}
+                style={{ width: dataColumns.start_date.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -333,7 +333,7 @@ class AssessmentsLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.dummyBodyItem}
-                style={{ width: dataColumns.risk_status.width }}
+                style={{ width: dataColumns.uploaded.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -344,7 +344,7 @@ class AssessmentsLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.dummyBodyItem}
-                style={{ width: dataColumns.response_type.width }}
+                style={{ width: dataColumns.authenticated.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -355,7 +355,7 @@ class AssessmentsLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.dummyBodyItem}
-                style={{ width: dataColumns.lifecycle.width }}
+                style={{ width: dataColumns.targets.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -366,7 +366,7 @@ class AssessmentsLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.dummyBodyItem}
-                style={{ width: dataColumns.occurrences.width }}
+                style={{ width: dataColumns.risks.width }}
               >
                 <Skeleton
                   animation="wave"
@@ -377,7 +377,7 @@ class AssessmentsLineDummyComponent extends Component {
               </div>
               <div
                 className={classes.dummyBodyItem}
-                style={{ width: dataColumns.deadline.width }}
+                style={{ width: dataColumns.observations.width }}
               >
                 <Skeleton
                   animation="wave"

@@ -183,17 +183,37 @@ class Assessments extends Component {
       selectAll,
     } = this.state;
     const dataColumns = {
-      poam_id: {
-        label: 'POAM ID',
+      title: {
+        label: 'Title',
+        width: '9%',
       },
-      name: {
-        label: 'Name',
+      type: {
+        label: 'Type',
+        width: '16%',
       },
-      created: {
-        label: 'Creation date',
+      start_date: {
+        label: 'Start Date',
+        width: '11%',
       },
-      modified: {
-        label: 'Modification date',
+      uploaded: {
+        label: 'uploaded',
+        width: '10%',
+      },
+      authenticated: {
+        label: 'Authenticated',
+        width: '10%',
+      },
+      targets: {
+        label: 'Targets',
+        width: '18%',
+      },
+      risks: {
+        label: 'Risks',
+        width: '12%',
+      },
+      observations: {
+        label: 'Observations',
+        width: '7%',
       },
     };
     return (
@@ -271,43 +291,43 @@ class Assessments extends Component {
       numberOfElements,
     } = this.state;
     const dataColumns = {
-      poam_id: {
-        label: 'POAM ID',
+      title: {
+        label: 'Title',
         width: '9%',
         isSortable: true,
       },
-      name: {
-        label: 'Name',
+      type: {
+        label: 'Type',
         width: '16%',
         isSortable: true,
       },
-      risk_level: {
-        label: 'Severity',
+      start_date: {
+        label: 'Start Date',
         width: '11%',
         isSortable: true,
       },
-      risk_status: {
-        label: 'Status',
+      uploaded: {
+        label: 'Uploaded',
         width: '10%',
         isSortable: true,
       },
-      response_type: {
-        label: 'Response',
+      authenticated: {
+        label: 'Authenticated',
         width: '10%',
         isSortable: true,
       },
-      lifecycle: {
-        label: 'Lifecycle',
+      targets: {
+        label: 'Targets',
         width: '18%',
         isSortable: true,
       },
-      occurrences: {
-        label: 'Occurrences',
+      risks: {
+        label: 'Risks',
         width: '12%',
         isSortable: true,
       },
-      deadline: {
-        label: 'Deadline',
+      observations: {
+        label: 'Observations',
         width: '7%',
         isSortable: true,
       },

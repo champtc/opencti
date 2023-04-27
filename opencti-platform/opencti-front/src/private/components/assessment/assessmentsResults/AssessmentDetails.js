@@ -67,6 +67,15 @@ const styles = (theme) => ({
     textAlign: 'center',
     padding: '3px 0',
   },
+  titleContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  columnViewContainer: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr 0.5fr',
+  },
   tooltip: { float: 'left', margin: '2px 0 0 5px' },
 });
 
@@ -127,13 +136,30 @@ class AssessmentDetailsComponent extends Component {
               <Divider />
             </Grid>
             <Grid item={true} xs={6}>
-              <Typography
-                variant="h3"
-                color="textSecondary"
-                gutterBottom={true}
-              >
-                {t('Inventory Items')}
-              </Typography>
+              <div className={classes.titleContainer}>
+                <div>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left' }}
+                  >
+                    {t('Inventory Items')}
+                  </Typography>
+                  <div className={classes.tooltip}>
+                    <Tooltip title={t('Inventory Items')}>
+                      <Information fontSize='inherit' color='disabled' />
+                    </Tooltip>
+                  </div>
+                </div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                >
+                  {t('New')}
+                </Typography>
+              </div>
               <div className="clearfix" />
               <div className={classes.scrollBg}>
                 <div className={classes.scrollDiv}>
@@ -151,13 +177,30 @@ class AssessmentDetailsComponent extends Component {
               </div>
             </Grid>
             <Grid item={true} xs={6}>
-              <Typography
-                variant="h3"
-                color="textSecondary"
-                gutterBottom={true}
-              >
-                {t('Components')}
-              </Typography>
+              <div className={classes.titleContainer}>
+                <div>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left' }}
+                  >
+                    {t('Components')}
+                  </Typography>
+                  <div className={classes.tooltip}>
+                    <Tooltip title={t('Components')}>
+                      <Information fontSize='inherit' color='disabled' />
+                    </Tooltip>
+                  </div>
+                </div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                >
+                  {t('New')}
+                </Typography>
+              </div>
               <div className="clearfix" />
               <div className={classes.scrollBg}>
                 <div className={classes.scrollDiv}>
@@ -178,13 +221,47 @@ class AssessmentDetailsComponent extends Component {
               <Divider />
             </Grid>
             <Grid item={true} xs={12}>
-              <Typography
-                variant="h3"
-                color="textSecondary"
-                gutterBottom={true}
-              >
-                {t('Observations')}
-              </Typography>
+              <div className={classes.columnViewContainer}>
+                <div>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left' }}
+                  >
+                    {t('Observations')}
+                  </Typography>
+                  <div className={classes.tooltip}>
+                    <Tooltip title={t('Observations')}>
+                      <Information fontSize='inherit' color='disabled' />
+                    </Tooltip>
+                  </div>
+                </div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Collected')}
+                </Typography>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Method')}
+                </Typography>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Source')}
+                </Typography>
+              </div>
               <div className="clearfix" />
               <div className={classes.scrollBg}>
                 <div className={classes.scrollDiv}>
@@ -205,13 +282,47 @@ class AssessmentDetailsComponent extends Component {
               <Divider />
             </Grid>
             <Grid item={true} xs={12}>
-              <Typography
-                variant="h3"
-                color="textSecondary"
-                gutterBottom={true}
-              >
-                {t('Findings')}
-              </Typography>
+            <div className={classes.columnViewContainer}>
+                <div>
+                  <Typography
+                    variant="h3"
+                    color="textSecondary"
+                    gutterBottom={true}
+                    style={{ float: 'left' }}
+                  >
+                    {t('Findings')}
+                  </Typography>
+                  <div className={classes.tooltip}>
+                    <Tooltip title={t('Findings')}>
+                      <Information fontSize='inherit' color='disabled' />
+                    </Tooltip>
+                  </div>
+                </div>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Target')}
+                </Typography>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Status')}
+                </Typography>
+                <Typography
+                  variant="h3"
+                  color="textSecondary"
+                  gutterBottom={true}
+                  style={{ float: 'left' }}
+                >
+                  {t('Source')}
+                </Typography>
+              </div>
               <div className="clearfix" />
               <div className={classes.scrollBg}>
                 <div className={classes.scrollDiv}>

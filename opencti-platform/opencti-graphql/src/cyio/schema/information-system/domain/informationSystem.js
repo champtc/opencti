@@ -1398,16 +1398,16 @@ export const computeSecurityObjectives = async ( infoTypes, dbName, dataSources 
       if (result === null) continue;
       let infoType = {
         confidentiality_impact: {
-          base_impact: result.confidentiality_base_impact,
-          selected_impact: result.confidentiality_selected_impact
+          base_impact: result.confidentiality_base_impact ? result.confidentiality_base_impact : confidentiality,
+          selected_impact: result.confidentiality_selected_impact ? result.confidentiality_selected_impact : confidentiality
         },
         integrity_impact: {
-          base_impact: result.integrity_base_impact,
-          selected_impact: result.integrity_selected_impact
+          base_impact: result.integrity_base_impact ? result.integrity_base_impact : integrity,
+          selected_impact: result.integrity_selected_impact ? result.integrity_selected_impact : integrity
         },
         availability_impact: {
-          base_impact: result.availability_base_impact,
-          selected_impact: result.availability_selected_impact
+          base_impact: result.availability_base_impact ? result.availability_base_impact : availability,
+          selected_impact: result.availability_selected_impact ? result.availability_selected_impact : availability
         }
       }
       results.push(infoType);

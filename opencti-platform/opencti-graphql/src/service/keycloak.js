@@ -428,7 +428,6 @@ const checkApiToken = async (req, res, next) => {
   try {
     const user = await getUserByApiToken(apiToken);
     if (!user) {
-      logApp.warn('[KEYCLOAK] No user found for given API token', { apiToken });
       return next(); // No user found, treat as a typical user
     }
 

@@ -12,11 +12,7 @@ const send = async (title, text, sections) => {
         sections,
       })
       .then((response) => {
-        logApp.debug('[TEAMS] Message sent', {
-          title,
-          status: response.status,
-          statusText: response.statusText,
-        });
+        return response;
       })
       .catch((error) => {
         logApp.error('[TEAMS] Failed to send message', { title, error });
@@ -38,10 +34,12 @@ export const sendStacktrace = async (title, message, stacktrace) => {
 
   send(title, message, sections)
     .then((response) => {
-      logApp.debug('[TEAMS] Stacktrace sent', {
-        status: response.status,
-        statusText: response.statusText,
-      });
+      if (response) {
+        logApp.debug('[TEAMS] Stacktrace sent', {
+          status: response.status,
+          statusText: response.statusText,
+        });
+      }
     })
     .catch((error) => {
       logApp.error('[TEAMS] Failed to send stacktrace', { error });

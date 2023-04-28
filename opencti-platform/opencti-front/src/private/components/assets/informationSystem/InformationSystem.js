@@ -44,6 +44,9 @@ class InformationSystemComponent extends Component {
   }
 
   handleCreateGraph() {
+    if(this.state.displayGraph){
+      this.props.refreshQuery();
+    }
     this.setState({ displayGraph: !this.state.displayGraph });
   }
 
@@ -117,10 +120,12 @@ class InformationSystemComponent extends Component {
         <InformationSystemFormCreation
           InfoSystemCreation={this.state.displayCreate === 'form'}
           handleInformationSystemCreation={this.handleOpenNewCreation.bind(this)}
+          history={history}
         />
         <InformationSystemGraphCreation
           InfoSystemCreation={this.state.displayCreate === 'graph'}
           handleInformationSystemCreation={this.handleOpenNewCreation.bind(this)}
+          history={history}
         />
         <InformationSystemEditionContainer
           displayEdit={this.state.displayEdit}

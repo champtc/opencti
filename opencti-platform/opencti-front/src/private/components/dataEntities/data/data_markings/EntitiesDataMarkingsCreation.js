@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import * as Yup from 'yup';
@@ -240,6 +242,14 @@ class EntitiesDataMarkingsCreation extends Component {
     this.props.handleDataMarkingCreation();
   }
 
+  handleDisableTLP(value) {
+    if(value === 'tlp') {
+      return true
+    }
+
+    return false
+  }
+
   render() {
     const { t, classes, openDataCreation } = this.props;
     return (
@@ -393,6 +403,7 @@ class EntitiesDataMarkingsCreation extends Component {
                         required={true}
                         style={{ height: '18.09px' }}
                         containerstyle={{ width: '100%' }}
+                        isDisabled={this.handleDisableTLP.bind(this)}
                       />
                     </Grid>
                     <Grid item={true} xs={12}>

@@ -25,6 +25,7 @@ import ResponsiblePartiesField from '../../../common/form/ResponsiblePartiesFiel
 import LoggedBy from '../../../common/form/LoggedBy';
 import { parse } from '../../../../../utils/Time';
 import CyioCoreObjectOrCyioCoreRelationshipNotes from '../../../analysis/notes/CyioCoreObjectOrCyioCoreRelationshipNotes';
+import DataMarkingsField from '../../../common/form/DataMarkingsField';
 
 const styles = (theme) => ({
   dialogMain: {
@@ -55,6 +56,9 @@ const styles = (theme) => ({
     fontSize: '18px',
     lineHeight: '24px',
     color: theme.palette.header.text,
+  },
+  notesContainer: {
+    marginTop: '-40px',
   },
 });
 
@@ -294,7 +298,7 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
-                      <div>
+                      <div style={{ marginTop: '5px' }}>
                         <Typography
                           variant="h3"
                           color="textSecondary"
@@ -318,7 +322,7 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                           invalidDateMessage={t(
                             'The value must be a date (YYYY-MM-DD)',
                           )}
-                          style={{ height: '38.09px' }}
+                          style={{ height: '38.09px', marginTop: '5px' }}
                           containerstyle={{ width: '100%' }}
                         />
                       </div>
@@ -374,20 +378,35 @@ class EntitiesLeveragedAuthorizationsCreation extends Component {
                       />
                     </Grid>
                     <Grid item={true} xs={12}>
-                      <div style={{ marginTop: '10px' }}>
-                        <ResponsiblePartiesField
-                          title='Markings'
-                          variant='outlined'
-                          name="marking"
-                          fullWidth={true}
-                          style={{ height: '38.09px' }}
-                          containerstyle={{ width: '100%' }}
-                          disabled={true}
-                        />
+                    <Typography
+                        variant="h3"
+                        color="textSecondary"
+                        gutterBottom={true}
+                        style={{ float: 'left' }}
+                      >
+                        {t('Markings')}
+                      </Typography>
+                      <div style={{ float: 'left', margin: '1px 0 0 5px' }}>
+                        <Tooltip title={t('Party')} >
+                          <Information fontSize="inherit" color="disabled" />
+                        </Tooltip>
                       </div>
+                      <div className="clearfix" />
+                      <LoggedBy
+                        variant='outlined'
+                        name='party'
+                        size='small'
+                        fullWidth={true}
+                        multiple={false}
+                        disabled={true}
+                        style={{ height: '38.09px', marginBottom: '3px' }}
+                        containerstyle={{ width: '100%', padding: '0 0 1px 0' }}
+                      />
                     </Grid>
                     <Grid item={true} xs={12}>
-                      <CyioCoreObjectOrCyioCoreRelationshipNotes disableAdd={true} />
+                      <div className={classes.notesContainer}>
+                        <CyioCoreObjectOrCyioCoreRelationshipNotes disableAdd={true} />
+                      </div>
                     </Grid>
                   </Grid>
                 </DialogContent>

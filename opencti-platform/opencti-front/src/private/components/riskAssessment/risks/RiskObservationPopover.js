@@ -6,6 +6,12 @@ import { createFragmentContainer } from 'react-relay';
 import { withStyles } from '@material-ui/core/styles/index';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
+import AddIcon from '@material-ui/icons/Add';
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+import IconButton from '@material-ui/core/IconButton';
+import { Information } from 'mdi-material-ui';
+import Tooltip from '@material-ui/core/Tooltip';
 import Grid from '@material-ui/core/Grid';
 import { Link } from '@material-ui/core';
 import AccessTimeIcon from '@material-ui/icons/AccessTime';
@@ -21,10 +27,37 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import Slide from '@material-ui/core/Slide';
 import inject18n from '../../../../components/i18n';
 import ItemIcon from '../../../../components/ItemIcon';
+import { truncate } from '../../../../utils/String';
 
 const styles = (theme) => ({
+  scrollBg: {
+    background: theme.palette.header.background,
+    width: '100%',
+    color: 'white',
+    padding: '10px 5px 10px 15px',
+    borderRadius: '5px',
+    lineHeight: '20px',
+  },
+  scrollDiv: {
+    width: '100%',
+    background: theme.palette.header.background,
+    height: '35px',
+    overflow: 'hidden',
+    overflowY: 'scroll',
+  },
+  scrollObj: {
+    color: theme.palette.header.text,
+    fontFamily: 'sans-serif',
+    padding: '0px',
+    textAlign: 'left',
+  },
   container: {
     margin: 0,
+  },
+  linkTitle: {
+    color: '#fff',
+    minWidth: 'fit-content',
+    fontSize: '12px',
   },
   menuItem: {
     padding: '15px 0',
@@ -47,8 +80,13 @@ const styles = (theme) => ({
   },
   link: {
     textAlign: 'left',
-    fontSize: '16px',
-    font: 'DIN Next LT Pro',
+    display: 'flex',
+    alignItems: 'center',
+    minWidth: '50px',
+    width: '100%',
+  },
+  launchIcon: {
+    marginRight: '1%',
   },
   popoverDialog: {
     fontSize: '18px',
@@ -75,10 +113,34 @@ const styles = (theme) => ({
     display: 'flex',
     alignItems: 'center',
   },
+  observationTitle: {
+    marginRight: '15px',
+  },
+  componentContainer: {
+    marginLeft: '15px',
+    marginRight: '15px',
+  },
+  relevantContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+  },
+  relevantContentBox: { display: 'flex', alignItems: 'center' },
+  relevantTitle: {
+    display: 'grid',
+    gridTemplateColumns: '20% 1fr 1.5fr 0.5fr',
+    width: '100%',
+    padding: '10px 0 10px 12px',
+  },
+  relevantDisplay: {
+    display: 'grid',
+    gridTemplateColumns: '20% 1fr 1.5fr 0.5fr',
+    width: '100%',
+  },
 });
 
 const Transition = React.forwardRef((props, ref) => (
-  <Slide direction="up" ref={ref} {...props} />
+  <Slide direction='up' ref={ref} {...props} />
 ));
 Transition.displayName = 'TransitionSlide';
 
@@ -95,12 +157,7 @@ class RiskObservationPopover extends Component {
 
   render() {
     const {
-      classes,
-      t,
-      fd,
-      data,
-      handleCloseUpdate,
-      history,
+      classes, t, fd, data, handleCloseUpdate, history,
     } = this.props;
     // const subjectTypes = R.pipe(
     //   R.pathOr([], ['subjects']),
@@ -108,72 +165,225 @@ class RiskObservationPopover extends Component {
     // )(data);
     return (
       <>
-        <DialogTitle style={{ color: 'white' }}>
+        <DialogTitle style={{ color: 'white', paddingBottom: 0 }}>
           {data.name && t(data.name)}
         </DialogTitle>
+        <div style={{ marginLeft: '25px' }}>
+          <Typography variant='caption'>
+            {data.description && t(data.description)}
+          </Typography>
+        </div>
         <DialogContent classes={{ root: classes.dialogContent }}>
           <DialogContentText>
             <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
+              <Grid item={true} xs={2}>
+                <Typography
+                  className={classes.observationHeading}
+                  color='textSecondary'
+                  variant='h3'
+                  style={{ float: 'left' }}
+                >
+                  ID
+                </Typography>
+                <Tooltip title={t('Uniquely identifies this object')}>
+                  <Information
+                    style={{ marginLeft: '5px' }}
+                    fontSize='inherit'
+                    color='disabled'
+                  />
+                </Tooltip>
+              </Grid>
+              <Grid item={true} xs={10}>
+                <Grid container={true}>
+                  <Grid item={true} xs={6} style={{ marginLeft: '40px' }}>
+                    <Typography variang='h2' style={{ color: 'white' }}>
+                      {data.id && t(data.id)}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Divider />
+          </DialogContentText>
+          <DialogContentText>
+            <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
               <Grid item={true} xs={3}>
-                <Typography className={classes.observationHeading} color="textSecondary" variant="h3" >
-                  <FindInPageIcon fontSize="small" style={{ marginRight: '8px' }} />How
+                <Typography
+                  className={classes.observationHeading}
+                  color='textSecondary'
+                  variant='h3'
+                >
+                  <AccessTimeIcon
+                    fontSize='small'
+                    style={{ marginRight: '8px' }}
+                  />{' '}
+                  When
                 </Typography>
               </Grid>
               <Grid item={true} xs={9}>
-                <DialogContentText>
-                  {t('Observation Sources')}
+                <Grid container={true}>
+                  <Grid item={true} xs={6} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div>
+                      <DialogContentText style={{ float: 'left' }}>
+                        {t('Collected')}
+                      </DialogContentText>
+                      <Tooltip title={t('Identifies a Date/time stamp identifying when the finding information was collected.')}>
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
+                      </Tooltip>
+                    </div>
+                    <Typography variang='h2' style={{ color: 'white' }}>
+                      {data.collected && fd(data.collected)}
+                    </Typography>
+                  </Grid>
+                  <Grid item={true} xs={6} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div>
+                      <DialogContentText style={{ float: 'left' }}>
+                        {t('Expiration')}
+                      </DialogContentText>
+                      <Tooltip title={t('Identifies Date/time identifying when the finding information is out-of-date and no longer valid.')}>
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
+                      </Tooltip>
+                    </div>
+                    <Typography variang='h2' style={{ color: 'white' }}>
+                      {data.expires && fd(data.expires)}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Divider />
+          </DialogContentText>
+          <DialogContentText>
+            <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
+              <Grid item={true} xs={3}>
+                <Typography
+                  className={classes.observationHeading}
+                  color='textSecondary'
+                  variant='h3'
+                >
+                  <FindInPageIcon
+                    fontSize='small'
+                    style={{ marginRight: '8px' }}
+                  />
+                  How
+                </Typography>
+              </Grid>
+              <Grid item={true} xs={9}>
+                <DialogContentText style={{ float: 'left' }}>
+                  {t('Source of Observation')}
                 </DialogContentText>
-                <div className={classes.componentScroll}>
-                  {
-                    data?.origins && data.origins.map((value) => value.origin_actors.map((s, i) => (
-                      <Link
-                        key={i}
-                        component="button"
-                        variant="body2"
-                        className={classes.link}
-                        onClick={() => (history.push(`/data/entities/assessment_platform/${s.actor_ref.id}`))}
-                      >
-                        <LaunchIcon fontSize='small' /> {t(s.actor_ref.name)}
-                      </Link>
-                    )))
-                  }
+                <Tooltip
+                  title={t(
+                    'Identifies one or more sources of the finding, such as a tool, interviewed person, or activity.',
+                  )}
+                >
+                  <Information
+                    style={{ marginLeft: '5px' }}
+                    fontSize='inherit'
+                    color='disabled'
+                  />
+                </Tooltip>
+                <div className={classes.scrollBg}>
+                  <div className={classes.scrollDiv}>
+                    <div className={classes.scrollObj}>
+                      {data?.origins
+                        && data.origins.map((value) => value.origin_actors.map((s, i) => (
+                            <Link
+                              key={i}
+                              component='button'
+                              variant='body2'
+                              className={classes.link}
+                              onClick={() => history.push(
+                                `/data/entities/assessment_platform/${s.actor_ref.id}`,
+                              )
+                              }
+                            >
+                              <LaunchIcon
+                                fontSize='small'
+                                className={classes.launchIcon}
+                              />
+                              <div className={classes.linkTitle}>
+                                {t(s.actor_ref.name)}
+                              </div>
+                            </Link>
+                        )))}
+                    </div>
+                  </div>
                 </div>
-                <Grid style={{ marginTop: '20px' }} spacing={3} container={true}>
+                <Grid
+                  style={{ marginTop: '20px' }}
+                  spacing={3}
+                  container={true}
+                >
                   <Grid item={true} xs={6}>
-                    <DialogContentText>
-                      {t('Methods')}
-                    </DialogContentText>
-                    {data?.methods && data.methods.map((value, i) => (
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        key={i}
-                        style={{ margin: '1px' }}
-                        className={classes.statusButton}
+                   <div style={{ display: 'flex' }}>
+                      <DialogContentText style={{ float: 'left' }}>{t('Methods')}</DialogContentText>
+                      <Tooltip
+                        title={t(
+                          'Defined the types of methods for making an observation.',
+                        )}
                       >
-                        {value}
-                      </Button>
-                    ))}
-                    <Typography style={{ marginTop: '5px', textTransform: 'inherit' }} variant="h4">
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
+                      </Tooltip>
+                    </div>
+                    {data?.methods
+                      && data.methods.map((value, i) => (
+                        <Button
+                          variant='outlined'
+                          size='small'
+                          key={i}
+                          style={{ margin: '1px' }}
+                          className={classes.statusButton}
+                        >
+                          {value}
+                        </Button>
+                      ))}
+                    <Typography
+                      style={{ marginTop: '5px', textTransform: 'inherit' }}
+                      variant='h4'
+                    >
                       {t('A manual or automated test was performed.')}
                     </Typography>
                   </Grid>
                   <Grid item={true} xs={6}>
-                    <DialogContentText>
-                      {t('Type')}
-                    </DialogContentText>
-                    {data?.observation_types && data.observation_types.map((value, i) => (
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        key={i}
-                        style={{ margin: '1px' }}
-                        className={classes.statusButton}
-                      >
-                        {value}
-                      </Button>
-                    ))}
-                    <Typography style={{ marginTop: '5px', textTransform: 'inherit' }} variant="h4">
+                    <div style={{ display: 'flex' }}>
+                      <DialogContentText style={{ float: 'left' }}>{t('Type')}</DialogContentText>
+                      <Tooltip title={t('Defines the types of observations')}>
+                        <Information
+                          style={{ marginLeft: '5px' }}
+                          fontSize='inherit'
+                          color='disabled'
+                        />
+                      </Tooltip>
+                    </div>
+                    {data?.observation_types
+                      && data.observation_types.map((value, i) => (
+                        <Button
+                          variant='outlined'
+                          size='small'
+                          key={i}
+                          style={{ margin: '1px' }}
+                          className={classes.statusButton}
+                        >
+                          {value}
+                        </Button>
+                      ))}
+                    <Typography
+                      style={{ marginTop: '5px', textTransform: 'inherit' }}
+                      variant='h4'
+                    >
                       {t(' An assessment finding made by a source.')}
                     </Typography>
                   </Grid>
@@ -183,126 +393,232 @@ class RiskObservationPopover extends Component {
             <Divider />
           </DialogContentText>
 
-          <DialogContentText>
-            <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
-              <Grid item={true} xs={3}>
-                <Typography className={classes.observationHeading} color="textSecondary" variant="h3" >
-                  <AccessTimeIcon fontSize="small" style={{ marginRight: '8px' }} /> When
+          <DialogContentText style={{ display: 'flex' }}>
+            <Grid style={{ margin: '25px 0px' }} container={true} xs={12}>
+              <Grid item={true} xs={2}>
+                <Typography
+                  className={classes.observationHeading}
+                  color='textSecondary'
+                  variant='h3'
+                >
+                  <MapIcon fontSize='small' style={{ marginRight: '8px' }} />
+                  Where
                 </Typography>
               </Grid>
-              <Grid item={true} xs={9}>
-                <Grid container={true}>
-                  <Grid item={true} xs={6}>
-                    <DialogContentText>
-                      {t('Collected')}
-                    </DialogContentText>
-                    <Typography variang="h2" style={{ color: 'white' }}>
-                      {data.collected && fd(data.collected)}
-                    </Typography>
-                  </Grid>
-                  <Grid item={true} xs={6}>
-                    <DialogContentText>
-                      {t('Expiration Date')}
-                    </DialogContentText>
-                    <Typography variang="h2" style={{ color: 'white' }}>
-                      {data.expires && fd(data.expires)}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Divider />
-          </DialogContentText>
-
-          <DialogContentText>
-            <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
-              <Grid item={true} xs={3}>
-                <Typography className={classes.observationHeading} color="textSecondary" variant="h3" >
-                  <MapIcon fontSize="small" style={{ marginRight: '8px' }} />Where
-                </Typography>
-              </Grid>
-              <Grid item={true} xs={9}>
-                <DialogContentText>
+              <Grid item={true} xs={4}>
+                <DialogContentText style={{ float: 'left' }}>
                   {t('Observation Target(s)')}
                 </DialogContentText>
-                <div className={classes.componentScroll}>
-                  {data.subjects && data.subjects.map((subject, i) => {
-                    if (subject && subject.subject_context === 'target') {
-                      return (
-                        <div className={classes.observationContainer}>
-                          <div style={{ height: '26px', padding: '0 10px 10px 0' }}>
-                            <ItemIcon
-                                key={i}
-                                type={subject.subject_type}
-                              />
-                          </div>
-                          <Link
-                            component="button"
-                            variant="body2"
-                            className={classes.link}
-                            onClick={() => (history.push(`/defender_hq/assets/devices/${subject.subject_ref.id}`))}
-                          >
-                            {t(subject.subject_ref.name)}
-                            </Link>
-                        </div>
-                      );
-                    }
-                    return <></>;
-                  })}
+                <Tooltip
+                  title={t(
+                    'Identifies a reference to a component, inventory-item, location, party, user, or resource.',
+                  )}
+                >
+                  <Information
+                    style={{ marginLeft: '5px' }}
+                    fontSize='inherit'
+                    color='disabled'
+                  />
+                </Tooltip>
+                <div className={classes.scrollBg}>
+                  <div className={classes.scrollDiv}>
+                    <div className={classes.scrollObj}>
+                      {data.subjects
+                        && data.subjects.map((subject) => {
+                          if (subject && subject.subject_context === 'target') {
+                            return (
+                              <div className={classes.observationContainer}>
+                                <Link
+                                  component='button'
+                                  variant='body2'
+                                  className={classes.link}
+                                  onClick={() => history.push(
+                                    `/defender_hq/assets/devices/${subject.subject_ref.id}`,
+                                  )
+                                  }
+                                >
+                                  <LaunchIcon
+                                    fontSize='small'
+                                    className={classes.launchIcon}
+                                  />
+                                  <div className={classes.linkTitle}>
+                                    {t(subject.subject_ref.name)}
+                                  </div>
+                                </Link>
+                              </div>
+                            );
+                          }
+                          return <></>;
+                        })}
+                    </div>
+                  </div>
+                </div>
+              </Grid>
+              <Grid item={true} xs={2}>
+                <Typography
+                  className={classes.observationHeading}
+                  color='textSecondary'
+                  variant='h3'
+                >
+                  <LayersIcon fontSize='small' style={{ marginRight: '8px' }} />
+                  What
+                </Typography>
+              </Grid>
+              <Grid item={true} xs={4}>
+                <DialogContentText style={{ float: 'left' }}>
+                  {t('Component(s)')}
+                </DialogContentText>
+                <Tooltip
+                  title={t(
+                    'Identifies a reference to a component, inventory-item, location, party, user, or resource.',
+                  )}
+                >
+                  <Information
+                    style={{ marginLeft: '5px' }}
+                    fontSize='inherit'
+                    color='disabled'
+                  />
+                </Tooltip>
+                <div className={classes.scrollBg}>
+                  <div className={classes.scrollDiv}>
+                    <div className={classes.scrollObj}>
+                      {data.subjects
+                        && data.subjects.map((subject, i) => {
+                          if (
+                            subject
+                            && subject.subject_context === 'secondary_target'
+                          ) {
+                            return (
+                              <div className={classes.observationContainer}>
+                                <div
+                                  style={{
+                                    height: '26px',
+                                    padding: '0 10px 0 0',
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                  }}
+                                >
+                                  <ItemIcon
+                                    key={i}
+                                    type={subject.subject_type}
+                                  />
+                                </div>
+                                <Link
+                                  component='button'
+                                  variant='body2'
+                                  className={classes.link}
+                                  onClick={() => history.push(
+                                    `/defender_hq/assets/software/${subject.subject_ref.id}`,
+                                  )
+                                  }
+                                >
+                                  {t(subject.subject_ref.name)}
+                                </Link>
+                              </div>
+                            );
+                          }
+                          return <></>;
+                        })}
+                    </div>
+                  </div>
                 </div>
               </Grid>
             </Grid>
             <Divider />
           </DialogContentText>
-
           <DialogContentText>
             <Grid style={{ margin: '25px 0' }} container={true} xs={12}>
-              <Grid item={true} xs={3}>
-                <Typography className={classes.observationHeading} color="textSecondary" variant="h3" >
-                  <LayersIcon fontSize="small" style={{ marginRight: '8px' }} />What
-                </Typography>
-              </Grid>
-              <Grid item={true} xs={9}>
-                <DialogContentText>
-                  {t('Component(s)')}
-                </DialogContentText>
-                <div className={classes.componentScroll}>
-                  {data.subjects && data.subjects.map((subject, i) => {
-                    if (subject && subject.subject_context === 'secondary_target') {
-                      return (
-                        <div className={classes.observationContainer}>
-                          <div style={{
-                            height: '26px', padding: '0 10px 0 0', display: 'grid', placeItems: 'center',
-                          }}>
-                            <ItemIcon
-                              key={i}
-                              type={subject.subject_type}
-                            />
+              <div className={classes.relevantContainer}>
+                <div className={classes.relevantContentBox}>
+                  <Typography style={{ display: 'flex' }}>
+                    <LayersIcon fontSize='small' style={{ marginRight: '8px' }} />
+                    {'RELEVANT EVIDENCE'}
+                  </Typography>
+                  <div style={{ float: 'left', margin: '5px 0 0 5px' }}>
+                    <Tooltip title={t('Identifies relevant evidence collected as part of this observation.')}>
+                      <Information fontSize='inherit' color='disabled' />
+                    </Tooltip>
+                  </div>
+                  <IconButton
+                    size='small'
+                    // onClick={this.handleCreateDiagram.bind(this)}
+                    disabled={true}
+                  >
+                    <AddIcon fontSize='small' />
+                  </IconButton>
+                </div>
+                <div className='clearfix' />
+                <div className={classes.relevantTitle}>
+                  <Typography>Title</Typography>
+                  <Typography>Description</Typography>
+                  <Typography>Referenced Attachment</Typography>
+                </div>
+              </div>
+              <div className={classes.scrollBg}>
+                <div className={classes.scrollDiv} style={{ height: '70px' }}>
+                  <div className={classes.scrollObj}>
+                    {data.relevant_evidence
+                      && data.relevant_evidence.map((evidence, key) => (
+                        <div key={key} className={classes.relevantDisplay}>
+                          <div>{evidence?.title && evidence?.title}</div>
+                          <div>
+                            {evidence?.description
+                              && truncate(evidence?.description, 10)}
                           </div>
                           <Link
-                            component="button"
-                            variant="body2"
+                            key={key}
+                            component='button'
+                            variant='body2'
                             className={classes.link}
-                            onClick={() => (history.push(`/defender_hq/assets/software/${subject.subject_ref.id}`))}
+                            rel='noopener noreferrer'
+                            onClick={(event) => {
+                              event.preventDefault();
+                              window.open(evidence?.href, '_blank');
+                            }}
                           >
-                            {t(subject.subject_ref.name)}
-                            </Link>
+                            {evidence?.href && (
+                              <LaunchIcon
+                                fontSize='small'
+                                className={classes.launchIcon}
+                              />
+                            )}
+                            <div className={classes.linkTitle}>
+                              {evidence?.href && evidence?.href}
+                            </div>
+                          </Link>
+                          <div style={{ display: 'flex' }}>
+                            <IconButton
+                              size='small'
+                              // onClick={this.handleOpenEdit.bind()}
+                              disabled={true}
+                            >
+                              <EditIcon fontSize='small' />
+                            </IconButton>
+                            <IconButton
+                              size='small'
+                              // onClick={this.handleDeleteDialog.bind(this, key)}
+                              disabled={true}
+                            >
+                              <DeleteIcon fontSize='small' />
+                            </IconButton>
+                          </div>
                         </div>
-                      );
-                    }
-                    return <></>;
-                  })}
+                      ))}
+                  </div>
                 </div>
-              </Grid>
+              </div>
             </Grid>
             <Divider />
           </DialogContentText>
         </DialogContent>
-        <DialogActions style={{ marginLeft: '15px', display: 'flex', justifyContent: 'flex-start' }}>
-          <Button
-            onClick={() => handleCloseUpdate()}
-            variant="outlined"
-          >
+        <DialogActions
+          style={{
+            marginLeft: '15px',
+            display: 'flex',
+            justifyContent: 'flex-start',
+          }}
+        >
+          <Button onClick={() => handleCloseUpdate()} variant='outlined'>
             {t('Close')}
           </Button>
         </DialogActions>
@@ -325,79 +641,92 @@ RiskObservationPopover.propTypes = {
 
 export const riskObservationPopoverQuery = graphql`
   query RiskObservationPopoverQuery($id: ID!) {
-    observation(id: $id){
+    observation(id: $id) {
       ...RiskObservationPopover_risk
     }
   }
 `;
 
-export const RiskObservationPopoverComponent = createFragmentContainer(RiskObservationPopover, {
-  data: graphql`
-    fragment RiskObservationPopover_risk on Observation {
-      id
-      entity_type
-      name
-      description
-      methods
-      observation_types
-      collected
-      origins {
-        origin_actors {
-          # actor_type
-          actor_ref {
-            ... on AssessmentPlatform {
-              id
-              name
+export const RiskObservationPopoverComponent = createFragmentContainer(
+  RiskObservationPopover,
+  {
+    data: graphql`
+      fragment RiskObservationPopover_risk on Observation {
+        id
+        entity_type
+        name
+        description
+        methods
+        observation_types
+        collected
+        relevant_evidence {
+          href
+          id
+          description
+          entity_type
+          title
+        }
+        origins {
+          origin_actors {
+            # actor_type
+            actor_ref {
+              ... on AssessmentPlatform {
+                id
+                name
+              }
+              ... on Component {
+                id
+                component_type
+                name
+              }
+              ... on OscalParty {
+                id
+                party_type
+                name
+              }
             }
+          }
+        }
+        subjects {
+          id
+          entity_type
+          name
+          subject_context
+          subject_type
+          subject_ref {
             ... on Component {
               id
-              component_type
+              entity_type
+              name
+            }
+            ... on InventoryItem {
+              id
+              entity_type
+              name
+            }
+            ... on OscalLocation {
+              id
+              entity_type
               name
             }
             ... on OscalParty {
               id
-              party_type
+              entity_type
+              name
+            }
+            ... on OscalUser {
+              id
+              entity_type
               name
             }
           }
         }
       }
-      subjects {
-        id
-        entity_type
-        name
-        subject_context
-        subject_type
-        subject_ref {
-          ... on Component {
-            id
-            entity_type
-            name
-          }
-          ... on InventoryItem {
-            id
-            entity_type
-            name
-          }
-          ... on OscalLocation {
-            id
-            entity_type
-            name
-          }
-          ... on OscalParty {
-            id
-            entity_type
-            name
-          }
-          ... on OscalUser {
-            id
-            entity_type
-            name
-          }
-        }
-      }
-    }
-  `,
-});
+    `,
+  },
+);
 
-export default R.compose(inject18n, withStyles(styles))(RiskObservationPopoverComponent);
+export default R.compose(
+  inject18n,
+  withStyles(styles),
+)(RiskObservationPopoverComponent);

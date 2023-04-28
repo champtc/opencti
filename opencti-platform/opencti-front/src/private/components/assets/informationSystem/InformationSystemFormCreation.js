@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* refactor */
 import React, { Component } from 'react';
 import * as PropTypes from 'prop-types';
 import * as R from 'ramda';
@@ -68,7 +70,7 @@ const informationSystemFormCreationMutation = graphql`
 const InformationSystemValidation = (t) => Yup.object().shape({
   system_name: Yup.string().required(t('This field is required')),
   description: Yup.string().required(t('This field is required')),
-  operational_status: Yup.string().required(t('This Field is required')),
+  operational_status: Yup.string().required(t('This Field is required')).nullable(),
 });
 
 const Transition = React.forwardRef((props, ref) => (
@@ -88,7 +90,7 @@ class InformationSystemFormCreation extends Component {
       {
         date_authorized: () => (values.date_authorized === null
           ? null
-          : parse(values.date_authorized).format()),
+          : parse(values.date_authorized).format('YYYY-MM-DD')),
       },
       values,
     );
@@ -151,6 +153,7 @@ class InformationSystemFormCreation extends Component {
             onReset={this.onReset.bind(this)}
           >
             {({
+              values,
               handleReset,
               submitForm,
               isSubmitting,
@@ -254,6 +257,7 @@ class InformationSystemFormCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -264,7 +268,7 @@ class InformationSystemFormCreation extends Component {
                           gutterBottom={true}
                           style={{ margin: 0 }}
                         >
-                          {t('Cloud Service Model')}
+                          {t('Cloud Service Modelssss')}
                         </Typography>
                         <Tooltip title={t('Cloud Service Model')} >
                           <Information style={{ marginLeft: '5px' }} fontSize="inherit" color="disabled" />
@@ -278,6 +282,8 @@ class InformationSystemFormCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
+                        disabled={values.deployment_model && values.deployment_model.includes('cloud')}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -302,6 +308,7 @@ class InformationSystemFormCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -326,6 +333,7 @@ class InformationSystemFormCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -350,6 +358,7 @@ class InformationSystemFormCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        hasNull={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>
@@ -374,6 +383,7 @@ class InformationSystemFormCreation extends Component {
                         style={{ height: '38.09px' }}
                         containerstyle={{ width: '100%' }}
                         variant='outlined'
+                        required={true}
                       />
                     </Grid>
                     <Grid item={true} xs={6}>

@@ -120,7 +120,7 @@ export const selectAllSharedMetadataQuery = (select, args, parent) => {
 
 export const insertSharedMetadataQuery = (propValues) => {
   const id = generateSharedMetadataId( propValues );
-  const iri = getAssessmentPlanIri(id);
+  const iri = getSharedMetadataIri(id);
   const timestamp = new Date().toISOString();
 
   // set last_modified if not in propValues

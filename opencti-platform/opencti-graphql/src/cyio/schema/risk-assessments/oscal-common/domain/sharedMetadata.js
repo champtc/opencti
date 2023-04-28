@@ -23,10 +23,8 @@ import {
   attachToSharedMetadataQuery,
   detachFromSharedMetadataQuery,
 } from '../schema/sparql/sharedMetadata.js';
-import { addToInventoryQuery, removeFromInventoryQuery } from '../../../assets/assetUtil.js';
 
 // Shared Metadata
-
 export const findSharedMetadataById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
@@ -239,15 +237,6 @@ export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
     }
     
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
-    let AsseResult = response[0];
-
-    // Removing Shared Metadata Asset from Asset Inventory
-    const invQuery = removeFromInventoryQuery(AsseResult.iri);
-    await dataSources.Stardog.create({
-      dbName,
-      sparqlQuery: invQuery,
-      queryId: 'Removing Shared Metadata Asset from Inventory',
-    });
 
     sparqlQuery = deleteSharedMetadataQuery(itemId);
     try {
@@ -286,15 +275,6 @@ export const deleteSharedMetadataByIri = async ( iri, dbName, dataSources) => {
     }
     
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with IRI ${iri}`);
-    let AsseResult = response[0];
-
-    // Removing Shared Metadata Asset from Asset Inventory
-    const connectQuery = removeFromInventoryQuery(AsseResult.iri);
-    await dataSources.Stardog.create({
-      dbName,
-      sparqlQuery: connectQuery,
-      queryId: 'Removing Shared Metadata Asset from Inventory',
-    });
 
     sparqlQuery = deleteSharedMetadataByIriQuery(iri);
     try {

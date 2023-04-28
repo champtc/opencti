@@ -11,37 +11,38 @@ import {
 } from '../../../utils.js';
 import {
   getReducer,
-  //Assessment Plan
-  assessmentPlanPredicateMap,
-  singularizeAssessmentPlanSchema,
-  selectAssessmentPlanQuery,
-  selectAssessmentPlanByIriQuery,
-  selectAllAssessmentPlanQuery,
-  insertAssessmentPlanQuery,
-  deleteAssessmentPlanQuery,
-  deleteAssessmentPlanByIriQuery,
-  attachToAssessmentPlanQuery,
-  detachFromAssessmentPlanQuery,
-} from '../schema/sparql/assessmentPlan.js';
+  //Revisions
+  revisionsPredicateMap,
+  singularizeRevisionsSchema,
+  selectRevisionsQuery,
+  selectRevisionsByIriQuery,
+  selectAllRevisionsQuery,
+  insertRevisionsQuery,
+  deleteRevisionsQuery,
+  deleteRevisionsByIriQuery,
+  attachToRevisionsQuery,
+  detachFromRevisionsQuery,
+} from '../schema/sparql/revisions.js';
 
-// Assessment Plan
-export const findAssessmentPlanById = async (id, dbName, dataSources, select) => {
+// Revisions
+
+export const findRevisionsById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://csrc.nist.gov/ns/oscal/assessment-results#AssessmentPlan-${id}>`;
-  return findAssessmentPlanByIri(iri, dbName, dataSources, select);
+  let iri = `<http://cyio.darklight.ai/revisions--${id}>`;
+  return findRevisionsByIri(iri, dbName, dataSources, select);
 }
 
-export const findAssessmentPlanByIri = async (iri, dbName, dataSources, select) => {
-  const sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
+export const findRevisionsByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectRevisionsByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Assessment Plan",
-      singularizeSchema: singularizeAssessmentPlanSchema
+      queryId: "Select Revisions",
+      singularizeSchema: singularizeRevisionsSchema
     });
   } catch (e) {
     console.log(e)
@@ -49,19 +50,19 @@ export const findAssessmentPlanByIri = async (iri, dbName, dataSources, select) 
   }
   if (response === undefined || response === null || response.length === 0) return null;
 
-  const reducer = getReducer("ASSESSMENT-PLAN");
+  const reducer = getReducer("REVISIONS");
   return reducer(response[0]);  
 };
 
-export const findAllAssessmentPlan = async (args, dbName, dataSources, select ) => {
-  const sparqlQuery = selectAllAssessmentPlanQuery(select, args);
+export const findAllRevisions = async (args, dbName, dataSources, select ) => {
+  const sparqlQuery = selectAllRevisionsQuery(select, args);
   let response;
   try {
     response = await dataSources.Stardog.queryAll({
       dbName,
       sparqlQuery,
-      queryId: "Select List of Assessment Plan",
-      singularizeSchema: singularizeAssessmentPlanSchema
+      queryId: "Select List of Revisions",
+      singularizeSchema: singularizeRevisionsSchema
     });
   } catch (e) {
     console.log(e)
@@ -72,7 +73,7 @@ export const findAllAssessmentPlan = async (args, dbName, dataSources, select ) 
   if (response === undefined || (Array.isArray(response) && response.length === 0)) return null;
 
   const edges = [];
-  const reducer = getReducer("ASSESSMENT-PLAN");
+  const reducer = getReducer("REVISIONS");
   let skipCount = 0,filterCount = 0, resultCount = 0, limit, offset, limitSize, offsetSize;
   limitSize = limit = (args.first === undefined ? response.length : args.first) ;
   offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
@@ -80,8 +81,8 @@ export const findAllAssessmentPlan = async (args, dbName, dataSources, select ) 
   let resultList ;
   let sortBy;
   if (args.orderedBy !== undefined ) {
-    if (args.orderedBy === 'name') {
-      sortBy = 'name';
+    if (args.orderedBy === 'title') {
+      sortBy = 'title';
     } else {
       sortBy = args.orderedBy;
     }
@@ -152,7 +153,7 @@ export const findAllAssessmentPlan = async (args, dbName, dataSources, select ) 
   }
 };
 
-export const createAssessmentPlan = async (input, dbName, dataSources, select) => {
+export const createRevisions = async (input, dbName, dataSources, select) => {
   // WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -166,8 +167,9 @@ export const createAssessmentPlan = async (input, dbName, dataSources, select) =
   // END WORKAROUND
 
   // Need to escape contents, remove explicit newlines, and collapse multiple what spaces.
-  if (input.name !== undefined ) {
-    input.name = input.name.replace(/\s+/g, ' ')
+  // TODO change title to name of fields that will be used
+  if (input.title !== undefined ) {
+    input.title = input.title.replace(/\s+/g, ' ')
                                         .replace(/\n/g, '\\n')
                                         .replace(/\"/g, '\\"')
                                         .replace(/\'/g, "\\'")
@@ -175,40 +177,40 @@ export const createAssessmentPlan = async (input, dbName, dataSources, select) =
                                         .replace(/[\u201C\u201D]/g, '\\"');
   }
 
-  // create the Assessment Plan object
+  // create the Revisions object
   let response;
-  let {iri, id, query} = insertAssessmentPlanQuery(input);
+  let {iri, id, query} = insertRevisionsQuery(input);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery: query,
-      queryId: "Create Assessment Plan object"
+      queryId: "Create Revisions object"
       });
   } catch (e) {
     console.log(e)
     throw e
   }
 
-  // retrieve the newly created Assessment Plan to be returned
-  const selectQuery = selectAssessmentPlanQuery(id, select);
+  // retrieve the newly created Revisions to be returned
+  const selectQuery = selectRevisionsQuery(id, select);
   let result;
   try {
     result = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery: selectQuery,
-      queryId: "Select Assessment Plan object",
-      singularizeSchema: singularizeAssessmentPlanSchema
+      queryId: "Select Revisions object",
+      singularizeSchema: singularizeRevisionsSchema
     });
   } catch (e) {
     console.log(e)
     throw e
   }
   if (result === undefined || result === null || result.length === 0) return null;
-  const reducer = getReducer("ASSESSMENT-PLAN");
+  const reducer = getReducer("REVISIONS");
   return reducer(result[0]);
 };
 
-export const deleteAssessmentPlanById = async ( id, dbName, dataSources) => {
+export const deleteRevisionsById = async ( id, dbName, dataSources) => {
   let select = ['iri','id'];
   let idArray = [];
   if (!Array.isArray(id)) {
@@ -223,13 +225,13 @@ export const deleteAssessmentPlanById = async ( id, dbName, dataSources) => {
     if (!checkIfValidUUID(itemId)) throw new UserInputError(`Invalid identifier: ${itemId}`);  
 
     // check if object with id exists
-    let sparqlQuery = selectAssessmentPlanQuery(itemId, select);
+    let sparqlQuery = selectRevisionsQuery(itemId, select);
     try {
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select Assessment Plan",
-        singularizeSchema: singularizeAssessmentPlanSchema
+        queryId: "Select Revisions",
+        singularizeSchema: singularizeRevisionsSchema
       });
     } catch (e) {
       console.log(e)
@@ -238,12 +240,12 @@ export const deleteAssessmentPlanById = async ( id, dbName, dataSources) => {
     
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
 
-    sparqlQuery = deleteAssessmentPlanQuery(itemId);
+    sparqlQuery = deleteRevisionsQuery(itemId);
     try {
       response = await dataSources.Stardog.delete({
         dbName,
         sparqlQuery,
-        queryId: "Delete Assessment Plan"
+        queryId: "Delete Revisions"
       });
     } catch (e) {
       console.log(e)
@@ -257,17 +259,17 @@ export const deleteAssessmentPlanById = async ( id, dbName, dataSources) => {
   return removedIds;
 };
 
-export const deleteAssessmentPlanByIri = async ( iri, dbName, dataSources) => {
+export const deleteRevisionsByIri = async ( iri, dbName, dataSources) => {
     // check if object with iri exists
     let select = ['iri','id'];
     let response;
     try {
-      let sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
+      let sparqlQuery = selectRevisionsByIriQuery(iri, select);
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select Assessment Plan",
-        singularizeSchema: singularizeAssessmentPlanSchema
+        queryId: "Select Revisions",
+        singularizeSchema: singularizeRevisionsSchema
       });
     } catch (e) {
       console.log(e)
@@ -276,12 +278,12 @@ export const deleteAssessmentPlanByIri = async ( iri, dbName, dataSources) => {
     
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with IRI ${iri}`);
 
-    sparqlQuery = deleteAssessmentPlanByIriQuery(iri);
+    sparqlQuery = deleteRevisionsByIriQuery(iri);
     try {
       response = await dataSources.Stardog.delete({
         dbName,
         sparqlQuery,
-        queryId: "Delete Assessment Plan"
+        queryId: "Delete Revisions"
       });
     } catch (e) {
       console.log(e)
@@ -291,7 +293,7 @@ export const deleteAssessmentPlanByIri = async ( iri, dbName, dataSources) => {
   return iri;
 };
 
-export const editAssessmentPlanById = async (id, input, dbName, dataSources, select, schema) => {
+export const editRevisionsById = async (id, input, dbName, dataSources, select, schema) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
 
   // make sure there is input data containing what is to be edited
@@ -306,12 +308,12 @@ export const editAssessmentPlanById = async (id, input, dbName, dataSources, sel
     editSelect.push(editItem.key);
   }
 
-  const sparqlQuery = selectAssessmentPlanQuery(id, editSelect );
+  const sparqlQuery = selectRevisionsQuery(id, editSelect );
   let response = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery,
-    queryId: "Select Assessment Plan",
-    singularizeSchema: singularizeAssessmentPlanSchema
+    queryId: "Select Revisions",
+    singularizeSchema: singularizeRevisionsSchema
   });
   if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
@@ -354,38 +356,7 @@ export const editAssessmentPlanById = async (id, input, dbName, dataSources, sel
     let value, fieldType, objectType, objArray, iris=[];
     for (value of editItem.value) {
       switch(editItem.key) {
-        case 'revisions':
-          objectType = 'revisions';
-          fieldType = 'id';
-          break;
-        case 'document_ids':
-          objectType = 'document_ids';
-          fieldType = 'id';
-          break;
-        case 'sysetm_security_plan':
-          objectType = 'sysetm_security_plan';
-          fieldType = 'id';
-          break;
-        case 'local_definitions':
-          objectType = 'local_definitions';
-          fieldType = 'id';
-          break;
-        case 'reviewed_controls':
-          objectType = 'reviewed_controls';
-          fieldType = 'id';
-          break;
-        case 'assessment_subjects':
-          objectType = 'assessment_subjects';
-          fieldType = 'id';
-          break;
-        case 'assessment_assets':
-          objectType = 'assessment_assets';
-          fieldType = 'id';
-          break;  
-        case 'resources':
-          objectType = 'resources';
-          fieldType = 'id';
-          break;      
+        // TODO
         default:
           fieldType = 'simple';
           break;
@@ -400,7 +371,7 @@ export const editAssessmentPlanById = async (id, input, dbName, dataSources, sel
           dbName,
           sparqlQuery,
           queryId: "Obtaining IRI for the object with id",
-          singularizeSchema: singularizeAssessmentPlanSchema
+          singularizeSchema: singularizeRevisionsSchema
         });
         if (result === undefined || result.length === 0) throw new UserInputError(`Entity does not exist with ID ${value}`);
         iris.push(`<${result[0].iri}>`);
@@ -410,10 +381,10 @@ export const editAssessmentPlanById = async (id, input, dbName, dataSources, sel
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/assessment-plan--${id}`,
-    "http://csrc.nist.gov/ns/oscal/common#AssessmentPlan",
+    `http://cyio.darklight.ai/revisions--${id}`,
+    "http://csrc.nist.gov/ns/oscal/common#Revisions",
     input,
-    assessmentPlanPredicateMap
+    revisionsPredicateMap
   );
   if (query !== null) {
     let response;
@@ -421,7 +392,7 @@ export const editAssessmentPlanById = async (id, input, dbName, dataSources, sel
       response = await dataSources.Stardog.edit({
         dbName,
         sparqlQuery: query,
-        queryId: "Update Assessment Plan"
+        queryId: "Update Revisions"
       });  
     } catch (e) {
       console.log(e)
@@ -429,33 +400,33 @@ export const editAssessmentPlanById = async (id, input, dbName, dataSources, sel
     }
   }
 
-  const selectQuery = selectAssessmentPlanQuery(id, select);
+  const selectQuery = selectRevisionsQuery(id, select);
   const result = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery: selectQuery,
-    queryId: "Select Assessment Plan",
-    singularizeSchema: singularizeAssessmentPlanSchema
+    queryId: "Select Revisions",
+    singularizeSchema: singularizeRevisionsSchema
   });
-  const reducer = getReducer("ASSESSMENT-PLAN");
+  const reducer = getReducer("REVISIONS");
   return reducer(result[0]);
 };
 
-export const attachToAssessmentPlan = async (id, field, entityId, dbName, dataSources) => {
+export const attachToRevisions = async (id, field, entityId, dbName, dataSources) => {
   let sparqlQuery;
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
-  // check to see if the assessment plan exists
+  // check to see if the revisions exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-plan--${id}>`;
-  sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
+  let iri = `<http://cyio.darklight.ai/revisions--${id}>`;
+  sparqlQuery = selectRevisionsByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Assessment Plan",
-      singularizeSchema: singularizeAssessmentPlanSchema
+      queryId: "Select Revisions",
+      singularizeSchema: singularizeRevisionsSchema
     });
   } catch (e) {
     console.log(e)
@@ -464,14 +435,7 @@ export const attachToAssessmentPlan = async (id, field, entityId, dbName, dataSo
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'revisions': 'revisions',
-    'document_ids': 'document_ids',
-    'system_security_plan': 'system_security_plan',
-    'local_definitions': 'local_definitions',
-    'reviewed_controls': 'reviewed_controls',
-    'assessment_subjects': 'assessment_subjects',
-    'assessment_assets': 'assessment_assets',
-    'resources': 'resources',
+    // TODO
   }
   let objectType = attachableObjects[field];
   try {
@@ -481,7 +445,7 @@ export const attachToAssessmentPlan = async (id, field, entityId, dbName, dataSo
       dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
-      singularizeSchema: singularizeAssessmentPlanSchema
+      singularizeSchema: singularizeRevisionsSchema
     });
   } catch (e) {
     console.log(e)
@@ -497,13 +461,13 @@ export const attachToAssessmentPlan = async (id, field, entityId, dbName, dataSo
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the assessment plan
-  sparqlQuery = attachToAssessmentPlanQuery(id, field, entityIri);
+  // Attach the object to the revisions
+  sparqlQuery = attachToRevisionsQuery(id, field, entityIri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Attach ${field} to Assessment Plan`
+      queryId: `Attach ${field} to Revisions`
       });
   } catch (e) {
     console.log(e)
@@ -513,22 +477,22 @@ export const attachToAssessmentPlan = async (id, field, entityId, dbName, dataSo
   return true;
 };
 
-export const detachFromAssessmentPlan = async (id, field, entityId, dbName, dataSources) => {
+export const detachFromRevisions = async (id, field, entityId, dbName, dataSources) => {
   let sparqlQuery;
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
-  // check to see if the assessment plan exists
+  // check to see if the revisions exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/assessment-plan--${id}>`;
-  sparqlQuery = selectAssessmentPlanByIriQuery(iri, select);
+  let iri = `<http://cyio.darklight.ai/revisions--${id}>`;
+  sparqlQuery = selectRevisionsByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Assessment Plan",
-      singularizeSchema: singularizeAssessmentPlanSchema
+      queryId: "Select Revisions",
+      singularizeSchema: singularizeRevisionsSchema
     });
   } catch (e) {
     console.log(e)
@@ -537,14 +501,7 @@ export const detachFromAssessmentPlan = async (id, field, entityId, dbName, data
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'revisions': 'revisions',
-    'document_ids': 'document_ids',
-    'system_security_plan': 'system_security_plan',
-    'local_definitions': 'local_definitions',
-    'reviewed_controls': 'reviewed_controls',
-    'assessment_subjects': 'assessment_subjects',
-    'assessment_assets': 'assessment_assets',
-    'resources': 'resources',
+    // TODO
   }
   let objectType = attachableObjects[field];
   try {
@@ -554,7 +511,7 @@ export const detachFromAssessmentPlan = async (id, field, entityId, dbName, data
       dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
-      singularizeSchema: singularizeAssessmentPlanSchema
+      singularizeSchema: singularizeRevisionsSchema
     });
   } catch (e) {
     console.log(e)
@@ -570,13 +527,13 @@ export const detachFromAssessmentPlan = async (id, field, entityId, dbName, data
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the assessment plan
-  sparqlQuery = detachFromAssessmentPlanQuery(id, field, entityIri);
+  // Attach the object to the revisions
+  sparqlQuery = detachFromRevisionsQuery(id, field, entityIri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Detach ${field} from Assessment Plan`
+      queryId: `Detach ${field} from Revisions`
       });
   } catch (e) {
     console.log(e)

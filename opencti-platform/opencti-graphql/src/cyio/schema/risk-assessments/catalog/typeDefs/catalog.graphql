@@ -342,7 +342,7 @@ type ControlParameter implements BasicObject & LifecycleObject & OscalObject {
   "Specifies a set of values provided in a catalog can be redefined at any higher layer of OSCAL (e.g., Profile)."
   values: [String]
   "Specifies a choice a choice among alternative"
-  select: ControlSelection
+  select: Selector
   # ControlParameter extension fields
   "Identifies an alternate or aliased identifier for the parent context."
   alt_identifier: String

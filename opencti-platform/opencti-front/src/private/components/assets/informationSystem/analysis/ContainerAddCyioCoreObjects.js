@@ -39,6 +39,7 @@ const styles = (theme) => ({
     // backgroundColor: theme.palette.navAlt.background,
     padding: 0,
     zIndex: 1,
+    justifyContent: 'space-between',
   },
   createButton: {
     position: 'fixed',
@@ -85,6 +86,13 @@ const styles = (theme) => ({
     padding: 0,
     height: '100%',
     width: '100%',
+  },
+  bottomContainer: {
+    padding: '20px 5px',
+    display: 'flex',
+    flexFlow: 'column wrap',
+    alignItems: 'flex-end',
+    marginBottom: '80px',
   },
   placeholder: {
     display: 'inline-block',
@@ -312,7 +320,7 @@ class ContainerAddCyioCoreObjects extends Component {
           }
           return (
             <List>
-              {Array.from(Array(2), (e, i) => (
+              {Array.from(Array(1), (e, i) => (
                 <ListItem key={i} divider={true} button={false}>
                   <ListItemIcon>
                     <Skeleton
@@ -376,36 +384,36 @@ class ContainerAddCyioCoreObjects extends Component {
           classes={{ paper: classes.drawerPaper }}
           onClose={this.handleClose.bind(this)}
         >
-          <div className={classes.header}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Button
-                size='small'
-                variant='outlined'
-                className={classes.closeButton}
-                onClick={this.handleClose.bind(this)}
-              >
-                <ArrowBack />
-              </Button>
-              <Typography style={{ marginLeft: '20px' }}>
-                {t('Add Entities')}
-              </Typography>
+          <div className={classes.topContainer}>
+            <div className={classes.header}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  className={classes.closeButton}
+                  onClick={this.handleClose.bind(this)}
+                >
+                  <ArrowBack />
+                </Button>
+                <Typography style={{ marginLeft: '20px' }}>
+                  {t('Add Entities')}
+                </Typography>
+              </div>
+              <SearchInput
+                disabled
+                variant='noAnimation'
+                placeholder={`${t('Search')}...`}
+                onSubmit={this.handleSearch.bind(this)}
+              />
             </div>
-            <SearchInput
-              disabled
-              variant='noAnimation'
-              placeholder={`${t('Search')}...`}
-              onSubmit={this.handleSearch.bind(this)}
-            />
+            {this.renderSearch('component', paginationOptions)}
+            {this.renderSearch('inventory-item', paginationOptions)}
+            {this.renderSearch('oscal-leveraged-authorization', paginationOptions)}
+            {this.renderSearch('oscal-user', paginationOptions)}
+            {this.renderSearch('information-type', paginationOptions)}
+            {this.renderSearch('information-system', paginationOptions)}
           </div>
-          {this.renderSearch('component', paginationOptions)}
-          {this.renderSearch('inventory-item', paginationOptions)}
-          {this.renderSearch('oscal-leveraged-authorization', paginationOptions)}
-          {this.renderSearch('oscal-user', paginationOptions)}
-          {this.renderSearch('information-type', paginationOptions)}
-          {this.renderSearch('information-system', paginationOptions)}
-          <div style={{
-            position: 'absolute', bottom: '0px', right: '0px', padding: '20px 5px', height: '180px',
-          }}>
+          <div className={classes.bottomContainer}>
             <Button
               size='small'
               color='primary'
@@ -423,6 +431,14 @@ class ContainerAddCyioCoreObjects extends Component {
               anchorEl={this.state.popoverAnchorEl}
               open={Boolean(this.state.popoverAnchorEl)}
               onClose={this.handleCloseCreateOnEntity.bind(this)}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+              }}
             >
               <MenuItem onClick={this.handleInformationSystemCreation.bind(this)}>
                 {t('Create an Information System')}

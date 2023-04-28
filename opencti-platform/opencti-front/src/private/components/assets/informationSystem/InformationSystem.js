@@ -44,6 +44,9 @@ class InformationSystemComponent extends Component {
   }
 
   handleCreateGraph() {
+    if(this.state.displayGraph){
+      this.props.refreshQuery();
+    }
     this.setState({ displayGraph: !this.state.displayGraph });
   }
 

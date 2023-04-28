@@ -62,6 +62,8 @@ type Finding implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
+  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [DataMarking]
   # Finding
   "Identifies the name for this Finding item."
   name: String!
@@ -86,7 +88,9 @@ input FindingInput {
   "Identifies an assessor's conclusions regarding the degree to which an objective is satisfied."
   target: FindingTargetInput
   "Identifies a reference to the implementation statement in the SSP to which this finding is related."
-  implementation_statement: ID
+  # implementation_statement: ID
+  # "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [ID]
 }
 
 enum FindingOrdering {

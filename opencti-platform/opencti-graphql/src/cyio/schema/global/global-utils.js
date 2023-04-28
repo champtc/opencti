@@ -5,102 +5,75 @@ import {
   itAssetPredicateMap,
   locationPredicateMap as assetLocationPredicateMap,
 } from '../assets/asset-common/sparql-query.js';
+import { computingDevicePredicateMap } from '../assets/computing-device/sparql-query.js';
+import { hardwarePredicateMap } from '../assets/hardware/sparql-query.js';
+import { networkPredicateMap } from '../assets/network/sparql-query.js';
+import { softwarePredicateMap } from '../assets/software/sparql-query.js';
 import {
-  computingDevicePredicateMap, // attachToComputingDeviceQuery,detachFromComputingDeviceQuery
-} from '../assets/computing-device/sparql-query.js';
-import {
-  hardwarePredicateMap, //attachToHardwareQuery, detachFromHardwareQuery
-} from '../assets/hardware/sparql-query.js';
-import {
-  networkPredicateMap, //attachToNetworkQuery, detachFromNetworkQuery
-} from '../assets/network/sparql-query.js';
-import {
-  softwarePredicateMap, //attachToSoftwareQuery, detachFromSoftwareQuery,
-} from '../assets/software/sparql-query.js';
-import {
-  addressPredicateMap, // attachToAddressQuery, detachFromAddressQuery,
-  externalReferencePredicateMap, // attachToExternalReferenceQuery, detachFromExternalReferenceQuery,
-  labelPredicateMap, // attachToLabelQuery, detachFromLabelQuery,
-  notePredicateMap, // attachToNoteQuery, detachFromNoteQuery,
-  phoneNumberPredicateMap,attachToPhoneNumberQuery, detachFromPhoneNumberQuery,
+  addressPredicateMap,
+  externalReferencePredicateMap,
+  labelPredicateMap,
+  notePredicateMap,
+  phoneNumberPredicateMap,
 } from '../global/resolvers/sparql-query.js';
 import {
-  activityPredicateMap, // attachToActivityQuery, detachFromActivityQuery,
-  actorPredicateMap, // attachToActorQuery, detachFromActorQuery,
-  assessmentPlatformPredicateMap, // attachToAssessmentPlatformQuery, detachFromAssessmentPlatformQuery,
-  assessmentSubjectPredicateMap, // attachToAssessmentSubjectQuery, detachFromAssessmentSubjectQuery,
-  associatedActivityPredicateMap, // attachToAssociatedActivityQuery, detachFromAssociatedActivityQuery,
-  characterizationPredicateMap, // attachToCharacterizationQuery, detachFromCharacterizationQuery,
-  evidencePredicateMap, // attachToEvidenceQuery, detachFromEvidenceQuery,
-  facetPredicateMap, // attachToFacetQuery, detachFromFacetQuery,
-  logEntryAuthorPredicateMap, // attachToLogEntryAuthorQuery, detachFromLogEntryAuthorQuery,
-  mitigatingFactorPredicateMap, // attachToMitigatingFactorQuery, detachFromMitigatingFactorQuery,
-  observationPredicateMap, // attachToObservationQuery, detachFromObservationQuery,
-  originPredicateMap, // attachToOriginQuery, detachFromOriginQuery,
-  oscalTaskPredicateMap, // attachToOscalTaskQuery, detachFromOscalTaskQuery,
-  requiredAssetPredicateMap, // attachToRequiredAssetQuery, detachFromRequiredAssetQuery,
-  riskPredicateMap, // attachToRiskQuery, detachFromRiskQuery,
-  riskLogPredicateMap, // attachToRiskLogEntryQuery, detachFromRiskLogEntryQuery,
-  riskResponsePredicateMap, // attachToRiskResponseQuery, detachFromRiskResponseQuery,
-  subjectPredicateMap, // attachToSubjectQuery, detachFromSubjectQuery, 
-  assessmentAssetPredicateMap, // attachToAssessmentAssetQuery, detachFromAssessmentAssetQuery,
+  activityPredicateMap,
+  actorPredicateMap,
+  assessmentPlatformPredicateMap,
+  assessmentSubjectPredicateMap,
+  associatedActivityPredicateMap,
+  characterizationPredicateMap,
+  evidencePredicateMap,
+  facetPredicateMap,
+  logEntryAuthorPredicateMap,
+  mitigatingFactorPredicateMap,
+  observationPredicateMap,
+  originPredicateMap,
+  oscalTaskPredicateMap,
+  requiredAssetPredicateMap,
+  riskPredicateMap,
+  riskLogPredicateMap,
+  riskResponsePredicateMap,
+  subjectPredicateMap,
+  assessmentAssetPredicateMap,
  } from '../risk-assessments/assessment-common/resolvers/sparql-query.js';
-// import {
-
-// } from '../risk-assessments/assessment-results/resolvers/sparql-query.js';
+import { assessmentResultsPredicateMap } from '../risk-assessments/assessment-results/schema/sparql/assessmentResult.js';
+import { resultPredicateMap } from "../risk-assessments/assessment-results/schema/sparql/result.js";
+import { componentPredicateMap } from '../risk-assessments/component/resolvers/sparql-query.js';
+import { inventoryItemPredicateMap } from '../risk-assessments/inventory-item/resolvers/sparql-query.js';
 import {
-  componentPredicateMap, // attachToComponentQuery, detachFromComponentQuery,
-} from '../risk-assessments/component/resolvers/sparql-query.js';
-import {
-  inventoryItemPredicateMap, // attachToInventoryItemQuery, detachFromInventoryItemQuery
-} from '../risk-assessments/inventory-item/resolvers/sparql-query.js';
-import {
-  externalIdentifierPredicateMap, // attachToExternalIdentifierQuery, detachFromExternalIdentifierQuery,
-  locationPredicateMap as oscalLocationPredicateMap, // attachToLocationQuery, detachFromLocationQuery,
-  partyPredicateMap, // attachToPartyQuery, detachFromPartyQuery,
-  responsiblePartyPredicateMap, // attachToResponsiblePartyQuery, detachFromResponsiblePartyQuery,
-  // attachToResponsibleRoleQuery, detachFromResponsibleRoleQuery,
-  rolePredicateMap, // attachToRoleQuery, detachFromRoleQuery,
+  externalIdentifierPredicateMap,
+  locationPredicateMap as oscalLocationPredicateMap,
+  partyPredicateMap,
+  responsiblePartyPredicateMap,
+  rolePredicateMap,
 } from '../risk-assessments/oscal-common/resolvers/sparql-query.js';
 import {
-  poamPredicateMap, // attachToPOAMQuery, detachFromPOAMQuery,
-  poamItemPredicateMap, // attachToPOAMItemQuery, detachFromPOAMItemQuery,
-  poamLocalDefinitionPredicateMap, // attachToPOAMLocalDefinitionQuery, detachFromPOAMLocalDefinitionQuery,
+  poamPredicateMap, 
+  poamItemPredicateMap,
+  poamLocalDefinitionPredicateMap,
 } from '../risk-assessments/poam/resolvers/sparql-query.js';
+import { workspacePredicateMap } from '../../../schema/sparql/cyio-workspace.js'
+import { dataMarkingPredicateMap } from '../data-markings/schema/sparql/dataMarkings.js';
+import { dataSourcePredicateMap } from '../data-sources/schema/sparql/dataSource.js';
+import { connectionInformationPredicateMap } from '../data-sources/schema/sparql/connectionInformation.js';
+import { controlObjectivePredicateMap } from '../risk-assessments/control/schema/sparql/control.js';
+import { informationSystemPredicateMap } from '../information-system/schema/sparql/informationSystem.js'
+import { informationTypeCatalogPredicateMap } from '../information-system/schema/sparql/informationTypeCatalog.js';
 import {
-  workspacePredicateMap, // attachToWorkspaceQuery, detachFromWorkspaceQuery ,
-} from '../../../schema/sparql/cyio-workspace.js'
-import {
-  dataMarkingPredicateMap, // attachToDataMarkingQuery, detachFromDataMarkingQuery
-} from '../data-markings/schema/sparql/dataMarkings.js';
-import {
-  dataSourcePredicateMap, // attachToDataSourceQuery, detachFromDataSourceQuery
-} from '../data-sources/schema/sparql/dataSource.js';
-import {
-  connectionInformationPredicateMap, // attachToConnectionInformationQuery, detachFromConnectionInformationQuery
-} from '../data-sources/schema/sparql/connectionInformation.js';
-import {
-  informationSystemPredicateMap, // attachToInformationSystemQuery, detachFromInformationSystemQuery
-} from '../information-system/schema/sparql/informationSystem.js'
-import {
-  informationTypeCatalogPredicateMap, // attachToInformationTypeCatalogQuery, detachFromInformationTypeCatalogQuery
-} from '../information-system/schema/sparql/informationTypeCatalog.js';
-import {
-  descriptionBlockPredicateMap, // attachToDescriptionBlockQuery, detachFromDescriptionBlockQuery,
-  diagramPredicateMap, // attachToDiagramQuery, detachFromDiagramQuery
+  descriptionBlockPredicateMap, 
+  diagramPredicateMap,
 } from '../information-system/schema/sparql/descriptionBlock.js';
 import {
-  informationTypePredicateMap, // attachToInformationTypeQuery, detachFromInformationTypeQuery
+  informationTypePredicateMap,
   impactDefinitionPredicateMap,
   categorizationPredicateMap,
 } from '../information-system/schema/sparql/informationType.js';
 import {
-  oscalUserPredicateMap, // attachToOscalUserQuery, detachFromOscalUserQuery,
-  authorizedPrivilegePredicateMap, // attachToAuthorizedPrivilegeQuery, detachFromAuthorizedPrivilegeQuery,
+  oscalUserPredicateMap,
+  authorizedPrivilegePredicateMap,
 } from '../risk-assessments/oscal-common/schema/sparql/oscalUser.js' ;
-import {
-  oscalLeveragedAuthorizationPredicateMap, // attachToOscalLeveragedAuthorizationQuery, detachFromOscalLeveragedAuthorizationQuery,
-} from '../risk-assessments/oscal-common/schema/sparql/oscalLeveragedAuthorization.js';
+import { oscalLeveragedAuthorizationPredicateMap } from '../risk-assessments/oscal-common/schema/sparql/oscalLeveragedAuthorization.js';
 
 
 // find id of parent
@@ -207,36 +180,29 @@ export const selectObjectByIriQuery = (iri, type, select) => {
   `
 }
 
+// Object Map
 export const objectMap = {
   // key is the entity_type/object_type
   "activity": {
     predicateMap: activityPredicateMap,
-    // attachQuery: attachToActivityQuery,
-    // detachQuery: detachFromActivityQuery,
     graphQLType: "Activity",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Activity",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Activity"
   },
   "actor": {
     predicateMap: actorPredicateMap,
-    // attachQuery: attachToActorQuery,
-    // detachQuery: detachFromActorQuery,
     graphQLType: "Actor",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Actor",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Actor"
   },
   "address": {
     predicateMap: addressPredicateMap,
-    // attachQuery: attachToAddressQuery,
-    // detachQuery: detachFromAddressQuery,
     graphQLType: "CivicAddress",
     classIri: "http://csrc.nist.gov/ns/oscal/common#Address",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#Address"
   },
   "appliance": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "ApplianceDeviceAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Appliance",
@@ -244,8 +210,6 @@ export const objectMap = {
   },
   "application-software": {
     predicateMap: softwarePredicateMap,
-    // attachQuery: attachToSoftwareQuery,
-    // detachQuery: detachFromSoftwareQuery,
     graphQLType: "ApplicationSoftwareAsset",
     parent: "software",
     classIri: "http://scap.nist.gov/ns/asset-identification#Software",
@@ -253,40 +217,36 @@ export const objectMap = {
   },
   "assessment-asset": {
     predicateMap: assessmentAssetPredicateMap,
-    // attachQuery: attachToAssessmentAssetQuery,
-    // detachQuery: detachFromAssessmentAssetQuery,
     graphQLType: "AssessmentAsset",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentAsset",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentAsset"
   },
   "assessment-platform": {
     predicateMap: assessmentPlatformPredicateMap,
-    // attachQuery: attachToAssessmentPlatformQuery,
-    // detachQuery: detachFromAssessmentPlatformQuery,
     graphQLType: "AssessmentPlatform",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentPlatform",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentPlatform",
   },
+  "assessment-results": {
+    predicateMap: assessmentResultsPredicateMap,
+    graphQLType: "AssessmentResults",
+    classIri: "http://csrc.nist.gov/ns/oscal/common#AssessmentResults",
+    iriTemplate: "http://cyio.darklight.ai/common#AssessmentResults"
+  },
   "assessment-subject": {
     predicateMap: assessmentSubjectPredicateMap,
-    // attachQuery: attachToAssessmentSubjectQuery,
-    // detachQuery: detachFromAssessmentSubjectQuery,
     graphQLType: "AssessmentSubject",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentSubject",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentSubject",
   }, 
   "associated-activity": {
     predicateMap: associatedActivityPredicateMap,
-    // attachQuery: attachToAssociatedActivityQuery,
-    // detachQuery: detachFromAssociatedActivityQuery,
     graphQLType: "AssociatedActivity",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#AssociatedActivity",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#AssociatedActivity",
   },
   "authorized-privilege": {
-    predicateMap: oscalLeveragedAuthorizationPredicateMap,
-    // attachQuery: attachToOscalLeveragedAuthorizationQuery,
-    // detachQuery: detachFromOscalLeveragedAuthorizationQuery,
+    predicateMap: authorizedPrivilegePredicateMap,
     graphQLType: "AuthorizedPrivilege",
     classIri:  "http://csrc.nist.gov/ns/oscal/common#AuthorizedPrivilege",
     iriTemplate: "http://cyio.darklight.ai/authorized-privilege",
@@ -299,24 +259,18 @@ export const objectMap = {
   },
   "characterization": {
     predicateMap: characterizationPredicateMap,
-    // attachQuery: attachToCharacterizationQuery,
-    // detachQuery: detachFromCharacterizationQuery,
     graphQLType: "Characterization",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Characterization",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Characterization"
   },
   "component": {
     predicateMap: componentPredicateMap,
-    // attachQuery: attachToComponentQuery,
-    // detachQuery: detachFromComponentQuery,
     graphQLType: "Component",
     classIri: "http://csrc.nist.gov/ns/oscal/common#Component",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#Component"
   },
   "computing-device": {
     predicateMap: computingDevicePredicateMap,
-    // attachQuery: attachToComputingDeviceQuery,
-    // detachQuery: detachFromComputingDeviceQuery,
     graphQLType: "ComputingDeviceAsset",
     parent: "hardware",
     classIri: "http://scap.nist.gov/ns/asset-identification#ComputingDevice",
@@ -324,40 +278,36 @@ export const objectMap = {
   },
   "connection-information": {
     predicateMap: connectionInformationPredicateMap,
-    // attachQuery: attachToConnectionInformationQuery,
-    // detachQuery: detachFromConnectionInformationQuery,
     graphQLType: "ConnectionInformation",
     classIri: "<http://darklight.ai/ns/cyio/connection#ConnectionInformation>",
     iriTemplate: "http://cyio.darklight.ai/connection-information"
   },
+  "control-objective": {
+    predicateMap: controlObjectivePredicateMap,
+    graphQLType: "ControlObjective",
+    classIri: "<http://csrc.nist.gov/ns/oscal/assessment/common#ControlObjective>",
+    iriTemplate: "http://cyio.darklight.ai/control-objective"
+  },
   "data-source": {
     predicateMap: dataSourcePredicateMap,
-    // attachQuery: attachToDataSourceQuery,
-    // detachQuery: detachFromDataSourceQuery,
     graphQLType: "DataSource",
     classIri: "<http://darklight.ai/ns/cyio/datasource#DataSource",
     iriTemplate: "http://cyio.darklight.ai/data-source"
   },
   "description-block": {
     predicateMap: descriptionBlockPredicateMap,
-    // attachQuery: attachToDescriptionBlockQuery,
-    // detachQuery: detachFromDescriptionBlockQuery,
     graphQLType: "DescriptionBlock",
     classIri: "http://csrc.nist.gov/ns/oscal/info-system#DescriptionBlock",
     iriTemplate: "http://cyio.darklight.ai/description-block"
   },
   "diagram": {
     predicateMap: diagramPredicateMap,
-    // attachQuery: attachToDiagramQuery,
-    // detachQuery: detachFromDiagramQuery,
     graphQLType: "DiagramRef",
     classIri: "http://csrc.nist.gov/ns/oscal/info-system#Diagram",
     iriTemplate: "http://cyio.darklight.ai/diagram"
   },
   "embedded": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "HardwareAsset",
     parent: "computing-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Embedded",
@@ -365,24 +315,18 @@ export const objectMap = {
   },
   "evidence": {
     predicateMap: evidencePredicateMap,
-    // attachQuery: attachToEvidenceQuery,
-    // detachQuery: detachFromEvidenceQuery,
     graphQLType: "Evidence",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Evidence",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Evidence"
   },
   "external-identifier": {
     predicateMap: externalIdentifierPredicateMap,
-    // attachQuery: attachToExternalIdentifierQuery,
-    // detachQuery: detachFromExternalIdentifierQuery,
     graphQLType: "ExternalIdentifier",
     classIri: "http://csrc.nist.gov/ns/oscal/common#ExternalIdentifier",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#ExternalIdentifier"
   },
   "external-reference": {
     predicateMap: externalReferencePredicateMap,
-    // attachQuery: attachToExternalReferenceQuery,
-    // detachQuery: detachFromExternalReferenceQuery,
     alternateKey: "link",
     graphQLType: "CyioExternalReference",
     classIri: "http://darklight.ai/ns/common#ExternalReference",
@@ -390,16 +334,12 @@ export const objectMap = {
   },
   "facet": {
     predicateMap: facetPredicateMap,
-    // attachQuery: attachToFacetQuery,
-    // detachQuery: detachFromFacetQuery,
     graphQLType: "Facet",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Facet",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Facet"
   },
   "firewall": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "FirewallAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Firewall",
@@ -407,16 +347,12 @@ export const objectMap = {
   },
   "hardware": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "HardwareAsset",
     classIri: "http://scap.nist.gov/ns/asset-identification#Hardware",
     iriTemplate: "http://scap.nist.gov/ns/asset-identification#Hardware"
   },
   "hypervisor": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "HardwareAsset",
     parent: "computing-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Hypervisor",
@@ -430,48 +366,36 @@ export const objectMap = {
   },
   "inventory-item": {
     predicateMap: inventoryItemPredicateMap,
-    // attachQuery: attachToInventoryItemQuery,
-    // detachQuery: detachFromInventoryItemQuery,
     graphQLType: "InventoryItem",
     classIri: "http://csrc.nist.gov/ns/oscal/common#InventoryItem",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#InventoryItem"
   },
   "information-type": {
     predicateMap: informationTypePredicateMap,
-    // attachQuery: attachToInformationTypeQuery,
-    // detachQuery: detachFromInformationTypeQuery,
     graphQLType: "InformationType",
     classIri: "http://csrc.nist.gov/ns/oscal/info-system#InformationType",
     iriTemplate: "http://cyio.darklight.ai/information-type"
   },
   "information-type-catalog": {
     predicateMap: informationTypeCatalogPredicateMap,
-    // attachQuery: attachToInformationTypeCatalogQuery,
-    // detachQuery: detachFromInformationTypeCatalogQuery,
     graphQLType: "InformationTypeCatalog",
     classIri: "http://nist.gov/ns/sp800-60#InformationTypeCatalog",
     iriTemplate: "http://cyio.darklight.ai/information-type-catalog"
   },
   "information-system": {
     predicateMap: informationSystemPredicateMap,
-    // attachQuery: attachToInformationSystemQuery,
-    // detachQuery: detachFromInformationSystemQuery,
     graphQLType: "InformationSystem",
     classIri: "http://csrc.nist.gov/ns/oscal/info-system#InformationSystem",
     iriTemplate: "http://cyio.darklight.ai/information-system"
   },
   "label": {
     predicateMap: labelPredicateMap,
-    // attachQuery: attachToLabelQuery,
-    // detachQuery: detachFromLabelQuery,
     graphQLType: "CyioLabel",
     classIri: "http://darklight.ai/ns/common#Label",
     iriTemplate: "http://darklight.ai/ns/common#Label"
   },
   "laptop": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "LaptopAsset",
     parent: "computing-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Laptop",
@@ -479,8 +403,6 @@ export const objectMap = {
   },
   "load-balancer": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "NetworkDeviceAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#LoadBalancer",
@@ -488,32 +410,24 @@ export const objectMap = {
   },
   "log-entry-author": {
     predicateMap: logEntryAuthorPredicateMap,
-    // attachQuery: attachToLogEntryAuthorQuery,
-    // detachQuery: detachFromLogEntryAuthorQuery,
     graphQLType: "LogEntryAuthor",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#LogEntryAuthor",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#LogEntryAuthor"
   },
   "marking-definition": {
     predicateMap: dataMarkingPredicateMap,
-    // attachQuery: attachToDataMarkingQuery,
-    // detachQuery: detachFromDataMarkingQuery,
     graphQLType: "DataMarkingObject",
     classIri: "http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition",
     iriTemplate: "http://cyio.darklight.ai/marking-definition"
   },
   "mitigating-factor": {
     predicateMap: mitigatingFactorPredicateMap,
-    // attachQuery: attachToMitigatingFactorQuery,
-    // detachQuery: detachFromMitigatingFactorQuery,
     graphQLType: "actor",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#MitigatingFactor",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#MitigatingFactor"
   },
   "mobile-device": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "MobileDeviceAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#MobileDevice",
@@ -521,16 +435,12 @@ export const objectMap = {
   },
   "network": {
     predicateMap: networkPredicateMap,
-    // attachQuery: attachToNetworkQuery,
-    // detachQuery: detachFromNetworkQuery,
     graphQLType: "NetworkAsset",
     classIri: "http://scap.nist.gov/ns/asset-identification#Network",
     iriTemplate: "http://scap.nist.gov/ns/asset-identification#Network"
   },
   "network-device": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "NetworkDeviceAsset",
     parent: "hardware",
     classIri:"http://scap.nist.gov/ns/asset-identification#NetworkDevice",
@@ -538,8 +448,6 @@ export const objectMap = {
   },
   "network-switch": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "SwitchAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#NetworkSwitch",
@@ -547,8 +455,6 @@ export const objectMap = {
   },
   "note": {
     predicateMap: notePredicateMap,
-    // attachQuery: attachToNoteQuery,
-    // detachQuery: detachFromNoteQuery,
     alternateKey: "remark",
     graphQLType: "CyioNote",
     classIri: "http://darklight.ai/ns/common#Note",
@@ -556,16 +462,12 @@ export const objectMap = {
   },
   "observation": {
     predicateMap: observationPredicateMap,
-    // attachQuery: attachToObservationQuery,
-    // detachQuery: detachFromObservationQuery,
     graphQLType: "Observation",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Observation",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Observation"
   },
   "operating-system": {
     predicateMap: softwarePredicateMap,
-    // attachQuery: attachToSoftwareQuery,
-    // detachQuery: detachFromSoftwareQuery,
     graphQLType: "OperatingSystemAsset",
     parent: "software",
     classIri: "http://scap.nist.gov/ns/asset-identification#OperatingSystem",
@@ -573,24 +475,18 @@ export const objectMap = {
   },
   "origin": {
     predicateMap: originPredicateMap,
-    // attachQuery: attachToOriginQuery,
-    // detachQuery: detachFromOriginQuery,
     graphQLType: "Origin",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Origin",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Origin",
   },
   "oscal-leveraged-authorization": {
     predicateMap: oscalLeveragedAuthorizationPredicateMap,
-    // attachQuery: attachToOscalLeveragedAuthorizationQuery,
-    // detachQuery: detachFromOscalLeveragedAuthorizationQuery,
     graphQLType: "OscalLeveragedAuthorization",
     classIri:  "http://csrc.nist.gov/ns/oscal/common#LeveragedAuthorization",
     iriTemplate: "http://cyio.darklight.ai/oscal-leveraged-authorization",
   },
   "oscal-location": {
     predicateMap: oscalLocationPredicateMap,
-    // attachQuery: attachToLocationQuery,
-    // detachQuery: detachFromLocationQuery,
     alternateKey: "location",
     graphQLType: "OscalLocation",
     classIri: "http://csrc.nist.gov/ns/oscal/common#Location",
@@ -598,8 +494,6 @@ export const objectMap = {
   },
   "oscal-party": {
     predicateMap: partyPredicateMap,
-    // attachQuery: attachToPartyQuery,
-    // detachQuery: detachFromPartyQuery,
     alternateKey: "party",
     graphQLType: "OscalParty",
     classIri: "http://csrc.nist.gov/ns/oscal/common#Party",
@@ -607,8 +501,6 @@ export const objectMap = {
   },
   "oscal-responsible-party": {
     predicateMap: responsiblePartyPredicateMap,
-    // attachQuery: attachToResponsiblePartyQuery,
-    // detachQuery: detachFromResponsiblePartyQuery,
     alternateKey: "responsible-party",
     graphQLType: "OscalResponsibleParty",
     classIri: "http://csrc.nist.gov/ns/oscal/common#ResponsibleParty",
@@ -616,8 +508,6 @@ export const objectMap = {
   },
   "oscal-responsible-role": {
     predicateMap: responsiblePartyPredicateMap,
-    // attachQuery: attachToResponsibleRoleQuery,
-    // detachQuery: detachFromResponsibleRoleQuery,
     alternateKey: "responsible-role",
     graphQLType: "OscalResponsibleRole",
     classIri: "http://csrc.nist.gov/ns/oscal/common#ResponsibleRole",
@@ -625,8 +515,6 @@ export const objectMap = {
   },
   "oscal-role": {
     predicateMap: rolePredicateMap,
-    // attachQuery: attachToRoleQuery,
-    // detachQuery: detachFromRoleQuery,
     alternateKey: "role",
     graphQLType: "OscalRole",
     classIri: "http://csrc.nist.gov/ns/oscal/common#Role",
@@ -634,8 +522,6 @@ export const objectMap = {
   },
   "oscal-task": {
     predicateMap: oscalTaskPredicateMap,
-    // attachQuery: attachToOscalTaskQuery,
-    // detachQuery: detachFromOscalTaskQuery,
     alternateKey: "task",
     graphQLType: "OscalTask",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Task",
@@ -643,8 +529,6 @@ export const objectMap = {
   },
   "oscal-user": {
     predicateMap: oscalUserPredicateMap,
-    // attachQuery: attachToOscalUserQuery,
-    // detachQuery: detachFromOscalUserQuery,
     alternateKey: "user",
     graphQLType: "OscalUser",
     classIri: "http://csrc.nist.gov/ns/oscal/common#User",
@@ -652,8 +536,6 @@ export const objectMap = {
   },
   "pbx": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "HardwareAsset",
     parent: "hardware",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#PBX",
@@ -661,32 +543,24 @@ export const objectMap = {
   },
   "poam": {
     predicateMap: poamPredicateMap,
-    // attachQuery: attachToPOAMQuery,
-    // detachQuery: detachFromPOAMQuery,
     graphQLType: "POAM",
     classIri: "http://csrc.nist.gov/ns/oscal/common#POAM",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#POAM"
   },
   "poam-item": {
     predicateMap: poamItemPredicateMap,
-    // attachQuery: attachToPOAMItemQuery,
-    // detachQuery: detachFromPOAMItemQuery,
     graphQLType: "POAMItem",
     classIri: "http://csrc.nist.gov/ns/oscal/poam#Item",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/poam#Item"
   },
   "poam-local-definition": {
     predicateMap: poamLocalDefinitionPredicateMap,
-    // attachQuery: attachToPOAMLocalDefinitionQuery,
-    // detachQuery: detachFromPOAMLocalDefinitionQuery,
     graphQLType: "POAMLocalDefinition",
     classIri: "http://csrc.nist.gov/ns/oscal/poam#LocalDefinition",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/poam#LocalDefinition"
   },
   "printer": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "HardwareAsset",
     parent: "hardware",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Printer",
@@ -694,8 +568,6 @@ export const objectMap = {
   },
   "physical-device": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "PhysicalDeviceAsset",
     parent: "hardware",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#PhysicalDevice",
@@ -703,32 +575,30 @@ export const objectMap = {
   },
   "required-asset": {
     predicateMap: requiredAssetPredicateMap,
-    // attachQuery: attachToRequiredAssetQuery,
-    // detachQuery: detachFromRequiredAssetQuery,
     graphQLType: "RequiredAsset",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#RequiredAsset",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#RequiredAsset"
   },
+  "result": {
+    predicateMap: resultPredicateMap,
+    graphQLType: "AssessmentResults",
+    classIri: "http://csrc.nist.gov/ns/oscal/assessment-results#Result",
+    iriTemplate: "http://cyio.darklight.ai/assessment-results#Result"
+  },
   "risk": {
     predicateMap: riskPredicateMap,
-    // attachQuery: attachToRiskQuery,
-    // detachQuery: detachFromRiskQuery,
     graphQLType: "Risk",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Risk",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Risk"
   },
   "risk-log-entry": {
     predicateMap: riskLogPredicateMap,
-    // attachQuery: attachToRiskLogEntryQuery,
-    // detachQuery: detachFromRiskLogEntryQuery,
     graphQLType: "RiskLogEntry",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#RiskLogEntry",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#RiskLogEntry"
   },
   "risk-response": {
     predicateMap: riskResponsePredicateMap,
-    // attachQuery: attachToRiskResponseQuery,
-    // detachQuery: detachFromRiskResponseQuery,
     alternateKey: "remediation",
     graphQLType: "RiskResponse",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#RiskResponse",
@@ -736,8 +606,6 @@ export const objectMap = {
   },
   "router": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "RouterAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Router",
@@ -745,8 +613,6 @@ export const objectMap = {
   },
   "server": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "ServerAsset",
     parent: "computing-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Server",
@@ -754,8 +620,6 @@ export const objectMap = {
   },
   "software": {
     predicateMap: softwarePredicateMap,
-    // attachQuery: attachToSoftwareQuery,
-    // detachQuery: detachFromSoftwareQuery,
     graphQLType: "SoftwareAsset",
     alternateKey: "tool",
     classIri: "http://scap.nist.gov/ns/asset-identification#Software",
@@ -763,8 +627,6 @@ export const objectMap = {
   },
   "storage-array": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "StorageArrayAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#StorageArray",
@@ -772,24 +634,18 @@ export const objectMap = {
   },
   "subject": {
     predicateMap: subjectPredicateMap,
-    // attachQuery: attachToSubjectQuery,
-    // detachQuery: detachFromSubjectQuery,
     graphQLType: "Subject",
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Subject",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Subject"
   },
   "telephone-number": {
     predicateMap: phoneNumberPredicateMap,
-    // attachQuery: attachToPhoneNumberQuery,
-    // detachQuery: detachFromPhoneNumberQuery,
     graphQLType: "TelephoneNumber",
     classIri: "http://csrc.nist.gov/ns/oscal/common#TelephoneNumber",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#TelephoneNumber"
   },
   "voip-device": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "NetworkDeviceAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#VoIPDevice",
@@ -797,8 +653,6 @@ export const objectMap = {
   },
   "voip-handset": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "VoIPHandsetAsset",
     parent: "voip-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#VoIPHandset",
@@ -806,8 +660,6 @@ export const objectMap = {
   },
   "voip-router": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "VoIPRouterAsset",
     parent: "voip-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#VoIPRouter",
@@ -815,8 +667,6 @@ export const objectMap = {
   },
   "wireless-access-point": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "NetworkDeviceAsset",
     parent: "network-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#WirelessAccessPoint",
@@ -824,16 +674,12 @@ export const objectMap = {
   },
   "workspace": {
     predicateMap: workspacePredicateMap,
-    // attachQuery: attachToWorkspaceQuery,
-    // detachQuery: detachFromWorkspaceQuery,
     graphQLType: "Workspace",
     classIri: "http://darklight.ai/ns/cyio/workspace#Workspace",
     iriTemplate: "http://cyio.darklight.ai/workspace"
   },
   "workstation": {
     predicateMap: hardwarePredicateMap,
-    // attachQuery: attachToHardwareQuery,
-    // detachQuery: detachFromHardwareQuery,
     graphQLType: "WorkstationAsset",
     parent: "computing-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Workstation",

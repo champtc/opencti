@@ -59,7 +59,7 @@ type AssessmentPlan implements BasicObject & LifecycleObject & OscalModel {
   "Identifies references to previous versions of this document."
   document_ids: [ID]
   "Provides information about the containing document, and defines concepts that are shared across the document."
-  shared_metadata: OscalMetadata!
+  metadata: OscalMetadata
   # AssessmentPlan
   system_security_plan: SystemSecurityPlan!
   "Identifies data objects that are used in the assessment plan, that do not appear in the referenced SSP."
@@ -67,7 +67,7 @@ type AssessmentPlan implements BasicObject & LifecycleObject & OscalModel {
   "Identifies the  various terms and conditions under which an assessment, described by the plan, can be performed. Each child part defines a different type of term or condition."
   terms_and_conditions: [OscalPart]
   "Identifies the controls being assessed and their control objectives."
-  reviewed_controls: [ControlSelection!]
+  reviewed_controls: [ControlSet!]
   "Identifies system elements being assessed, such as components, inventory items, and locations. In the assessment plan, this identifies a planned assessment subject."
   assessment_subjects: [AssessmentSubject]
   "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
@@ -94,7 +94,7 @@ input AssessmentPlanInput {
   document_ids: [ID]
   # AssessmentPlan
   "Identifies the controls being assessed and their control objectives."
-  reviewed_controls: [ControlSelectionInput!]
+  reviewed_controls: [ControlSetInput!]
   "Identifies system elements being assessed, such as components, inventory items, and locations. In the assessment plan, this identifies a planned assessment subject."
   assessment_subjects: [AssessmentSubjectAddInput]
 }

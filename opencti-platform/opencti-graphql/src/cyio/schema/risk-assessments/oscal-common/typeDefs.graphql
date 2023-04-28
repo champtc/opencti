@@ -145,7 +145,7 @@ interface OscalModel {
   "Identifies references to previous versions of this document."
   document_ids: [ID]
   "Identifies metadata shared across all OSCAL model instances with the same ID value"
-  shared_metadata: OscalMetadata!
+  metadata: OscalMetadata
   # Back-matter
   resources(first: Int, offset: Int): OscalResourceConnection
 }
@@ -1178,9 +1178,11 @@ enum RoleType {
 ##### OSCAL Revision
 ##
 "Defines identifying information about a Revision"
-type Revision {
+type Revision implements ComplexDatatype {
   "Uniquely identifies this object."
   id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
   "Identifies the name given to the document."
   name: String!
   "Identifies the date and time the document was published."

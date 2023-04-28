@@ -38,8 +38,17 @@ const findingReducer = (item) => {
     ...(item.modified && { modified: item.modified }),
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
-    ...(item.origin && { origin: item.origin }),
-    ...(item.target && { target: item.target }),
+    ...(item.origin && { origin_iris: item.origin }),
+    ...(item.target && { target_iri: item.target }),
+    ...(item.implementation_statement && { implementation_statement_iri: item.implementation_statement }),
+    ...(item.related_observations && { related_observation_iris: item.related_observations }),
+    ...(item.related_risks && { related_risk_iris: item.related_risks }),
+    // hints for common lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
+    ...(item.relationships && { relationships: item.relationships }),
+    ...(item.labels && { label_iris: item.labels }),
+    ...(item.links && { link_iris: item.links }),
+    ...(item.remarks && { remark_iris: item.remarks }),
   }
 };
 
@@ -68,12 +77,26 @@ const findingTargetReducer = (item) => {
 };
 
 // Utility
+export const generateFindingId = (input) => {
+  const id_material = {
+    ...(input.name && {"name": input.name}),
+  } ;
+  const id = generateId( id_material, OSCAL_NS );
+  return id;
+}
 export const getFindingIri = (id) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   return `<http://cyio.darklight.ai/finding--${id}>`;
 }
 
+export const generateFindingTargetId = (input) => {
+  const id_material = {
+    ...(input.name && {"name": input.name}),
+  } ;
+  const id = generateId( id_material, OSCAL_NS );
+  return id;
+}
 export const getFindingTargetIri = (id) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
@@ -82,7 +105,7 @@ export const getFindingTargetIri = (id) => {
 
 // Query Builders - Finding
 export const selectFindingQuery = (id, select) => {
-  return selectFindingByIriQuery(`http://cyio.darklight.ai/finding--${id}`, select);
+  return selectFindingByIriQuery(getFindingIri(id), select);
 }
 
 export const selectFindingByIriQuery = (iri, select) => {
@@ -99,7 +122,7 @@ export const selectFindingByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Finding> .
     ${predicates}
   }`
 }
@@ -129,18 +152,18 @@ export const selectAllFindingsQuery = (select, args, parent) => {
   SELECT DISTINCT ?iri ${selectionClause} 
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Finding> . 
     ${predicates}
   }
   `
 }
 
 export const insertFindingQuery = (propValues) => {
-  const id = generateId( propValues, DARKLIGHT_NS );
+  const id = generateFindingId(propValues);
+  const iri = getFindingIri(id);
   const timestamp = new Date().toISOString();
 
   // determine the appropriate ontology class type
-  const iri = `<http://cyio.darklight.ai/finding--${id}>`;
   const insertPredicates = [];
   Object.entries(propValues).forEach((propPair) => {
     if (findingPredicateMap.hasOwnProperty(propPair[0])) {
@@ -157,8 +180,10 @@ export const insertFindingQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results#Finding> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment/common#Finding> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Object> .
+      ${iri} a <http://darklight.ai/ns/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
       ${iri} <http://darklight.ai/ns/common#object_type> "finding" . 
       ${iri} <http://darklight.ai/ns/common#created> "${timestamp}"^^xsd:dateTime . 
@@ -171,7 +196,7 @@ export const insertFindingQuery = (propValues) => {
 }
     
 export const deleteFindingQuery = (id) => {
-  const iri = `http://cyio.darklight.ai/finding--${id}`;
+  const iri = getFindingIri(id);
   return deleteFindingByIriQuery(iri);
 }
 
@@ -184,7 +209,7 @@ export const deleteFindingByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Finding> .
       ?iri ?p ?o
     }
   }
@@ -200,7 +225,7 @@ export const deleteMultipleFindingsQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Finding> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -211,7 +236,7 @@ export const deleteMultipleFindingsQuery = (ids) =>{
 
 export const attachToFindingQuery = (id, field, itemIris) => {
   if (!findingPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/finding--${id}>`;
+  const iri = getFindingIri(id);
   const predicate = findingPredicateMap[field].predicate;
 
   let statements;
@@ -229,13 +254,13 @@ export const attachToFindingQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     findingPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results#Finding>'
   );
 }
 
 export const detachFromFindingQuery = (id, field, itemIris) => {
   if (!findingPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/finding--${id}>`;
+  const iri = getFindingIri(id);
   const predicate = findingPredicateMap[field].predicate;
 
   let statements;
@@ -253,13 +278,13 @@ export const detachFromFindingQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     findingPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/results#Finding>'
+    '<http://csrc.nist.gov/ns/oscal/assessment-results#Finding>'
   );
 }
 
 // Query Builders - Finding Target
 export const selectFindingTargetQuery = (id, select) => {
-  return selectFindingTargetByIriQuery(`http://cyio.darklight.ai/finding-target--${id}`, select);
+  return selectFindingTargetByIriQuery(getFindingTargetIri, select);
 }
 
 export const selectFindingTargetByIriQuery = (iri, select) => {
@@ -276,7 +301,7 @@ export const selectFindingTargetByIriQuery = (iri, select) => {
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment/common#FindingTarget> .
     ${predicates}
   }`
 }
@@ -307,18 +332,18 @@ export const selectAllFindingTargetsQuery = (select, args, parent) => {
   SELECT DISTINCT ?iri ${selectionClause} 
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/assessment/common#FindingTarget> . 
     ${predicates}
   }
   `
 }
 
 export const insertFindingTargetQuery = (propValues) => {
-  const id = generateId( );
+  const id = generateFindingTargetId(propValues);
+  const iri = getFindingTargetIri(id);
   const timestamp = new Date().toISOString();
 
   // determine the appropriate ontology class type
-  const iri = `<http://cyio.darklight.ai/finding-target--${id}>`;
   const insertPredicates = [];
   Object.entries(propValues).forEach((propPair) => {
     if (findingTargetPredicateMap.hasOwnProperty(propPair[0])) {
@@ -335,7 +360,7 @@ export const insertFindingTargetQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/assessment/common#FindingTarget> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
       ${iri} <http://darklight.ai/ns/common#object_type> "finding-target" . 
       ${insertPredicates.join(" . \n")}
@@ -346,7 +371,7 @@ export const insertFindingTargetQuery = (propValues) => {
 }
     
 export const deleteFindingTargetQuery = (id) => {
-  const iri = `http://cyio.darklight.ai/finding-target--${id}`;
+  const iri = getFindingTargetIri(id);
   return deleteFindingTargetByIriQuery(iri);
 }
 
@@ -359,7 +384,7 @@ export const deleteFindingTargetByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment/common#FindingTarget> .
       ?iri ?p ?o
     }
   }
@@ -375,7 +400,7 @@ export const deleteMultipleFindingTargetsQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/assessment/common#FindingTarget> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -386,7 +411,7 @@ export const deleteMultipleFindingTargetsQuery = (ids) =>{
 
 export const attachToFindingTargetQuery = (id, field, itemIris) => {
   if (!findingTargetPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/finding-target--${id}>`;
+  const iri = getFindingTargetIri(id);
   const predicate = findingTargetPredicateMap[field].predicate;
 
   let statements;
@@ -404,13 +429,13 @@ export const attachToFindingTargetQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     findingTargetPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget>'
+    '<http://csrc.nist.gov/ns/oscal/assessment/common#FindingTarget>'
   );
 }
 
 export const detachFromFindingTargetQuery = (id, field, itemIris) => {
   if (!findingTargetPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/finding-target--${id}>`;
+  const iri = getFindingTargetIri(id);
   const predicate = findingTargetPredicateMap[field].predicate;
 
   let statements;
@@ -428,7 +453,7 @@ export const detachFromFindingTargetQuery = (id, field, itemIris) => {
     iri, 
     statements, 
     findingTargetPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget>'
+    '<http://csrc.nist.gov/ns/oscal/assessment/common#FindingTarget>'
   );
 }
 
@@ -460,23 +485,48 @@ export const findingPredicateMap = {
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   name: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#name>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#name>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "name");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   description: {
-      predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#description>",
-      binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "description");},
-      optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#description>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"@en-US`: null, this.predicate, "description");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  origin: {
-      predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#origin>",
-      binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "origin");},
-      optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  origins: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment/common#origins>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "origins");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   target: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results/results#target>",
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment/common#target>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "target");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  implementation_statement: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment/common#implementation_statement>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "implementation_statement");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  related_observations: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment/common#related_observations>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "related_observations");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  related_risks: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment/common#related_risks>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "related_risks");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  links: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#links>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "links");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  remarks: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#remarks>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "remarks");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 };
@@ -556,8 +606,8 @@ export const singularizeFindingSchema = {
     "modified": true,
     "name": true,
     "description": true,
-    "origin": true,
     "target": true,
+    "implementation_statement": true,
   }
 };
 

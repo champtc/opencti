@@ -29,12 +29,6 @@ extend type Mutation {
   editAttestation(id: ID!, input: [EditInput]!, commitMessage: String): Attestation @hasPermission(resources: "AssessmentResults:update")
   attachToAttestation(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
   detachFromAttestation(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
-  # ControlSet
-  createControlSet(input: ControlSetInput!): ControlSet @hasPermission(resources: "AssessmentResults:update")
-  deleteControlSet(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
-  editControlSet(id: ID!, input: [EditInput]!, commitMessage: String): ControlSet @hasPermission(resources: "AssessmentResults:update")
-  attachToControlSet(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
-  detachFromControlSet(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
   # ControlSelection
   createControlSelection(input: ControlSelectionInput!): ControlSelection @hasPermission(resources: "AssessmentResults:update")
   deleteControlSelection(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
@@ -97,6 +91,8 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
+  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [DataMarking]
   # Result
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
@@ -157,6 +153,8 @@ input ResultInput {
   authenticated_scan: Boolean = false
   "Identifies the count of targets within the specific assessment."
   target_count: Int
+  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [ID]
 }
 
 # Pagination Types
@@ -219,11 +217,11 @@ type ResultLocalDefinitions implements ComplexDatatype {
   "Identifies a managed inventory item within the system."
   inventory_items(first: Int, offset: Int): InventoryItemConnection
   "Identifies a type of user that interacts with the system based on an associated role."
-  users(first: Int, offset: Int): UserConnection
+  users(first: Int, offset: Int): OscalUserConnection
   "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
   assessment_assets: AssessmentAsset
   "Identifies a scheduled event or milestone, which may be associated with a series of assessment actions."
-  tasks(first: Int, offset: Int): TaskConnection
+  tasks(first: Int, offset: Int): OscalTaskConnection
 }
 
 """
@@ -247,57 +245,6 @@ input AttestationInput {
   parts: [ID!]!
 }
 
-"""
-ControlSet defines identifying information about Controls being assessed 
-and their control objectives.
-
-In the context of an assessment plan, this construct is used to identify the 
-controls and control objectives that are to be assessed. In the context of 
-an assessment result, this construct is used to identify the actual controls 
-and objectives that were assessed, reflecting any changes from the plan.
-
-When resolving the selection of controls and control objectives, the 
-following processing will occur:
-
-1. Controls will be resolved by creating a set of controls based on the control-selections by first handling the includes, and then removing any excluded controls.
-
-2. The set of control objectives will be resolved from the set of controls that was generated in the previous step. The set of control objectives is based on the control-objective-selection by first handling the includes, and then removing any excluded control objectives.
-
-The Assessment Results control-selection ignores any control selection in the 
-Assessment Plan and re-selects controls from the baseline identified by the SSP.
-
-The Assessment Results control-objective-selection ignores any control objective 
-selection in the Assessment Plan and re-selects control objectives from the 
-baseline identified by the SSP.
-
-Any additional control objectives defined in the Assessment Plan local-definitions 
-do not need to be re-defined in the Assessment Results local-definitions; however, 
-if they were explicitly referenced with an Assessment Plan control-objective-selection, 
-they need to be selected again in the Assessment Results control-objective-selection.
-"""
-type ControlSet implements ComplexDatatype {
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the type of the Object."
-  entity_type: String!
-  # ControlSet
-  "Identifies a human-readable description of control objectives."
-  description: String
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies the controls being assessed. In the assessment plan, these are the planned controls. In the assessment results, these are the actual controls, and reflects any changes from the plan."
-  control_selections: [ControlSelection]
-  "Identifies the control objectives of the assessment. In the assessment plan, these are the planned objectives. In the assessment results, these are the assessed objectives, and reflects any changes from the plan."
-  control_objective_selections: [ControlObjectiveSelection]
-}
-input ControlSetInput {
-  "Identifies a human-readable description of control objectives."
-  description: String
-  "Identifies the controls being assessed. In the assessment plan, these are the planned controls. In the assessment results, these are the actual controls, and reflects any changes from the plan."
-  control_selections: [ControlSelectionInput]
-  "Identifies the control objectives of the assessment. In the assessment plan, these are the planned objectives. In the assessment results, these are the assessed objectives, and reflects any changes from the plan."
-  control_objective_selections: [ControlObjectiveSelectionInput]
-}
 
 """
 ControlSelection identifies the controls being assessed. In the assessment plan, 

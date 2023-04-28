@@ -5,6 +5,8 @@ import {
 	// Finding
   findingPredicateMap,
   singularizeFindingSchema,
+  generateFindingId,
+  getFindingIri,
   selectFindingQuery,
   selectFindingByIriQuery,
   selectAllFindingsQuery,
@@ -15,6 +17,8 @@ import {
 	// Finding Target
   findingTargetPredicateMap,
   singularizeFindingTargetSchema,
+  generateFindingTargetId,
+  getFindingTargetIri,
   selectFindingTargetQuery,
   selectFindingTargetByIriQuery,
   selectAllFindingTargetsQuery,
@@ -30,7 +34,7 @@ export const findFindingById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/finding--${id}>`;
+  let iri = getFindingIri(id);
   return findFindingByIri(iri, dbName, dataSources, select);
 }
 
@@ -237,15 +241,6 @@ export const deleteFindingById = async ( id, dbName, dataSources) => {
     }
     
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
-    let AsseFinding = response[0];
-
-    // Removing Finding Asset from Asset Inventory
-    const invQuery = removeFromInventoryQuery(AsseFinding.iri);
-    await dataSources.Stardog.create({
-      dbName,
-      sparqlQuery: invQuery,
-      queryId: 'Removing Finding Asset from Inventory',
-    });
 
     sparqlQuery = deleteFindingQuery(itemId);
     try {
@@ -412,7 +407,7 @@ export const editFindingById = async (id, input, dbName, dataSources, select, sc
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/finding--${id}`,
+    getFindingIri(id),
     "http://csrc.nist.gov/ns/oscal/assessment-results/result#Finding",
     input,
     findingPredicateMap
@@ -449,7 +444,7 @@ export const attachToFinding = async (id, field, entityId, dbName, dataSources) 
 
   // check to see if the result exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/finding--${id}>`;
+  let iri = getFindingIri(id);
   sparqlQuery = selectFindingByIriQuery(iri, select);
   let response;
   try {
@@ -466,10 +461,15 @@ export const attachToFinding = async (id, field, entityId, dbName, dataSources) 
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'revisions': 'revisions',
-    'document_ids': 'document_ids',
-    'assessment_plan': 'assessment_plan',
     'local_definitions': 'local_definitions',
+    'origins': 'origin',
+    'target': 'finding-target',
+    'related_observations': 'observation',
+    'related_risks': 'risk',
+    'object_markings': 'marking-definition',
+    'labels': 'label',
+    'links': 'link',
+    'remarks': 'remark',
   }
   let objectType = attachableObjects[field];
   try {
@@ -518,7 +518,7 @@ export const detachFromFinding = async (id, field, entityId, dbName, dataSources
 
   // check to see if the result exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/finding--${id}>`;
+  let iri = getFindingIri(id);
   sparqlQuery = selectFindingByIriQuery(iri, select);
   let response;
   try {
@@ -535,10 +535,15 @@ export const detachFromFinding = async (id, field, entityId, dbName, dataSources
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'revisions': 'revisions',
-    'document_ids': 'document_ids',
-    'assessment_plan': 'assessment_plan',
     'local_definitions': 'local_definitions',
+    'origins': 'origin',
+    'target': 'finding-target',
+    'related_observations': 'observation',
+    'related_risks': 'risk',
+    'object_markings': 'marking-definition',
+    'labels': 'label',
+    'links': 'link',
+    'remarks': 'remark',
   }
   let objectType = attachableObjects[field];
   try {
@@ -585,7 +590,7 @@ export const findFindingTargetById = async (id, dbName, dataSources, select) => 
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/finding-target--${id}>`;
+  let iri = getFindingTargetIri(id);
   return findFindingTargetByIri(iri, dbName, dataSources, select);
 }
 
@@ -966,7 +971,7 @@ export const editFindingTargetById = async (id, input, dbName, dataSources, sele
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/finding-target--${id}`,
+    getFindingTargetIri(id),
     "http://csrc.nist.gov/ns/oscal/assessment-results/results#FindingTarget",
     input,
     findingTargetPredicateMap
@@ -1003,7 +1008,7 @@ export const attachToFindingTarget = async (id, field, entityId, dbName, dataSou
 
   // check to see if the finding target exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/finding-target--${id}>`;
+  let iri = getFindingTargetIri(id);
   sparqlQuery = selectFindingTargetByIriQuery(iri, select);
   let response;
   try {
@@ -1020,10 +1025,9 @@ export const attachToFindingTarget = async (id, field, entityId, dbName, dataSou
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'revisions': 'revisions',
-    'document_ids': 'document_ids',
-    'assessment_plan': 'assessment_plan',
-    'local_definitions': 'local_definitions',
+    'object_markings': 'marking-definition',
+    'links': 'link',
+    'remarks': 'remark',
   }
   let objectType = attachableObjects[field];
   try {
@@ -1072,7 +1076,7 @@ export const detachFromFindingTarget = async (id, field, entityId, dbName, dataS
 
   // check to see if the finding target exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/finding-target--${id}>`;
+  let iri = getFindingTargetIri(id);
   sparqlQuery = selectFindingTargetByIriQuery(iri, select);
   let response;
   try {
@@ -1089,10 +1093,9 @@ export const detachFromFindingTarget = async (id, field, entityId, dbName, dataS
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'revisions': 'revisions',
-    'document_ids': 'document_ids',
-    'assessment_plan': 'assessment_plan',
-    'local_definitions': 'local_definitions',
+    'object_markings': 'marking-definition',
+    'links': 'link',
+    'remarks': 'remark',
   }
   let objectType = attachableObjects[field];
   try {

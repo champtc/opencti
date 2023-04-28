@@ -10,19 +10,32 @@ extend type Query {
     filterMode: FilterMode
     search: String
   ): ControlCatalogConnection  @hasPermission(resources:"ControlCatalog:view")
-  control(id: ID!): Control  @hasPermission(resources:"Control:view")
-  controlParameter(id: ID!): ControlParameter @hasPermission(resources:"Control:view")
   controlGroup(id: ID!): ControlGroup  @hasPermission(resources:"Control:view")
+  controlGroups(
+    first: Int
+    offset: Int
+    orderedBy: ControlGroupOrdering
+    orderMode: OrderingMode
+    filters: [ControlGroupFiltering]
+    filterMode: FilterMode
+    search: String
+  ): ControlGroupConnection  @hasPermission(resources:"ControlCatalog:view")
 }
 
 # =========== declares the mutation entry-points for this type ====================
 extend type Mutation {
-  # GeneralPart
-  createGeneralPart(input: GeneralPartInput!): GeneralPart @hasPermission(resources: "AssessmentResults:update")
-  deleteGeneralPart(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
-  editGeneralPart(id: ID!, input: [EditInput]!, commitMessage: String): GeneralPart @hasPermission(resources: "AssessmentResults:update")
-  attachToGeneralPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
-  detachFromGeneralPart(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # Catalog
+  createControlCatalog(input: ControlCatalogInput!): ControlCatalog @hasPermission(resources: "Control:update")
+  deleteControlCatalog(id: ID!): ID @hasPermission(resources: "Control:delete")
+  editControlCatalog(id: ID!, input: [EditInput]!, commitMessage: String): ControlCatalog @hasPermission(resources: "Control:update")
+  attachToControlCatalog(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Control:update")
+  detachFromControlCatalog(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Control:update")
+  # Group
+  createControlGroup(input: ControlGroupInput!): ControlGroup @hasPermission(resources: "Control:update")
+  deleteControlGroup(id: ID!): ID @hasPermission(resources: "Control:delete")
+  editControlGroup(id: ID!, input: [EditInput]!, commitMessage: String): ControlGroup @hasPermission(resources: "Control:update")
+  attachToControlGroup(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Control:update")
+  detachFromControlGroup(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Control:update")
 }
 
 # ================== Types ==============
@@ -60,7 +73,7 @@ type ControlCatalog implements BasicObject & LifecycleObject & OscalModel {
   "Identifies references to previous versions of this document."
   document_ids: [ID]
   "Provides information about the containing document, and defines concepts that are shared across the document."
-  shared_metadata: OscalMetadata!
+  metadata: OscalMetadata
   # Catalog
   "Identifies the set of parameters used to support the dynamic assignment of value(s) in a control."
   params: ControlParameterConnection
@@ -71,6 +84,23 @@ type ControlCatalog implements BasicObject & LifecycleObject & OscalModel {
   # Back-matter
   "Identifies one or more Resources that are associated with this POAM."
   resources(first: Int, offset: Int): OscalResourceConnection
+}
+input ControlCatalogInput {
+  # Metadata
+  "Identifies the name given to the document."
+  name: String!
+  "Identifies the date and time the document was published."
+  published: Timestamp
+  "Identifies the date and time the document as last modified."
+  last_modified: Timestamp
+  "Identifies the current version of the document."
+  version: String!
+  "Identifies the OSCAL model version the document was authored against."
+  oscal_version: String!
+  "Identifies a list of revisions to the containing document."
+  revisions: [RevisionAddInput]
+  "Identifies references to previous versions of this document."
+  document_ids: [ID]
 }
 
 # Pagination Types
@@ -119,280 +149,6 @@ enum ControlCatalogOrdering {
   published
 }
 
-
-"""
-Control interface model provides a structured representation of control information.
-
-Controls may be grouped using group, and controls may be partitioned using part or further enhanced (extended) using control.
-
-A control must have a part with the name "statement", which represents the textual narrative of the control. This "statement" part must occur only once, but may have nested parts to allow for multiple paragraphs or sections of text.
-"""
-interface Control {
-  "Uniquely identifies this object."
-  id: ID!
-  "Specifies a textual label that provides a sub-type or characterization of the control."
-  class: String
-  "Identifies a name given to the control, which may be used by a tool for display and navigation."
-  name: String!
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies values in a control that are dynamically assigned."
-  params: [ControlParameter]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies sub-controls"
-  controls: [Control]
-  # Control extension fields
-  "Identifies an alternate or aliased identifier for the parent context."
-  alt_identifier: String
-  "Identifies the status of a control. For example, a value of 'withdrawn' can indicate that the control has been withdrawn and should no longer be used."
-  status: ControlStatus
-}
-
-# Pagination Types
-type ControlConnection {
-  pageInfo: PageInfo!
-  edges: [ControlEdge]
-}
-type ControlEdge {
-  cursor: String!
-  node: Control!
-}
-# Filtering Types
-input ControlFiltering {
-  key: ControlFilter!
-  values: [String]!
-  operator: String
-  filterMode: FilterMode
-}
-enum ControlFilter {
-  "Created"
-  created
-  "Modified"
-  modified
-  "Label"
-  label_name
-  "id"
-  id
-  "Name"
-  name
-  "Class"
-  class
-}
-# Ordering Enum
-enum ControlOrdering {
-  "Created"
-  created
-  "Modified"
-  modified
-  "Label"
-  label_name
-  "id"
-  id
-  "Name"
-  name
-  "Class"
-  class
-}
-
-
-"""
-SecurityControl 
-"""
-type SecurityControl implements BasicObject & LifecycleObject & Control {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # LifecycleObject
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # Control
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Specifies a textual label that provides a sub-type or characterization of the control."
-  class: String
-  "Identifies a name given to the control, which may be used by a tool for display and navigation."
-  name: String!
-  "Identifies values in a control that are dynamically assigned."
-  params: [ControlParameter]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies sub-controls"
-  controls: [Control]
-  # Control extension fields
-  "Identifies an alternate or aliased identifier for the parent context."
-  alt_identifier: String
-  "Identifies the status of a control. For example, a value of 'withdrawn' can indicate that the control has been withdrawn and should no longer be used."
-  status: ControlStatus
-}
-
-"""
-PrivacyControl 
-"""
-type PrivacyControl implements BasicObject & LifecycleObject & Control {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # LifecycleObject
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # Control
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Specifies a textual label that provides a sub-type or characterization of the control."
-  class: String
-  "Identifies a name given to the control, which may be used by a tool for display and navigation."
-  name: String!
-  "Identifies values in a control that are dynamically assigned."
-  params: [ControlParameter]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies sub-controls"
-  controls: [Control]
-  # Control extension fields
-  "Identifies an alternate or aliased identifier for the parent context."
-  alt_identifier: String
-  "Identifies the status of a control. For example, a value of 'withdrawn' can indicate that the control has been withdrawn and should no longer be used."
-  status: ControlStatus  
-}
-
-"""
-ControlParameter provide a mechanism for the dynamic assignment of value(s) in a control.
-
-In a catalog, a parameter is typically used as a placeholder for the future 
-assignment of a parameter value, although the OSCAL model allows for the direct 
-assignment of a value if desired by the control author. The value may be optionally 
-used to specify one or more values. If no value is provided, then it is expected 
-that the value will be provided at the Profile or Implementation layer.
-
-A parameter can include a variety of metadata options that support the future 
-solicitation of one or more values. A label provides a textual placeholder that 
-can be used in a tool to solicit parameter value input, or to display in catalog 
-documentation. The desc provides a short description of what the parameter is used 
-for, which can be used in tooling to help a user understand how to use the parameter. 
-A constraint can be used to provide criteria for the allowed values. A guideline 
-provides a recommendation for the use of a parameter.
-"""
-type ControlParameter implements BasicObject & LifecycleObject & OscalObject {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # LifecycleObject
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # OscalObject
-  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
-  labels: [CyioLabel]
-  "Identifies a list of references to a local or remote resource."
-  links: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-  "Identifies one or more relationships to other entities."
-  relationships(
-    first: Int
-    offset: Int
-    orderedBy: OscalRelationshipsOrdering
-    orderMode: OrderingMode
-    filters: [OscalRelationshipsFiltering]
-    filterMode: FilterMode
-    search: String
-  ): OscalRelationshipConnection
-  # Parameter
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies a textual label that provides a characterization of the parameter."
-  class: String
-  "Describes the purpose and use of a parameter."
-  usage: String
-  "Identifies a formal or informal expression of a constraint or test"
-  constraints: [OscalConstraint]
-  # "Specifies a set of prose statements that provides a recommendation for the use of a parameter."
-  # guidelines: [Guideline]
-  # choice
-  "Specifies a set of values provided in a catalog can be redefined at any higher layer of OSCAL (e.g., Profile)."
-  values: [String]
-  "Specifies a choice a choice among alternative"
-  select: Selector
-  # ControlParameter extension fields
-  "Identifies an alternate or aliased identifier for the parent context."
-  alt_identifier: String
-  "Identifies this parameter provides an aggregation of 2 or more other parameters, each described by this property."
-  aggregates: [ControlParameter]
-}
-
-# Pagination Types
-type ControlParameterConnection {
-  pageInfo: PageInfo!
-  edges: [ControlParameterEdge]
-}
-type ControlParameterEdge {
-  cursor: String!
-  node: ControlParameter!
-}
-# Filtering Types
-input ControlParameterFiltering {
-  key: ControlParameterFilter!
-  values: [String]!
-  operator: String
-  filterMode: FilterMode
-}
-enum ControlParameterFilter {
-  "Created"
-  created
-  "Modified"
-  modified
-  "Label"
-  label_name
-  "id"
-  id
-  "Class"
-  class
-}
-# Ordering Enum
-enum ControlParameterOrdering {
-  "Created"
-  created
-  "Modified"
-  modified
-  "Label"
-  label_name
-  "id"
-  id
-  "Class"
-  class
-}
-
-
 """
 ControlGroup
 """
@@ -426,6 +182,19 @@ type ControlGroup implements BasicObject & LifecycleObject {
   parts: [OscalPart]
   "Identifies sub-controls"
   controls: [Control]
+  # Control extension fields
+  "Identifies an alternate or aliased identifier for the parent context."
+  alt_identifier: String
+  "Identifies the status of a control. For example, a value of 'withdrawn' can indicate that the control has been withdrawn and should no longer be used."
+  status: ControlStatus
+}
+input ControlGroupInput {
+  "Specifies a textual label that provides a sub-type or characterization of the control."
+  class: String
+  "Identifies a name given to the control, which may be used by a tool for display and navigation."
+  name: String!
+  "Identifies values in a control that are dynamically assigned."
+  params: [ControlParameterInput]
   # Control extension fields
   "Identifies an alternate or aliased identifier for the parent context."
   alt_identifier: String
@@ -477,373 +246,4 @@ enum ControlGroupOrdering {
   class
   "Name"
   name
-}
-
-
-"""
-OscalConstraint represents a formal or informal expression of a constraint or test
-"""
-type OscalConstraint {
-  "Identifies a human-readable description of this set of test results."
-  description: String
-  "Identities a set of test expressions which are expected to be evaluated by a tool."
-  tests: [ConstraintTest]
-}
-
-type ConstraintTest {
-  "Specifies a formal (executable) expression of a constraint."
-  expression: String!
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-}
-
-"""
-OscalPart represents a partition of a control's definition or a child of another part.
-
-A part provides for logical partitioning of prose, and can be thought of as a grouping 
-structure (e.g., section). A part can have child parts allowing for arbitrary nesting 
-of prose content (e.g., statement hierarchy). A part can contain prop objects that allow 
-for enriching prose text with structured name/value information.
-
-A part can be assigned an optional id, which allows for internal and external references 
-to the textual concept contained within a part. A id provides a means for an OSCAL profile, 
-or a higher layer OSCAL model to reference a specific part within a catalog. For example, 
-an id can be used to reference or to make modifications to a control statement in a profile.
-
-Use of part and prop provides for a wide degree of extensibility within the OSCAL catalog 
-model. The optional ns provides a means to qualify a part's name, allowing for 
-organization-specific vocabularies to be defined with clear semantics. Any organization 
-that extends OSCAL in this way should consistently assign a ns value that represents the 
-organization, making a given namespace qualified name unique to that organization. This 
-allows the combination of ns and name to always be unique and unambiguous, even when 
-mixed with extensions from other organizations. Each organization is responsible for 
-governance of their own extensions, and is strongly encouraged to publish their extensions 
-as standards to their user community. If no ns is provided, the name is expected to be 
-in the "OSCAL" namespace.
-"""
-interface OscalPart {
-  "Specifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Specifies a name given to the part, which may be used by a tool for display and navigation."
-  title: String
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Specifies a description of the part."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-}
-
-type GeneralPart implements BasicObject & LifecycleObject & OscalPart {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # LifecycleObject
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # OscalPart
-  "Identifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Identifies A name given to the part, which may be used by a tool for display and navigation."
-  title: String!
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies multiple paragraphs, lists, tables etc."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-  # GeneralPart
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
-}
-input GeneralPartInput {
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
-  "Identifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Identifies A name given to the part, which may be used by a tool for display and navigation."
-  title: String!
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [PropertyAddInput]
-  "Identifies multiple paragraphs, lists, tables etc."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [GeneralPartInput]
-}
-
-"""
-ControlOverview provides an introduction to a control or a group of controls.
-"""
-type ControlOverview implements BasicObject & LifecycleObject {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # Lifecycle
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # Part
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
-  "Specifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Specifies a name given to the part, which may be used by a tool for display and navigation."
-  title: String
-  "Specifies a description of the part."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-}
-
-"""
-ControlStatement provides a set of control implementation requirements.
-"""
-type ControlStatement implements BasicObject & LifecycleObject {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # Lifecycle
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # Part
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
-  "Specifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Specifies a name given to the part, which may be used by a tool for display and navigation."
-  title: String
-  "Specifies a description of the part."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-}
-
-"""
-ControlAssessmentObjective describes a set of assessment objectives.
-"""
-type ControlAssessmentObjective implements BasicObject & LifecycleObject {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # Lifecycle
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # Part
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
-  "Specifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Specifies a name given to the part, which may be used by a tool for display and navigation."
-  title: String
-  "Specifies a description of the part."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-}
-
-"""
-ControlAssessmentObjects describes a listing of assessment objects.
-"""
-type ControlAssessmentObjective implements BasicObject & LifecycleObject {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # Lifecycle
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # Part
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
-  "Specifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Specifies a name given to the part, which may be used by a tool for display and navigation."
-  title: String
-  "Specifies a description of the part."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-}
-
-
-"""
-ControlGuidance provides additional information to consider when selecting, implementing, assessing, and monitoring a control.
-"""
-type ControlGuidance implements BasicObject & LifecycleObject {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # Lifecycle
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # Part
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
-  "Specifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Specifies a name given to the part, which may be used by a tool for display and navigation."
-  title: String
-  "Specifies a description of the part."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-}
-
-"""
-ControlAssessmentMethod describes a method-based assessment over a set of assessment objects.
-"""
-type ControlAssessmentMethod implements BasicObject & LifecycleObject {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # Lifecycle
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # Part
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies a textual label that uniquely identifies the part's semantic type."
-  name: String!
-  "Specifies a namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."
-  ns: URL
-  "Identifies a textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns."
-  class: String
-  "Specifies a name given to the part, which may be used by a tool for display and navigation."
-  title: String
-  "Specifies a description of the part."
-  prose: String
-  "Identifies a partition of a control's definition or a child of another part."
-  parts: [OscalPart]
-  "Identifies a list of references to a local or remote resource."
-  links: [Link]
-}
-
-
-"""
-ControlSelection specifies a set of parameter value choices, that may be picked
-from to set the parameter value.
-"""
-type ControlSelection {
-  "Specifies the number of selections that must occur. Without this setting, only one value should be assumed to be permitted."
-  how_many: ParameterCardinality!
-  "Specifies the selection value(s) among several such options."
-  choice: [String]
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-}
-
-# ================== Unions ==============
-union OscalControl = SecurityControl | PrivacyControl
-
-# ================== Enumerations ==============
-"""
-ControlStatus provides an enumeration of the various status for a control
-"""
-enum ControlStatus {
-  "The control is no longer used"
-  withdrawn
-}
-
-"""
-ParameterCardinality provides an enumeration of the cardinality choices
-"""
-enum ParameterCardinality {
-  "Only one value is permitted"
-  one
-  "One or more values are permitted."
-  one_or_more
 }

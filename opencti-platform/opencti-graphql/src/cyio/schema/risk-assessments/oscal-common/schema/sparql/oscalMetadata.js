@@ -14,19 +14,19 @@ import {
 // Reducer Selection
 export function getReducer(type) {
   switch (type) {
-    case 'SHARED-METADATA':
-      return sharedMetadataReducer;
+    case 'OSCAL-METADATA':
+      return oscalMetadataReducer;
     default:
       throw new UserInputError(`Unsupported reducer type ' ${type}'`)
   }
 }
 
 // Reducers
-const sharedMetadataReducer = (item) => {
+const oscalMetadataReducer = (item) => {
   // if no object type was returned, compute the type from the IRI
   if (item.object_type === undefined) {
       if (item.entity_type !== undefined) item.object_type = item.entity_type;
-      if (item.iri.includes('shared-metadata')) item.object_type = 'shared-metadata';
+      if (item.iri.includes('oscal-metadata')) item.object_type = 'oscal-metadata';
   }
 
   return {
@@ -47,8 +47,8 @@ const sharedMetadataReducer = (item) => {
     }
 };
 
-// Utilities - Shared Metadata
-export const generateSharedMetadataId = (input) => {
+// Utilities - Oscal Metadata
+export const generateOscalMetadataId = (input) => {
   const id_material = {
     ...(input.title && {"title": input.title}),
   };
@@ -56,39 +56,39 @@ export const generateSharedMetadataId = (input) => {
   return id;
 }
 
-export const getSharedMetadataIri = (id) => {
+export const getOscalMetadataIri = (id) => {
   if(!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
-  return `http://cyio.darklight.ai/shared-metadata--${id}`;
+  return `http://cyio.darklight.ai/oscal-metadata--${id}`;
 }
 
-// Query Builders - Shared Metadata
-export const selectSharedMetadataQuery = (id, select) => {
+// Query Builders - Oscal Metadata
+export const selectOscalMetadataQuery = (id, select) => {
   if(!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
-  return selectSharedMetadataByIriQuery(getSharedMetadataIri(id), select);
+  return selectOscalMetadataByIriQuery(getOscalMetadataIri(id), select);
 }
 
-export const selectSharedMetadataByIriQuery = (iri, select) => {
+export const selectOscalMetadataByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(sharedMetadataPredicateMap);
+  if (select === undefined || select === null) select = Object.keys(oscalMetadataPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
-  const { selectionClause, predicates } = buildSelectVariables(sharedMetadataPredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(oscalMetadataPredicateMap, select);
 
   return `
   SELECT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> .
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalMetadata> .
     ${predicates}
   }`
 }
 
-export const selectAllSharedMetadataQuery = (select, args, parent) => {
-  if (select === undefined || select === null) select = Object.keys(sharedMetadataPredicateMap);
+export const selectAllOscalMetadataQuery = (select, args, parent) => {
+  if (select === undefined || select === null) select = Object.keys(oscalMetadataPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
@@ -106,21 +106,21 @@ export const selectAllSharedMetadataQuery = (select, args, parent) => {
   }
 
   // build lists of selection variables and predicates
-  const { selectionClause, predicates } = buildSelectVariables(sharedMetadataPredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(oscalMetadataPredicateMap, select);
 
   return `
   SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> . 
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalMetadata> . 
     ${predicates}
   }
   `
 }
 
-export const insertSharedMetadataQuery = (propValues) => {
-  const id = generateSharedMetadataId( propValues );
-  const iri = getSharedMetadataIri(id);
+export const insertOscalMetadataQuery = (propValues) => {
+  const id = generateOscalMetadataId( propValues );
+  const iri = getOscalMetadataIri(id);
   const timestamp = new Date().toISOString();
 
   // set last_modified if not in propValues
@@ -129,13 +129,13 @@ export const insertSharedMetadataQuery = (propValues) => {
   // determine the appropriate ontology class type
   const insertPredicates = [];
   Object.entries(propValues).forEach((propPair) => {
-    if (sharedMetadataPredicateMap.hasOwnProperty(propPair[0])) {
+    if (oscalMetadataPredicateMap.hasOwnProperty(propPair[0])) {
       if (Array.isArray(propPair[1])) {
         for (let value of propPair[1]) {
-          insertPredicates.push(sharedMetadataPredicateMap[propPair[0]].binding(iri, value));
+          insertPredicates.push(oscalMetadataPredicateMap[propPair[0]].binding(iri, value));
         }  
       } else {
-        insertPredicates.push(sharedMetadataPredicateMap[propPair[0]].binding(iri, propPair[1]));
+        insertPredicates.push(oscalMetadataPredicateMap[propPair[0]].binding(iri, propPair[1]));
       }
     }
   });
@@ -143,12 +143,12 @@ export const insertSharedMetadataQuery = (propValues) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> .
+      ${iri} a <http://csrc.nist.gov/ns/oscal/common#OscalMetadata> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Model> .
       ${iri} a <http://csrc.nist.gov/ns/oscal/common#Object> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
-      ${iri} <http://darklight.ai/ns/common#object_type> "shared-metadata" . 
+      ${iri} <http://darklight.ai/ns/common#object_type> "oscal-metadata" . 
       ${iri} <http://darklight.ai/ns/common#created> "${timestamp}"^^xsd:dateTime . 
       ${iri} <http://darklight.ai/ns/common#modified> "${timestamp}"^^xsd:dateTime . 
       ${insertPredicates.join(" . \n")}
@@ -158,12 +158,12 @@ export const insertSharedMetadataQuery = (propValues) => {
   return {iri, id, query}
 }
     
-export const deleteSharedMetadataQuery = (id) => {
-  const iri = `http://cyio.darklight.ai/shared-metadata--${id}`;
-  return deleteSharedMetadataByIriQuery(iri);
+export const deleteOscalMetadataQuery = (id) => {
+  const iri = `http://cyio.darklight.ai/oscal-metadata--${id}`;
+  return deleteOscalMetadataByIriQuery(iri);
 }
 
-export const deleteSharedMetadataByIriQuery = (iri) => {
+export const deleteOscalMetadataByIriQuery = (iri) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
   return `
   DELETE {
@@ -172,14 +172,14 @@ export const deleteSharedMetadataByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalMetadata> .
       ?iri ?p ?o
     }
   }
   `
 }
 
-export const deleteMultipleSharedMetadataQuery = (ids) =>{
+export const deleteMultipleOscalMetadataQuery = (ids) =>{
   const values = ids ? (ids.map((id) => `"${id}"`).join(' ')) : "";
   return `
   DELETE {
@@ -188,7 +188,7 @@ export const deleteMultipleSharedMetadataQuery = (ids) =>{
     }
   } WHERE {
     GRAPH ?g {
-      ?iri a <http://csrc.nist.gov/ns/oscal/common#SharedMetadata> .
+      ?iri a <http://csrc.nist.gov/ns/oscal/common#OscalMetadata> .
       ?iri <http://darklight.ai/ns/common#id> ?id .
       ?iri ?p ?o .
       VALUES ?id {${values}}
@@ -197,10 +197,10 @@ export const deleteMultipleSharedMetadataQuery = (ids) =>{
   `
 }
 
-export const attachToSharedMetadataQuery = (id, field, itemIris) => {
-  if (!sharedMetadataPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  const predicate = sharedMetadataPredicateMap[field].predicate;
+export const attachToOscalMetadataQuery = (id, field, itemIris) => {
+  if (!oscalMetadataPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/oscal-metadata--${id}>`;
+  const predicate = oscalMetadataPredicateMap[field].predicate;
 
   let statements;
   if (Array.isArray(itemIris)) {
@@ -216,15 +216,15 @@ export const attachToSharedMetadataQuery = (id, field, itemIris) => {
   return attachQuery(
     iri, 
     statements, 
-    sharedMetadataPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/common#SharedMetadata>'
+    oscalMetadataPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#OscalMetadata>'
   );
 }
 
-export const detachFromSharedMetadataQuery = (id, field, itemIris) => {
-  if (!sharedMetadataPredicateMap.hasOwnProperty(field)) return null;
-  const iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  const predicate = sharedMetadataPredicateMap[field].predicate;
+export const detachFromOscalMetadataQuery = (id, field, itemIris) => {
+  if (!oscalMetadataPredicateMap.hasOwnProperty(field)) return null;
+  const iri = `<http://cyio.darklight.ai/oscal-metadata--${id}>`;
+  const predicate = oscalMetadataPredicateMap[field].predicate;
 
   let statements;
   if (Array.isArray(itemIris)) {
@@ -240,13 +240,13 @@ export const detachFromSharedMetadataQuery = (id, field, itemIris) => {
   return detachQuery(
     iri, 
     statements, 
-    sharedMetadataPredicateMap, 
-    '<http://csrc.nist.gov/ns/oscal/common#SharedMetadata>'
+    oscalMetadataPredicateMap, 
+    '<http://csrc.nist.gov/ns/oscal/common#OscalMetadata>'
   );
 }
   
 // Predicate Maps
-export const sharedMetadataPredicateMap = {
+export const oscalMetadataPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
@@ -320,7 +320,7 @@ export const sharedMetadataPredicateMap = {
 };
 
 // Serialization schema
-export const singularizeSharedMetadataSchema = { 
+export const singularizeOscalMetadataSchema = { 
   singularizeVariables: {
     "": false, // so there is an object as the root instead of an array
     "id": true,

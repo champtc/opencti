@@ -1,11 +1,11 @@
 import {
-  findSharedMetadataById,
-  findAllSharedMetadata,
-  createSharedMetadata,
-  deleteSharedMetadataById,
-  editSharedMetadataById,
-  attachToSharedMetadata,
-  detachFromSharedMetadata,
+  findOscalMetadataById,
+  findAllOscalMetadata,
+  createOscalMetadata,
+  deleteOscalMetadataById,
+  editOscalMetadataById,
+  attachToOscalMetadata,
+  detachFromOscalMetadata,
   // // Document Ids
   // findDocumentIdByIri,
   // // Links
@@ -14,23 +14,23 @@ import {
   // findPartyByIri,
   // // Responsible Parties
   // findResponsiblePartyByIri,
-} from '../domain/sharedMetadata.js';
+} from '../domain/oscalMetadata.js';
 
-const cyioSharedMetadataResolvers = {
+const cyioOscalMetadataResolvers = {
   Query: {
-    // Shared Metadata
-    sharedMetadataList: async (_, args, {user, token, kauth, clientId, dbName, dataSources, selectMap}) => findAllSharedMetadata(args, dbName, dataSources, selectMap.getNode('node')),
-    sharedMetadata: async (_, { id }, { user, token, kauth, clientId, dbName, dataSources, selectMap }) => findSharedMetadataById(id, dbName, dataSources, selectMap.getNode('sharedMetadata')),
+    // Oscal Metadata
+    oscalMetadataList: async (_, args, {user, token, kauth, clientId, dbName, dataSources, selectMap}) => findAllOscalMetadata(args, dbName, dataSources, selectMap.getNode('node')),
+    oscalMetadata: async (_, { id }, { user, token, kauth, clientId, dbName, dataSources, selectMap }) => findOscalMetadataById(id, dbName, dataSources, selectMap.getNode('oscalMetadata')),
   },
   Mutation: {
-    // Shared Metadata
-    createSharedMetadata: async (_, { input }, { dbName, dataSources, selectMap }) => createSharedMetadata(input, dbName, dataSources, selectMap.getNode("createSharedMetadata")),
-    deleteSharedMetadata: async (_, { id }, { dbName, dataSources }) => deleteSharedMetadataById( id, dbName, dataSources),
-    editSharedMetadata: async (_, { id, input }, { dbName, dataSources, selectMap }, {schema}) => editSharedMetadataById(id, input, dbName, dataSources, selectMap.getNode("editSharedMetadata"), schema),
-    attachToSharedMetadata: async (_, { id, field, entityId }, { dbName, dataSources }) => attachToSharedMetadata(id, field, entityId ,dbName, dataSources),
-    detachFromSharedMetadata: async (_, { id, field, entityId }, { dbName, dataSources }) => detachFromSharedMetadata(id, field, entityId ,dbName, dataSources),
+    // Oscal Metadata
+    createOscalMetadata: async (_, { input }, { dbName, dataSources, selectMap }) => createOscalMetadata(input, dbName, dataSources, selectMap.getNode("createOscalMetadata")),
+    deleteOscalMetadata: async (_, { id }, { dbName, dataSources }) => deleteOscalMetadataById( id, dbName, dataSources),
+    editOscalMetadata: async (_, { id, input }, { dbName, dataSources, selectMap }, {schema}) => editOscalMetadataById(id, input, dbName, dataSources, selectMap.getNode("editOscalMetadata"), schema),
+    attachToOscalMetadata: async (_, { id, field, entityId }, { dbName, dataSources }) => attachToOscalMetadata(id, field, entityId ,dbName, dataSources),
+    detachFromOscalMetadata: async (_, { id, field, entityId }, { dbName, dataSources }) => detachFromOscalMetadata(id, field, entityId ,dbName, dataSources),
   },
-  SharedMetadata: {
+  OscalMetadata: {
     document_ids: async (parent, _, { dbName, dataSources, selectMap }) => {
       // if (parent.link_iris === undefined) return [];
       // let results = []
@@ -74,4 +74,4 @@ const cyioSharedMetadataResolvers = {
   },
 };
 
-export default cyioSharedMetadataResolvers;
+export default cyioOscalMetadataResolvers;

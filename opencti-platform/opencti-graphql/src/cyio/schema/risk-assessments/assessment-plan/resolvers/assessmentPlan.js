@@ -26,12 +26,12 @@ import {
 
 const cyioAssessmentPlanResolvers = {
   Query: {
-    // Shared Metadata
+    // Assessment Plan
     assessmentPlanList: async (_, args, {user, token, kauth, clientId, dbName, dataSources, selectMap}) => findAllAssessmentPlan(args, dbName, dataSources, selectMap.getNode('node')),
     assessmentPlan: async (_, { id }, { user, token, kauth, clientId, dbName, dataSources, selectMap }) => findAssessmentPlanById(id, dbName, dataSources, selectMap.getNode('assessmentPlan')),
   },
   Mutation: {
-    // Shared Metadata
+    // Assessment Plan
     createAssessmentPlan: async (_, { input }, { dbName, dataSources, selectMap }) => createAssessmentPlan(input, dbName, dataSources, selectMap.getNode("createAssessmentPlan")),
     deleteAssessmentPlan: async (_, { id }, { dbName, dataSources }) => deleteAssessmentPlanById( id, dbName, dataSources),
     editAssessmentPlan: async (_, { id, input }, { dbName, dataSources, selectMap }, {schema}) => editAssessmentPlanById(id, input, dbName, dataSources, selectMap.getNode("editAssessmentPlan"), schema),

@@ -11,37 +11,37 @@ import {
 } from '../../../utils.js';
 import {
   getReducer,
-  //Shared Metadata
-  sharedMetadataPredicateMap,
-  singularizeSharedMetadataSchema,
-  selectSharedMetadataQuery,
-  selectSharedMetadataByIriQuery,
-  selectAllSharedMetadataQuery,
-  insertSharedMetadataQuery,
-  deleteSharedMetadataQuery,
-  deleteSharedMetadataByIriQuery,
-  attachToSharedMetadataQuery,
-  detachFromSharedMetadataQuery,
-} from '../schema/sparql/sharedMetadata.js';
+  //Oscal Metadata
+  oscalMetadataPredicateMap,
+  singularizeOscalMetadataSchema,
+  selectOscalMetadataQuery,
+  selectOscalMetadataByIriQuery,
+  selectAllOscalMetadataQuery,
+  insertOscalMetadataQuery,
+  deleteOscalMetadataQuery,
+  deleteOscalMetadataByIriQuery,
+  attachToOscalMetadataQuery,
+  detachFromOscalMetadataQuery,
+} from '../schema/sparql/oscalMetadata.js';
 
-// Shared Metadata
-export const findSharedMetadataById = async (id, dbName, dataSources, select) => {
+// Oscal Metadata
+export const findOscalMetadataById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
 
-  let iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  return findSharedMetadataByIri(iri, dbName, dataSources, select);
+  let iri = `<http://cyio.darklight.ai/oscal-metadata--${id}>`;
+  return findOscalMetadataByIri(iri, dbName, dataSources, select);
 }
 
-export const findSharedMetadataByIri = async (iri, dbName, dataSources, select) => {
-  const sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+export const findOscalMetadataByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectOscalMetadataByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Shared Metadata",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select Oscal Metadata",
+      singularizeSchema: singularizeOscalMetadataSchema
     });
   } catch (e) {
     console.log(e)
@@ -49,19 +49,19 @@ export const findSharedMetadataByIri = async (iri, dbName, dataSources, select) 
   }
   if (response === undefined || response === null || response.length === 0) return null;
 
-  const reducer = getReducer("SHARED-METADATA");
+  const reducer = getReducer("OSCAL-METADATA");
   return reducer(response[0]);  
 };
 
-export const findAllSharedMetadata = async (args, dbName, dataSources, select ) => {
-  const sparqlQuery = selectAllSharedMetadataQuery(select, args);
+export const findAllOscalMetadata = async (args, dbName, dataSources, select ) => {
+  const sparqlQuery = selectAllOscalMetadataQuery(select, args);
   let response;
   try {
     response = await dataSources.Stardog.queryAll({
       dbName,
       sparqlQuery,
-      queryId: "Select List of Shared Metadata",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select List of Oscal Metadata",
+      singularizeSchema: singularizeOscalMetadataSchema
     });
   } catch (e) {
     console.log(e)
@@ -72,7 +72,7 @@ export const findAllSharedMetadata = async (args, dbName, dataSources, select ) 
   if (response === undefined || (Array.isArray(response) && response.length === 0)) return null;
 
   const edges = [];
-  const reducer = getReducer("SHARED-METADATA");
+  const reducer = getReducer("OSCAL-METADATA");
   let skipCount = 0,filterCount = 0, resultCount = 0, limit, offset, limitSize, offsetSize;
   limitSize = limit = (args.first === undefined ? response.length : args.first) ;
   offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
@@ -152,7 +152,7 @@ export const findAllSharedMetadata = async (args, dbName, dataSources, select ) 
   }
 };
 
-export const createSharedMetadata = async (input, dbName, dataSources, select) => {
+export const createOscalMetadata = async (input, dbName, dataSources, select) => {
   // WORKAROUND to remove input fields with null or empty values so creation will work
   for (const [key, value] of Object.entries(input)) {
     if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -175,40 +175,40 @@ export const createSharedMetadata = async (input, dbName, dataSources, select) =
                                         .replace(/[\u201C\u201D]/g, '\\"');
   }
 
-  // create the Shared Metadata object
+  // create the Oscal Metadata object
   let response;
-  let {iri, id, query} = insertSharedMetadataQuery(input);
+  let {iri, id, query} = insertOscalMetadataQuery(input);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery: query,
-      queryId: "Create Shared Metadata object"
+      queryId: "Create Oscal Metadata object"
       });
   } catch (e) {
     console.log(e)
     throw e
   }
 
-  // retrieve the newly created Shared Metadata to be returned
-  const selectQuery = selectSharedMetadataQuery(id, select);
+  // retrieve the newly created Oscal Metadata to be returned
+  const selectQuery = selectOscalMetadataQuery(id, select);
   let result;
   try {
     result = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery: selectQuery,
-      queryId: "Select Shared Metadata object",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select Oscal Metadata object",
+      singularizeSchema: singularizeOscalMetadataSchema
     });
   } catch (e) {
     console.log(e)
     throw e
   }
   if (result === undefined || result === null || result.length === 0) return null;
-  const reducer = getReducer("SHARED-METADATA");
+  const reducer = getReducer("OSCAL-METADATA");
   return reducer(result[0]);
 };
 
-export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
+export const deleteOscalMetadataById = async ( id, dbName, dataSources) => {
   let select = ['iri','id'];
   let idArray = [];
   if (!Array.isArray(id)) {
@@ -223,13 +223,13 @@ export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
     if (!checkIfValidUUID(itemId)) throw new UserInputError(`Invalid identifier: ${itemId}`);  
 
     // check if object with id exists
-    let sparqlQuery = selectSharedMetadataQuery(itemId, select);
+    let sparqlQuery = selectOscalMetadataQuery(itemId, select);
     try {
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select Shared Metadata",
-        singularizeSchema: singularizeSharedMetadataSchema
+        queryId: "Select Oscal Metadata",
+        singularizeSchema: singularizeOscalMetadataSchema
       });
     } catch (e) {
       console.log(e)
@@ -238,12 +238,12 @@ export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
     
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
 
-    sparqlQuery = deleteSharedMetadataQuery(itemId);
+    sparqlQuery = deleteOscalMetadataQuery(itemId);
     try {
       response = await dataSources.Stardog.delete({
         dbName,
         sparqlQuery,
-        queryId: "Delete Shared Metadata"
+        queryId: "Delete Oscal Metadata"
       });
     } catch (e) {
       console.log(e)
@@ -257,17 +257,17 @@ export const deleteSharedMetadataById = async ( id, dbName, dataSources) => {
   return removedIds;
 };
 
-export const deleteSharedMetadataByIri = async ( iri, dbName, dataSources) => {
+export const deleteOscalMetadataByIri = async ( iri, dbName, dataSources) => {
     // check if object with iri exists
     let select = ['iri','id'];
     let response;
     try {
-      let sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+      let sparqlQuery = selectOscalMetadataByIriQuery(iri, select);
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select Shared Metadata",
-        singularizeSchema: singularizeSharedMetadataSchema
+        queryId: "Select Oscal Metadata",
+        singularizeSchema: singularizeOscalMetadataSchema
       });
     } catch (e) {
       console.log(e)
@@ -276,12 +276,12 @@ export const deleteSharedMetadataByIri = async ( iri, dbName, dataSources) => {
     
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with IRI ${iri}`);
 
-    sparqlQuery = deleteSharedMetadataByIriQuery(iri);
+    sparqlQuery = deleteOscalMetadataByIriQuery(iri);
     try {
       response = await dataSources.Stardog.delete({
         dbName,
         sparqlQuery,
-        queryId: "Delete Shared Metadata"
+        queryId: "Delete Oscal Metadata"
       });
     } catch (e) {
       console.log(e)
@@ -291,7 +291,7 @@ export const deleteSharedMetadataByIri = async ( iri, dbName, dataSources) => {
   return iri;
 };
 
-export const editSharedMetadataById = async (id, input, dbName, dataSources, select, schema) => {
+export const editOscalMetadataById = async (id, input, dbName, dataSources, select, schema) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
 
   // make sure there is input data containing what is to be edited
@@ -306,12 +306,12 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
     editSelect.push(editItem.key);
   }
 
-  const sparqlQuery = selectSharedMetadataQuery(id, editSelect );
+  const sparqlQuery = selectOscalMetadataQuery(id, editSelect );
   let response = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery,
-    queryId: "Select Shared Metadata",
-    singularizeSchema: singularizeSharedMetadataSchema
+    queryId: "Select Oscal Metadata",
+    singularizeSchema: singularizeOscalMetadataSchema
   });
   if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
@@ -384,7 +384,7 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
           dbName,
           sparqlQuery,
           queryId: "Obtaining IRI for the object with id",
-          singularizeSchema: singularizeSharedMetadataSchema
+          singularizeSchema: singularizeOscalMetadataSchema
         });
         if (result === undefined || result.length === 0) throw new UserInputError(`Entity does not exist with ID ${value}`);
         iris.push(`<${result[0].iri}>`);
@@ -394,10 +394,10 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
   }    
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/shared-metadata--${id}`,
-    "http://csrc.nist.gov/ns/oscal/common#SharedMetadata",
+    `http://cyio.darklight.ai/oscal-metadata--${id}`,
+    "http://csrc.nist.gov/ns/oscal/common#OscalMetadata",
     input,
-    sharedMetadataPredicateMap
+    oscalMetadataPredicateMap
   );
   if (query !== null) {
     let response;
@@ -405,7 +405,7 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
       response = await dataSources.Stardog.edit({
         dbName,
         sparqlQuery: query,
-        queryId: "Update Shared Metadata"
+        queryId: "Update Oscal Metadata"
       });  
     } catch (e) {
       console.log(e)
@@ -413,33 +413,33 @@ export const editSharedMetadataById = async (id, input, dbName, dataSources, sel
     }
   }
 
-  const selectQuery = selectSharedMetadataQuery(id, select);
+  const selectQuery = selectOscalMetadataQuery(id, select);
   const result = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery: selectQuery,
-    queryId: "Select Shared Metadata",
-    singularizeSchema: singularizeSharedMetadataSchema
+    queryId: "Select Oscal Metadata",
+    singularizeSchema: singularizeOscalMetadataSchema
   });
-  const reducer = getReducer("SHARED-METADATA");
+  const reducer = getReducer("OSCAL-METADATA");
   return reducer(result[0]);
 };
 
-export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSources) => {
+export const attachToOscalMetadata = async (id, field, entityId, dbName, dataSources) => {
   let sparqlQuery;
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
-  // check to see if the shared metadata exists
+  // check to see if the oscal metadata exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+  let iri = `<http://cyio.darklight.ai/oscal-metadata--${id}>`;
+  sparqlQuery = selectOscalMetadataByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Shared Metadata",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select Oscal Metadata",
+      singularizeSchema: singularizeOscalMetadataSchema
     });
   } catch (e) {
     console.log(e)
@@ -461,7 +461,7 @@ export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSo
       dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
-      singularizeSchema: singularizeSharedMetadataSchema
+      singularizeSchema: singularizeOscalMetadataSchema
     });
   } catch (e) {
     console.log(e)
@@ -477,13 +477,13 @@ export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSo
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the shared metadata
-  sparqlQuery = attachToSharedMetadataQuery(id, field, entityIri);
+  // Attach the object to the oscal metadata
+  sparqlQuery = attachToOscalMetadataQuery(id, field, entityIri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Attach ${field} to Shared Metadata`
+      queryId: `Attach ${field} to Oscal Metadata`
       });
   } catch (e) {
     console.log(e)
@@ -493,22 +493,22 @@ export const attachToSharedMetadata = async (id, field, entityId, dbName, dataSo
   return true;
 };
 
-export const detachFromSharedMetadata = async (id, field, entityId, dbName, dataSources) => {
+export const detachFromOscalMetadata = async (id, field, entityId, dbName, dataSources) => {
   let sparqlQuery;
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
-  // check to see if the shared metadata exists
+  // check to see if the oscal metadata exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/shared-metadata--${id}>`;
-  sparqlQuery = selectSharedMetadataByIriQuery(iri, select);
+  let iri = `<http://cyio.darklight.ai/oscal-metadata--${id}>`;
+  sparqlQuery = selectOscalMetadataByIriQuery(iri, select);
   let response;
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Shared Metadata",
-      singularizeSchema: singularizeSharedMetadataSchema
+      queryId: "Select Oscal Metadata",
+      singularizeSchema: singularizeOscalMetadataSchema
     });
   } catch (e) {
     console.log(e)
@@ -530,7 +530,7 @@ export const detachFromSharedMetadata = async (id, field, entityId, dbName, data
       dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
-      singularizeSchema: singularizeSharedMetadataSchema
+      singularizeSchema: singularizeOscalMetadataSchema
     });
   } catch (e) {
     console.log(e)
@@ -546,13 +546,13 @@ export const detachFromSharedMetadata = async (id, field, entityId, dbName, data
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the shared metadata
-  sparqlQuery = detachFromSharedMetadataQuery(id, field, entityIri);
+  // Attach the object to the oscal metadata
+  sparqlQuery = detachFromOscalMetadataQuery(id, field, entityIri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Detach ${field} from Shared Metadata`
+      queryId: `Detach ${field} from Oscal Metadata`
       });
   } catch (e) {
     console.log(e)

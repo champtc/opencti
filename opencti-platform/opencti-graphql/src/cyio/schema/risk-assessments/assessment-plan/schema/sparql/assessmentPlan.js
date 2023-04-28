@@ -42,7 +42,7 @@ const assessmentPlanReducer = (item) => {
       ...(item.oscal_version && { oscal_version: item.oscal_version }),
       ...(item.revisions && { revision_iris: item.revisions }),
       ...(item.document_ids && { document_id_iris: item.document_ids }),
-      ...(item.shared_metadata && { shared_metadata_iris: item.shared_metadata }),
+      ...(item.metadata && { metadata_iris: item.metadata }),
       ...(item.system_security_plan && { system_security_plan_iris: item.system_security_plan }),
       ...(item.local_definitions && { local_definition_iris: item.local_definitions }),
       ...(item.terms_and_conitions && { terms_and_conitions_iris: item.terms_and_conitions }),
@@ -312,9 +312,9 @@ export const assessmentPlanPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "document_ids");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  shared_metadata: {
-    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#shared_metadata>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "shared_metadata");},
+  metadata: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/assessment-results#metadata>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "metadata");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   system_security_plan: {
@@ -371,7 +371,7 @@ export const singularizeAssessmentPlanSchema = {
     "oscal-version": true,
     "revisions": false,
     "document-ids": false,
-    "shared_metadata": false,
+    "metadata": false,
     "system_security_plan": false,
     "local_definitions": false,
     "terms_and_conditions": false,

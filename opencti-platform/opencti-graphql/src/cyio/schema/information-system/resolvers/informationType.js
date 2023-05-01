@@ -27,6 +27,7 @@ import {
 } from '../domain/informationType.js';
 import { findInformationTypeCatalogByIri } from '../domain/informationTypeCatalog';
 import { findDataMarkingByIri } from '../../data-markings/domain/dataMarkings';
+import { findLinkByIri } from '../../risk-assessments/oscal-common/domain/oscalLink.js';
 
 const cyioInformationTypeResolvers = {
   Query: {

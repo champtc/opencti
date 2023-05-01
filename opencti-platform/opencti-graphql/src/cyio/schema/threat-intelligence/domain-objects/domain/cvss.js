@@ -1,20 +1,21 @@
 import { UserInputError } from 'apollo-server-errors';
-import { compareValues, filterValues, updateQuery, checkIfValidUUID, validateEnumValue } from '../../utils.js';
-import { selectObjectIriByIdQuery } from '../../global/global-utils.js';
-import { objectTypeMapping } from '../../assets/asset-mappings';
+import { compareValues, filterValues, updateQuery, checkIfValidUUID, validateEnumValue } from '../../../utils.js';
+import { selectObjectIriByIdQuery } from '../../../global/global-utils.js';
+import { objectTypeMapping } from '../../../assets/asset-mappings';
 import {
+  getReducer,
   singularizeCvssSchema,
+  cvssPredicateMap,
+  generateCVSSId,
   selectCvssQuery,
   selectAllCvssMetricsQuery,
   insertCVSSMetricQuery,
   deleteCVSSMetricQuery,
-  generateCVSSId,
   selectCVSSByIriQuery,
   attachToCVSSMetricQuery,
   detachFromCVSSMetricQuery,
-  cvssPredicateMap,
-  getReducer
 } from '../schema/sparql/cvss.js';
+
 
 export const findAllCvssMetrics = async ( args, dbName, dataSources, select ) => {
   const sparqlQuery = selectAllCvssMetricsQuery(select, args);
@@ -221,7 +222,7 @@ export const createCVSSMetric = async (input, dbName, dataSources, select) => {
     throw e
   }
 
-  // retrieve the newly created CSVV to be returned
+  // retrieve the newly created CVSSMetric to be returned
   selectQuery = selectCvssQuery(id, select);
   let result;
 
@@ -478,7 +479,7 @@ export const attachToCVSSMetric = async (id, field, entityId, dbName, dataSource
 
   // check to see if the cvss exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/cvss--${id}>`;
+  let iri = getCVSSIri(id);
 
   sparqlQuery = selectCVSSByIriQuery(iri, select);
   let response;
@@ -554,7 +555,7 @@ export const detachFromCVSSMetric = async (id, field, entityId, dbName, dataSour
 
   // check to see if the taxonomy exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/cvss--${id}>`;
+  let iri = getCVSSIri(id);
 
   sparqlQuery = selectCVSSByIriQuery(iri, select);
 

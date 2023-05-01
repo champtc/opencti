@@ -1,19 +1,52 @@
 import { UserInputError } from 'apollo-server-errors';
-import { compareValues, filterValues, updateQuery, checkIfValidUUID, validateEnumValue } from '../../utils.js';
-import { selectObjectIriByIdQuery, sanitizeInputFields } from '../../global/global-utils.js';
+import { compareValues, filterValues, updateQuery, checkIfValidUUID, validateEnumValue } from '../../../utils.js';
+import { selectObjectIriByIdQuery, sanitizeInputFields } from '../../../global/global-utils.js';
 import {
+  getReducer,
+  singularizeAffectedProductSchema,
+  affectedProductPredicateMap,
   insertAffectedProductQuery,
   selectAffectedProductQuery,
-  singularizeAffectedProductSchema,
   deleteAffectedProductQuery,
-  affectedProdcutPredicateMap,
   selectAffectedProductQueryByIriQuery,
   attachToAffectedProductQuery,
   detachFromAffectedProductQuery,
   generateAffectedProductId,
-  getReducer
+  getAffectedProductIri,
 } from '../schema/sparql/affectedProduct.js';
-import { createVersion, deleteVersionByIri } from './version.js';
+import { createVersionSpec, deleteVersionSpecByIri } from './versionSpec.js';
+
+
+// Affected Product
+export const findAffectedProductById = async (id, dbName, dataSources, select) => {
+  // ensure the id is a valid UUID
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+
+  let iri = getAffectedProductIri(id);
+  return findAffectedProductByIri(iri, dbName, dataSources, select);
+}
+
+export const findAffectedProductByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectAffectedProductQueryByIriQuery(iri, select);
+  let response;
+
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName: dbName,
+      sparqlQuery,
+      queryId: "Select AffectedProduct",
+      singularizeSchema: singularizeAffectedProductSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+
+  if (response === undefined || response === null || response.length === 0) return null;
+  const reducer = getReducer("AFFECTED-PRODUCT");
+
+  return reducer(response[0]);  
+};
 
 export const createAffectedProduct = async (input, dbName, dataSources, select) => {
   sanitizeInputFields(input);
@@ -26,7 +59,7 @@ export const createAffectedProduct = async (input, dbName, dataSources, select) 
 
   // Collect all the nested definitions and remove them from input array
   let nestedDefinitions = {
-    'versions': { values: input.versions, props: {}, objectType: 'version', createFunction: createVersion },
+    'versions': { values: input.versions, props: {}, objectType: 'version-spec', createFunction: createVersionSpec },
   };
 
   for (let [fieldName, fieldInfo] of Object.entries(nestedDefinitions)) {
@@ -108,7 +141,7 @@ export const createAffectedProduct = async (input, dbName, dataSources, select) 
   }
 
   if (result === undefined || result === null || result.length === 0) return null;
-  const reducer = getReducer("AFFECTEDPRODCUT");
+  const reducer = getReducer("AFFECTED-PRODUCT");
 
   return reducer(result[0]); 
 };
@@ -131,14 +164,14 @@ export const deleteAffectedProductById = async ( id, dbName, dataSources ) => {
     let affectedProd;
     if (!checkIfValidUUID(itemId)) throw new UserInputError(`Invalid identifier: ${itemId}`);
     
-    response = await affectedProductExists(itemId, select, dataSources, dbName)
+    response = await affectedProductExists(itemId, select, dbName, dataSources);
     if (response == undefined || response == null || response.length == 0) {
       throw new UserInputError(`Entity does not exist with ID ${itemId}`);
     }
 
     affectedProd = response[0];
     let nestedReferences = {
-      'versions': { object_type: 'version', iris: affectedProd.versions, deleteFunction: deleteVersionByIri },
+      'versions': { object_type: 'version-spec', iris: affectedProd.versions, deleteFunction: deleteVersionSpecByIri },
     };
 
     // delete any nested nodes
@@ -149,7 +182,7 @@ export const deleteAffectedProductById = async ( id, dbName, dataSources ) => {
       switch (fieldInfo.object_type) {
         case 'version':
           for( let cvssIri of fieldInfo.iris) {
-            let result = await deleteVersionByIri(cvssIri, dbName, dataSources);
+            let result = await deleteVersionSpecByIri(cvssIri, dbName, dataSources);
           }
       }
     }
@@ -190,7 +223,7 @@ export const editAffectedProductById = async (id, input, dbName, dataSources, se
   }
 
   let response;
-  response = await affectedProductExists(id, select, dataSources, dbName)
+  response = await affectedProductExists(id, editSelect, dbName, dataSources);
   if (response == undefined || response == null || response.length == 0) {
     throw new UserInputError(`Entity does not exist with ID ${id}`);
   }
@@ -258,7 +291,7 @@ export const editAffectedProductById = async (id, input, dbName, dataSources, se
     `http://cyio.darklight.ai/affected-product--${id}`,
     "http://nist.gov/ns/vulnerability#AffectedProduct",
     input,
-    affectedProdcutPredicateMap
+    affectedProductPredicateMap
   );
 
   if (query !== null) {
@@ -283,31 +316,9 @@ export const editAffectedProductById = async (id, input, dbName, dataSources, se
     singularizeSchema: singularizeAffectedProductSchema
   });
 
-  const reducer = getReducer("AFFECTEDPRODCUT");
+  const reducer = getReducer("AFFECTED-PRODUCT");
 
   return reducer(result[0]);
-};
-
-export const findAffectedProductByIri = async (iri, dbName, dataSources, select) => {
-  const sparqlQuery = selectAffectedProductQueryByIriQuery(iri, select);
-  let response;
-
-  try {
-    response = await dataSources.Stardog.queryById({
-      dbName: dbName,
-      sparqlQuery,
-      queryId: "Select AffectedProduct",
-      singularizeSchema: singularizeAffectedProductSchema
-    });
-  } catch (e) {
-    console.log(e)
-    throw e
-  }
-
-  if (response === undefined || response === null || response.length === 0) return null;
-  const reducer = getReducer("AFFECTEDPRODCUT");
-
-  return reducer(response[0]);  
 };
 
 export const attachToAffectedProduct = async (id, field, entityId, dbName, dataSources) => {
@@ -317,7 +328,7 @@ export const attachToAffectedProduct = async (id, field, entityId, dbName, dataS
 
   // check to see if the affected product exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/affected-product--${id}>`;
+  let iri = getAffectedProductIri(id);
   sparqlQuery = selectAffectedProductQueryByIriQuery(iri, select);
   
   let response;
@@ -325,7 +336,7 @@ export const attachToAffectedProduct = async (id, field, entityId, dbName, dataS
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Affected Prodcut",
+      queryId: "Select Affected Product",
       singularizeSchema: singularizeAffectedProductSchema
     });
   } catch (e) {
@@ -334,8 +345,9 @@ export const attachToAffectedProduct = async (id, field, entityId, dbName, dataS
   }
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
+  // TODO: this needs to include any object that can be attached
   let attachableObjects = {
-    'versions': 'version',
+    'versions': 'version-spec',
   }
 
   let objectType = attachableObjects[field];
@@ -353,8 +365,9 @@ export const attachToAffectedProduct = async (id, field, entityId, dbName, dataS
     throw e
   }
 
+  // TODO: this needs to include any object that can be attached
   let objectTypeMapping = {
-    'versions': 'version',
+    'versions': 'version-spec',
   };
 
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${entityId}`);
@@ -390,7 +403,7 @@ export const detachFromAffectedProduct = async (id, field, entityId, dbName, dat
 
   // check to see if the affected product exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/affected-product--${id}>`;
+  let iri = getAffectedProductIri(id);
   sparqlQuery = selectAffectedProductQueryByIriQuery(iri, select);
   let response;
   try {
@@ -407,8 +420,9 @@ export const detachFromAffectedProduct = async (id, field, entityId, dbName, dat
 
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
+  // TODO: this needs to include any object that can be attached
   let attachableObjects = {
-    'versions': 'version',
+    'versions': 'version-spec',
   }
   let objectType = attachableObjects[field];
   try {
@@ -425,8 +439,9 @@ export const detachFromAffectedProduct = async (id, field, entityId, dbName, dat
     throw e
   }
 
+  // TODO: this needs to include any object that can be attached
   let objectTypeMapping = {
-    'versions': 'version',
+    'versions': 'version-spec',
   };
 
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${entityId}`);
@@ -439,13 +454,13 @@ export const detachFromAffectedProduct = async (id, field, entityId, dbName, dat
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the AffectedProdcut
+  // Attach the object to the AffectedProduct
   sparqlQuery = detachFromAffectedProductQuery(id, field, entityIri);
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Detach ${field} from AffectedProdcut`
+      queryId: `Detach ${field} from AffectedProduct`
       });
   } catch (e) {
     console.log(e)
@@ -455,17 +470,8 @@ export const detachFromAffectedProduct = async (id, field, entityId, dbName, dat
   return true;
 };
 
-// Affected Product
-export const findAffectedProductById = async (id, dbName, dataSources, select) => {
-  // ensure the id is a valid UUID
-  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
-
-  let iri = `<http://cyio.darklight.ai/affected-product--${id}>`;
-  return findAffectedProductByIri(iri, dbName, dataSources, select);
-}
-
 // check if object with id exists
-export const affectedProductExists = async (checkId, select, dataSources, dbName) => {
+export const affectedProductExists = async (checkId, select, dbName, dataSources) => {
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(checkId)) throw new UserInputError(`Invalid identifier: ${checkId}`);
   

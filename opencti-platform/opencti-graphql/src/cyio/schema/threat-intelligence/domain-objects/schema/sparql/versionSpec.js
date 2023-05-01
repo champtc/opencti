@@ -4,23 +4,23 @@ import {
   parameterizePredicate, 
   buildSelectVariables,
   generateId,
-} from '../../../utils.js';
+} from '../../../../utils.js';
 
 // Reducer Selection
 export function getReducer(type) {
   switch (type) {
-    case 'VERSION':
-      return versionReducer;
+    case 'VERSION-SPEC':
+      return versionSpecReducer;
     default:
       throw new UserInputError(`Unsupported reducer type ' ${type}'`)
   }
 };
 
-const versionReducer = (item) => {
+const versionSpecReducer = (item) => {
   // if no object type was returned, compute the type from the IRI
   if (item.object_type === undefined) {
     if (item.entity_type !== undefined) item.object_type = item.entity_type;
-    if (item.iri.includes('version')) item.object_type = 'version';
+    if (item.iri.includes('version-spec')) item.object_type = 'version-spec';
   }
 
   return {
@@ -37,7 +37,7 @@ const versionReducer = (item) => {
 };
 
 // Serialization schema
-export const singularizeVersionSchema = { 
+export const singularizeVersionSpecSchema = { 
   singularizeVariables: {
     "": false, // so there is an object as the root instead of an array
     "id": true,
@@ -54,7 +54,7 @@ export const singularizeVersionSchema = {
 };
 
 // Predicate Maps
-export const versionPredicateMap = {
+export const versionSpecPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
@@ -102,11 +102,13 @@ export const versionPredicateMap = {
   },
 };
 
-export const insertVersionQuery = (propValues) => {
+
+
+export const insertVersionSpecQuery = (propValues) => {
   const id = generateId();
 
   // determine the appropriate ontology class type
-  const iri = `<http://cyio.darklight.ai/version--${id}>`;
+  const iri = `<http://cyio.darklight.ai/version-spec--${id}>`;
   const insertPredicates = [];
   
   Object.entries(propValues).forEach((propPair) => {
@@ -125,8 +127,7 @@ export const insertVersionQuery = (propValues) => {
   INSERT DATA {
     GRAPH ${iri} {
       ${iri} a <http://nist.gov/ns/vulnerability#VersionSpec> .
-      ${iri} a <http://oasis-org/ns/cti/stix/domain/VersionSpec> .
-      ${iri} a <http://darklight.ai/ns/common#Object> .
+      ${iri} a <http://darklight.ai/ns/common#ComplexDatatype> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
       ${iri} <http://darklight.ai/ns/common#object_type> "version" . 
       ${insertPredicates.join(" . \n")}
@@ -137,11 +138,11 @@ export const insertVersionQuery = (propValues) => {
   return {iri, id, query}
 };
 
-export const selectVersionQuery = (id, select) => {
-  return selectVersionByIriQuery(`<http://cyio.darklight.ai/version--${id}>`, select);
+export const selectVersionSpecQuery = (id, select) => {
+  return selectVersionSpecByIriQuery(`<http://cyio.darklight.ai/version-spec--${id}>`, select);
 };
 
-export const selectVersionByIriQuery = (iri, select) => {
+export const selectVersionSpecByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
   if (select === undefined || select === null) select = Object.keys(versionPredicateMap);
 
@@ -161,12 +162,12 @@ export const selectVersionByIriQuery = (iri, select) => {
   }`
 };
 
-export const deleteVersionQuery = (id) => {
-  const iri = `http://cyio.darklight.ai/version--${id}`;
-  return deleteVersionByIriQuery(iri);
+export const deleteVersionSpecQuery = (id) => {
+  const iri = `http://cyio.darklight.ai/version-spec--${id}`;
+  return deleteVersionSpecByIriQuery(iri);
 };
 
-export const deleteVersionByIriQuery = (iri) => {
+export const deleteVersionSpecByIriQuery = (iri) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
   return `
   DELETE {

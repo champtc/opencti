@@ -10,6 +10,7 @@ import {
 
 const cvssResolvers = {
   Query: {
+    // CVSS objects
     cvssMetrics: async (_, args, { dbName, dataSources, selectMap }) => findAllCvssMetrics(args, dbName, dataSources, selectMap.getNode('node')),
     cvssMetric: async (_, { id }, { dbName, dataSources, selectMap }) => findCvssMetricById(id, dbName, dataSources, selectMap.getNode('cvssMetric')),
   },

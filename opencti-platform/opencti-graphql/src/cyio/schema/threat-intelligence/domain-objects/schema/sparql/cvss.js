@@ -1,6 +1,6 @@
 import { UserInputError } from 'apollo-server-errors';
-import { Cvss2Parser } from '../../util/parsers/cvss2.js'
-import { Cvss3Parser } from '../../util/parsers/cvss3.js'
+import { Cvss2Parser } from '../../../util/parsers/cvss2.js'
+import { Cvss3Parser } from '../../../util/parsers/cvss3.js'
 import { 
   optionalizePredicate, 
   parameterizePredicate, 
@@ -8,8 +8,8 @@ import {
   generateId,
   checkIfValidUUID,
   DARKLIGHT_NS,
-} from '../../../utils.js';
-import { parse } from 'graphql';
+} from '../../../../utils.js';
+
 
 // Reducer Selection
 export function getReducer(type) {
@@ -94,7 +94,7 @@ export const singularizeCvssSchema = {
   }
 };
 
-const cvssSelectPredicateMap = {
+export const cvssSelectPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
@@ -192,67 +192,44 @@ const cvssSelectPredicateMap = {
   },
   vector_string: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#vector_string>|<http://first.org/ns/cvss/cvss-v3#vector_string>|<http://first.org/ns/cvss/cvss-v4#vector_string>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'vector_string');
-    }, optional: function (iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'vector_string');}, 
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));
     },
   },
   confidentiality_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#confidentiality_impact>|<http://first.org/ns/cvss/cvss-v3#confidentiality_impact>|<http://first.org/ns/cvss/cvss-v4#confidentiality_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'confidentiality_impact');
-    }, optional: function (iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'confidentiality_impact');}, 
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   integrity_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#integrity_impact>|<http://first.org/ns/cvss/cvss-v3#integrity_impact>|<http://first.org/ns/cvss/cvss-v4#integrity_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'integrity_impact');
-    }, optional: function (iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'integrity_impact');}, 
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   availability_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#availability_impact>|<http://first.org/ns/cvss/cvss-v3#availability_impact>|<http://first.org/ns/cvss/cvss-v4#availability_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'availability_impact');
-    }, optional: function (iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'availability_impact');}, 
+    optional: function (iri, value) {return optionalizePredicate(this.binding(iri, value));},
   },
   confidentiality_requirement: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#confidentiality_requirement>|<http://first.org/ns/cvss/cvss-v3#confidentiality_requirement>|<http://first.org/ns/cvss/cvss-v4#confidentiality_requirement>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'confidentiality_requirement');
-    }, optional: function (iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'confidentiality_requirement');}, 
+    optional: function (iri, value) {return optionalizePredicate(this.binding(iri, value));},
   },
   integrity_requirement: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#integrity_requirement>|<http://first.org/ns/cvss/cvss-v3#integrity_requirement>|<http://first.org/ns/cvss/cvss-v4#integrity_requirement>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'integrity_requirement');
-    }, optional: function (iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) {return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'integrity_requirement');}, 
+    optional: function (iri, value) {return optionalizePredicate(this.binding(iri, value));},
   },
   availability_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#availability_impact>|<http://first.org/ns/cvss/cvss-v3#availability_impact>|<http://first.org/ns/cvss/cvss-v4#availability_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'availability_impact');
-    }, optional: function (iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'availability_impact');}, 
+    optional: function (iri, value) {return optionalizePredicate(this.binding(iri, value));},
   },
   report_confidence: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#report_confidence>|<http://first.org/ns/cvss/cvss-v3#report_confidence>|<http://first.org/ns/cvss/cvss-v4#report_confidence>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'report_confidence');
-    }, optional: function (iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'report_confidence');}, 
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 };
 
@@ -390,27 +367,18 @@ export const cvssPredicateMap = {
   },
   cvss2_vector_string: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#vector_string>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_vector_string');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_vector_string');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   cvss3_vector_string: {
     predicate: '<http://first.org/ns/cvss/cvss-v3#vector_string>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_vector_string');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_vector_string');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss4_vector_string: {
     predicate: '<http://first.org/ns/cvss/cvss-v4#vector_string>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_vector_string');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_vector_string');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss2_confidentiality_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#confidentiality_impact>',
@@ -422,168 +390,127 @@ export const cvssPredicateMap = {
   },
   cvss3_confidentiality_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v3#confidentiality_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_confidentiality_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_confidentiality_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss4_confidentiality_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v4#confidentiality_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_confidentiality_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_confidentiality_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss2_integrity_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#integrity_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_integrity_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_integrity_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   cvss3_integrity_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v3#integrity_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_integrity_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_integrity_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss4_integrity_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v4#integrity_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_integrity_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_integrity_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss2_availability_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#availability_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_availability_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_availability_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   cvss3_availability_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v3#availability_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_availability_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_availability_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss4_availability_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v4#availability_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_availability_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_availability_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss2_confidentiality_requirement: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#confidentiality_requirement>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_confidentiality_requirement');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_confidentiality_requirement');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   cvss3_confidentiality_requirement: {
     predicate: '<http://first.org/ns/cvss/cvss-v3#confidentiality_requirement>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_confidentiality_requirement');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_confidentiality_requirement');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss4_confidentiality_requirement: {
     predicate: '<http://first.org/ns/cvss/cvss-v4#confidentiality_requirement>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_confidentiality_requirement');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_confidentiality_requirement');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss2_integrity_requirement: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#integrity_requirement>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_integrity_requirement');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_integrity_requirement');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   cvss3_integrity_requirement: {
     predicate: '<http://first.org/ns/cvss/cvss-v3#integrity_requirement>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_integrity_requirement');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_integrity_requirement');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss4_integrity_requirement: {
     predicate: '<http://first.org/ns/cvss/cvss-v4#integrity_requirement>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_integrity_requirement');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_integrity_requirement');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss2_availability_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#availability_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_availability_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_availability_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   cvss3_availability_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v3#availability_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_availability_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_availability_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss4_availability_impact: {
     predicate: '<http://first.org/ns/cvss/cvss-v4#availability_impact>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_availability_impact');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_availability_impact');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value)); },
   },
   cvss2_report_confidence: {
     predicate: '<http://first.org/ns/cvss/cvss-v2#report_confidence>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_report_confidence');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss2_report_confidence');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   cvss3_report_confidence: {
     predicate: '<http://first.org/ns/cvss/cvss-v3#report_confidence>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_report_confidence');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss3_report_confidence');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
   cvss4_report_confidence: {
     predicate: '<http://first.org/ns/cvss/cvss-v4#report_confidence>',
-    binding: function(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_report_confidence');
-    }, optional: function(iri, value) {
-      return optionalizePredicate(this.binding(iri.value));
-    },
+    binding: function(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cvss4_report_confidence');}, 
+    optional: function(iri, value) { return optionalizePredicate(this.binding(iri.value));},
   },
 };
 
+
+// Utilities
+export const generateCVSSId = (input) => {
+  const id_material = {
+    ...(input.version && {"version": input.version}),
+    ...(input.vector_string && {"vector_string": input.vector_string}),
+  }; 
+  
+  const id = generateId( id_material, DARKLIGHT_NS );
+  return id;
+}
+
+export const getCVSSIri = (id) => {
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`); 
+  return `http://cyio.darklight.ai/cvss--${id}`; 
+}
+
+
+// Query Builders - CVSS
 export const selectCvssQuery = (id, select) => {
-  return selectCVSSByIriQuery(`<http://cyio.darklight.ai/cvss--${id}>`, select);
+  return selectCVSSByIriQuery(getCVSSIri(id), select);
 }
 
 export const selectCVSSByIriQuery = (iri, select) => {
@@ -634,21 +561,6 @@ export const selectAllCvssMetricsQuery = (select, args, parent) => {
     ${constraintClause}
   }
   `
-}
-
-export const generateCVSSId = (input) => {
-  const id_material = {
-    ...(input.version && {"version": input.version}),
-    ...(input.vector_string && {"vector_string": input.vector_string}),
-  }; 
-  
-  const id = generateId( id_material, DARKLIGHT_NS );
-  return id;
-}
-
-export const getCVSSIri = (id) => {
-  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`); 
-  return `http://cyio.darklight.ai/cvss--${id}`; 
 }
 
 export const insertCVSSMetricQuery = (id, propValues) => {
@@ -1053,7 +965,7 @@ export const deleteCVSSMetricByIriQuery = (iri) => {
 export const attachToCVSSMetricQuery = (id, field, itemIris) => {
   if (!cvssPredicateMap.hasOwnProperty(field)) return null;
 
-  const iri = `<http://cyio.darklight.ai/cvss--${id}>`;
+  const iri = getCVSSIri(id);
   const predicate = cvssPredicateMap[field].predicate;
 
   let statements;
@@ -1078,7 +990,7 @@ export const attachToCVSSMetricQuery = (id, field, itemIris) => {
 export const detachFromCVSSMetricQuery = (id, field, itemIris) => {
   if (!cvssPredicateMap.hasOwnProperty(field)) return null;
 
-  const iri = `<http://cyio.darklight.ai/cvss--${id}>`;
+  const iri = getCVSSIri(id);
   const predicate = cvssPredicateMap[field].predicate;
 
   let statements;

@@ -2,18 +2,19 @@ import { UserInputError } from 'apollo-server-errors';
 import { 
   updateQuery, 
   checkIfValidUUID,
-} from '../../utils.js';
-import { sanitizeInputFields } from '../../global/global-utils.js';
+} from '../../../utils.js';
+import { sanitizeInputFields } from '../../../global/global-utils.js';
 import {
   getReducer,
   singularizeUnknownMetricSchema,
   selectUnknownMetricQuery,
-  insertUnkownMetricQuery,
+  insertUnknownMetricQuery,
   deleteUnknownMetricQuery,
-  selectImpactTypeQueryByIriQuery,
   generateUnknownMetricId,
   unknownMetricPredicateMap,
-} from '../schema/sparql/unkownMetric.js';
+} from '../schema/sparql/unknownMetric.js';
+
+
 
 export const createUnknownMetric = async (input, dbName, dataSources, select) => {
   sanitizeInputFields(input);
@@ -30,7 +31,7 @@ export const createUnknownMetric = async (input, dbName, dataSources, select) =>
     unknownMetric = await dataSources.Stardog.queryById({
       dbName: dbName,
       sparqlQuery: selectQuery,
-      queryId: "Select Unkown Metric",
+      queryId: "Select Unknown Metric",
       singularizeSchema: singularizeUnknownMetricSchema
     });
   } catch (e) {
@@ -44,20 +45,20 @@ export const createUnknownMetric = async (input, dbName, dataSources, select) =>
 
   // Insert uknownMetric object
   let response;
-  let {iri, id, query} = insertUnkownMetricQuery(input, checkId);
+  let {iri, id, query} = insertUnknownMetricQuery(input, checkId);
   
   try {
     response = await dataSources.Stardog.create({
       dbName: dbName,
       sparqlQuery: query,
-      queryId: "Create Unkown Metric"
+      queryId: "Create Unknown Metric"
       });
   } catch (e) {
     console.log(e)
     throw e
   }
   
-  // retrieve the newly created Unkown Metric to be returned
+  // retrieve the newly created Unknown Metric to be returned
   selectQuery = selectUnknownMetricQuery(id, select);
   let result;
 
@@ -65,7 +66,7 @@ export const createUnknownMetric = async (input, dbName, dataSources, select) =>
     result = await dataSources.Stardog.queryById({
       dbName: dbName,
       sparqlQuery: selectQuery,
-      queryId: "Select Unkown Metric object",
+      queryId: "Select Unknown Metric object",
       singularizeSchema: singularizeUnknownMetricSchema
     });
   } catch (e) {
@@ -75,7 +76,7 @@ export const createUnknownMetric = async (input, dbName, dataSources, select) =>
 
   if (result === undefined || result === null || result.length === 0) return null;
 
-  const reducer = getReducer("UNKNOWNMETRIC");
+  const reducer = getReducer("UNKNOWN-METRIC");
 
   return reducer(result[0]); 
 };
@@ -104,7 +105,7 @@ export const deleteUnknownMetricById = async ( id, dbName, dataSources ) => {
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select UnkownMetric object",
+        queryId: "Select UnknownMetric object",
         singularizeSchema: singularizeUnknownMetricSchema
       });
     } catch (e) {
@@ -214,7 +215,7 @@ export const editUnknownMetricById = async (id, input, dbName, dataSources, sele
     singularizeSchema: singularizeUnknownMetricSchema
   });
 
-  const reducer = getReducer("UNKNOWNMETRIC");
+  const reducer = getReducer("UNKNOWN-METRIC");
 
   return reducer(result[0]);
 };

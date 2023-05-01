@@ -2,7 +2,7 @@ import {
   createUnknownMetric,
   deleteUnknownMetricById,
   editUnknownMetricById
-} from '../domain/unkownMetric.js';
+} from '../domain/unknownMetric.js';
 
 const cyioUnknownMetricResolvers = {
   Mutation: {

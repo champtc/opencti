@@ -1,117 +1,72 @@
 import { UserInputError } from 'apollo-server-errors';
-import { updateQuery, checkIfValidUUID } from '../../utils.js';
-import { selectObjectIriByIdQuery, sanitizeInputFields } from '../../global/global-utils.js';
-import { objectTypeMapping } from '../../assets/asset-mappings';
+import { compareValues, filterValues, updateQuery, checkIfValidUUID, validateEnumValue } from '../../../utils.js';
+import { selectObjectIriByIdQuery, sanitizeInputFields } from '../../../global/global-utils.js';
+import { objectTypeMapping } from '../../../assets/asset-mappings';
 import {
-  insertTaxonomyEntryQuery,
-  selectTaxonomyEntryQuery,
-  singularizeTaxonomyEntrySchema,
-  deleteTaxonomyEntryQuery,
-  taxonomyEntryPredicateMap,
-  generateTaxonomyEntryId,
-  attachToTaxonomyEntryQuery,
-  selectTaxonomyEntryQueryByIriQuery,
-  detachFromTaxonomyEntryQuery,
+  insertProblemTypeQuery,
+  selectProblemTypeQuery,
+  singularizeProblemTypeSchema,
+  deleteProblemTypeQuery,
+  problemTypePredicateMap,
+  selectProblemTypeQueryByIriQuery,
+  attachToProblemTypeQuery,
+  detachFromProblemTypeQuery,
+  generateProblemTypeId,
   getReducer
-} from '../schema/sparql/taxonomyEntry.js';
+} from '../schema/sparql/problemType.js';
 
-export const createTaxonomyEntry = async (input, dbName, dataSources, select) => {
+export const createProblemType = async (input, dbName, dataSources, select) => {
   sanitizeInputFields(input);
-  //TODO: parse taxonomy relationships and attach them
-
-  // check if a taxonomy with this same id exists
-  let checkId = generateTaxonomyEntryId( input );
-
+  
+  // check if problemType with this same id exists
+  let checkId = generateProblemTypeId(input);
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(checkId)) throw new UserInputError(`Invalid identifier: ${checkId}`);
-  
-  const taxonomyQuery = selectTaxonomyEntryQuery(checkId, select);
-  let taxonomy;
-  
+
+  let selectQuery;
+  let problemType;
+  selectQuery = selectProblemTypeQuery(checkId, select);
   try {
-    taxonomy = await dataSources.Stardog.queryById({
+    problemType = await dataSources.Stardog.queryById({
       dbName: dbName,
-      sparqlQuery: taxonomyQuery,
-      queryId: "Select TaxonomyEntry object",
-      singularizeSchema: singularizeTaxonomyEntrySchema
+      sparqlQuery: selectQuery,
+      queryId: "Select Problem Type",
+      singularizeSchema: singularizeProblemTypeSchema
     });
   } catch (e) {
     console.log(e)
     throw e
   }
 
-  if ( (taxonomy != undefined && taxonomy != null) && taxonomy.length > 0) {
-    throw new UserInputError(`Cannot create taxonomy entry as entity ${checkId} already exists`);
+  if ( (problemType != undefined && problemType != null) && problemType.length > 0) {
+    throw new UserInputError(`Cannot create ProblemType entry as entity ${checkId} already exists`);
   }
 
-  // Collect all the referenced objects and remove them from input array
-  let objectReferences = {
-    'taxonomy_relationships': { ids: input.taxonomy_relationships, objectType: 'Relationship' }
-  };
-  
-  if (input.taxonomy_relationships) delete input.taxonomy_relationships;
-
+  // insert problem type
   let response;
-  let {iri, id, query} = insertTaxonomyEntryQuery(input);
+  let {iri, id, query} = insertProblemTypeQuery(input);
 
   try {
     response = await dataSources.Stardog.create({
       dbName: dbName,
       sparqlQuery: query,
-      queryId: "Create TaxonomyEntry object"
+      queryId: "Create Problem Type object"
       });
   } catch (e) {
     console.log(e)
     throw e
   }
 
-  // Attach any references to other objects
-  for (let [key, value] of Object.entries(objectReferences)) {
-    if (value.ids === undefined || value.ids === null) continue;
-		let itemName = value.objectType.replace(/-/g, ' ');
-    let iris = [];
-
-    for (let refId of value.ids) {
-      let sparqlQuery = selectObjectIriByIdQuery(refId, value.objectType);
-      let result = await dataSources.Stardog.queryById({
-        dbName,
-        sparqlQuery,
-        queryId: "Obtaining IRI for the object with id",
-        singularizeSchema: singularizeTaxonomyEntrySchema
-      });
-
-      if (result === undefined || result.length === 0) throw new UserInputError(`Entity does not exist with ID ${refId}`);
-      
-      iris.push(`<${result[0].iri}>`);
-    }
-
-    if (iris.length > 0) {
-      // attach the definition to the new Taxonomy
-      let attachQuery = attachToTaxonomyEntryQuery(id, key, iris );
-      
-      try {
-        response = await dataSources.Stardog.create({
-          dbName,
-          sparqlQuery: attachQuery,
-          queryId: `Attaching one or more ${itemName} to information system`
-          });
-      } catch (e) {
-        console.log(e)
-        throw e
-      }
-    }
-  }
-
-  // retrieve the newly created Affected Product to be returned
-  const selectQuery = selectTaxonomyEntryQuery(id, select);
+  // retrieve the newly created Problem Type to be returned
+  selectQuery = selectProblemTypeQuery(id, select);
   let result;
-  
+
   try {
     result = await dataSources.Stardog.queryById({
       dbName: dbName,
       sparqlQuery: selectQuery,
-      queryId: "Select TaxonomyEntry object",
-      singularizeSchema: singularizeTaxonomyEntrySchema
+      queryId: "Select Problem Type object",
+      singularizeSchema: singularizeProblemTypeSchema
     });
   } catch (e) {
     console.log(e)
@@ -119,16 +74,15 @@ export const createTaxonomyEntry = async (input, dbName, dataSources, select) =>
   }
 
   if (result === undefined || result === null || result.length === 0) return null;
-  
-  const reducer = getReducer("TAXONOMYENTRY");
 
-  return reducer(result[0]); 
+  const reducer = getReducer("PROBLEM-TYPE");
+
+  return reducer(result[0]);
 };
 
-export const deleteTaxonomyEntryById = async ( id, dbName, dataSources ) => {
-  // let select = ['iri','id','source','credits','timeline', 'impacts'];
+export const deleteProblemTypeById = async ( id, dbName, dataSources ) => {
   let select = ['iri','id'];
-  
+
   let idArray = [];
 
   if (!Array.isArray(id)) {
@@ -145,36 +99,35 @@ export const deleteTaxonomyEntryById = async ( id, dbName, dataSources ) => {
     if (!checkIfValidUUID(itemId)) throw new UserInputError(`Invalid identifier: ${itemId}`);  
 
     // check if object with id exists
-    let sparqlQuery = selectTaxonomyEntryQuery(itemId, select);
-    
+    let sparqlQuery = selectProblemTypeQuery(itemId, select);
+
     try {
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select TaxonomyEntry object",
-        singularizeSchema: singularizeTaxonomyEntrySchema
+        queryId: "Select Problem Type object",
+        singularizeSchema: singularizeProblemTypeSchema
       });
     } catch (e) {
       console.log(e)
       throw e
     }
-    
+
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
     //TODO: Delete nested definitions once they are attached
+    sparqlQuery = deleteProblemTypeQuery(itemId);
 
-    sparqlQuery = deleteTaxonomyEntryQuery(itemId);
-    
     try {
       response = await dataSources.Stardog.delete({
         dbName,
         sparqlQuery,
-        queryId: "Delete TaxonomyEntry"
+        queryId: "Delete Problem Type"
       });
     } catch (e) {
       console.log(e)
       throw e
     }
-    
+
     removedIds.push(itemId);
   }
 
@@ -183,7 +136,7 @@ export const deleteTaxonomyEntryById = async ( id, dbName, dataSources ) => {
   return removedIds;
 };
 
-export const editTaxonomyEntryById = async (id, input, dbName, dataSources, select, schema) => {
+export const editProblemTypeById = async (id, input, dbName, dataSources, select, schema) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
 
   // make sure there is input data containing what is to be edited
@@ -193,19 +146,19 @@ export const editTaxonomyEntryById = async (id, input, dbName, dataSources, sele
   input = input.filter(element => (element.key !== 'id' && element.key !== 'created' && element.key !== 'modified'));
 
   // check that the object to be edited exists with the predicates - only get the minimum of data
-  let editSelect = ['id','created','modified'];
+  let editSelect = ['id'];
 
   for (let editItem of input) {
     editSelect.push(editItem.key);
   }
 
-  const sparqlQuery = selectTaxonomyEntryQuery(id, editSelect );
+  const sparqlQuery = selectProblemTypeQuery(id, editSelect );
 
   let response = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery,
-    queryId: "Select TaxonomyEntry",
-    singularizeSchema: singularizeTaxonomyEntrySchema
+    queryId: "Select Problem Type",
+    singularizeSchema: singularizeProblemTypeSchema
   });
 
   if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
@@ -219,6 +172,7 @@ export const editTaxonomyEntryById = async (id, input, dbName, dataSources, sele
       editItem.operation = 'remove';
       continue;
     }
+
     if (Array.isArray(editItem.value) && editItem.value[0] === null) throw new UserInputError(`Field "${editItem.key}" has invalid value "null"`);
 
     if (!response[0].hasOwnProperty(editItem.key)) {
@@ -231,32 +185,17 @@ export const editTaxonomyEntryById = async (id, input, dbName, dataSources, sele
     }
   }
 
-  // Push an edit to update the modified time of the object
-  const timestamp = new Date().toISOString();
-  
-  if (!response[0].hasOwnProperty('created')) {
-    let update = {key: "created", value:[`${timestamp}`], operation: "add"}
-    input.push(update);
-  }
-
-  let operation = "replace";
-
-  if (!response[0].hasOwnProperty('modified')) operation = "add";
-  
-  let update = {key: "modified", value:[`${timestamp}`], operation: `${operation}`}
-  input.push(update);
-
   // Handle the update to fields that have references to other object instances
   for (let editItem  of input) {
     if (editItem.operation === 'skip') continue;
 
     let value, fieldType, objectType, objArray, iris=[];
-
     for (value of editItem.value) {
       switch(editItem.key) {
-        case 'taxonomy_relationships':
-          objectType = 'Relationship';
-          fieldType = 'id';
+        case 'references':
+          throw new UserInputError(`Cannot directly edit field "${editItem.key}".`);
+        default:
+          fieldType = 'simple';
           break;
       }
 
@@ -269,23 +208,21 @@ export const editTaxonomyEntryById = async (id, input, dbName, dataSources, sele
           dbName,
           sparqlQuery,
           queryId: "Obtaining IRI for the object with id",
-          singularizeSchema: singularizeTaxonomyEntrySchema
+          singularizeSchema: singularizeProblemTypeSchema
         });
 
         if (result === undefined || result.length === 0) throw new UserInputError(`Entity does not exist with ID ${value}`);
-
         iris.push(`<${result[0].iri}>`);
       }
     }
-
     if (iris.length > 0) editItem.value = iris;
-  } 
+  }
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/taxonmy-map-entry--${id}`,
-    "http://nist.gov/ns/vulnerability#TaxonomyMapEntry",
+    `http://cyio.darklight.ai/problem-type--${id}`,
+    "http://nist.gov/ns/vulnerability#ProblemType",
     input,
-    taxonomyEntryPredicateMap
+    problemTypePredicateMap
   );
 
   if (query !== null) {
@@ -294,7 +231,7 @@ export const editTaxonomyEntryById = async (id, input, dbName, dataSources, sele
       response = await dataSources.Stardog.edit({
         dbName,
         sparqlQuery: query,
-        queryId: "Update TaxonomyEntry"
+        queryId: "Update Problem Type"
       });  
     } catch (e) {
       console.log(e)
@@ -302,50 +239,49 @@ export const editTaxonomyEntryById = async (id, input, dbName, dataSources, sele
     }
   }
 
-  const selectQuery = selectTaxonomyEntryQuery(id, select);
+  const selectQuery = selectProblemTypeQuery(id, select);
 
   const result = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery: selectQuery,
-    queryId: "Select TaxonomyEntry",
-    singularizeSchema: singularizeTaxonomyEntrySchema
+    queryId: "Select Problem Type",
+    singularizeSchema: singularizeProblemTypeSchema
   });
 
-  const reducer = getReducer("TAXONOMYENTRY");
+  const reducer = getReducer("PROBLEM-TYPE");
 
   return reducer(result[0]);
 };
 
-export const attachToTaxonomyEntry = async (id, field, entityId, dbName, dataSources) => {
+export const attachToProblemType = async (id, field, entityId, dbName, dataSources) => {
   let sparqlQuery;
 
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
-  // check to see if the taxonomy exists
+  // check to see if the information system exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/taxonmy-map-entry--${id}>`;
-
-  sparqlQuery = selectTaxonomyEntryQueryByIriQuery(iri, select);
+  let iri = `<http://cyio.darklight.ai/problem-type--${id}>`;
+  
+  sparqlQuery = selectProblemTypeQueryByIriQuery(iri, select);
+  
   let response;
   
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Taxonomy",
-      singularizeSchema: singularizeTaxonomyEntrySchema
+      queryId: "Select Problem Type",
+      singularizeSchema: singularizeProblemTypeSchema
     });
   } catch (e) {
     console.log(e)
     throw e
   }
-
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
-  //TODO: find list of attachable objects for Taxonomy
   let attachableObjects = {
-    'taxonomy_relationships': 'Relationship'
+    'references': 'external-reference',
   }
 
   let objectType = attachableObjects[field];
@@ -357,7 +293,7 @@ export const attachToTaxonomyEntry = async (id, field, entityId, dbName, dataSou
       dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
-      singularizeSchema: singularizeTaxonomyEntrySchema
+      singularizeSchema: singularizeProblemTypeSchema
     });
   } catch (e) {
     console.log(e)
@@ -374,13 +310,14 @@ export const attachToTaxonomyEntry = async (id, field, entityId, dbName, dataSou
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the taxonomy entry
-  sparqlQuery = attachToTaxonomyEntryQuery(id, field, entityIri);
+  // Attach the object to the information system
+  sparqlQuery = attachToProblemTypeQuery(id, field, entityIri);
+  
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Attach ${field} to Taxonomy`
+      queryId: `Attach ${field} to Problem Type`
       });
   } catch (e) {
     console.log(e)
@@ -390,37 +327,40 @@ export const attachToTaxonomyEntry = async (id, field, entityId, dbName, dataSou
   return true;
 };
 
-export const detachFromTaxonomyEntry = async (id, field, entityId, dbName, dataSources) => {
+export const detachFromProblemType = async (id, field, entityId, dbName, dataSources) => {
   let sparqlQuery;
 
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
   if (!checkIfValidUUID(entityId)) throw new UserInputError(`Invalid identifier: ${entityId}`);
 
-  // check to see if the taxonomy exists
+  // check to see if the information system exists
   let select = ['id','iri','object_type'];
-  let iri = `<http://cyio.darklight.ai/taxonmy-map-entry--${id}>`;
+  let iri = `<http://cyio.darklight.ai/problem-type--${id}>`;
 
-  sparqlQuery = selectTaxonomyEntryQueryByIriQuery(iri, select);
-
+  sparqlQuery = selectProblemTypeQueryByIriQuery(iri, select);
+  
   let response;
+  
   try {
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
-      queryId: "Select Taxonomy Entry",
-      singularizeSchema: singularizeTaxonomyEntrySchema
+      queryId: "Select Problem Type",
+      singularizeSchema: singularizeProblemTypeSchema
     });
   } catch (e) {
     console.log(e)
     throw e
   }
+
   if (response === undefined || response === null || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
 
   let attachableObjects = {
-    'taxonomy_relationships': 'Relationship'
+    'references': 'external-reference',
   }
 
   let objectType = attachableObjects[field];
+  
   try {
     // check to see if the entity exists
     sparqlQuery = selectObjectIriByIdQuery(entityId, objectType);
@@ -428,7 +368,7 @@ export const detachFromTaxonomyEntry = async (id, field, entityId, dbName, dataS
       dbName: (objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
       sparqlQuery,
       queryId: "Obtaining IRI for the object with id",
-      singularizeSchema: singularizeTaxonomyEntrySchema
+      singularizeSchema: singularizeProblemTypeSchema
     });
   } catch (e) {
     console.log(e)
@@ -445,14 +385,14 @@ export const detachFromTaxonomyEntry = async (id, field, entityId, dbName, dataS
   // retrieve the IRI of the entity
   let entityIri = `<${response[0].iri}>`;
 
-  // Attach the object to the Taxonomy Entry
-  sparqlQuery = detachFromTaxonomyEntryQuery(id, field, entityIri);
-  
+  // Attach the object to the information system
+  sparqlQuery = detachFromProblemTypeQuery(id, field, entityIri);
+
   try {
     response = await dataSources.Stardog.create({
       dbName,
       sparqlQuery,
-      queryId: `Detach ${field} from Taxonomy Entry`
+      queryId: `Detach ${field} from Problem Type`
       });
   } catch (e) {
     console.log(e)
@@ -462,16 +402,16 @@ export const detachFromTaxonomyEntry = async (id, field, entityId, dbName, dataS
   return true;
 };
 
-export const findTaxonomyByIri = async (iri, dbName, dataSources, select) => {
-  const sparqlQuery = selectTaxonomyEntryQueryByIriQuery(iri, select);
+export const findProblemTypesByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectProblemTypeQueryByIriQuery(iri, select);
   let response;
 
   try {
     response = await dataSources.Stardog.queryById({
       dbName: dbName,
       sparqlQuery,
-      queryId: "Select TaxonomyType",
-      singularizeSchema: singularizeTaxonomyEntrySchema
+      queryId: "Select ProblemType",
+      singularizeSchema: singularizeProblemTypeSchema
     });
   } catch (e) {
     console.log(e)
@@ -479,7 +419,7 @@ export const findTaxonomyByIri = async (iri, dbName, dataSources, select) => {
   }
 
   if (response === undefined || response === null || response.length === 0) return null;
-  const reducer = getReducer("TAXONOMYENTRY");
+  const reducer = getReducer("PROBLEM-TYPE");
 
   return reducer(response[0]);  
 };

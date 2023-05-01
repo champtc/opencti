@@ -5,7 +5,7 @@ import {
   attachToAffectedProduct,
   detachFromAffectedProduct
 } from '../domain/affectedProduct.js';
-import { findVersionByIri } from '../domain/version.js';
+import { findVersionSpecByIri } from '../domain/versionSpec.js'
 
 const cyioAffectedProductResolvers = {
   Mutation: {
@@ -24,7 +24,7 @@ const cyioAffectedProductResolvers = {
       if (parent.versions === undefined) return [];
       let results = []
       for (let iri of parent.versions) {
-        let result = await findVersionByIri(iri, dbName, dataSources, selectMap.getNode('versions'));
+        let result = await findVersionSpecByIri(iri, dbName, dataSources, selectMap.getNode('versions'));
         if (result === undefined || result === null) return null;
         results.push(result);
       }

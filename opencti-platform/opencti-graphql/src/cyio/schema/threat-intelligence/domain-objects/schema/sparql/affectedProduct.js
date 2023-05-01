@@ -6,12 +6,12 @@ import {
   attachQuery,
   detachQuery,
   generateId,
-} from '../../../utils.js';
+} from '../../../../utils.js';
 
 // Reducer Selection
 export function getReducer(type) {
   switch (type) {
-    case 'AFFECTEDPRODCUT':
+    case 'AFFECTED-PRODUCT':
       return affectedProductReducer;
     default:
       throw new UserInputError(`Unsupported reducer type ' ${type}'`)
@@ -40,7 +40,7 @@ return {
     ...(item.platforms && { platforms: item.platforms }),
     ...(item.repo && { repo: item.repo }),
     ...(item.default_status && {default_status: item.default_status }),
-    ...(item.versions && {versions: item.versions}),
+    ...(item.versions && {version_iris: item.versions}),
   }
 };
 
@@ -68,7 +68,7 @@ export const singularizeAffectedProductSchema = {
 };
 
 // Predicate Maps
-export const affectedProdcutPredicateMap = {
+export const affectedProductPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
@@ -146,25 +146,32 @@ export const affectedProdcutPredicateMap = {
   },
 };
 
+
+// utilities
 export const generateAffectedProductId = (input) => {
   return generateId();
 }
 
+export const getAffectedProductIri = (id) => {
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  return `<http://cyio.darklight.ai/affected-product--${id}>`;
+}
+
+// Query Builder - AffectedProduct
 export const insertAffectedProductQuery = (propValues) => {
   const id = generateId();
+  const iri = getAffectedProductIri(id);
 
   // determine the appropriate ontology class type
-  const iri = `<http://cyio.darklight.ai/affected-product--${id}>`;
   const insertPredicates = [];
-  
   Object.entries(propValues).forEach((propPair) => {
-    if (affectedProdcutPredicateMap.hasOwnProperty(propPair[0])) {
+    if (affectedProductPredicateMap.hasOwnProperty(propPair[0])) {
       if (Array.isArray(propPair[1])) {
         for (let value of propPair[1]) {
-          insertPredicates.push(affectedProdcutPredicateMap[propPair[0]].binding(iri, value));
+          insertPredicates.push(affectedProductPredicateMap[propPair[0]].binding(iri, value));
         }  
       } else {
-        insertPredicates.push(affectedProdcutPredicateMap[propPair[0]].binding(iri, propPair[1]));
+        insertPredicates.push(affectedProductPredicateMap[propPair[0]].binding(iri, propPair[1]));
       }
     }
   });
@@ -185,18 +192,18 @@ export const insertAffectedProductQuery = (propValues) => {
 }
 
 export const selectAffectedProductQuery = (id, select) => {
-  return selectAffectedProductQueryByIriQuery(`<http://cyio.darklight.ai/affected-product--${id}>`, select);
+  return selectAffectedProductQueryByIriQuery(getAffectedProductIri(id), select);
 }
 
 export const selectAffectedProductQueryByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(affectedProdcutPredicateMap);
+  if (select === undefined || select === null) select = Object.keys(affectedProductPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
-  const { selectionClause, predicates } = buildSelectVariables(affectedProdcutPredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(affectedProductPredicateMap, select);
   return `
   SELECT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
@@ -229,10 +236,10 @@ export const deleteAffectedProductByIriQuery = (iri) => {
 }
 
 export const attachToAffectedProductQuery = (id, field, itemIris) => {
-  if (!affectedProdcutPredicateMap.hasOwnProperty(field)) return null;
+  if (!affectedProductPredicateMap.hasOwnProperty(field)) return null;
 
-  const iri = `<http://cyio.darklight.ai/affected-product--${id}>`;
-  const predicate = affectedProdcutPredicateMap[field].predicate;
+  const iri = getAffectedProductIri(id);
+  const predicate = affectedProductPredicateMap[field].predicate;
 
   let statements;
   if (Array.isArray(itemIris)) {
@@ -248,16 +255,16 @@ export const attachToAffectedProductQuery = (id, field, itemIris) => {
   return attachQuery(
     iri, 
     statements, 
-    affectedProdcutPredicateMap, 
+    affectedProductPredicateMap, 
     '<http://nist.gov/ns/vulnerability#AffectedProduct>'
   );
 }
 
 export const detachFromAffectedProductQuery = (id, field, itemIris) => {
-  if (!affectedProdcutPredicateMap.hasOwnProperty(field)) return null;
+  if (!affectedProductPredicateMap.hasOwnProperty(field)) return null;
 
-  const iri = `<http://cyio.darklight.ai/affected-product--${id}>`;
-  const predicate = affectedProdcutPredicateMap[field].predicate;
+  const iri = getAffectedProductIri(id);
+  const predicate = affectedProductPredicateMap[field].predicate;
 
   let statements;
   if (Array.isArray(itemIris)) {
@@ -273,7 +280,7 @@ export const detachFromAffectedProductQuery = (id, field, itemIris) => {
   return detachQuery(
     iri, 
     statements, 
-    affectedProdcutPredicateMap, 
+    affectedProductPredicateMap, 
     '<http://nist.gov/ns/vulnerability#AffectedProduct>'
   );
 }

@@ -1,72 +1,70 @@
 import { UserInputError } from 'apollo-server-errors';
-import { 
+import {
   updateQuery, 
   checkIfValidUUID,
-} from '../../utils.js';
-import { sanitizeInputFields } from '../../global/global-utils.js';
+} from '../../../utils.js';
+import { sanitizeInputFields } from '../../../global/global-utils.js';
 import {
   getReducer,
-  singularizeImpactTypeSchema,
-  selectImpactTypeQuery,
-  insertImpactQuery,
-  deleteImpactTypeQuery,
-  impactTypePredicateMap,
-  selectImpactTypeQueryByIriQuery,
-  generateImpactId,
-} from '../schema/sparql/impact.js';
+  insertCreditQuery,
+  selectCreditQuery,
+  singularizeCreditSchema,
+  deleteCreditQuery,
+  creditPredicateMap,
+  generateCreditId,
+} from '../schema/sparql/credit.js';
 
-export const createImpact = async (input, dbName, dataSources, select) => {
+export const createCredit = async (input, dbName, dataSources, select) => {
   sanitizeInputFields(input);
-
   // check if impact with this same id exists
-  let checkId = generateImpactId(input);
+  let checkId = generateCreditId(input);
   // ensure the id is a valid UUID
   if (!checkIfValidUUID(checkId)) throw new UserInputError(`Invalid identifier: ${checkId}`);
 
-  let selectQuery;
-  let impact;
-  selectQuery = selectImpactTypeQuery(checkId, select);
-  try {
-    impact = await dataSources.Stardog.queryById({
-      dbName: dbName,
-      sparqlQuery: selectQuery,
-      queryId: "Select Impact object",
-      singularizeSchema: singularizeImpactTypeSchema
-    });
-  } catch (e) {
-    console.log(e)
-    throw e
-  }
-
-  if ( (impact != undefined && impact != null) && impact.length > 0 ) {
-    throw new UserInputError(`Cannot create impact entry as entity ${checkId} already exists`);
-  }
-
-  // Insert impact object
-  let response;
-  let {iri, id, query} = insertImpactQuery(input, checkId);
-  
-  try {
-    response = await dataSources.Stardog.create({
-      dbName: dbName,
-      sparqlQuery: query,
-      queryId: "Create Impact object"
-      });
-  } catch (e) {
-    console.log(e)
-    throw e
-  }
-  
-  // retrieve the newly created ImpactType to be returned
-  selectQuery = selectImpactTypeQuery(id, select);
+  // check if credit already exists
+  let selectQuery = selectCreditQuery(checkId, select);
   let result;
 
   try {
     result = await dataSources.Stardog.queryById({
       dbName: dbName,
       sparqlQuery: selectQuery,
-      queryId: "Select Impact object",
-      singularizeSchema: singularizeImpactTypeSchema
+      queryId: "Select Credit object",
+      singularizeSchema: singularizeCreditSchema
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+
+  if ( (result != undefined && result != null) && result.length > 0 ) {
+    throw new UserInputError(`Cannot create credit entry as entity ${checkId} already exists`);
+  }
+
+  let response;
+  let {iri, id, query} = insertCreditQuery(checkId, input);
+
+  try {
+    response = await dataSources.Stardog.create({
+      dbName: dbName,
+      sparqlQuery: query,
+      queryId: "Create Credit object"
+    });
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
+  
+  // retrieve the newly created Credit to be returned
+  selectQuery = selectCreditQuery(id, select);
+  result;
+
+  try {
+    result = await dataSources.Stardog.queryById({
+      dbName: dbName,
+      sparqlQuery: selectQuery,
+      queryId: "Select Credit object",
+      singularizeSchema: singularizeCreditSchema
     });
   } catch (e) {
     console.log(e)
@@ -75,22 +73,23 @@ export const createImpact = async (input, dbName, dataSources, select) => {
 
   if (result === undefined || result === null || result.length === 0) return null;
 
-  const reducer = getReducer("IMPACTTYPE");
+  const reducer = getReducer("CREDIT");
 
-  return reducer(result[0]); 
+  return reducer(result[0]);
 };
 
-export const deleteImpactById = async ( id, dbName, dataSources ) => {
+export const deleteCreditById = async ( id, dbName, dataSources ) => {
   let select = ['iri','id'];
+
   let idArray = [];
-  
+
   if (!Array.isArray(id)) {
     idArray = [id];
   } else {
     idArray = id;
   }
 
-  let removedIds = [];
+  let removedIds = []
 
   for (let itemId of idArray) {
     let response;
@@ -98,14 +97,14 @@ export const deleteImpactById = async ( id, dbName, dataSources ) => {
     if (!checkIfValidUUID(itemId)) throw new UserInputError(`Invalid identifier: ${itemId}`);  
 
     // check if object with id exists
-    let sparqlQuery = selectImpactTypeQuery(itemId, select);
+    let sparqlQuery = selectCreditQuery(itemId, select);
 
     try {
       response = await dataSources.Stardog.queryById({
         dbName,
         sparqlQuery,
-        queryId: "Select Impact Type object",
-        singularizeSchema: singularizeImpactTypeSchema
+        queryId: "Select Credit object",
+        singularizeSchema: singularizeCreditSchema
       });
     } catch (e) {
       console.log(e)
@@ -113,14 +112,15 @@ export const deleteImpactById = async ( id, dbName, dataSources ) => {
     }
 
     if (response === undefined || response.length === 0) throw new UserInputError(`Entity does not exist with ID ${itemId}`);
+    //TODO: Delete nested definitions once they are attached
 
-    sparqlQuery = deleteImpactTypeQuery(itemId);
+    sparqlQuery = deleteCreditQuery(itemId);
 
     try {
       response = await dataSources.Stardog.delete({
         dbName,
         sparqlQuery,
-        queryId: "Delete Impact Type"
+        queryId: "Delete Credit"
       });
     } catch (e) {
       console.log(e)
@@ -132,10 +132,10 @@ export const deleteImpactById = async ( id, dbName, dataSources ) => {
 
   if (!Array.isArray(id)) return id;
 
-  return removedIds;
+  return removedIds; 
 };
 
-export const editImpactById = async (id, input, dbName, dataSources, select, schema) => {
+export const editCreditById = async (id, input, dbName, dataSources, select, schema) => {
   if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);  
 
   // make sure there is input data containing what is to be edited
@@ -151,13 +151,13 @@ export const editImpactById = async (id, input, dbName, dataSources, select, sch
     editSelect.push(editItem.key);
   }
 
-  const sparqlQuery = selectImpactTypeQuery(id, editSelect );
+  const sparqlQuery = selectCreditQuery(id, editSelect );
 
   let response = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery,
-    queryId: "Select Impact Type",
-    singularizeSchema: singularizeImpactTypeSchema
+    queryId: "Select Credit",
+    singularizeSchema: singularizeCreditSchema
   });
 
   if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`);
@@ -185,10 +185,10 @@ export const editImpactById = async (id, input, dbName, dataSources, select, sch
   }
 
   const query = updateQuery(
-    `http://cyio.darklight.ai/impact-type--${id}`,
-    "http://nist.gov/ns/vulnerability#ImpactType",
+    `http://cyio.darklight.ai/credit--${id}`,
+    "http://nist.gov/ns/vulnerability#Credit",
     input,
-    impactTypePredicateMap
+    creditPredicateMap
   );
 
   if (query !== null) {
@@ -197,7 +197,7 @@ export const editImpactById = async (id, input, dbName, dataSources, select, sch
       response = await dataSources.Stardog.edit({
         dbName,
         sparqlQuery: query,
-        queryId: "Update ImpactType"
+        queryId: "Update Credit"
       });  
     } catch (e) {
       console.log(e)
@@ -205,30 +205,30 @@ export const editImpactById = async (id, input, dbName, dataSources, select, sch
     }
   }
 
-  const selectQuery = selectImpactTypeQuery(id, select);
+  const selectQuery = selectCreditQuery(id, select);
 
   const result = await dataSources.Stardog.queryById({
     dbName,
     sparqlQuery: selectQuery,
-    queryId: "Select Impact Type",
-    singularizeSchema: singularizeImpactTypeSchema
+    queryId: "Select Credit",
+    singularizeSchema: singularizeCreditSchema
   });
 
-  const reducer = getReducer("IMPACTTYPE");
+  const reducer = getReducer("CREDIT");
 
   return reducer(result[0]);
 };
 
-export const findImpactByIri = async (iri, dbName, dataSources, select) => {
-  const sparqlQuery = selectImpactTypeQueryByIriQuery(iri, select);
+export const findCreditByIri = async (iri, dbName, dataSources, select) => {
+  const sparqlQuery = selectCreditQuery(iri, select);
   let response;
 
   try {
     response = await dataSources.Stardog.queryById({
       dbName: dbName,
       sparqlQuery,
-      queryId: "Select ImpactType",
-      singularizeSchema: singularizeImpactTypeSchema
+      queryId: "Select Credit",
+      singularizeSchema: singularizeCreditSchema
     });
   } catch (e) {
     console.log(e)
@@ -236,7 +236,7 @@ export const findImpactByIri = async (iri, dbName, dataSources, select) => {
   }
 
   if (response === undefined || response === null || response.length === 0) return null;
-  const reducer = getReducer("IMPACTTYPE");
+  const reducer = getReducer("CREDIT");
 
   return reducer(response[0]);  
 };

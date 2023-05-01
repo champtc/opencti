@@ -4,50 +4,49 @@ import {
   parameterizePredicate, 
   buildSelectVariables,
   generateId,
-  DARKLIGHT_NS
-} from '../../../utils.js';
+} from '../../../../utils.js';
 
 // Reducer Selection
 export function getReducer(type) {
   switch (type) {
-    case 'IMPACTTYPE':
-      return impactTypeReducer;
+    case 'UNKNOWN-METRIC':
+      return impactUnknownMetric;
     default:
       throw new UserInputError(`Unsupported reducer type ' ${type}'`)
   }
 }
 
-const impactTypeReducer = (item) => {
+const impactUnknownMetric = (item) => {
   // if no object type was returned, compute the type from the IRI
   if (item.object_type === undefined) {
     if (item.entity_type !== undefined) item.object_type = item.entity_type;
-    if (item.iri.includes('impact-type')) item.object_type = 'impact-type';
+    if (item.iri.includes('unknown-metric-type')) item.object_type = 'unknown-metric-type';
 }
 
 return {
     iri: item.iri,
     id: item.id,
     ...(item.object_type && { entity_type: item.object_type }),
-    ...(item.capec_id && { capec_id: item.capec_id }),
-    ...(item.description && { description: item.description }),
+    ...(item.metric_type && { metric_type: item.metric_type }),
+    ...(item.content && { content: item.content }),
   }
 };
 
 // Serialization schema
-export const singularizeImpactTypeSchema = { 
+export const singularizeUnknownMetricSchema = { 
   singularizeVariables: {
     "": false, // so there is an object as the root instead of an array
     "id": true,
     "iri": true,
     "object_type": true,
     "entity_type": true,
-    "capec_id": true,
-    "description": true,
+    "metric_type": true,
+    "content": true,
   }
 };
 
 // Predicate Maps
-export const impactTypePredicateMap = {
+export const unknownMetricPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
@@ -63,40 +62,39 @@ export const impactTypePredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  capec_id: {
-    predicate: "<http://darklight.ai/ns/common#capec_id>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:string` : null,  this.predicate, "capec_id");},
+  metric_type: {
+    predicate: "<http://darklight.ai/ns/common#metric_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:string` : null,  this.predicate, "metric_type");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  description: {
-    predicate: "<http://darklight.ai/ns/common#description>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:string` : null,  this.predicate, "description");},
+  content: {
+    predicate: "<http://darklight.ai/ns/common#content>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:string` : null,  this.predicate, "content");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 };
 
-export const generateImpactId = (input) => {
-  return generateId(input, DARKLIGHT_NS);
+export const generateUnknownMetricId = (input) => {
+  return generateId();
 }
 
-export const getImpactIri = (id) => {
-  const iri = `http://cyio.darklight.ai/vulnerability--${id}`;
-  return iri;
+export const getUnknownMetricIri = (id) => {
+  return `http://cyio.darklight.ai/unknown-metric-type--${id}`;
 }
 
-export const insertImpactQuery = (propValues, id) => {
+export const insertUnknownMetricQuery = (propValues, id) => {
   // determine the appropriate ontology class type
-  const iri = `<http://cyio.darklight.ai/impact-type--${id}>`;
+  const iri = `<http://cyio.darklight.ai/unknown-metric-type--${id}>`;
   const insertPredicates = [];
   
   Object.entries(propValues).forEach((propPair) => {
-    if (impactTypePredicateMap.hasOwnProperty(propPair[0])) {
+    if (unknownMetricPredicateMap.hasOwnProperty(propPair[0])) {
       if (Array.isArray(propPair[1])) {
         for (let value of propPair[1]) {
-          insertPredicates.push(impactTypePredicateMap[propPair[0]].binding(iri, value));
+          insertPredicates.push(unknownMetricPredicateMap[propPair[0]].binding(iri, value));
         }  
       } else {
-        insertPredicates.push(impactTypePredicateMap[propPair[0]].binding(iri, propPair[1]));
+        insertPredicates.push(unknownMetricPredicateMap[propPair[0]].binding(iri, propPair[1]));
       }
     }
   });
@@ -104,11 +102,11 @@ export const insertImpactQuery = (propValues, id) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://nist.gov/ns/vulnerability#ImpactType> .
-      ${iri} a <http://oasis-org/ns/cti/stix/domain/ImpactType> .
+      ${iri} a <http://nist.gov/ns/vulnerability#UnknownMetricType> .
+      ${iri} a <http://oasis-org/ns/cti/stix/domain/UnknownMetricType> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
-      ${iri} <http://darklight.ai/ns/common#object_type> "impact-type" . 
+      ${iri} <http://darklight.ai/ns/common#object_type> "unknown-metric-type" . 
       ${insertPredicates.join(" . \n")}
     }
   }
@@ -117,11 +115,11 @@ export const insertImpactQuery = (propValues, id) => {
   return {iri, id, query}
 }
 
-export const selectImpactTypeQuery = (id, select) => {
-  return selectImpactTypeQueryByIriQuery(`http://cyio.darklight.ai/impact-type--${id}`, select);
+export const selectUnknownMetricQuery = (id, select) => {
+  return selectUnknownMetricByIriQuery(`http://cyio.darklight.ai/unknown-metric-type--${id}`, select);
 }
 
-export const selectImpactTypeQueryByIriQuery = (iri, select) => {
+export const selectUnknownMetricByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
   if (select === undefined || select === null) select = Object.keys(impactTypePredicateMap);
 
@@ -129,24 +127,24 @@ export const selectImpactTypeQueryByIriQuery = (iri, select) => {
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
-  const { selectionClause, predicates } = buildSelectVariables(impactTypePredicateMap, select);
+  const { selectionClause, predicates } = buildSelectVariables(unknownMetricPredicateMap, select);
 
   return `
   SELECT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://nist.gov/ns/vulnerability#ImpactType> .
+    ?iri a <http://nist.gov/ns/vulnerability#UnknownMetricType> .
     ${predicates}
   }`
 }
 
-export const deleteImpactTypeQuery = (id) => {
-  const iri = `http://cyio.darklight.ai/impact-type--${id}`;
-  return deleteImpactTypeByIriQuery(iri);
+export const deleteUnknownMetricQuery = (id) => {
+  const iri = `http://cyio.darklight.ai/unknown-metric-type--${id}`;
+  return deleteUnknownMetricByIriQuery(iri);
 }
 
-export const deleteImpactTypeByIriQuery = (iri) => {
+export const deleteUnknownMetricByIriQuery = (iri) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
   
   return `
@@ -156,7 +154,7 @@ export const deleteImpactTypeByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://nist.gov/ns/vulnerability#ImpactType> .
+      ?iri a <http://nist.gov/ns/vulnerability#UnknownMetricType> .
       ?iri ?p ?o
     }
   }

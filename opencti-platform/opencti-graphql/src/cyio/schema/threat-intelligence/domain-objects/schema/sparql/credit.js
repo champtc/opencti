@@ -4,49 +4,52 @@ import {
   parameterizePredicate, 
   buildSelectVariables,
   generateId,
-} from '../../../utils.js';
+  DARKLIGHT_NS
+} from '../../../../utils.js';
 
 // Reducer Selection
 export function getReducer(type) {
   switch (type) {
-    case 'UNKNOWNMETRIC':
-      return impactUnknownMetric;
+    case 'CREDIT':
+      return creditReducer;
     default:
       throw new UserInputError(`Unsupported reducer type ' ${type}'`)
   }
 }
 
-const impactUnknownMetric = (item) => {
+const creditReducer = (item) => {
   // if no object type was returned, compute the type from the IRI
   if (item.object_type === undefined) {
     if (item.entity_type !== undefined) item.object_type = item.entity_type;
-    if (item.iri.includes('unknown-metric-type')) item.object_type = 'unknown-metric-type';
-}
+    if (item.iri.includes('credit')) item.object_type = 'credit';
+  }
 
-return {
+  return {
     iri: item.iri,
     id: item.id,
     ...(item.object_type && { entity_type: item.object_type }),
-    ...(item.metric_type && { metric_type: item.metric_type }),
-    ...(item.content && { content: item.content }),
+    ...(item.credit_name && { credit_name: item.credit_name }),
+    ...(item.user_id && { user_id: item.user_id }),
+    ...(item.credit_type && { credit_type: item.credit_type }),
   }
 };
 
 // Serialization schema
-export const singularizeUnknownMetricSchema = { 
+export const singularizeCreditSchema = { 
   singularizeVariables: {
     "": false, // so there is an object as the root instead of an array
     "id": true,
     "iri": true,
     "object_type": true,
     "entity_type": true,
-    "metric_type": true,
-    "content": true,
+    "credit_name": true,
+    "user_id": true,
+    "credit_type": true
   }
 };
 
 // Predicate Maps
-export const unknownMetricPredicateMap = {
+export const creditPredicateMap = {
   id: {
     predicate: "<http://darklight.ai/ns/common#id>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"`: null, this.predicate, "id");},
@@ -62,39 +65,47 @@ export const unknownMetricPredicateMap = {
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "entity_type");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  metric_type: {
-    predicate: "<http://darklight.ai/ns/common#metric_type>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:string` : null,  this.predicate, "metric_type");},
+  credit_name: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#credit_name>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "credit_name");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
-  content: {
-    predicate: "<http://darklight.ai/ns/common#content>",
-    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:string` : null,  this.predicate, "content");},
+  user_id: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#user_id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "user_id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
+  credit_type: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#credit_type>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "credit_type");},
     optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
 };
 
-export const generateUnknownMetricId = (input) => {
-  return generateId();
+// Utilities
+export const generateCreditId = (input) => {
+  return generateId(input, DARKLIGHT_NS);
 }
 
-export const getUnkownMetricIri = (id) => {
-  return `http://cyio.darklight.ai/unknown-metric-type--${id}`;
+export const getCreditIri = (id) => {
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`);
+  return `<http://cyio.darklight.ai/credit--${id}>`;
 }
 
-export const insertUnkownMetricQuery = (propValues, id) => {
+// Query Builder - AffectedProduct
+export const insertCreditQuery = (id, propValues) => {
+  const iri = getCreditIri(id);
+
   // determine the appropriate ontology class type
-  const iri = `<http://cyio.darklight.ai/unknown-metric-type--${id}>`;
   const insertPredicates = [];
-  
   Object.entries(propValues).forEach((propPair) => {
-    if (unknownMetricPredicateMap.hasOwnProperty(propPair[0])) {
+    if (creditPredicateMap.hasOwnProperty(propPair[0])) {
       if (Array.isArray(propPair[1])) {
         for (let value of propPair[1]) {
-          insertPredicates.push(unknownMetricPredicateMap[propPair[0]].binding(iri, value));
+          insertPredicates.push(creditPredicateMap[propPair[0]].binding(iri, value));
         }  
       } else {
-        insertPredicates.push(unknownMetricPredicateMap[propPair[0]].binding(iri, propPair[1]));
+        insertPredicates.push(creditPredicateMap[propPair[0]].binding(iri, propPair[1]));
       }
     }
   });
@@ -102,11 +113,11 @@ export const insertUnkownMetricQuery = (propValues, id) => {
   const query = `
   INSERT DATA {
     GRAPH ${iri} {
-      ${iri} a <http://nist.gov/ns/vulnerability#UnknownMetricType> .
-      ${iri} a <http://oasis-org/ns/cti/stix/domain/UnknownMetricType> .
+      ${iri} a <http://nist.gov/ns/vulnerability#Credit> .
+      ${iri} a <http://oasis-org/ns/cti/stix/domain/Credit> .
       ${iri} a <http://darklight.ai/ns/common#Object> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}" .
-      ${iri} <http://darklight.ai/ns/common#object_type> "unknown-metric-type" . 
+      ${iri} <http://darklight.ai/ns/common#object_type> "credit" . 
       ${insertPredicates.join(" . \n")}
     }
   }
@@ -115,38 +126,38 @@ export const insertUnkownMetricQuery = (propValues, id) => {
   return {iri, id, query}
 }
 
-export const selectUnknownMetricQuery = (id, select) => {
-  return selectUnknownMetricByIriQuery(`http://cyio.darklight.ai/unknown-metric-type--${id}`, select);
-}
+export const selectCreditQuery = (id, select) => {
+  return selectCreditQueryByIriQuery(getCreditIri(id), select);
+};
 
-export const selectUnknownMetricByIriQuery = (iri, select) => {
+export const selectCreditQueryByIriQuery = (iri, select) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select === undefined || select === null) select = Object.keys(impactTypePredicateMap);
+  if (select === undefined || select === null) select = Object.keys(creditPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
-  const { selectionClause, predicates } = buildSelectVariables(unknownMetricPredicateMap, select);
-
+  const { selectionClause, predicates } = buildSelectVariables(creditPredicateMap, select);
+  
   return `
   SELECT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
-    ?iri a <http://nist.gov/ns/vulnerability#UnknownMetricType> .
+    ?iri a <http://nist.gov/ns/vulnerability#Credit> .
     ${predicates}
   }`
-}
+};
 
-export const deleteUnknownMetricQuery = (id) => {
-  const iri = `http://cyio.darklight.ai/unknown-metric-type--${id}`;
-  return deleteUnknownMetricByIriQuery(iri);
-}
+export const deleteCreditQuery = (id) => {
+  const iri = `http://cyio.darklight.ai/credit--${id}`;
+  return deleteCreditByIriQuery(iri);
+};
 
-export const deleteUnknownMetricByIriQuery = (iri) => {
+export const deleteCreditByIriQuery = (iri) => {
   if (!iri.startsWith('<')) iri = `<${iri}>`;
-  
+
   return `
   DELETE {
     GRAPH ${iri} {
@@ -154,9 +165,9 @@ export const deleteUnknownMetricByIriQuery = (iri) => {
     }
   } WHERE {
     GRAPH ${iri} {
-      ?iri a <http://nist.gov/ns/vulnerability#UnknownMetricType> .
+      ?iri a <http://nist.gov/ns/vulnerability#Credit> .
       ?iri ?p ?o
     }
   }
   `
-}
+};

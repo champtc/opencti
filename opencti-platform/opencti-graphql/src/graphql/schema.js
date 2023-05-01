@@ -110,7 +110,7 @@ import oscalRoleResolvers from '../cyio/schema/risk-assessments/oscal-common/res
 import assessmentCommonResolvers from '../cyio/schema/risk-assessments/assessment-common/resolvers/assessmentCommon.js';
 import cyioAssessmentResultsResolvers from '../cyio/schema/risk-assessments/assessment-results/resolvers/assessmentResult.js';
 import cyioResultResolvers from '../cyio/schema/risk-assessments/assessment-results/resolvers/result';
-import cyiofindingresolvers from '../cyio/schema/risk-assessments/assessment-results/resolvers/finding.js';
+import cyioFindingResolvers from '../cyio/schema/risk-assessments/assessment-results/resolvers/finding.js';
 import activityResolvers from '../cyio/schema/risk-assessments/assessment-common/resolvers/activity.js';
 import actorResolvers from '../cyio/schema/risk-assessments/assessment-common/resolvers/actor.js';
 import assessmentPlatformResolvers from '../cyio/schema/risk-assessments/assessment-common/resolvers/assessmentPlatform.js';
@@ -143,6 +143,14 @@ import cyioInformationTypeCatalogResolvers from '../cyio/schema/information-syst
 import cyioDescriptionBlockResolvers from '../cyio/schema/information-system/resolvers/descriptionBlock.js';
 import cyioOscalUserResolvers from '../cyio/schema/risk-assessments/oscal-common/resolvers/oscalUser.js';
 import cyioOscalLeveragedAuthorizationResolvers from '../cyio/schema/risk-assessments/oscal-common/resolvers/oscalLeveragedAuthorization.js';
+import cyioVulnerabilityResolvers from '../cyio/schema/threat-intelligence/domain-objects/resolvers/vulnerability.js';
+import cvssResolvers from '../cyio/schema/threat-intelligence/domain-objects/resolvers/cvss.js';
+import cyioAffectedProductResolvers from '../cyio/schema/threat-intelligence/domain-objects/resolvers/affectedProduct.js';
+import cyioVulnerabilityImpactResolvers from '../cyio/schema/threat-intelligence/domain-objects/resolvers/vulnerabilityImpact.js';
+import cyioProblemTypeResolvers from '../cyio/schema/threat-intelligence/domain-objects/resolvers/problemType.js';
+import cyioTaxonomyEntryResolvers from '../cyio/schema/threat-intelligence/domain-objects/resolvers/taxonomyEntry.js';
+import cyioCreditResolvers from '../cyio/schema/threat-intelligence/domain-objects/resolvers/credit.js';
+import cyioUnknownMetricResolvers from '../cyio/schema/threat-intelligence/domain-objects/resolvers/unknownMetric.js';
 
 // Cyio Extensions to support merged graphQL schema
 
@@ -266,7 +274,7 @@ const createSchema = () => {
     assessmentCommonResolvers,
     cyioAssessmentResultsResolvers,
     cyioResultResolvers,
-    cyiofindingresolvers,
+    cyioFindingResolvers,
     activityResolvers,
     actorResolvers,
     assessmentPlatformResolvers,
@@ -299,6 +307,14 @@ const createSchema = () => {
     cyioDescriptionBlockResolvers,
     cyioOscalUserResolvers,
     cyioOscalLeveragedAuthorizationResolvers,
+    cyioVulnerabilityResolvers,
+    cvssResolvers,
+    cyioAffectedProductResolvers,
+    cyioVulnerabilityImpactResolvers,
+    cyioProblemTypeResolvers,
+    cyioTaxonomyEntryResolvers,
+    cyioCreditResolvers,
+    cyioUnknownMetricResolvers,
 ]);
 
   // load the OpenCTI and each of the Cyio GraphQL schema files

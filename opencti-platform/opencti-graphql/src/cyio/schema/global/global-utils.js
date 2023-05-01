@@ -74,7 +74,28 @@ import {
   authorizedPrivilegePredicateMap,
 } from '../risk-assessments/oscal-common/schema/sparql/oscalUser.js' ;
 import { oscalLeveragedAuthorizationPredicateMap } from '../risk-assessments/oscal-common/schema/sparql/oscalLeveragedAuthorization.js';
+import { cvssPredicateMap, cvssSelectPredicateMap } from "../threat-intelligence/domain-objects/schema/sparql/cvss.js";
+import { vulnerabilityPredicateMap } from "../threat-intelligence/domain-objects/schema/sparql/vulnerability.js";
+import { vulnerabilityImpactPredicateMap } from "../threat-intelligence/domain-objects/schema/sparql/vulnerabilityImpact.js";
+import { versionSpecPredicateMap } from "../threat-intelligence/domain-objects/schema/sparql/versionSpec.js";
+import { taxonomyEntryPredicateMap } from "../threat-intelligence/domain-objects/schema/sparql/taxonomyEntry.js";
+import { problemTypePredicateMap } from "../threat-intelligence/domain-objects/schema/sparql/problemType.js";
 
+
+// sanitize input
+export const sanitizeInputFields = (input) => {
+  // remove input fields with null or empty values so creation will work
+  for (const [key, value] of Object.entries(input)) {
+    if (Array.isArray(input[key]) && input[key].length === 0) {
+      delete input[key];
+      continue;
+    }
+    
+    if (value === null || value.length === 0) {
+      delete input[key];
+    }
+  }
+};
 
 // find id of parent
 export const findParentId = (iri) => {
@@ -201,6 +222,11 @@ export const objectMap = {
     classIri: "http://csrc.nist.gov/ns/oscal/common#Address",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#Address"
   },
+  "affected-product": {
+    graphQLType: "AffectedProduct",
+    classIri: "http://nist.gov/ns/vulnerability#AffectedProduct",
+    iriTemplate: "http://cyio.darklight.ai/affected-product"
+  },
   "appliance": {
     predicateMap: hardwarePredicateMap,
     graphQLType: "ApplianceDeviceAsset",
@@ -287,6 +313,38 @@ export const objectMap = {
     graphQLType: "ControlObjective",
     classIri: "<http://csrc.nist.gov/ns/oscal/assessment/common#ControlObjective>",
     iriTemplate: "http://cyio.darklight.ai/control-objective"
+  },
+  "credit": {
+    graphQLType: "Credit",
+    classIri: "http://nist.gov/ns/vulnerability#Credit",
+    iriTemplate: "http://cyio.darklight.ai/credit"
+  },
+  "cvss": {
+    predicateMap: cvssPredicateMap,
+    graphQLType: "CVSS",
+    classIri: "http://first.org/ns/cvss#CVSS",
+    iriTemplate: "http://cyio.darklight.ai/cvss"
+  },
+  "cvss-v2": {
+    predicateMap: cvssPredicateMap,
+    graphQLType: "CVSSv2",
+    parent: "cvss",
+    classIri: "http://first.org/ns/cvss#CVSSv2",
+    iriTemplate: "http://cyio.darklight.ai/cvss"
+  },
+  "cvss-v3": {
+    predicateMap: cvssPredicateMap,
+    graphQLType: "CVSSv3",
+    parent: "cvss",
+    classIri: "http://first.org/ns/cvss#CVSSv3",
+    iriTemplate: "http://cyio.darklight.ai/cvss"
+  },
+  "cvss-v4": {
+    predicateMap: cvssPredicateMap,
+    graphQLType: "CVSSv4",
+    parent: "cvss",
+    classIri: "http://first.org/ns/cvss#CVSSv4",
+    iriTemplate: "http://cyio.darklight.ai/cvss"
   },
   "data-source": {
     predicateMap: dataSourcePredicateMap,
@@ -420,6 +478,12 @@ export const objectMap = {
     classIri: "http://docs.oasis-open.org/ns/cti/data-marking#MarkingDefinition",
     iriTemplate: "http://cyio.darklight.ai/marking-definition"
   },
+  "metric-type": {
+    predicateMap: cvssSelectPredicateMap,
+    graphQLType: "MetricType",
+    classIri: "http://nist.gov/ns/vulnerability#MetricType",
+    iriTemplate: "http://cyio.darklight.ai/metric-type"
+  },
   "mitigating-factor": {
     predicateMap: mitigatingFactorPredicateMap,
     graphQLType: "actor",
@@ -541,6 +605,13 @@ export const objectMap = {
     classIri: "http://darklight.ai/ns/nist-7693-dlex#PBX",
     iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#PBX",
   },
+  "physical-device": {
+    predicateMap: hardwarePredicateMap,
+    graphQLType: "PhysicalDeviceAsset",
+    parent: "hardware",
+    classIri: "http://darklight.ai/ns/nist-7693-dlex#PhysicalDevice",
+    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#PhysicalDevice",
+  },
   "poam": {
     predicateMap: poamPredicateMap,
     graphQLType: "POAM",
@@ -566,12 +637,11 @@ export const objectMap = {
     classIri: "http://darklight.ai/ns/nist-7693-dlex#Printer",
     iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#Printer",
   },
-  "physical-device": {
-    predicateMap: hardwarePredicateMap,
-    graphQLType: "PhysicalDeviceAsset",
-    parent: "hardware",
-    classIri: "http://darklight.ai/ns/nist-7693-dlex#PhysicalDevice",
-    iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#PhysicalDevice",
+  "problem-type": {
+    predicateMap: problemTypePredicateMap,
+    graphQLType: "ProblemType",
+    classIri: "http://nist.gov/ns/vulnerability#ProblemType",
+    iriTemplate: "http://cyio.darklight.ai/problem-type"
   },
   "required-asset": {
     predicateMap: requiredAssetPredicateMap,
@@ -638,11 +708,23 @@ export const objectMap = {
     classIri: "http://csrc.nist.gov/ns/oscal/assessment/common#Subject",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/assessment/common#Subject"
   },
+  "taxonomy-map-entry": {
+    predicateMap: taxonomyEntryPredicateMap,
+    graphQLType: "TaxonomyMapEntry",
+    classIri: "http://nist.gov/ns/vulnerability#TaxonomyMapEntry",
+    iriTemplate: "http://cyio.darklight.ai/taxonomy-map-entry"
+  },
   "telephone-number": {
     predicateMap: phoneNumberPredicateMap,
     graphQLType: "TelephoneNumber",
     classIri: "http://csrc.nist.gov/ns/oscal/common#TelephoneNumber",
     iriTemplate: "http://csrc.nist.gov/ns/oscal/common#TelephoneNumber"
+  },
+  "version-spec": {
+    predicateMap: versionSpecPredicateMap,
+    graphQLType: "VersionSpec",
+    classIri: "http://nist.gov/ns/vulnerability#VersionSpec",
+    iriTemplate: "http://cyio.darklight.ai/version-spec"
   },
   "voip-device": {
     predicateMap: hardwarePredicateMap,
@@ -664,6 +746,18 @@ export const objectMap = {
     parent: "voip-device",
     classIri: "http://darklight.ai/ns/nist-7693-dlex#VoIPRouter",
     iriTemplate: "http://darklight.ai/ns/nist-7693-dlex#VoIPRouter",
+  },
+  "vulnerability": {
+    predicateMap: vulnerabilityPredicateMap,
+    graphQLType: "Vulnerability",
+    classIri: "http://nist.gov/ns/vulnerability#Vulnerability",
+    iriTemplate: "http://cyio.darklight.ai/vulnerability"
+  },
+  "vulnerability-impact": {
+    predicateMap: vulnerabilityImpactPredicateMap,
+    graphQLType: "VulnerabilityImpact",
+    classIri: "http://nist.gov/ns/vulnerability#VulnerabilityImpact",
+    iriTemplate: "http://cyio.darklight.ai/vulnerability-impact"
   },
   "wireless-access-point": {
     predicateMap: hardwarePredicateMap,

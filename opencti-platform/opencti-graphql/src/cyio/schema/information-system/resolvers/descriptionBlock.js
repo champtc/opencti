@@ -14,6 +14,9 @@ import {
 	editDiagramRefById,
 } from '../domain/descriptionBlock.js';
 import { findDataMarkingByIri } from '../../data-markings/domain/dataMarkings.js';
+import { findLabelByIri } from '../../global/domain/label.js';
+import { findLinkByIri } from '../../risk-assessments/oscal-common/domain/oscalLink.js';
+import { findRemarkByIri } from '../../risk-assessments/oscal-common/domain/oscalRemark.js';
 
 
 const cyioDescriptionBlockResolvers = {
@@ -66,13 +69,43 @@ const cyioDescriptionBlockResolvers = {
       return results;
     },
     labels: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.labels_iris === undefined) return [];
+      if (parent.label_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.label_iris) {
+        let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
     },
     links: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.links_iris === undefined) return [];
+      if (parent.link_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.link_iris) {
+        let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
     },
     remarks: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.remarks_iris === undefined) return [];
+      if (parent.remark_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.remark_iris) {
+        let result = await findRemarkByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
     },
 	},
 };

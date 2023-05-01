@@ -7,7 +7,6 @@ import jwt from 'jsonwebtoken';
 import { defaultFieldResolver } from 'graphql';
 import { getDirective, MapperKind, mapSchema } from '@graphql-tools/utils';
 import { auth, hasPermission, hasRole, KeycloakContext } from 'keycloak-connect-graphql';
-import KeycloakAdminClient from '@darklight/keycloak-admin-client';
 import { v4 as uuid } from 'uuid';
 import conf, { logApp } from '../config/conf';
 import extractTokenFromBearer from '../utils/tokens';
@@ -20,15 +19,6 @@ const enabled = process.env.POLICY_ENFORCEMENT ? process.env.POLICY_ENFORCEMENT 
 
 let keycloakInstance;
 let adminToken;
-
-const keycloakAdminClient = new KeycloakAdminClient({
-  serverUrl: keycloakServer,
-  clientId,
-  realm,
-  credentials: {
-    secret,
-  },
-});
 
 export const keycloakEnabled = () => {
   return enabled;
@@ -391,14 +381,6 @@ export const roleDirectiveTransformer = (schema, directiveName = 'hasRole') => {
 };
 
 export const keycloakAlive = async () => {
-  try {
-    logApp.info('[INIT] Authenticating Keycloak admin client');
-    await keycloakAdminClient.auth();
-  } catch (e) {
-    logApp.error(`[INIT] Keycloak admin client failed to authenticate`, e);
-    throw e;
-  }
-
   if (!keycloakEnabled()) return false;
   try {
     keycloakInstance = new Keycloak(
@@ -469,4 +451,4 @@ export const applyKeycloakContext = (context, req) => {
   }
 };
 
-export { keycloakAdminClient };
+export default applyKeycloakContext;

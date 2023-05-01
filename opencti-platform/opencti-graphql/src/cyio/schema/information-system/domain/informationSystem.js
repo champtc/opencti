@@ -824,8 +824,8 @@ export const attachToInformationSystem = async (id, field, entityId, dbName, dat
     'responsible_parties': 'oscal-responsible-party',
     'object_markings': 'marking-definition',
     'labels': 'label',
-    'links': 'link',
-    'remarks': 'remark',
+    'links': 'external-reference',
+    'remarks': 'note',
     // internal fields
     'components': 'component',
     'inventory_items': 'inventory-item',

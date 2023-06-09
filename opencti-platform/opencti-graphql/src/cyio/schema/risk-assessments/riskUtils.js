@@ -10,24 +10,23 @@ export const getOverallRisk = async (riskIris, dbName, dataSources) => {
   // make single IRI into an array
   if (!Array.isArray(riskIris)) riskIris = [riskIris];
 
-  for (const iri of riskIris) {
-    if (iri === undefined || !iri.includes('Risk')) continue;
-    const select = ['risk_level','first_seen'];
-    const sparqlQuery = selectRiskByIriQuery(iri, select);
-    let response;
-    try {
-      response = await dataSources.Stardog.queryById({
-        dbName,
-        sparqlQuery,
-        queryId: 'Select Risk',
-        singularizeSchema,
-      });
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
-    if (response === undefined) return null;
-    let risk = response[0];
+  // PATCH: 08-Jun-2023
+  const select = ['risk_level','first_seen'];
+  const sparqlQuery = selectRiskByIriQuery(riskIris, select);
+  let response;
+  try {
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: 'Select Risk',
+      singularizeSchema,
+    });
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
+  if (response === undefined) return null;
+  for (let risk of response) {
     if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
       // calculate the risk level
       const { riskLevel, riskScore } = calculateRiskLevel(risk);
@@ -37,6 +36,35 @@ export const getOverallRisk = async (riskIris, dbName, dataSources) => {
       }
     }
   }
+
+  // PATCH: 08-Jun-2023
+  // for (const iri of riskIris) {
+  //   if (iri === undefined || !iri.includes('Risk')) continue;
+  //   const select = ['risk_level','first_seen'];
+  //   const sparqlQuery = selectRiskByIriQuery(iri, select);
+  //   let response;
+  //   try {
+  //     response = await dataSources.Stardog.queryById({
+  //       dbName,
+  //       sparqlQuery,
+  //       queryId: 'Select Risk',
+  //       singularizeSchema,
+  //     });
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw e;
+  //   }
+  //   if (response === undefined) return null;
+  //   let risk = response[0];
+  //   if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
+  //     // calculate the risk level
+  //     const { riskLevel, riskScore } = calculateRiskLevel(risk);
+  //     if (riskScore >= highestRiskScore) {
+  //       highestRiskScore = riskScore;
+  //       highestRiskSeverity = riskLevel;
+  //     }
+  //   }
+  // }
   return { highestRiskScore, highestRiskSeverity } ;
 };
 

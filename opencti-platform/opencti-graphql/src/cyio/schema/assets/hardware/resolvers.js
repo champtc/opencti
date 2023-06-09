@@ -847,43 +847,73 @@ const hardwareResolvers = {
     },
     installed_software: async (parent, _, {dbName, dataSources, selectMap}) => {
       if (parent.installed_sw_iri === undefined) return [];
-      let iriArray = parent.installed_sw_iri;
       const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        let reducer = getSoftwareReducer('SOFTWARE');
-        for (let iri of iriArray) {
-          // check if this is an software object
-          if (iri === undefined || !iri.includes('Software')) {
-            continue;
-          }
 
-          // query for the Software based on its IRI
-          let sparqlQuery = selectSoftwareByIriQuery(iri, selectMap.getNode('installed_software'));
-          const response = await dataSources.Stardog.queryById({
-            dbName,
-            sparqlQuery,
-            queryId: "Select Installed Software for Hardware Asset",
-            singularizeSchema
-          })
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]))
-          }
-          else {
-            // Handle reporting Stardog Error
-            if (typeof (response) === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: (response.body.message ? response.body.message : response.body),
-                error_code: (response.body.code ? response.body.code : 'N/A')
-              });
-            }
-          }
+      // PATCH: 08-Jun-2023
+      let response;
+      try {
+        const sparqlQuery = selectSoftwareByIriQuery(parent.installed_sw_iri, selectMap.getNode('installed_software'));
+        response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: 'Select Software',
+          singularizeSchema,
+        });
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+      if (response === undefined || response.length === 0 ) return [];
+
+      const reducer = getSoftwareReducer('SOFTWARE');
+      for (let result of response) {
+        // Convert date field values that are represented as JavaScript Date objects
+        if (result.last_scanned !== undefined) {
+          if (result.last_scanned instanceof Date) result.last_scanned = result.last_scanned.toISOString();
         }
 
-        return results;
-      } else {
-        return [];
+        results.push(reducer(result));
       }
+
+      // PATCH: 08-Jun-2023
+      // let iriArray = parent.installed_sw_iri;
+      // if (Array.isArray(iriArray) && iriArray.length > 0) {
+      //   let reducer = getSoftwareReducer('SOFTWARE');
+      //   for (let iri of iriArray) {
+      //     // check if this is an software object
+      //     if (iri === undefined || !iri.includes('Software')) {
+      //       continue;
+      //     }
+
+      //     // query for the Software based on its IRI
+      //     let sparqlQuery = selectSoftwareByIriQuery(iri, selectMap.getNode('installed_software'));
+      //     const response = await dataSources.Stardog.queryById({
+      //       dbName,
+      //       sparqlQuery,
+      //       queryId: "Select Installed Software for Hardware Asset",
+      //       singularizeSchema
+      //     })
+      //     if (response === undefined) return [];
+      //     if (Array.isArray(response) && response.length > 0) {
+      //       results.push(reducer(response[0]))
+      //     }
+      //     else {
+      //       // Handle reporting Stardog Error
+      //       if (typeof (response) === 'object' && 'body' in response) {
+      //         throw new UserInputError(response.statusText, {
+      //           error_details: (response.body.message ? response.body.message : response.body),
+      //           error_code: (response.body.code ? response.body.code : 'N/A')
+      //         });
+      //       }
+      //     }
+      //   }
+
+      //   return results;
+      // } else {
+      //   return [];
+      // }
+
+      return results;
     },
     installed_operating_system: async (parent, _, {dbName, dataSources, selectMap}) => {
       if (parent.installed_os_iri === undefined) return null;
@@ -1238,59 +1268,99 @@ const hardwareResolvers = {
     },
     related_risks: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.related_risks_iri === undefined) return [];
-      const iriArray = parent.related_risks_iri;
       const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getAssessmentReducer('RISK');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Risk')) continue;
-          const select = selectMap.getNode('related_risks');
-          const sparqlQuery = selectRiskByIriQuery(iri, select);
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Risk',
-              singularizeSchema: riskSingularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            let risk = response[0];
 
-            // Convert date field values that are represented as JavaScript Date objects
-            if (risk.first_seen !== undefined) {
-              if (risk.first_seen instanceof Date) risk.first_seen = risk.first_seen.toISOString();
-            }
-            if (risk.last_seen !== undefined) {
-              if (risk.last_seen instanceof Date) risk.last_seen = risk.last_seen.toISOString();
-            }
-
-            // calculate the risk level
-            risk.risk_level = 'unknown';
-            if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
-              const { riskLevel, riskScore } = calculateRiskLevel(risk);
-              risk.risk_score = riskScore;
-              risk.risk_level = riskLevel;
-            }
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
-        }
-        return results;
+      // PATCH: 08-Jun-2023
+      let response;
+      try {
+        const sparqlQuery = selectRiskByIriQuery(parent.related_risks_iri, selectMap.getNode('related_risks'));
+        response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: 'Select Risk',
+          singularizeSchema,
+        });
+      } catch (e) {
+        console.log(e);
+        throw e;
       }
-      return [];
+      if (response === undefined || response.length === 0 ) return [];
+
+      const reducer = getAssessmentReducer('RISK');
+      for (let risk of response) {
+        // Convert date field values that are represented as JavaScript Date objects
+        if (risk.first_seen !== undefined) {
+          if (risk.first_seen instanceof Date) risk.first_seen = risk.first_seen.toISOString();
+        }
+        if (risk.last_seen !== undefined) {
+          if (risk.last_seen instanceof Date) risk.last_seen = risk.last_seen.toISOString();
+        }
+
+        // calculate the risk level
+        risk.risk_level = 'unknown';
+        if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
+          const { riskLevel, riskScore } = calculateRiskLevel(risk);
+          risk.risk_score = riskScore;
+          risk.risk_level = riskLevel;
+        }
+
+        results.push(reducer(risk));
+      }
+
+      // PATCH: 08-Jun-2023
+      // const iriArray = parent.related_risks_iri;
+      // if (Array.isArray(iriArray) && iriArray.length > 0) {
+      //   const reducer = getAssessmentReducer('RISK');
+      //   for (const iri of iriArray) {
+      //     if (iri === undefined || !iri.includes('Risk')) continue;
+      //     const select = selectMap.getNode('related_risks');
+      //     const sparqlQuery = selectRiskByIriQuery(iri, select);
+      //     let response;
+      //     try {
+      //       response = await dataSources.Stardog.queryById({
+      //         dbName,
+      //         sparqlQuery,
+      //         queryId: 'Select Risk',
+      //         singularizeSchema: riskSingularizeSchema,
+      //       });
+      //     } catch (e) {
+      //       console.log(e);
+      //       throw e;
+      //     }
+      //     if (response === undefined) return [];
+      //     if (Array.isArray(response) && response.length > 0) {
+      //       let risk = response[0];
+
+      //       // Convert date field values that are represented as JavaScript Date objects
+      //       if (risk.first_seen !== undefined) {
+      //         if (risk.first_seen instanceof Date) risk.first_seen = risk.first_seen.toISOString();
+      //       }
+      //       if (risk.last_seen !== undefined) {
+      //         if (risk.last_seen instanceof Date) risk.last_seen = risk.last_seen.toISOString();
+      //       }
+
+      //       // calculate the risk level
+      //       risk.risk_level = 'unknown';
+      //       if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
+      //         const { riskLevel, riskScore } = calculateRiskLevel(risk);
+      //         risk.risk_score = riskScore;
+      //         risk.risk_level = riskLevel;
+      //       }
+      //       results.push(reducer(response[0]));
+      //     } else {
+      //       // Handle reporting Stardog Error
+      //       if (typeof response === 'object' && 'body' in response) {
+      //         throw new UserInputError(response.statusText, {
+      //           error_details: response.body.message ? response.body.message : response.body,
+      //           error_code: response.body.code ? response.body.code : 'N/A',
+      //         });
+      //       }
+      //     }
+      //   }
+      //   return results;
+      // }
+
+      return results;
     },
     responsible_parties: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.responsible_party_iris === undefined) return [];

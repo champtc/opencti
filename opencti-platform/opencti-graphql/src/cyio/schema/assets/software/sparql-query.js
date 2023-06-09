@@ -151,7 +151,8 @@ export const selectSoftwareQuery = (id, select) => {
   return selectSoftwareByIriQuery(`http://scap.nist.gov/ns/asset-identification#Software-${id}`, select);
 };
 export const selectSoftwareByIriQuery = (iri, select) => {
-  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  // PATCH: 08-Jun-2023
+  // if (!iri.startsWith('<')) iri = `<${iri}>`;
 
   // if no select values provides, use all available field names of the object
   if (select === undefined || select === null) select = Object.keys(softwarePredicateMap);
@@ -185,11 +186,26 @@ export const selectSoftwareByIriQuery = (iri, select) => {
   // build list of selection variables and predicates
   const { selectionClause, predicates } = buildSelectVariables(softwarePredicateMap, select);
 
+  // PATCH: 08-Jun-2023
+  // Build the "BIND" clause dependent upon value of iri
+  let bindClause;
+  if (Array.isArray(iri)) {
+    bindClause = '\tVALUES ?iri {\n'
+    for(let itemIri of iri) {
+      if (!itemIri.startsWith('<')) itemIri = `<${itemIri}>`;
+      bindClause = bindClause + `\t\t${itemIri}\n`;
+    }
+    bindClause = bindClause + '\t\t}'
+  } else {
+    if (!iri.startsWith('<')) iri = `<${iri}>`;
+    bindClause = `BIND(${iri} AS ?iri)`;
+  }  
+
   return `
   SELECT ?iri ${selectionClause} ${relatedRiskVariable}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    BIND(${iri} AS ?iri)
+    ${bindClause}
     ?iri a <http://scap.nist.gov/ns/asset-identification#Software> .
     ${predicates}
     ${relatedRiskClause}

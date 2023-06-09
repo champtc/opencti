@@ -3079,7 +3079,8 @@ export const selectRiskByIriQuery = (iri, select) => {
   let occurrences = '';
   let occurrenceQuery = '';
 
-  if (!iri.startsWith('<')) iri = `<${iri}>`;
+  // PATCH: 08-Jun-2023
+  // if (!iri.startsWith('<')) iri = `<${iri}>`;
   if (select === undefined || select === null) select = Object.keys(riskPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('entity_type')) select.push('entity_type');
@@ -3103,8 +3104,9 @@ export const selectRiskByIriQuery = (iri, select) => {
     if (!select.includes('cvss2_temporal_score')) select.push('cvss2_temporal_score');
     if (!select.includes('cvss3_base_score')) select.push('cvss3_base_score');
     if (!select.includes('cvss3_temporal_score')) select.push('cvss3_temporal_score');
-    if (!select.includes('available_exploit')) select.push('available_exploit');
-    if (!select.includes('exploitability_ease')) select.push('exploitability_ease');
+    // PATCH: 08-Jun-2023
+    // if (!select.includes('available_exploit')) select.push('available_exploit');
+    // if (!select.includes('exploitability_ease')) select.push('exploitability_ease');
   }
   // Update select to collect additional predicates if looking for response type
   if (select.includes('response_type') || select.includes('lifecycle')) {
@@ -3125,8 +3127,9 @@ export const selectRiskByIriQuery = (iri, select) => {
     selectionClause = selectionClause.replace('?cvss2_temporal_score', '');
     selectionClause = selectionClause.replace('?cvss3_base_score', '');
     selectionClause = selectionClause.replace('?cvss3_temporal_score', '');
-    selectionClause = selectionClause.replace('?available_exploit', '');
-    selectionClause = selectionClause.replace('?exploitability_ease', '');
+    // PATCH: 08-Jun-2023
+    // selectionClause = selectionClause.replace('?available_exploit', '');
+    // selectionClause = selectionClause.replace('?exploitability_ease', '');
   }
   if (select.includes('response_type') || select.includes('response_lifecycle')) {
     selectionClause = selectionClause.replace('?remediation_type', '');
@@ -3141,8 +3144,9 @@ export const selectRiskByIriQuery = (iri, select) => {
   if (select.includes('risk_level')) {
     insertSelections.push(`(MAX(?cvss2_base_score) AS ?cvssV2Base_score) (MAX(?cvss2_temporal_score) as ?cvssV2Temporal_score)`);
     insertSelections.push(`(MAX(?cvss3_base_score) AS ?cvssV3Base_score) (MAX(?cvss3_temporal_score) as ?cvssV3Temporal_score)`);
-    insertSelections.push(`(GROUP_CONCAT(DISTINCT ?available_exploit;SEPARATOR=",") as ?available_exploit_values)`);
-    insertSelections.push(`(GROUP_CONCAT(DISTINCT ?exploitability_ease;SEPARATOR=",") as ?exploitability_ease_values)`);
+    // PATCH: 08-Jun-2023
+    // insertSelections.push(`(GROUP_CONCAT(DISTINCT ?available_exploit;SEPARATOR=",") as ?available_exploit_values)`);
+    // insertSelections.push(`(GROUP_CONCAT(DISTINCT ?exploitability_ease;SEPARATOR=",") as ?exploitability_ease_values)`);
   }
   if (select.includes('response_type') || select.includes('response_lifecycle')) {
     insertSelections.push(`(GROUP_CONCAT(DISTINCT ?remediation_type;SEPARATOR=",") AS ?remediation_type_values)`);
@@ -3180,12 +3184,27 @@ export const selectRiskByIriQuery = (iri, select) => {
     groupByClause.push(`GROUP BY ?iri ${selectionClause.trim()} ${occurrences}`);
   }
 
+  // PATCH: 08-Jun-2023
+  // Build the "BIND" clause dependent upon value of iri
+  let bindClause;
+  if (Array.isArray(iri)) {
+    bindClause = '\tVALUES ?iri {\n'
+    for(let riskIri of iri) {
+      if (!riskIri.startsWith('<')) riskIri = `<${riskIri}>`;
+      bindClause = bindClause + `\t\t${riskIri}\n`;
+    }
+    bindClause = bindClause + '\t\t}'
+  } else {
+    if (!iri.startsWith('<')) iri = `<${iri}>`;
+    bindClause = `BIND(${iri} AS ?iri)`;
+  }  
+
   return `
   SELECT DISTINCT ?iri ${selectionClause.trim()} ${occurrences}
   ${insertSelections.join('\n')}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    BIND(${iri} AS ?iri)
+    ${bindClause}
     ?iri a <http://csrc.nist.gov/ns/oscal/assessment/common#Risk> .
     ${predicates}
     ${occurrenceQuery}
@@ -3222,8 +3241,9 @@ export const selectAllRisks = (select, args, parent) => {
     if (!select.includes('cvss2_temporal_score')) select.push('cvss2_temporal_score');
     if (!select.includes('cvss3_base_score')) select.push('cvss3_base_score');
     if (!select.includes('cvss3_temporal_score')) select.push('cvss3_temporal_score');
-    if (!select.includes('available_exploit')) select.push('available_exploit');
-    if (!select.includes('exploitability_ease')) select.push('exploitability_ease');
+    // PATCH: 08-Jun-2023
+    // if (!select.includes('available_exploit')) select.push('available_exploit');
+    // if (!select.includes('exploitability_ease')) select.push('exploitability_ease');
   }
   // Update select to collect additional predicates if looking for response type
   if (select.includes('response_type') || select.includes('lifecycle')) {
@@ -3290,8 +3310,9 @@ export const selectAllRisks = (select, args, parent) => {
     selectionClause = selectionClause.replace('?cvss2_temporal_score', '');
     selectionClause = selectionClause.replace('?cvss3_base_score', '');
     selectionClause = selectionClause.replace('?cvss3_temporal_score', '');
-    selectionClause = selectionClause.replace('?available_exploit', '');
-    selectionClause = selectionClause.replace('?exploitability_ease', '');
+    // PATCH: 08-Jun-2023
+    // selectionClause = selectionClause.replace('?available_exploit', '');
+    // selectionClause = selectionClause.replace('?exploitability_ease', '');
   }
   if (select.includes('response_type') || select.includes('response_lifecycle')) {
     selectionClause = selectionClause.replace('?remediation_type', '');
@@ -3310,8 +3331,9 @@ export const selectAllRisks = (select, args, parent) => {
     insertSelections.push(
       `(MAX(?cvss3_base_score) AS ?cvssV3Base_score) (MAX(?cvss3_temporal_score) as ?cvssV3Temporal_score)`
     );
-    insertSelections.push(`(GROUP_CONCAT(DISTINCT ?available_exploit;SEPARATOR=",") as ?available_exploit_values)`);
-    insertSelections.push(`(GROUP_CONCAT(DISTINCT ?exploitability_ease;SEPARATOR=",") as ?exploitability_ease_values)`);
+    // PATCH: 08-Jun-2023
+    // insertSelections.push(`(GROUP_CONCAT(DISTINCT ?available_exploit;SEPARATOR=",") as ?available_exploit_values)`);
+    // insertSelections.push(`(GROUP_CONCAT(DISTINCT ?exploitability_ease;SEPARATOR=",") as ?exploitability_ease_values)`);
   }
   if (select.includes('response_type') || select.includes('response_lifecycle')) {
     insertSelections.push(`(GROUP_CONCAT(DISTINCT ?remediation_type;SEPARATOR=",") AS ?remediation_type_values)`);
@@ -3335,7 +3357,7 @@ export const selectAllRisks = (select, args, parent) => {
             ?iri <http://csrc.nist.gov/ns/oscal/assessment/common#related_observations> ?related_observations .
             ?related_observations <http://csrc.nist.gov/ns/oscal/assessment/common#subjects> ?subjects .
             ?subjects <http://darklight.ai/ns/oscal/assessment/common#subject_context> "target" .
-      }
+          }
           GROUP BY ?iri
         }
       }

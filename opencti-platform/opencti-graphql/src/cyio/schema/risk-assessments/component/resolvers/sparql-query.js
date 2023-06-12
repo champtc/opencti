@@ -725,11 +725,11 @@ export function convertAssetToComponent(asset) {
       case 'labels':
       case 'remarks':
       case 'component_type':
+      case 'display_name':
       case 'name':
       case 'description':
       case 'purpose':
       case 'operational_status':
-      case 'links':
       case 'responsible_roles':
       case 'protocols':
         continue;
@@ -745,7 +745,7 @@ export function convertAssetToComponent(asset) {
         break;
     }
 
-    if (value === null || value === 'null') continue;
+    if (value === null || value === 'null' || value === ' ') continue;
     // replace '_' with'-'
     if (key.includes('_')) key = key.replace(/_/g, '-');
     // generate id based on the name and the namespace

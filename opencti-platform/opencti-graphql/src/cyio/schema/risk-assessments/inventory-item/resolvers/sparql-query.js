@@ -820,6 +820,7 @@ export function convertAssetToInventoryItem(asset) {
       case 'links':
       case 'labels':
       case 'remarks':
+      case 'display_name':
       case 'name':
       case 'description':
       case 'responsible_parties':
@@ -899,7 +900,7 @@ export function convertAssetToInventoryItem(asset) {
         break;
     }
 
-    if (value === null || value === 'null') continue;
+    if (value === null || value === 'null' || value === ' ') continue;
     // replace '_' with'-'
     if (key.includes('_')) key = key.replace(/_/g, '-');
     // generate id based on the name and the namespace

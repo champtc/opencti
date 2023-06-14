@@ -587,6 +587,7 @@ const assetCommonResolvers = {
     database: 'database',
     directory_server: 'directory-server',
     dns_server: 'dns-server',
+    domain_controller: 'domain-controller',
     documentary_asset: 'documentary-asset',
     email_server: 'email-server',
     embedded: 'embedded',

@@ -72,6 +72,8 @@
     directory_server
     "DNS Server"
     dns_server
+    "Domain Controller"
+    domain_controller
     "Documentary Asset"
     documentary_asset
     "Email Server"

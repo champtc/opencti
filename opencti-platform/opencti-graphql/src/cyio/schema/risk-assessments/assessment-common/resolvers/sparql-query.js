@@ -3085,6 +3085,9 @@ export const selectRiskByIriQuery = (iri, select) => {
   if (!select.includes('id')) select.push('id');
   if (!select.includes('entity_type')) select.push('entity_type');
 
+  // PATCH: 14-Jun-2023
+  if (select.includes('name')) select.push('risk_id');
+
   // extension properties
   if (select.includes('props')) {
     if (!select.includes('risk_level')) select.push('risk_level');
@@ -3221,6 +3224,9 @@ export const selectAllRisks = (select, args, parent) => {
   if (select === undefined || select === null) select = Object.keys(riskPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('entity_type')) select.push('entity_type');
+
+  // PATCH: 14-Jun-2023
+  if (select.includes('name')) select.push('risk_id');
 
   // extension properties
   if (select.includes('props')) {
@@ -5098,6 +5104,11 @@ export const riskPredicateMap = {
   //   binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "relationships");},
   //   optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   // },
+  risk_id: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#risk_id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "risk_id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
   name: {
     predicate: "<http://csrc.nist.gov/ns/oscal/common#name>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "name");},

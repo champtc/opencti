@@ -1077,7 +1077,10 @@ const poamResolvers = {
 
       // update the risk level and score before sorting
       for (const risk of response) {
-        risk.risk_level = 'unknown';
+        // PATCH: 14-Jun-2023
+        if (risk.risk_id !== undefined ) risk.name = risk.risk_id;
+
+          risk.risk_level = 'unknown';
         if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
           // calculate the risk level
           const { riskLevel, riskScore } = calculateRiskLevel(risk);

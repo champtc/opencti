@@ -843,6 +843,9 @@ const networkResolvers = {
           if (Array.isArray(response) && response.length > 0) {
             let risk = response[0];
 
+            // PATCH: 14-Jun-2023
+            if (risk.risk_id !== undefined ) risk.name = risk.risk_id;
+            
             // Convert date field values that are represented as JavaScript Date objects
             if (risk.first_seen !== undefined) {
               if (risk.first_seen instanceof Date) risk.first_seen = risk.first_seen.toISOString();

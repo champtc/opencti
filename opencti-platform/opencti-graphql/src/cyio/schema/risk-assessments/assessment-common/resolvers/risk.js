@@ -64,6 +64,9 @@ const riskResolvers = {
 
         // update the risk level and score before sorting
         for (const risk of response) {
+          // PATCH: 14-Jun-2023
+          if (risk.risk_id !== undefined ) risk.name = risk.risk_id;
+
           risk.risk_level = 'unknown';
           if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
             // calculate the risk level
@@ -267,6 +270,9 @@ const riskResolvers = {
       if (Array.isArray(response) && response.length > 0) {
         const reducer = getReducer('RISK');
         const risk = response[0];
+
+        // PATCH: 14-Jun-2023
+        if (risk.risk_id !== undefined ) risk.name = risk.risk_id;
 
         // handle the case where we get only empty availability fields
         if (risk.id === undefined && risk.entity_type === undefined && risk.object_type === undefined) return null;

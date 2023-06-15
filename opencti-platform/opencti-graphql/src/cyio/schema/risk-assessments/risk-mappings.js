@@ -183,6 +183,7 @@ export const riskSingularizeSchema = {
     resource_type: true,
     response_type: true,
     risk: true,
+    risk_id: true,
     risk_adjusted: true,
     risk_state: true,
     risk_status: true,

@@ -305,7 +305,7 @@ export const selectExternalIdentifierByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(externalIdentifierPredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(externalIdentifierPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -449,7 +449,7 @@ export const selectLocationByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(locationPredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(locationPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -617,7 +617,7 @@ export const selectPartyByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(partyPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -748,6 +748,7 @@ export const insertResponsiblePartyQuery = (propValues) => {
   };
   const id = generateId(id_material, OSCAL_NS);
   const iri = `<http://csrc.nist.gov/ns/oscal/common#ResponsibleParty-${id}>`;
+  const timestamp = new Date().toISOString();
 
   // remove role and parties so predicates don't get generated
   if ('role' in propValues) delete propValues.role;
@@ -765,6 +766,8 @@ export const insertResponsiblePartyQuery = (propValues) => {
       ${iri} a <http://darklight.ai/ns/common#ComplexDatatype> .
       ${iri} <http://darklight.ai/ns/common#id> "${id}".
       ${iri} <http://darklight.ai/ns/common#object_type> "oscal-responsible-party" . 
+      ${iri} <http://darklight.ai/ns/common#created> "${timestamp}"^^xsd:dateTime . 
+      ${iri} <http://darklight.ai/ns/common#modified> "${timestamp}"^^xsd:dateTime . 
       ${insertPredicates}
     }
   }
@@ -779,7 +782,7 @@ export const selectResponsiblePartyByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(responsiblePartyPredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(responsiblePartyPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -934,7 +937,7 @@ export const selectResponsibleRoleByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(responsiblePartyPredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(responsiblePartyPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -1147,7 +1150,7 @@ export const selectRoleByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(rolePredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(rolePredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

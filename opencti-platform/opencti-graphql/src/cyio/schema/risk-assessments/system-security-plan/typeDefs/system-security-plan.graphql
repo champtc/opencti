@@ -69,7 +69,7 @@ type SystemSecurityPlan implements BasicObject & LifecycleObject & OscalObject &
   "Identifies references to previous versions of this document."
   document_ids: [ID]
   "Identifies metadata shared across all OSCAL model instances with the same ID value"
-  shared_metadata: OscalMetadata!
+  metadata: OscalMetadata
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
 	# System Security Plan

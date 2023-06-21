@@ -35,6 +35,8 @@ const networkAssetReducer = (item) => {
     if (item.object_type === undefined || item.object_type !== 'network') return null;
   }
 
+  if (item.display_name === undefined) item.display_name = item.name;
+
   return {
     iri: item.iri,
     id: item.id,
@@ -42,6 +44,7 @@ const networkAssetReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.display_name && { display_name: item.display_name }),
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
     ...(item.asset_id && { asset_id: item.asset_id }),
@@ -63,9 +66,6 @@ const networkAssetReducer = (item) => {
     // Hints
     ...(item.iri && { parent_iri: item.iri }),
     ...(item.locations && { locations_iri: item.locations }),
-    ...(item.external_references && { ext_ref_iri: item.external_references }),
-    ...(item.labels && { labels_iri: item.labels }),
-    ...(item.notes && { notes_iri: item.notes }),
     ...(item.network_address_range && { netaddr_range_iri: item.network_address_range }),
     ...(item.connected_assets && { connected_assets: item.connected_assets }),
     ...(item.responsible_parties && { responsible_party_iris: item.responsible_parties }),
@@ -73,12 +73,16 @@ const networkAssetReducer = (item) => {
     ...(item.risk_count !== undefined && { risk_count: item.risk_count }),
     ...(item.risk_score !== undefined && { risk_score: item.risk_score }),
     ...(item.top_risk_severity && { top_risk_severity: item.top_risk_severity }),
+    // hints for general lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
+    ...(item.labels && { label_iris: item.labels }),
+    ...(item.external_references && { external_reference_iris: item.external_references }),
+    ...(item.notes && { note_iris: item.notes }),
   };
 };
 const ipAddrRangeReducer = (item) => {
   let is_string = false;
   if (!item.starting_ip_address.includes('http:')) {
-    console.log(`[CYIO] CONSTRAINT-VIOLATION: ${item.iri} 'starting_ip_address' is NOT an object`);
     is_string = true;
   }
 
@@ -144,7 +148,6 @@ export const selectNetworkQuery = (id, select) => {
   return selectNetworkByIriQuery(`http://scap.nist.gov/ns/asset-identification#Network-${id}`, select);
 };
 export const selectNetworkByIriQuery = (iri, select) => {
-  if (!iri.startsWith('<')) iri = `<${iri}>`;
 
   if (select === undefined || select === null) select = Object.keys(networkPredicateMap);
 
@@ -152,6 +155,13 @@ export const selectNetworkByIriQuery = (iri, select) => {
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
+  // if looking for display_name
+  if (select.includes('display_name')) {
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('network_id')) select.push('network_id');
+    if (!select.includes('network_name')) select.push('network_name');
+  }
+  
   // define related risks clause to restrict to only Risk since it available in other objects
   let relatedRiskClause = '', relatedRiskVariable = '';
   if (select.includes('related_risks')) {
@@ -168,11 +178,25 @@ export const selectNetworkByIriQuery = (iri, select) => {
   // build list of selection variables and predicates
   const { selectionClause, predicates } = buildSelectVariables(networkPredicateMap, select);
 
+  // Build the "BIND" clause dependent upon value of iri
+  let bindClause;
+  if (Array.isArray(iri)) {
+    bindClause = '\tVALUES ?iri {\n'
+    for(let itemIri of iri) {
+      if (!itemIri.startsWith('<')) itemIri = `<${itemIri}>`;
+      bindClause = bindClause + `\t\t${itemIri}\n`;
+    }
+    bindClause = bindClause + '\t\t}'
+  } else {
+    if (!iri.startsWith('<')) iri = `<${iri}>`;
+    bindClause = `BIND(${iri} AS ?iri)`;
+  }
+  
   return `
-  SELECT ?iri ${selectionClause} ${relatedRiskVariable}
+  SELECT DISTINCT ?iri ${selectionClause} ${relatedRiskVariable}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    BIND(${iri} AS ?iri)
+    ${bindClause}
     ?iri a <http://scap.nist.gov/ns/asset-identification#Network> .
     ${predicates}
     ${relatedRiskClause}
@@ -208,6 +232,13 @@ export const selectAllNetworks = (select, args) => {
     }
   }
 
+  // if looking for display_name
+  if (select.includes('display_name')) {
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('network_id')) select.push('network_id');
+    if (!select.includes('network_name')) select.push('network_name');
+  }
+    
   // define related risks clause to restrict to only Risk since it available in other objects
   let relatedRiskClause = '', relatedRiskVariable = '';
   if (select.includes('top_risk_severity') || select.includes('risk_count') || select.includes('related_risks')) {

@@ -60,7 +60,7 @@ type InformationSystem implements BasicObject & LifecycleObject & OscalObject & 
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
-  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
   object_markings: [DataMarking]
   # InformationSystem
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
@@ -183,6 +183,8 @@ input InformationSystemInput {
   network_architecture: DescriptionBlockInput
   "Identifies a description of the logical flow of information within the system and across its boundaries, optionally supplemented by diagrams that illustrate these flows."
   data_flow: DescriptionBlockInput
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [ID]
 }
 
 # Information System Connection

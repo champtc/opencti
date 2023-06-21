@@ -4,33 +4,20 @@ Common Vulnerability Scoring System (CVSS) v3 Metric that provides a way to
 capture the principal characteristics of a vulnerability and produce a 
 numerical score reflecting its severity.
 """
-type CVSSv3 implements CVSS & BasicObject & LifecycleObject {
+type CVSSv3 implements CVSS & ComplexDatatype {
   # BasicObject
   "Uniquely identifies this object."
   id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
   "Identifies the type of the Object."
   entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # LifecycleObject
-  "Identities the date and time at which the object was originally created."
-  created: Timestamp
-  "Identifies the date and time at which the object was last modified."
-  modified: Timestamp
-  # Core Object
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  external_references: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  notes: [CyioNote]
   # CVSS
   "Indicates the version of the CVSS record."
   version: String
-  # CVSS v3.*
   "Identifies a text representation of a set of CVSS metrics."
   vector_string: String
+  "Identifies the name used to display to users"
+  display_name: String
+  # CVSS v3.*
   "Indicates the context by which vulnerability exploitation is possible. This metric value (and consequently the Base Score) will be larger the more remote (logically, and physically) an attacker can be in order to exploit the vulnerable component."
   attack_vector: AttackVectorType
   "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
@@ -92,9 +79,9 @@ input CVSSv3Input {
   # CVSS
   "Indicates the version of the CVSS record."
   version: String!
-  # CVSS v3.*
   "Identifies a text representation of a set of CVSS metrics."
   vector_string: String!
+  # CVSS v3.*
   "Indicates the context by which vulnerability exploitation is possible. This metric value (and consequently the Base Score) will be larger the more remote (logically, and physically) an attacker can be in order to exploit the vulnerable component."
   attack_vector: AttackVectorType
   "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
@@ -182,7 +169,7 @@ AttackVector -
   the vulnerability from inside a corporate network).
 """
 enum AttackVectorType {
-  "The vulnerable component is bound to the network stack and the set of possible attackers extends beyond the other options listed below, up to and including the entire Internet.  Such a vulnerability is often termed “remotely exploitable” and can be thought of as an attack being exploitable at the protocol level one or more network hops away (e.g., across one or more routers)."
+  "The vulnerable component is bound to the network stack and the set of possible attackers extends beyond the other options listed below, up to and including the entire Internet.  Such a vulnerability is often termed 'remotely exploitable' and can be thought of as an attack being exploitable at the protocol level one or more network hops away (e.g., across one or more routers)."
   NETWORK
   "The vulnerable component is bound to the network stack, but the attack is limited at the protocol level to a logically adjacent topology. This can mean an attack must be launched from the same shared physical (e.g., Bluetooth or IEEE 802.11) or logical (e.g., local IP subnet) network, or from within a secure or otherwise limited administrative domain (e.g., MPLS, secure VPN to an administrative network zone)."
   ADJACENT_NETWORK
@@ -366,7 +353,7 @@ ModifiedAttackVectorType -
   Enables analyst to override Attack Vector Base metrics based on specific characteristics of a user’s environment.
 """
 enum ModifiedAttackVectorType {
-  "The vulnerable component is bound to the network stack and the set of possible attackers extends beyond the other options listed below, up to and including the entire Internet.  Such a vulnerability is often termed “remotely exploitable” and can be thought of as an attack being exploitable at the protocol level one or more network hops away (e.g., across one or more routers)."
+  "The vulnerable component is bound to the network stack and the set of possible attackers extends beyond the other options listed below, up to and including the entire Internet.  Such a vulnerability is often termed 'remotely exploitable' and can be thought of as an attack being exploitable at the protocol level one or more network hops away (e.g., across one or more routers)."
   NETWORK
   "The vulnerable component is bound to the network stack, but the attack is limited at the protocol level to a logically adjacent topology. This can mean an attack must be launched from the same shared physical (e.g., Bluetooth or IEEE 802.11) or logical (e.g., local IP subnet) network, or from within a secure or otherwise limited administrative domain (e.g., MPLS, secure VPN to an administrative network zone)."
   ADJACENT_NETWORK

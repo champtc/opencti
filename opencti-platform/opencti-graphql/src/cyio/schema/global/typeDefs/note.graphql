@@ -1,0 +1,90 @@
+# declares the query entry-points for this type
+extend type Query {
+  cyioNote(id: ID!): CyioNote  @hasPermission(resources: "Cyio:view")
+  cyioNotes( 
+    first: Int
+    offset: Int
+    orderedBy: CyioNotesOrdering
+    orderMode: OrderingMode
+    filters: [CyioNotesFiltering]
+    filterMode: FilterMode
+    search: String
+  ): CyioNoteConnection  @hasPermission(resources: "Cyio:view")
+}
+
+# declares the mutation entry-points for this type
+extend type Mutation {  
+  createCyioNote(input: CyioNoteAddInput): CyioNote  @hasPermission(resources: "Note:update")
+  deleteCyioNote(id: ID!): String!  @hasPermission(resources: "Note:delete")
+  deleteCyioNotes(id: [ID!]!): ID @hasPermission(resources: "Note:delete")
+  editCyioNote(id: ID!, input: [EditInput]!, commitMessage: String): CyioNote  @hasPermission(resources: "Note:update")
+  attachToCyioNote(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Note:update")
+  detachFromCyioNote(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Note:update")
+}
+
+############## Notes
+type CyioNote implements BasicObject & LifecycleObject {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # Lifecycle
+  created: Timestamp
+  modified: Timestamp
+  labels: [CyioLabel]
+  # CyioNote
+  abstract: String
+  content: String!
+  authors: [String]
+}
+# Mutation
+input CyioNoteAddInput {
+  # CyioNote
+  abstract: String
+  content: String!
+  authors: [String]
+}
+# slicing 
+enum CyioNotesOrdering {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Label"
+  label_name
+  "Author"
+  author_name
+  "Abstract"
+  abstract
+}
+# filtering
+enum CyioNotesFilter {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Label"
+  label_name
+  "Author"
+  author
+}
+input CyioNotesFiltering {
+  key: CyioNotesFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
+}
+# Pagination Types
+type CyioNoteConnection {
+  pageInfo: PageInfo!
+  edges: [CyioNoteEdge]
+}
+type CyioNoteEdge {
+  cursor: String!
+  node: CyioNote!
+}

@@ -1,5 +1,6 @@
 # declares the query entry-points for this type
 extend type Query {
+  # Result
   result(id: ID!): Result  @hasPermission(resources: "AssessmentResults:view")
   results(
     first: Int
@@ -17,6 +18,7 @@ extend type Mutation {
   # Result
   createResult(input: ResultInput!): Result @hasPermission(resources: "AssessmentResults:update")
   deleteResult(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  deleteResults(id: [ID!]!): ID @hasPermission(resources: "AssessmentResults:delete")
   editResult(id: ID!, input: [EditInput]!, commitMessage: String): Result @hasPermission(resources: "AssessmentResults:update")
   attachToResult(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
   detachFromResult(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
@@ -29,12 +31,6 @@ extend type Mutation {
   editAttestation(id: ID!, input: [EditInput]!, commitMessage: String): Attestation @hasPermission(resources: "AssessmentResults:update")
   attachToAttestation(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
   detachFromAttestation(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
-  # ControlSet
-  createControlSet(input: ControlSetInput!): ControlSet @hasPermission(resources: "AssessmentResults:update")
-  deleteControlSet(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
-  editControlSet(id: ID!, input: [EditInput]!, commitMessage: String): ControlSet @hasPermission(resources: "AssessmentResults:update")
-  attachToControlSet(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
-  detachFromControlSet(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
   # ControlSelection
   createControlSelection(input: ControlSelectionInput!): ControlSelection @hasPermission(resources: "AssessmentResults:update")
   deleteControlSelection(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
@@ -97,6 +93,10 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [DataMarking]
+  "Identifies a human readable name for the result of the assessment that should be shown to the user."
+  display_name: String
   # Result
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
@@ -115,24 +115,56 @@ type Result implements BasicObject & LifecycleObject & OscalObject {
   "Identifies a set of textual statements, typically written by the assessor."
   attestations: [Attestation]
   "Identifies a log of all assessment-related actions taken."
-  assessment_log(first: Int, offset: Int): AssessmentLogEntryConnection
+  assessment_log(
+    first: Int
+    offset: Int
+    orderedBy: AssessmentLogEntryOrdering
+    orderMode: OrderingMode
+    filters: [AssessmentLogEntryFiltering]
+    filterMode: FilterMode
+  ): AssessmentLogEntryConnection
   "Identifies one or more individual observations."
-  observations(first: Int, offset: Int): ObservationConnection
+  observations(
+    first: Int
+    offset: Int
+    orderedBy: ObservationsOrdering
+    orderMode: OrderingMode
+    filters: [ObservationsFiltering]
+    filterMode: FilterMode
+  ): ObservationConnection
   "Identifies one or more individual observations."
-  risks(first: Int, offset: Int, orderedBy: RisksOrdering orderMode: OrderingMode): RiskConnection
-  "Identifies one ore more POAM Items that bind a specific Risk to the associated Observations."
-  findings(first: Int, offset: Int): FindingConnection
+  risks(
+    first: Int, 
+    offset: Int, 
+    orderedBy: RisksOrdering 
+    orderMode: OrderingMode
+    filters: [RisksFiltering]
+    filterMode: FilterMode
+  ): RiskConnection
+  "Identifies one ore more Findings that bind a specific Risk to the associated Observations."
+  findings(
+    first: Int, 
+    offset: Int, 
+    orderedBy: FindingOrdering 
+    orderMode: OrderingMode
+    filters: [FindingFiltering]
+    filterMode: FilterMode
+  ): FindingConnection
   # DarkLight Extensions
+  "Identifies the UTC date/time stamp identifying when the assessment result was ingested."
+  ingested: Timestamp
   "Identifies the status of the ingest process"
   ingest_status: IngestStatus
   "Identifies the scan identifier assigned by the assessment platform for the specific assessment."
   scan_id: String
   "Identifies the type of assessment performed."
-  assessment_type: AssessmentType!
+  assessment_type: AssessmentType
   "Identifies if the specific assessment was performed were authenticated to the target.\r\nAuthenticated assessment allows the scanner to do a more thorough check looking for problems that can not be seen from the network."
   authenticated_scan: Boolean
-  "Identifies the count of targets within the specific assessment."
-  target_count: Int
+  "Identifies the components that were discovered during the assessment."
+  components_discovered: [Component]
+  "Identifies the inventory items that were discovered during the assessment."
+  inventory_items_discovered: [InventoryItem]
 }
 
 input ResultInput {
@@ -149,14 +181,18 @@ input ResultInput {
   "Identifies a set of textual statements, typically written by the assessor."
   attestations: [AttestationInput]
   # DarkLight Extensions
+  "Identifies the UTC date/time stamp identifying when the assessment result was ingested."
+  ingested: Timestamp
   "Identifies the status of the ingest process"
   ingest_status: IngestStatus!
   "Identifies the scan identifier assigned by the assessment platform for the specific assessment."
   scan_id: String
+  "Identifies the type of assessment performed."
+  assessment_type: AssessmentType!
   "Identifies if the specific assessment was performed were authenticated to the target.\r\nAuthenticated assessment allows the scanner to do a more thorough check looking for problems that can not be seen from the network."
   authenticated_scan: Boolean = false
-  "Identifies the count of targets within the specific assessment."
-  target_count: Int
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [ID]
 }
 
 # Pagination Types
@@ -197,6 +233,8 @@ enum ResultOrdering {
   modified
   "Label"
   label_name
+  "Display Name"
+  display_name
   "Name"
   name
   "Assessment Start"
@@ -219,11 +257,11 @@ type ResultLocalDefinitions implements ComplexDatatype {
   "Identifies a managed inventory item within the system."
   inventory_items(first: Int, offset: Int): InventoryItemConnection
   "Identifies a type of user that interacts with the system based on an associated role."
-  users(first: Int, offset: Int): UserConnection
+  users(first: Int, offset: Int): OscalUserConnection
   "Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions."
   assessment_assets: AssessmentAsset
   "Identifies a scheduled event or milestone, which may be associated with a series of assessment actions."
-  tasks(first: Int, offset: Int): TaskConnection
+  tasks(first: Int, offset: Int): OscalTaskConnection
 }
 
 """
@@ -247,57 +285,6 @@ input AttestationInput {
   parts: [ID!]!
 }
 
-"""
-ControlSet defines identifying information about Controls being assessed 
-and their control objectives.
-
-In the context of an assessment plan, this construct is used to identify the 
-controls and control objectives that are to be assessed. In the context of 
-an assessment result, this construct is used to identify the actual controls 
-and objectives that were assessed, reflecting any changes from the plan.
-
-When resolving the selection of controls and control objectives, the 
-following processing will occur:
-
-1. Controls will be resolved by creating a set of controls based on the control-selections by first handling the includes, and then removing any excluded controls.
-
-2. The set of control objectives will be resolved from the set of controls that was generated in the previous step. The set of control objectives is based on the control-objective-selection by first handling the includes, and then removing any excluded control objectives.
-
-The Assessment Results control-selection ignores any control selection in the 
-Assessment Plan and re-selects controls from the baseline identified by the SSP.
-
-The Assessment Results control-objective-selection ignores any control objective 
-selection in the Assessment Plan and re-selects control objectives from the 
-baseline identified by the SSP.
-
-Any additional control objectives defined in the Assessment Plan local-definitions 
-do not need to be re-defined in the Assessment Results local-definitions; however, 
-if they were explicitly referenced with an Assessment Plan control-objective-selection, 
-they need to be selected again in the Assessment Results control-objective-selection.
-"""
-type ControlSet implements ComplexDatatype {
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the type of the Object."
-  entity_type: String!
-  # ControlSet
-  "Identifies a human-readable description of control objectives."
-  description: String
-  "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
-  props: [Property]
-  "Identifies the controls being assessed. In the assessment plan, these are the planned controls. In the assessment results, these are the actual controls, and reflects any changes from the plan."
-  control_selections: [ControlSelection]
-  "Identifies the control objectives of the assessment. In the assessment plan, these are the planned objectives. In the assessment results, these are the assessed objectives, and reflects any changes from the plan."
-  control_objective_selections: [ControlObjectiveSelection]
-}
-input ControlSetInput {
-  "Identifies a human-readable description of control objectives."
-  description: String
-  "Identifies the controls being assessed. In the assessment plan, these are the planned controls. In the assessment results, these are the actual controls, and reflects any changes from the plan."
-  control_selections: [ControlSelectionInput]
-  "Identifies the control objectives of the assessment. In the assessment plan, these are the planned objectives. In the assessment results, these are the assessed objectives, and reflects any changes from the plan."
-  control_objective_selections: [ControlObjectiveSelectionInput]
-}
 
 """
 ControlSelection identifies the controls being assessed. In the assessment plan, 
@@ -472,9 +459,9 @@ enum AssessmentType {
   "Identifies high-level domains and DNS related-information"
   ATTACK_SURFACE_DISCOVERY
   "Identifies active hosts and open ports"
-  HOST_DISCOVERY
-  "Identifies vulnerabilities by performing full system scan."
-  NETWORK_SCAN
+  ENDPOINT_DISCOVERY_SCAN
+  "Identifies vulnerabilities by performing vulnerability scan on endpoints."
+  ENDPOINT_VULNERABILITY_SCAN
   "Identifies malware on Windows and Unix Systems"
   MALWARE
   "Identifies published and unknown web vulnerabilities."
@@ -485,4 +472,12 @@ enum AssessmentType {
   POLICY_COMPLIANCE
   "Identifies configuration issues in third-party cloud services."
   CLOUD_AUDIT
+  "Identifies the assessment is comprised of multiple different types of assessments."
+  MULTIPLE
+  "Identifies the assessment was performed via inspection."
+  INSPECTION
+  "Identifies the assessment was performed via interviewing individuals."
+  INTERVIEW
+"Identifies an assessment of unknown or unspecified type."
+  UNKNOWN
 }

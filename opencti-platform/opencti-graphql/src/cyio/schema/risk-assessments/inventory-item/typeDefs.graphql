@@ -54,7 +54,7 @@ type InventoryItem implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
-  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
   object_markings: [DataMarking]
   # Inventory Item
   "Identifies the name of the inventory item."
@@ -113,6 +113,10 @@ type InventoryItem implements BasicObject & LifecycleObject & OscalObject {
   responsible_parties: [OscalResponsibleParty]
   "Identifies the set of components that are implemented in a given system inventory item."
   implemented_components: [ImplementedComponent]
+  "Identifies the name used to display to users"
+  display_name: String
+  "Identifies the date and time the inventory item was last scanned"
+  last_scanned: Timestamp
 }
 # Mutation Types
 input InventoryItemAddInput {
@@ -184,6 +188,8 @@ enum InventoryItemsOrdering {
   created
   "Modified"
   modified
+  "Display Name"
+  display_name
   "Name"
   name
   "Label"

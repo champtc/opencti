@@ -121,7 +121,7 @@ export const selectConnectionInformationByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(connectionInformationPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

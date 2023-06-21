@@ -1,6 +1,8 @@
+import { ApolloError, UserInputError } from 'apollo-server-errors';
+import { logApp } from '../../config/conf.js';
 import { v5 as uuid5, v4 as uuid4 } from 'uuid';
-import { ApolloError } from 'apollo-errors';
 import canonicalize from '../../utils/canonicalize.js';
+import { selectObjectIriByIdQuery } from '../schema/global/global-utils.js';
 
 export const DARKLIGHT_NS = 'd85ba5b6-609e-58bf-a973-ca109f868e86';
 export const OASIS_SCO_NS = '00abedb4-aa42-466c-9c01-fed23315a9b7';
@@ -220,10 +222,11 @@ export const updateQuery = (iri, type, input, predicateMap) => {
   const insertPredicates = [];
   const replaceBindingPredicates = [];
   let replacementPredicate;
+  if (!iri.startsWith('<')) iri = `<${iri}>`;
   for (const { key, value, operation } of input) {
     if (operation === 'skip') continue;
     if (!predicateMap.hasOwnProperty(key)) {
-      console.error(`[CYIO] UNKNOWN-FIELD Unknown field '${key}' for object ${iri}`);
+      logApp.error(`[CYIO] UNKNOWN-FIELD Unknown field '${key}' for object ${iri}`);
       continue;
     }
     let itr;
@@ -234,7 +237,7 @@ export const updateQuery = (iri, type, input, predicateMap) => {
         if (itr.includes('\"')) itr = itr.replace(/\"/g, '\\"');
         if (itr.includes("\'")) itr = itr.replace(/\'/g, "\\'");
       }
-      let predicate = predicateMap[key].binding(`<${iri}>`, itr) + ' .';
+      let predicate = predicateMap[key].binding(`${iri}`, itr) + ' .';
 
       // if value is IRI, remove quotes added by binding
       if (itr.startsWith('<') && itr.endsWith('>')) {
@@ -253,7 +256,7 @@ export const updateQuery = (iri, type, input, predicateMap) => {
         case UpdateOps.REPLACE:
         default:
           // replace is the default behavior when the operation is not supplied.
-          replacementPredicate = `${predicateMap[key].binding(`<${iri}>`)} .`;
+          replacementPredicate = `${predicateMap[key].binding(`${iri}`)} .`;
           if (!insertPredicates.includes(predicate)) insertPredicates.push(predicate);
           if (!replaceBindingPredicates.includes(replacementPredicate))
             replaceBindingPredicates.push(replacementPredicate);
@@ -277,7 +280,7 @@ DELETE {
   }
 } WHERE {
   GRAPH ?g {
-    <${iri}> a <${type}> .
+    ${iri} a <${type}> .
     ${replaceBindingPredicates.join('\n      ')}
   }
 }
@@ -314,10 +317,10 @@ export const attachQuery = (iri, statements, predicateMap, classIri) => {
     let modifiedPredicate = predicateMap['modified'].predicate;
     return `
       WITH ${iri}
-      DELETE { ${iri} ${modifiedPredicate} ?modified }
+      DELETE { ${iri} ${modifiedPredicate} ?modified . }
       INSERT {
         ${statements}
-        ${iri} ${modifiedPredicate} "${timestamp}"^^xsd:dateTime
+        ${iri} ${modifiedPredicate} "${timestamp}"^^xsd:dateTime .
       }
       WHERE {
         ${iri} a ${classIri} .
@@ -384,3 +387,259 @@ export const detachQuery = (iri, statements, predicateMap, classIri) => {
   }
   
 }
+
+// @function populateNestedDefinitions
+//
+// This function takes a nestedDefinitions object that contains fields
+// for each field of the object being managed/created where it's value is
+// the ability to be an objects definition and populates a prop field that
+// the property definitions need to create that object.
+//
+// Each entry in the nestedObject contains value that is a definition structure
+// that contains the current values, the type object represented by the field,
+// the function to be used to create the field's object.
+//
+// @param {nestedDefinitions} NestedDefinitions
+//    specifies a reference to the NestedDefinitions node for a specific object
+//    that contains fields for each field of the object that contains a nested
+//    definition of a child object
+//                                
+// @return {nestedDefinition} the updated nestedDefinition
+//
+export const populateNestedDefinitions = (nestedDefinitions) => {
+  for (let [fieldName, fieldInfo] of Object.entries(nestedDefinitions)) {
+    if (fieldInfo.values === undefined || fieldInfo.values === null) continue;
+    if (Array.isArray(fieldInfo.values)) {
+      nestedDefinitions[fieldName]['props'] = [];
+      for (let fieldValue of fieldInfo.values) {
+        if (fieldValue instanceof Object) {
+          nestedDefinitions[fieldName]['props'].push(fieldValue);
+          continue;
+        }
+      } 
+    }
+    if (!Array.isArray(fieldInfo.values)) {
+      for (let [key, value] of Object.entries(fieldInfo.values)) {
+        if (typeof value === 'string') {
+          value = value.replace(/\s+/g, ' ')
+                        .replace(/\n/g, '\\n')
+                        .replace(/\"/g, '\\"')
+                        .replace(/\'/g, "\\'")
+                        .replace(/[\u2019\u2019]/g, "\\'")
+                        .replace(/[\u201C\u201D]/g, '\\"');
+        }
+        if (value === undefined || value === null || value.length === 0) continue;
+        nestedDefinitions[fieldName]['props'][key] = value;
+      }
+    }
+  }
+
+  return nestedDefinitions
+}
+
+// @function processNestedDefinitions
+//
+// This function takes a populated nestedDefinitions object that contains fields
+// for each field of the object being managed/created where it's value is
+// the ability to be an objects definition and processes each of the populated
+// prop entries resulting the in nested object being created and attached to the
+// parent object by it's id value.
+//
+// @param {id}
+//    specifies the id value of the parent object
+// @param {nestedDefinitions} NestedDefinitions
+//    specifies a reference to the NestedDefinitions node for a specific object
+//    that contains fields for each field of the object that contains a nested
+//    definition of a child object
+// @param {user}
+//    specifies a reference to the user object that represents the caller
+// @param {clientId}
+//    specifies the UUID that is assigned to the organization that is the
+//    target of the request
+// @param {dbName}
+//    specifies the database identifier into which the nested objects are to be
+//    created and attached
+// @param {dataSources}
+//    specifies the list of data sources that can be used
+// @param {attachQueryFunction} 
+//    specifies the function to be used to create the appropriate query for attaching
+//    the newly created nested object to the parent.
+//                                
+export const processNestedDefinitions = async (id, nestedDefinitions, dbName, dataSources, attachQueryFunction) => {
+  for (let [key, value] of Object.entries(nestedDefinitions)) {
+    if (value === undefined || Object.keys(value.props).length === 0) continue;
+		let itemName = value.objectType.replace(/-/g, ' ');
+    let fieldName = (value.field ? value.field : key);
+    let propList = [];
+    if (!Array.isArray(value.props)) propList.push(value.props);
+    if (Array.isArray(value.props)) propList = value.props;
+    for (let props of propList) {
+      let item;
+      try {
+        let select = ['id','iri','entity_type']
+        item = await value.createFunction(props, dbName, dataSources, select);
+        if (item === undefined || item === null) continue;
+      } catch (e) {
+        logApp.error(e)
+        throw e
+      }
+
+      // attach the definition to the new Information System
+      let attachQuery = attachQueryFunction(id, fieldName, item.iri );
+      if (attachQuery === null) {
+        logApp.error(`Field '${fieldName}' is not defined for the entity.`);
+        continue;
+      }
+
+      try {
+        let response = await dataSources.Stardog.create({
+          dbName,
+          sparqlQuery: attachQuery,
+          queryId: `Attach ${itemName}`
+          });
+      } catch (e) {
+        logApp.error(e)
+        throw e
+      }
+    }
+  }
+}
+
+// @function processObjectReferences
+//
+// This function takes a populated objectReferences object that contains fields
+// for each field of the object being managed/created where it's value is
+// the ability to be an objects definition and processes each of the populated
+// prop entries resulting the in nested object being created and attached to the
+// parent object by it's id value.
+//
+// @param {id}
+//    specifies the id value of the parent object
+// @param {objectReferences} ObjectReferences
+//    specifies a reference to the ObjectReference node for a specific object
+//    that contains fields for each field of the objects that are referenced.
+// @param {ctx}
+//    specifies the context of a request being processed.
+// @param {dbName}
+//    specifies the database identifier into which the nested objects are to be
+//    created and attached
+// @param {dataSources}
+//    specifies the list of data sources that can be used
+// @param {attachQueryFunction} 
+//    specifies the function to be used to attach the referenced object to the parent.
+//                                
+export const processReferencedObjects = async ( id, objectReferences, dbName, dataSources, attachQueryFunction) => {
+  // For each references object
+  for (let [key, value] of Object.entries(objectReferences)) {
+    if (value.ids === undefined || value.ids === null) continue;
+    if (!Array.isArray(value.ids)) value.ids = [value.ids];
+		let itemName = value.objectType.replace(/-/g, ' ');
+    let iris = [];
+    for (let refId of value.ids) {
+      let sparqlQuery = selectObjectIriByIdQuery(refId, value.objectType);
+      let result = await dataSources.Stardog.queryById({
+        dbName,
+        sparqlQuery,
+        queryId: "Obtaining IRI for the object with id",
+        singularizeSchema: value.singularizationSchema
+      });
+      if (result === undefined || result.length === 0) throw new UserInputError(`Entity does not exist with ID ${refId}`,{identifier: `${refId}`});
+      iris.push(`<${result[0].iri}>`);
+    }
+
+    if (iris.length > 0) {
+      try {
+      // attach the definition to the new Result
+      let attachQuery = attachQueryFunction(id, key, iris );
+      await dataSources.Stardog.create({
+        dbName,
+        sparqlQuery: attachQuery,
+        queryId: `Attaching one or more ${itemName} to ${itemName}`
+        });
+      } catch (e) {
+        logApp.error(e)
+        throw e
+      }
+    }
+  }
+}
+
+// @function removeNestedObjects
+//
+// This function takes a populated nestedObject object that contains fields
+// for each field of the current object and deletes them.
+//
+// @param {nestedObjects} NestedObjects
+//    specifies a reference to the NestedObjects node for a specific object
+//    that contains fields for each field of the objects that are referenced.
+// @param {ctx}
+//    specifies the context of a request being processed.
+// @param {dbName}
+//    specifies the database identifier into which the nested objects are to be
+//    created and attached
+// @param {dataSources}
+//    specifies the list of data sources that can be used
+// 
+export const removeNestedObjects = async (nestedObjects, dbName, dataSources) => {
+  for (let [fieldName, fieldInfo] of Object.entries(nestedObjects)) {
+    if (fieldInfo.iris === undefined || fieldInfo.iris === null) continue;
+    if (!Array.isArray(fieldInfo.iris)) fieldInfo.iris = [fieldInfo.iris];
+    for( let nestedIri of fieldInfo.iris) {
+      try {
+        let result = await fieldInfo.deleteFunction(nestedIri, dbName, dataSources);
+      } catch (e) {
+        // Handle user input errors where the object isn't found
+        if (e.extensions && e.extensions.code && e.extensions.code === 'BAD_USER_INPUT') {
+          continue;
+        } else {
+          logApp.error(e);
+          throw e;
+        }
+      }
+    }
+  }
+}
+
+// @function selectByBulkIris
+export const selectByBulkIris = async (iriList, queryFunction, schema,  dbName, dataSources, select) => {
+  const divisor = 8;
+  let batch = [];
+  const batchSize = iriList.length > divisor ? Math.round(iriList.length / divisor) : divisor;
+  let resultList = [];
+  let batchCount = 0;
+  let count = 0;
+
+  for (let iri of iriList) {
+    batch.push(iri);
+    count++;
+    if (count < iriList.length) {
+      if (batch.length < batchSize) {
+        continue;
+      }
+    }
+    batchCount++;
+    console.log(`querying batch ${batchCount}: ${batch.length}`);
+
+    let results;
+    let sparqlQuery;
+    try {
+      sparqlQuery = queryFunction(batch, select);
+      results = await dataSources.Stardog.queryById({
+        dbName,
+        sparqlQuery,
+        queryId: 'Select List of IRIs',
+        singularizeSchema: schema,
+      });
+    } catch (e) {
+      logApp.error(e);
+      throw e;
+    }
+    // no components found
+    if (results === undefined || results?.length === 0) break;
+    resultList.push(...results);
+    batch = [];
+  }
+
+  console.log(`Gathered results for ${count} components [${resultList.length}]`);
+  return resultList;
+};

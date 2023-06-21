@@ -15,12 +15,9 @@ import {
   locationPredicateMap,
   selectIpAddressByIriQuery,
 } from './sparql-query.js';
-import {
-  selectLabelByIriQuery,
-  selectExternalReferenceByIriQuery,
-  selectNoteByIriQuery,
-  getReducer as getGlobalReducer,
-} from '../../global/resolvers/sparql-query.js';
+import { findExternalReferenceByIri } from '../../global/domain/externalReference.js';
+import { findNoteByIri } from '../../global/domain/note.js';
+import { findLabelByIri } from '../../global/domain/label.js';
 import { getReducer as getIpAddrReducer } from '../computing-device/sparql-query.js';
 
 const assetCommonResolvers = {
@@ -587,8 +584,8 @@ const assetCommonResolvers = {
     database: 'database',
     directory_server: 'directory-server',
     dns_server: 'dns-server',
-    domain_controller: 'domain-controller',
     documentary_asset: 'documentary-asset',
+    domain_controller: 'domain-controller',
     email_server: 'email-server',
     embedded: 'embedded',
     firewall: 'firewall',
@@ -667,115 +664,43 @@ const assetCommonResolvers = {
       return [];
     },
     labels: async (parent, _, { dbName, dataSources, selectMap }) => {
-      const iriArray = parent.labels_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('LABEL');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Label')) continue;
-          const sparqlQuery = selectLabelByIriQuery(iri, selectMap.getNode('labels'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Label',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.label_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.label_iris) {
+        let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     external_references: async (parent, _, { dbName, dataSources, selectMap }) => {
-      const iriArray = parent.ext_ref_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('EXTERNAL-REFERENCE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('ExternalReference')) continue;
-          const sparqlQuery = selectExternalReferenceByIriQuery(iri, selectMap.getNode('external_references'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select External Reference',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.link_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.link_iris) {
+        let result = await findExternalReferenceByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     notes: async (parent, _, { dbName, dataSources, selectMap }) => {
-      const iriArray = parent.notes_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('NOTE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Note')) continue;
-          const sparqlQuery = selectNoteByIriQuery(iri, selectMap.getNode('notes'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Note',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.remark_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.remark_iris) {
+        let result = await findNoteByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
   },
   AssetLocation: {

@@ -532,6 +532,7 @@ export const attachToDescriptionBlock = async (id, field, entityId, dbName, data
   let attachableObjects = {
     'diagrams': 'diagram',
     'object_markings': 'marking-definition',
+    'labels': 'label',
     'links': 'link',
     'remarks': 'remark',
   }
@@ -598,6 +599,7 @@ export const detachFromDescriptionBlock = async (id, field, entityId, dbName, da
   let attachableObjects = {
     'diagrams': 'diagram',
     'object_markings': 'marking-definition',
+    'labels': 'label',
     'links': 'link',
     'remarks': 'remark',
   }

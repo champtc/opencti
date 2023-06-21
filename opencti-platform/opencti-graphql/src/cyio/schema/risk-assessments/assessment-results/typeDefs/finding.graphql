@@ -16,6 +16,7 @@ extend type Query {
 extend type Mutation {
   createFinding(input: FindingInput!): Finding @hasPermission(resources: "AssessmentResults:update")
   deleteFinding(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  deleteFindings(id: [ID!]!): ID @hasPermission(resources: "AssessmentResults:delete")
   editFinding(id: ID!, input: [EditInput]!, commitMessage: String): Finding @hasPermission(resources: "AssessmentResults:update")
   attachToFinding(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
   detachFromFinding(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
@@ -62,6 +63,10 @@ type Finding implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [DataMarking]
+  "Identifies a human readable name for the result of the assessment that should be shown to the user."
+  display_name: String
   # Finding
   "Identifies the name for this Finding item."
   name: String!
@@ -87,6 +92,8 @@ input FindingInput {
   target: FindingTargetInput
   "Identifies a reference to the implementation statement in the SSP to which this finding is related."
   implementation_statement: ID
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [ID]
 }
 
 enum FindingOrdering {

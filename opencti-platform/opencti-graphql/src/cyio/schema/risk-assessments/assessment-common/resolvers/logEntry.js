@@ -1,12 +1,10 @@
 import { UserInputError } from 'apollo-server-express';
+import { logApp } from '../../../../../config/conf.js';
 import { riskSingularizeSchema as singularizeSchema } from '../../risk-mappings.js';
 import { compareValues, updateQuery, filterValues, CyioError } from '../../../utils.js';
-import {
-  selectLabelByIriQuery,
-  selectExternalReferenceByIriQuery,
-  selectNoteByIriQuery,
-  getReducer as getGlobalReducer,
-} from '../../../global/resolvers/sparql-query.js';
+import { findExternalReferenceByIri } from '../../../global/domain/externalReference.js';
+import { findNoteByIri } from '../../../global/domain/note.js';
+import { findLabelByIri } from '../../../global/domain/label.js';
 import {
   getReducer,
   insertRiskLogEntryQuery,
@@ -21,26 +19,47 @@ import {
   selectRiskResponseQuery,
   selectRiskResponseByIriQuery,
   selectOscalTaskByIriQuery,
+} from './sparql-query.js';
+import { 
   insertLogEntryAuthorsQuery,
   deleteLogEntryAuthorByIriQuery,
   selectLogEntryAuthorQuery,
   selectLogEntryAuthorByIriQuery,
   selectAllLogEntryAuthors,
-} from './sparql-query.js';
+ } from '../schema/sparql/logEntryAuthor.js';
 import {
   selectPartyQuery,
   selectPartyByIriQuery,
+  selectRoleQuery,
+  selectRoleByIriQuery,
   getReducer as getCommonReducer,
 } from '../../oscal-common/resolvers/sparql-query.js';
+// AssessmentLogEntry
+import {
+  findAllAssessmentLogEntries,
+  findAssessmentLogEntryByIri,
+  findAssessmentLogEntryById,
+  createAssessmentLogEntry,
+  deleteAssessmentLogEntryById,
+  editAssessmentLogEntryById,
+  attachToAssessmentLogEntry,
+  detachFromAssessmentLogEntry,  
+} from '../domain/assessmentLog.js';
+// LogEntryAuthor
+import {
+  findAllLogEntryAuthors,
+  findLogEntryAuthorByIri,
+  findLogEntryAuthorById,
+  createLogEntryAuthor,
+  deleteLogEntryAuthorById,
+  editLogEntryAuthorById,
+} from '../domain/logEntryAuthor.js';
+
 
 const logEntryResolvers = {
   Query: {
-    assessmentLogEntries: async (_, _args, { _dbName, _dataSources, _selectMap }) => {
-      return null;
-    },
-    assessmentLogEntry: async (_, { _id }, { _dbName, _dataSources, _selectMap }) => {
-      return null;
-    },
+    assessmentLogEntries: async (_, args, { dbName, dataSources, selectMap }) => findAllAssessmentLogEntries(_, args, dbName, dataSources, selectMap.getNode('node')),
+    assessmentLogEntry: async (_, { id }, { dbName, dataSources, selectMap }) => findAssessmentLogEntryById(id, dbName, dataSources, selectMap.getNode('assessmentLogEntry')),
     riskLogEntries: async (_, args, { dbName, dataSources, selectMap }) => {
       const sparqlQuery = selectAllRiskLogEntries(selectMap.getNode('node'), args);
       let response;
@@ -52,7 +71,7 @@ const logEntryResolvers = {
           singularizeSchema,
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
 
@@ -81,7 +100,7 @@ const logEntryResolvers = {
         // for each Log Entry in the result set
         for (const logEntry of logEntryList) {
           if (logEntry.id === undefined || logEntry.id == null) {
-            console.log(`[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${logEntry.iri} missing field 'id'; skipping`);
+            logApp.warn(`[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${logEntry.iri} missing field 'id'; skipping`);
             continue;
           }
 
@@ -164,7 +183,7 @@ const logEntryResolvers = {
           singularizeSchema,
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
 
@@ -183,166 +202,18 @@ const logEntryResolvers = {
         return null;
       }
     },
-    logEntryAuthors: async (_, args, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectAllLogEntryAuthors(selectMap.getNode('node'), args);
-      let response;
-      try {
-        response = await dataSources.Stardog.queryAll({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select LogEntry Author List',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-
-      if (response === undefined) return null;
-      if (Array.isArray(response) && response.length > 0) {
-        const edges = [];
-        const reducer = getReducer('LOG-ENTRY-AUTHOR');
-        let filterCount;
-        let resultCount;
-        let limit;
-        let offset;
-        let limitSize;
-        let offsetSize;
-        limitSize = limit = args.first === undefined ? response.length : args.first;
-        offsetSize = offset = args.offset === undefined ? 0 : args.offset;
-        filterCount = 0;
-        let authorList;
-        if (args.orderedBy !== undefined) {
-          authorList = response.sort(compareValues(args.orderedBy, args.orderMode));
-        } else {
-          authorList = response;
-        }
-
-        if (offset > authorList.length) return null;
-
-        // for each Log Entry in the result set
-        for (const author of authorList) {
-          if (author.id === undefined || author.id == null) {
-            console.log(
-              `[CYIO] (${dbName}) CONSTRAINT-VIOLATION: (${dbName}) ${author.iri} missing field 'id'; skipping`
-            );
-            continue;
-          }
-          if (author.party === undefined || author.party == null) {
-            console.log(
-              `[CYIO] (${dbName}) CONSTRAINT-VIOLATION: (${dbName}) ${author.iri} missing field 'party'; skipping`
-            );
-            continue;
-          }
-
-          let found = false;
-          for (const party of author.party) {
-            if (party.includes('Party-undefined')) {
-              console.error(
-                `[CYIO] INVALID-IRI: (${dbName}) ${author.iri} 'party' contains an IRI ${party} which is invalid; skipping`
-              );
-              found = true;
-              break;
-            }
-          }
-          if (found) continue;
-
-          // skip down past the offset
-          if (offset) {
-            offset--;
-            continue;
-          }
-
-          // filter out non-matching entries if a filter is to be applied
-          if ('filters' in args && args.filters != null && args.filters.length > 0) {
-            if (!filterValues(author, args.filters, args.filterMode)) {
-              continue;
-            }
-            filterCount++;
-          }
-
-          // if haven't reached limit to be returned
-          if (limit) {
-            const edge = {
-              cursor: author.iri,
-              node: reducer(author),
-            };
-            edges.push(edge);
-            limit--;
-          }
-        }
-        // check if there is data to be returned
-        if (edges.length === 0) return null;
-        let hasNextPage = false;
-        let hasPreviousPage = false;
-        resultCount = authorList.length;
-        if (edges.length < resultCount) {
-          if (edges.length === limitSize && filterCount <= limitSize) {
-            hasNextPage = true;
-            if (offsetSize > 0) hasPreviousPage = true;
-          }
-          if (edges.length <= limitSize) {
-            if (filterCount !== edges.length) hasNextPage = true;
-            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
-          }
-        }
-        return {
-          pageInfo: {
-            startCursor: edges[0].cursor,
-            endCursor: edges[edges.length - 1].cursor,
-            hasNextPage,
-            hasPreviousPage,
-            globalCount: resultCount,
-          },
-          edges,
-        };
-      }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      } else {
-        return null;
-      }
-    },
-    logEntryAuthor: async (_, { id }, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectLogEntryAuthorQuery(id, selectMap.getNode('logEntryAuthor'));
-      let response;
-      try {
-        response = await dataSources.Stardog.queryById({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select LogEntry Author',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-
-      if (response === undefined) return null;
-      if (Array.isArray(response) && response.length > 0) {
-        const reducer = getReducer('LOG-ENTRY-AUTHOR');
-        return reducer(response[0]);
-      }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      } else {
-        return null;
-      }
-    },
+    logEntryAuthors: async (_, args, ctx) => findAllLogEntryAuthors(_, args, ctx, ctx.dbName, ctx.dataSources, ctx.selectMap.getNode('node')),
+    logEntryAuthor: async (_, { id }, { dbName, dataSources, selectMap }) => findLogEntryAuthorById(id, dbName, dataSources, selectMap.getNode('logEntryAuthor')),
   },
   Mutation: {
-    createAssessmentLogEntry: async (_, { _input }, { _dbName, _dataSources, _selectMap }) => {},
-    deleteAssessmentLogEntry: async (_, { _resultId, _id }, { _dbName, _dataSources }) => {},
-    editAssessmentLogEntry: async (_, { _id, _input }, { _dbName, _dataSources, _selectMap }) => {},
-    createRiskLogEntry: async (_, { input }, { dbName, selectMap, dataSources }) => {
+    // Assessment Log Entry
+    createAssessmentLogEntry: async (_, { input }, { dbName, dataSources, selectMap }) => createAssessmentLogEntry(input, dbName, dataSources, selectMap.getNode("createAssessmentLogEntry")),
+    deleteAssessmentLogEntry: async (_, { id }, { dbName, dataSources }) => deleteAssessmentLogEntryById( id, dbName, dataSources),
+    editAssessmentLogEntry: async (_, { id, input }, { dbName, dataSources, selectMap }) => editAssessmentLogEntryById(id, input, dbName, dataSources, selectMap.getNode("editAssessmentLogEntry"), schema),
+    attachToAssessmentLogEntry: async (_, { id, field, entityId }, { dbName, dataSources }) => attachToAssessmentLogEntry(id, field, entityId ,dbName, dataSources),
+    detachFromAssessmentLogEntry: async (_, { id, field, entityId }, { dbName, dataSources }) => detachFromAssessmentLogEntry(id, field, entityId ,dbName, dataSources),
+    // Risk Log Entry    
+    createRiskLogEntry: async (_, { input }, { dbName, dataSources, selectMap }) => {
       // TODO: WORKAROUND to remove input fields with null or empty values so creation will work
       for (const [key, value] of Object.entries(input)) {
         if (Array.isArray(input[key]) && input[key].length === 0) {
@@ -373,7 +244,7 @@ const logEntryResolvers = {
             singularizeSchema,
           });
         } catch (e) {
-          console.log(e);
+          logApp.error(e);
           throw e;
         }
         if (response.length === 0) throw new CyioError(`Risk does not exist with ID ${riskId}`);
@@ -392,7 +263,7 @@ const logEntryResolvers = {
               singularizeSchema,
             });
           } catch (e) {
-            console.log(e);
+            logApp.error(e);
             throw e;
           }
 
@@ -413,7 +284,7 @@ const logEntryResolvers = {
               singularizeSchema,
             });
           } catch (e) {
-            console.log(e);
+            logApp.error(e);
             throw e;
           }
 
@@ -439,7 +310,7 @@ const logEntryResolvers = {
             queryId: 'Add Risk Log Entry to Risk',
           });
         } catch (e) {
-          console.log(e);
+          logApp.error(e);
           throw e;
         }
       }
@@ -488,7 +359,7 @@ const logEntryResolvers = {
           singularizeSchema,
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
 
@@ -507,7 +378,7 @@ const logEntryResolvers = {
           singularizeSchema,
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
       if (response.length === 0) throw new CyioError(`Entity does not exist with ID ${id}`);
@@ -539,7 +410,7 @@ const logEntryResolvers = {
             queryId: 'Detach Risk Log Entry from Risk',
           });
         } catch (e) {
-          console.log(e);
+          logApp.error(e);
           throw e;
         }
       }
@@ -553,7 +424,7 @@ const logEntryResolvers = {
           queryId: 'Delete Risk Log Entry',
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
       return id;
@@ -624,7 +495,7 @@ const logEntryResolvers = {
             queryId: 'Update Risk Log Entry',
           });
         } catch (e) {
-          console.log(e);
+          logApp.error(e);
           throw e;
         }
 
@@ -649,128 +520,12 @@ const logEntryResolvers = {
       const reducer = getReducer('RISK-LOG-ENTRY');
       return reducer(result[0]);
     },
+    // Log Entry Author
+    createLogEntryAuthor: async (_, { input }, { dbName, dataSources, selectMap }) => createLogEntryAuthor(input, dbName, dataSources, selectMap.getNode('createLogEntryAuthor')),
+    deleteLogEntryAuthor: async (_, { id }, {dbName, dataSources }) => deleteLogEntryAuthorById( id, dbName, dataSources),
+    editLogEntryAuthor: async (_, { id, input }, { dbName, dataSources, selectMap }) => editLogEntryAuthorById(id, input, dbName, dataSources, selectMap.getNode("editLogEntryAuthor"), schema),
   },
   AssessmentLogEntry: {
-    labels: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.labels_iri === undefined) return [];
-      const iriArray = parent.labels_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('LABEL');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Label')) {
-            continue;
-          }
-          const sparqlQuery = selectLabelByIriQuery(iri, selectMap.getNode('labels'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Label',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
-        }
-        return results;
-      }
-      return [];
-    },
-    links: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.links_iri === undefined) return [];
-      const iriArray = parent.links_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('EXTERNAL-REFERENCE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('ExternalReference')) {
-            continue;
-          }
-          const sparqlQuery = selectExternalReferenceByIriQuery(iri, selectMap.getNode('links'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Link',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
-        }
-        return results;
-      }
-      return [];
-    },
-    remarks: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.remarks_iri === undefined) return [];
-      const iriArray = parent.remarks_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('NOTE');
-        const sparqlQuery = selectNoteQuery(id, selectMap.getNode('remarks'));
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Note')) {
-            continue;
-          }
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Note',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
-        }
-        return results;
-      }
-      return [];
-    },
     related_tasks: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.related_tasks_iri === undefined) return [];
       const iriArray = parent.related_tasks_iri;
@@ -791,7 +546,7 @@ const logEntryResolvers = {
               singularizeSchema,
             });
           } catch (e) {
-            console.log(e);
+            logApp.error(e);
             throw e;
           }
           if (response === undefined) return [];
@@ -810,183 +565,117 @@ const logEntryResolvers = {
         return results;
       }
       return [];
+    },
+    logged_by: async ( parent, _, ctx, { dbName, dataSources, selectMap }) => {
+      if (parent.logged_by_iris === undefined) return [];
+      let args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      let connection = await findAllLogEntryAuthors(parent, args, ctx, ctx.dbName, ctx.dataSources, ctx.selectMap.getNode('node'));
+      let results = [];
+      if (connection !== null) {
+        for (let edge of connection.edges) results.push(edge.node);
+      }
+      return results;
+    },
+    labels: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.label_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.label_iris) {
+        let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
+    },
+    links: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.link_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.link_iris) {
+        // TODO: switch to findLinkByIri
+        // let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        let result = await findExternalReferenceByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
+    },
+    remarks: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.remark_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.remark_iris) {
+        // TODO: switch to findRemarkByIri
+        // let result = await findRemarkByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        let result = await findNoteByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
     },
   },
   RiskLogEntry: {
     labels: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.labels_iri === undefined) return [];
-      const iriArray = parent.labels_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('LABEL');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Label')) {
-            continue;
-          }
-          const sparqlQuery = selectLabelByIriQuery(iri, selectMap.getNode('labels'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Label',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.label_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.label_iris) {
+        let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     links: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.links_iri === undefined) return [];
-      const iriArray = parent.links_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('EXTERNAL-REFERENCE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('ExternalReference')) {
-            continue;
-          }
-          const sparqlQuery = selectExternalReferenceByIriQuery(iri, selectMap.getNode('links'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Link',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.link_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.link_iris) {
+        // TODO: switch to findLinkByIri
+        // let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        let result = await findExternalReferenceByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     remarks: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.remarks_iri === undefined) return [];
-      const iriArray = parent.remarks_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('NOTE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Note')) {
-            continue;
-          }
-          const sparqlQuery = selectNoteByIriQuery(iri, selectMap.getNode('remarks'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Note',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.remark_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.remark_iris) {
+        // TODO: switch to findRemarkByIri
+        // let result = await findRemarkByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        let result = await findNoteByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     logged_by: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.logged_by_iri === undefined) return [];
-      const iriArray = parent.logged_by_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getReducer('LOG-ENTRY-AUTHOR');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('LogEntryAuthor')) {
-            continue;
-          }
-          const sparqlQuery = selectLogEntryAuthorByIriQuery(iri, selectMap.getNode('logged_by'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Log Entry Author',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            // Return a null logEntryAuthor if it has a reference to the party that is bad or missing
-            if (response[0].hasOwnProperty('party')) {
-              let parties = [];
-              for (const party of response[0].party) {
-                if (party.includes('Party-undefined')) {
-                  console.error(
-                    `[CYIO] INVALID-IRI: (${dbName}) ${response[0].iri} 'party' contains an IRI ${party} which is invalid; skipping`
-                  );
-                  continue;
-                }
-                parties.push(party);
-              }
-              if (parties.length === 0) parties = null;
-              response[0].party = parties;
-            }
-            if (response[0].party !== null) results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      let results = [];
+      for (let iri of parent.logged_by_iri) {
+        let result = await findLogEntryAuthorByIri(iri, dbName, dataSources, selectMap.getNode('logged_by'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve component resource ${iri}`);
+          continue;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     related_responses: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.related_responses_iri === undefined) return [];
@@ -1008,7 +697,7 @@ const logEntryResolvers = {
               singularizeSchema,
             });
           } catch (e) {
-            console.log(e);
+            logApp.error(e);
             throw e;
           }
           if (response === undefined) return [];
@@ -1033,8 +722,7 @@ const logEntryResolvers = {
     party: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.party_iri === undefined) return null;
       const reducer = getCommonReducer('PARTY');
-      const iri = parent.party_iri[0];
-      const sparqlQuery = selectPartyByIriQuery(iri, selectMap.getNode('party'));
+      const sparqlQuery = selectPartyByIriQuery(parent.party_iri, selectMap.getNode('party'));
       let response;
       try {
         response = await dataSources.Stardog.queryById({
@@ -1044,17 +732,10 @@ const logEntryResolvers = {
           singularizeSchema,
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
       if (response === undefined || response.length === 0) return null;
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
       if (Array.isArray(response) && response.length > 0) {
         return reducer(response[0]);
       }
@@ -1063,29 +744,21 @@ const logEntryResolvers = {
     },
     role: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.role_iri === undefined) return null;
-      const reducer = getCommonReducer('PARTY');
-      const iri = parent.role_iri[0];
-      const sparqlQuery = selectPartyByIriQuery(iri, selectMap.getNode('party'));
+      const reducer = getCommonReducer('ROLE');
+      const sparqlQuery = selectRoleByIriQuery(parent.role_iri, selectMap.getNode('role'));
       let response;
       try {
         response = await dataSources.Stardog.queryById({
           dbName,
           sparqlQuery,
-          queryId: 'Select Party',
+          queryId: 'Select Role',
           singularizeSchema,
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
       if (response === undefined) return null;
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
       if (Array.isArray(response) && response.length > 0) {
         return reducer(response[0]);
       }
@@ -1093,6 +766,17 @@ const logEntryResolvers = {
       return null;
     },
   },
+  AssessmentActivityType: {
+    status_update: 'status-update',
+    milestone_complete: 'milestone-complete',
+    activity_start: 'activity-start',
+    activity_complete:'activity-complete',
+    attestation: 'attestation',
+    control_review_start: 'control-review-start',
+    control_review_complete: 'control-review-complete',
+    task_start: 'task-start',
+    task_complete: 'task-complete',
+  }
 };
 
 export default logEntryResolvers;

@@ -16,6 +16,7 @@ extend type Query {
 extend type Mutation {
   createAssessmentResults(input: AssessmentResultsInput!): AssessmentResults @hasPermission(resources: "AssessmentResults:update")
   deleteAssessmentResults(id: ID!): ID @hasPermission(resources: "AssessmentResults:delete")
+  deleteMultipleAssessmentResults(id: [ID!]!): ID @hasPermission(resources: "AssessmentResults:delete")
   editAssessmentResults(id: ID!, input: [EditInput]!, commitMessage: String): AssessmentResults @hasPermission(resources: "AssessmentResults:update")
   attachToAssessmentResults(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
   detachFromAssessmentResults(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
@@ -58,19 +59,33 @@ type AssessmentResults implements BasicObject & LifecycleObject & OscalModel {
   "Identifies references to previous versions of this document."
   document_ids: [ID]
   "Provides information about the containing document, and defines concepts that are shared across the document."
-  shared_metadata: OscalMetadata!
+  metadata: OscalMetadata
+  "Identifies a human readable name for the result of the assessment that should be shown to the user."
+  display_name: String
   # AssessmentResult
   "Specifies reference to the associated Assessment Plan to import information about the original plan for assessing the system."
-  assessment_plan: AssessmentPlan!
-  "Identifies data objects that are used in the assessment plan, that do not appear in the referenced SSP."
-  local_definitions: ARLocalDefinitions!
+  assessment_plan: AssessmentPlan
+  # Flattened LocalDefaults
+  "Identifies local definitions of a control objective for this assessment. Uses catalog syntax for control objective and assessment actions."
+  local_objectives_and_methods: [ControlObjective]
+  "Identifies an assessment or related process that can be performed."
+  local_activities(first: Int, offset: Int): [Activity]
   "Identifies all of the assessment observations and findings, initial and residual risks, deviations, and disposition."
-  results(first: Int, offset: Int): ResultConnection
+  results( 
+    first: Int
+    offset: Int
+    orderedBy: ResultOrdering
+    orderMode: OrderingMode
+    filters: [ResultFiltering]
+    filterMode: FilterMode
+  ): ResultConnection
   # Back-matter
   "Identifies one or more Resources that are associated with this POAM."
   resources(first: Int, offset: Int): OscalResourceConnection
 }
 input AssessmentResultsInput {
+  "Identifies the id of the Information system to this is associated; omit if no association"
+  system_id:  ID
   "Identifies the name given to the document."
   name: String!
   "Identifies the date and time the document was published."
@@ -87,11 +102,11 @@ input AssessmentResultsInput {
   document_ids: [ID]
   # AssessmentResult
   "Specifies reference to the associated Assessment Plan to import information about the original plan for assessing the system."
-  assessment_plan: ID!
+  assessment_plan: ID
   "Identifies local definitions of a control objective for this assessment. Uses catalog syntax for control objective and assessment actions."
-  objectives_and_methods: [ControlObjectiveInput]
+  local_objectives_and_methods: [ControlObjectiveInput]
   "Identifies an assessment or related process that can be performed."
-  activities: [ID]
+  local_activities: [ID]
 }
 
 # Pagination Types
@@ -138,17 +153,13 @@ enum AssessmentResultsOrdering {
   published
 }
 
-"""
-Defines data objects that were used in the assessment, that do not appear in the referenced SSP.
-"""
-type ARLocalDefinitions {
-  "Identifies local definitions of a control objective for this assessment. Uses catalog syntax for control objective and assessment actions."
-  objectives_and_methods: [ControlObjective]
-  "Identifies an assessment or related process that can be performed."
-  activities(first: Int, offset: Int): ActivityConnection
-}
-
-type ControlObjective {
+type ControlObjective implements ComplexDatatype {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  # ControlObjective
   "Identifies a reference to a control. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference)."
   control: Control!
   "Identifies a human-readable description of this control objective"

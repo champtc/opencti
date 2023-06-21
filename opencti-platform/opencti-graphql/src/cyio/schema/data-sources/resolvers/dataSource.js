@@ -15,11 +15,8 @@ import {
 import {
   findSourceActivityById,
 } from '../domain/workActivity.js';
-import {
-  getReducer as getGlobalReducer,
-  selectExternalReferenceByIriQuery,
-  selectNoteByIriQuery,
-} from '../../global/resolvers/sparql-query.js';
+import { findExternalReferenceByIri } from '../../global/domain/externalReference.js';
+import { findNoteByIri } from '../../global/domain/note.js';
 
 
 const cyioDataSourceResolvers = {
@@ -54,88 +51,30 @@ const cyioDataSourceResolvers = {
       return findDataMarkingByIri(parent.iep_iri, dbName, dataSources, selectMap.getNode('iep'));
     },
     external_references: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.external_references_iri === undefined) return [];
-      let iriArray = parent.external_references_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer("EXTERNAL-REFERENCE");
-        for (let iri of iriArray) {
-          if (iri === undefined || !iri.includes('ExternalReference')) {
-            continue;
-          }
-          const sparqlQuery = selectExternalReferenceByIriQuery(iri, selectMap.getNode("external_references"));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: "Select External Reference",
-              singularizeSchema
-            });
-          } catch (e) {
-            console.log(e)
-            throw e
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]))
-          }
-          else {
-            // Handle reporting Stardog Error
-            if (typeof (response) === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: (response.body.message ? response.body.message : response.body),
-                error_code: (response.body.code ? response.body.code : 'N/A')
-              });
-            }
-          }
+      if (parent.link_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.link_iris) {
+        let result = await findExternalReferenceByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
-      } else {
-        return [];
+        results.push(result);
       }
+      return results;
     },
     notes: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.notes_iri === undefined) return [];
-      let iriArray = parent.notes_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer("NOTE");
-        for (let iri of iriArray) {
-          if (iri === undefined || !iri.includes('Note')) {
-            continue;
-          }
-          const sparqlQuery = selectNoteByIriQuery(iri, selectMap.getNode("notes"));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: "Select Note",
-              singularizeSchema
-            });
-          } catch (e) {
-            console.log(e)
-            throw e
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]))
-          }
-          else {
-            // Handle reporting Stardog Error
-            if (typeof (response) === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: (response.body.message ? response.body.message : response.body),
-                error_code: (response.body.code ? response.body.code : 'N/A')
-              });
-            }
-          }
+      if (parent.remark_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.remark_iris) {
+        let result = await findNoteByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
-      } else {
-        return [];
+        results.push(result);
       }
+      return results;
     },
   },
   // Map enum GraphQL values to data model required values

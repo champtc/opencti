@@ -48,6 +48,10 @@
       filterMode: FilterMode
       search: String
     ): CyioRelationshipConnection
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [DataMarking]
+    "Identifies a human readable name for the result of the assessment that should be shown to the user."
+    display_name: String
     # Asset
     asset_id: String
     name: String!
@@ -141,6 +145,8 @@
     is_scanned: Boolean
     is_virtual: Boolean
     last_scanned: Timestamp
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [ID]
   }
   # Pagination Types
   type HardwareAssetConnection {
@@ -153,6 +159,8 @@
   }
   # Slicing Types
   enum HardwareAssetOrdering {
+    "Display Name"
+    display_name
     "Created"
     created
     "Modified"

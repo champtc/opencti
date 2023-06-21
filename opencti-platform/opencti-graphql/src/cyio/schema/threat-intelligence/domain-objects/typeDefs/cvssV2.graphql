@@ -3,33 +3,20 @@ Common Vulnerability Scoring System (CVSS) v2 Metric that provides a way to
 capture the principal characteristics of a vulnerability and produce a 
 numerical score reflecting its severity.
 """
-type CVSSv2 implements CVSS & BasicObject & LifecycleObject {
+type CVSSv2 implements CVSS & ComplexDatatype {
   # BasicObject
   "Uniquely identifies this object."
   id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
   "Identifies the type of the Object."
   entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # LifecycleObject
-  "Identities the date and time at which the object was originally created."
-  created: Timestamp
-  "Identifies the date and time at which the object was last modified."
-  modified: Timestamp
-  # Core Object
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  external_references: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  notes: [CyioNote]
   # CVSS
   "Indicates the version of the CVSS record."
   version: String
-  # CVSS v2
   "Identifies a text representation of a set of CVSS metrics."
   vector_string: String
+  "Identifies the name used to display to users"
+  display_name: String
+  # CVSS v2
   "Indicates the how the vulnerability is exploited."
   access_vector: AccessVectorType
   "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
@@ -69,9 +56,9 @@ input CVSSv2Input {
   # CVSS
   "Indicates the version of the CVSS record."
   version: String!
-  # CVSS v2
   "Identifies a text representation of a set of CVSS metrics."
   vector_string: String!
+  # CVSS v2
   "Indicates the how the vulnerability is exploited."
   access_vector: AccessVectorType
   "Indicates the conditions beyond the attacker’s control that must exist in order to exploit the vulnerability."
@@ -112,7 +99,7 @@ input CVSSv2Input {
 AccessVectorType -
 """
 enum AccessVectorType {
-  "A vulnerability exploitable with network access means the vulnerable software is bound to the network stack and the attacker does not require local network access or local access. Such a vulnerability is often termed "remotely exploitable"."
+  "A vulnerability exploitable with network access means the vulnerable software is bound to the network stack and the attacker does not require local network access or local access. Such a vulnerability is often termed 'remotely exploitable'."
   NETWORK
   "A vulnerability exploitable with adjacent network access requires the attacker to have access to either the broadcast or collision domain of the vulnerable software."
   ADJACENT_NETWORK

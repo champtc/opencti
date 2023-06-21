@@ -102,7 +102,7 @@ export const selectDescriptionBlockByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(descriptionBlockPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -283,7 +283,7 @@ export const selectDiagramByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(diagramPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

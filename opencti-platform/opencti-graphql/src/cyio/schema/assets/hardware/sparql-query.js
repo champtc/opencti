@@ -59,6 +59,8 @@ const hardwareAssetReducer = (item) => {
     }
   }
 
+  if (item.display_name === undefined) item.display_name = item.name;
+
   return {
     iri: item.iri,
     id: item.id,
@@ -66,6 +68,7 @@ const hardwareAssetReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.display_name && { display_name: item.display_name }),
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
     ...(item.asset_id && { asset_id: item.asset_id }),
@@ -101,9 +104,6 @@ const hardwareAssetReducer = (item) => {
     // Hints
     ...(item.iri && { parent_iri: item.iri }),
     ...(item.locations && { locations_iri: item.locations }),
-    ...(item.external_references && { ext_ref_iri: item.external_references }),
-    ...(item.labels && { labels_iri: item.labels }),
-    ...(item.notes && { notes_iri: item.notes }),
     ...(item.installed_hardware && { installed_hw_iri: item.installed_hardware }),
     ...(item.installed_operating_system && { installed_os_iri: item.installed_operating_system }),
     ...(item.installed_software && { installed_sw_iri: item.installed_software }),
@@ -116,6 +116,11 @@ const hardwareAssetReducer = (item) => {
     ...(item.risk_count !== undefined && { risk_count: item.risk_count }),
     ...(item.risk_score !== undefined && { risk_score: item.risk_score }),
     ...(item.top_risk_severity && { top_risk_severity: item.top_risk_severity }),
+    // hints for general lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
+    ...(item.labels && { label_iris: item.labels }),
+    ...(item.external_references && { external_reference_iris: item.external_references }),
+    ...(item.notes && { note_iris: item.notes }),
   };
 };
 
@@ -180,7 +185,6 @@ export const selectHardwareQuery = (id, select) => {
   return selectHardwareByIriQuery(`http://scap.nist.gov/ns/asset-identification#Hardware-${id}`, select);
 };
 export const selectHardwareByIriQuery = (iri, select) => {
-  if (!iri.startsWith('<')) iri = `<${iri}>`;
   if (select != null) {
     if (select.includes('ipv4_address') || select.includes('ipv6_address')) select.push('ip_address');
     select = select.filter((i) => i !== 'ipv4_address');
@@ -192,6 +196,17 @@ export const selectHardwareByIriQuery = (iri, select) => {
   if (!select.includes('id')) select.push('id');
   if (!select.includes('object_type')) select.push('object_type');
 
+  // if looking for display_name
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('mac_address')) select.push('mac_address');
+    if (!select.includes('fqdn')) select.push('fqdn');
+    if (!select.includes('hostname')) select.push('hostname');
+    if (!select.includes('netbios_name')) select.push('netbios_name');
+    if (!select.includes('ip_address_value')) select.push('ip_address_value');
+  }
+    
   // define related risks clause to restrict to only Risk since it available in other objects
   let relatedRiskClause = '', relatedRiskVariable = '';
   if (select.includes('related_risks')) {
@@ -208,11 +223,25 @@ export const selectHardwareByIriQuery = (iri, select) => {
   // build list of selection variables and predicates
   const { selectionClause, predicates } = buildSelectVariables(hardwarePredicateMap, select);
 
+  // Build the "BIND" clause dependent upon value of iri
+  let bindClause;
+  if (Array.isArray(iri)) {
+    bindClause = '\tVALUES ?iri {\n'
+    for(let itemIri of iri) {
+      if (!itemIri.startsWith('<')) itemIri = `<${itemIri}>`;
+      bindClause = bindClause + `\t\t${itemIri}\n`;
+    }
+    bindClause = bindClause + '\t\t}'
+  } else {
+    if (!iri.startsWith('<')) iri = `<${iri}>`;
+    bindClause = `BIND(${iri} AS ?iri)`;
+  }
+
   return `
-  SELECT ?iri ${selectionClause} ${relatedRiskVariable}
+  SELECT DISTINCT ?iri ${selectionClause} ${relatedRiskVariable}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    BIND(${iri} AS ?iri)
+    ${bindClause}
     ?iri a <http://scap.nist.gov/ns/asset-identification#Hardware> .
     ${predicates}
     ${relatedRiskClause}
@@ -226,6 +255,7 @@ export const selectHardwareByIriQuery = (iri, select) => {
   }
   `;
 };
+
 export const selectAllHardware = (select, args) => {
   if (select != null) {
     select = select.filter((i) => i !== 'ipv4_address');
@@ -249,6 +279,17 @@ export const selectAllHardware = (select, args) => {
     if (args.orderedBy !== undefined) {
       if (!select.includes(args.orderedBy)) select.push(args.orderedBy);
     }
+  }
+
+  // if looking for display_name
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('mac_address')) select.push('mac_address');
+    if (!select.includes('fqdn')) select.push('fqdn');
+    if (!select.includes('hostname')) select.push('hostname');
+    if (!select.includes('netbios_name')) select.push('netbios_name');
+    if (!select.includes('ip_address_value')) select.push('ip_address_value');
   }
 
   // define related risks clause to restrict to only Risk since it available in other objects

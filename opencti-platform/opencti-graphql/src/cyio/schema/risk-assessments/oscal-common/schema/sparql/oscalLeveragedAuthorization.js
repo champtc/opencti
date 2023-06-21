@@ -65,7 +65,7 @@ export const selectOscalLeveragedAuthorizationByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(oscalLeveragedAuthorizationPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

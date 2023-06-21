@@ -49,6 +49,10 @@
       filterMode: FilterMode
       search: String
     ): CyioRelationshipConnection
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [DataMarking]
+    "Identifies a human readable name for the result of the assessment that should be shown to the user."
+    display_name: String
     # Asset
     asset_id: String
     name: String!
@@ -101,6 +105,8 @@
     is_publicly_accessible: Boolean
     is_scanned: Boolean
     last_scanned: Timestamp
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [ID]
   }
 
   input NetworkAssetFiltering {
@@ -122,6 +128,8 @@
   }
 
   enum NetworkAssetOrdering {
+    "Display Name"
+    display_name
     "Name"
     name
     "Asset ID"

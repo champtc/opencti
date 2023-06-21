@@ -27,6 +27,8 @@ export const inventoryItemReducer = (item) => {
     item.object_type = 'inventory-item';
   }
 
+  if (item.display_name === undefined ) item.display_name = item.name;
+
   return {
     iri: item.iri,
     id: item.id,
@@ -37,6 +39,7 @@ export const inventoryItemReducer = (item) => {
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
     ...(item.name && { name: item.name }),
+    ...(item.display_name && { display_name: item.display_name}),
     ...(item.description && { description: item.description }),
     // inventory-item
     ...(item.responsible_parties && { responsible_party_iris: item.responsible_parties }),
@@ -82,11 +85,11 @@ export const inventoryItemReducer = (item) => {
     ...(item.installed_software && { installed_sw_iri: item.installed_software }),
     ...(item.ports && { ports_iri: item.ports }),
     ...(item.connected_to_network && { conn_network_iri: item.connected_to_network }),
-      // hints for general lists of items
-      ...(item.object_markings && {marking_iris: item.object_markings}),
-      ...(item.labels && { labels_iri: item.labels }),
-      ...(item.links && { links_iri: item.links }),
-      ...(item.remarks && { remarks_iri: item.remarks }),
+    // hints for general lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
+    ...(item.labels && { labels_iri: item.labels }),
+    ...(item.links && { links_iri: item.links }),
+    ...(item.remarks && { remarks_iri: item.remarks }),
   };
 };
 
@@ -131,10 +134,10 @@ export const selectInventoryItemQuery = (id, select) => {
   // This query building function is unusual because the IRI for InventoryItems can be
   // different since there are different types of objects.  Thus we build a query that 
   // looks up inventory items with a specific id instead of with a specific IRI
-  if (select !== null && select.includes('props')) {
+  if (select?.includes('props')) {
     let reservedFields = [
       'id','entity_type','links','remarks','props',
-      'name','description','responsible_parties','implemented_components'
+      'name','description','responsible_parties','implemented_components','display_name'
     ]
     for (let fieldName of select) {
       if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
@@ -148,10 +151,17 @@ export const selectInventoryItemQuery = (id, select) => {
     if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
     // if (select.includes('implemented_components')) delete select.implemented_components;
   }
+  
   if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('model')) select.push('model');
+  }
+
   const { selectionClause, predicates } = buildSelectVariables(inventoryItemPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     ?iri a <http://csrc.nist.gov/ns/oscal/common#InventoryItem> .
@@ -168,11 +178,10 @@ export const selectInventoryItemQuery = (id, select) => {
   `;
 };
 export const selectInventoryItemByIriQuery = (iri, select) => {
-  if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select !== null && select.includes('props')) {
+  if (select?.includes('props')) {
     let reservedFields = [
       'id','entity_type','links','remarks','props',
-      'name','description','responsible_parties','implemented_components'
+      'name','description','responsible_parties','implemented_components','display_name'
     ]
     for (let fieldName of select) {
       if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
@@ -186,23 +195,46 @@ export const selectInventoryItemByIriQuery = (iri, select) => {
     if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
     // if (select.includes('implemented_components')) delete select.implemented_components;
   }
+
   if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('model')) select.push('model');
+  }
+
   const { selectionClause, predicates } = buildSelectVariables(inventoryItemPredicateMap, select);
+
+  // Build the "BIND" clause dependent upon value of iri
+  let bindClause;
+  if (Array.isArray(iri)) {
+    bindClause = '\tVALUES ?iri {\n'
+    for(let itemIri of iri) {
+      if (!itemIri.startsWith('<')) itemIri = `<${itemIri}>`;
+      bindClause = bindClause + `\t\t${itemIri}\n`;
+    }
+    bindClause = bindClause + '\t\t}'
+  } else {
+    if (!iri.startsWith('<')) iri = `<${iri}>`;
+    bindClause = `BIND(${iri} AS ?iri)`;
+  }
+
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    BIND(${iri} AS ?iri)
+    ${bindClause}
     ?iri a <http://csrc.nist.gov/ns/oscal/common#InventoryItem> .
     ${predicates}
   }
   `;
 };
-export const selectAllInventoryItems = (select, args) => {
-  if (select !== null && select.includes('props')) {
+export const selectAllInventoryItems = (select, args, parent) => {
+  if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
+  if (select.includes('props')) {
     let reservedFields = [
       'id','entity_type','links','remarks','props',
-      'name','description','responsible_parties','implemented_components'
+      'name','description','responsible_parties','implemented_components','display_name'
     ]
     for (let fieldName of select) {
       if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
@@ -217,10 +249,16 @@ export const selectAllInventoryItems = (select, args) => {
     if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
     // if (select.includes('implemented_components')) delete select.implemented_components;
   }
+
   if (select === undefined || select === null) select = Object.keys(inventoryItemPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('entity_type')) select.push('entity_type');
   if (!select.includes('asset_type')) select.push('asset_type');
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('model')) select.push('model');
+  }
 
   if (args !== undefined) {
     // add value of filter's key to cause special predicates to be included
@@ -236,13 +274,31 @@ export const selectAllInventoryItems = (select, args) => {
     }
   }
 
+  // compute the list of selection clause terms and predicates to be used
   const { selectionClause, predicates } = buildSelectVariables(inventoryItemPredicateMap, select);
-  return `
-  SELECT DISTINCT ?iri ${selectionClause} 
-  FROM <tag:stardog:api:context:local>
-  WHERE {
-    ?iri a <http://csrc.nist.gov/ns/oscal/common#InventoryItem> . 
-    ${predicates}
+
+  // add constraint clause to limit to those that are referenced by the specified POAM
+  let constraintClause = '';
+  if (parent?.iri !== undefined) {
+    let classTypeIri;
+    let predicate;
+    if (parent.entity_type === 'result') {
+      classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>';
+      predicate = '<http://darklight.ai/ns/oscal/assessment-results#assets>'
+    }
+
+    // define a constraint to limit retrieval to only those referenced by the parent
+    constraintClause = `
+    {
+      SELECT DISTINCT ?iri
+      WHERE {
+          <${parent.iri}> a ${classTypeIri} ;
+            ${predicate} ?iri .
+      }
+    }
+    `;
+  } else {
+    constraintClause = `
     {
       SELECT DISTINCT ?iri
       WHERE {
@@ -250,6 +306,16 @@ export const selectAllInventoryItems = (select, args) => {
                 <http://csrc.nist.gov/ns/oscal/common#assets> ?iri .
       }
     }
+    `;
+  }
+
+  return `
+  SELECT DISTINCT ?iri ${selectionClause} 
+  FROM <tag:stardog:api:context:local>
+  WHERE {
+    ?iri a <http://csrc.nist.gov/ns/oscal/common#InventoryItem> . 
+    ${predicates}
+    ${constraintClause}
   }
   `;
 };
@@ -523,11 +589,11 @@ export const inventoryItemPredicateMap = {
   //   binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, "implementation_point");},
   //   optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   // },
-  // operational_status: {
-  //   predicate: "<http://scap.nist.gov/ns/asset-identification#operational_status>",
-  //   binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, "operational_status");},
-  //   optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
-  // },
+  operational_status: {
+    predicate: "<http://scap.nist.gov/ns/asset-identification#operational_status>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, "operational_status");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
   function: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#function>',
     binding(iri, value) {
@@ -801,6 +867,48 @@ export const inventoryItemPredicateMap = {
       return optionalizePredicate(this.binding(iri, value));
     },
   },
+};
+
+// SingularizeSchema
+export const inventoryItemSingularizeSchema = {
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
+    "label_name": true,
+    "name": true,
+    "description": true, 
+    "location_name": true,
+    "allows_authenticated_scan": true,
+    "asset_id": true,
+    "asset_type": true, 
+    "asset_tag": true,
+    "serial_number": true,
+    "vendor_name": true,
+    "version": true,
+    "operational_status": true,
+    "function": true,
+    "model": true,
+    "installed_os_id": true,
+    "installed_os_name": true,
+    "is_publicly_accessible": true,
+    "is_scanned": true,
+    "is_virtual": true,
+    "last_scanned": true,
+    "fqdn": true,
+    "netbios_name": true,
+    "vlan_id": true,
+    "uri": true,
+    "installed_software_id": true,
+    "installed_software_name": true,
+    "ip_address_value": true,
+    "mac_address_value": true,
+    "baseline_configuration_name": true,
+  }
 };
 
 // Function to convert an Asset to a Component

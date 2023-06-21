@@ -1,12 +1,10 @@
-import { UserInputError } from 'apollo-server-express';
+import { UserInputError } from 'apollo-server-errors';
+import { logApp } from '../../../../../config/conf.js';
 import { riskSingularizeSchema as singularizeSchema } from '../../risk-mappings.js';
-import { compareValues, updateQuery, filterValues, CyioError } from '../../../utils.js';
-import {
-  selectLabelByIriQuery,
-  selectExternalReferenceByIriQuery,
-  selectNoteByIriQuery,
-  getReducer as getGlobalReducer,
-} from '../../../global/resolvers/sparql-query.js';
+import { compareValues, updateQuery, filterValues } from '../../../utils.js';
+import { findExternalReferenceByIri } from '../../../global/domain/externalReference.js';
+import { findNoteByIri } from '../../../global/domain/note.js';
+import { findLabelByIri } from '../../../global/domain/label.js';
 import { attachToPOAMQuery, detachFromPOAMQuery } from '../../poam/resolvers/sparql-query.js';
 import {
   getReducer,
@@ -212,7 +210,7 @@ const responsiblePartyResolvers = {
       }
 
       // AB#5859 - Verify no other ResponsibleParty exists with the specified role
-      const sparqlQuery = selectAllResponsibleParties(['id', 'role']);
+      const sparqlQuery = selectAllResponsibleParties(['id','name','role']);
       let results;
       try {
         results = await dataSources.Stardog.queryAll({
@@ -229,19 +227,64 @@ const responsiblePartyResolvers = {
       // check if there is already a Responsible Party defined with the specified Role
       if (results !== undefined && results.length > 0) {
         for (const respParty of results) {
-          if (`<${respParty.role[0]}>` === `<http://csrc.nist.gov/ns/oscal/common#Role-${role}>`) {
-            throw new CyioError('Only one Responsible Party can be assigned the specified Responsibility');
+          if (respParty.hasOwnProperty('name') && input.name !== undefined && respParty.name === input.name) {
+            throw new UserInputError(`Responsible Party with name '${input.name}' already exists`,{name: `${input.name}`,iri: `${respParty.iri}`});
+          }
+          if (respParty.hasOwnProperty('role')) {
+            if (`<${respParty.role}>` === `<http://csrc.nist.gov/ns/oscal/common#Role-${role}>`) {
+              throw new UserInputError('Only one Responsible Party can be assigned the specified Responsibility');
+            }  
           }
         }
       }
 
       // create the Responsible Party
       const { iri, id, query } = insertResponsiblePartyQuery(input);
-      await dataSources.Stardog.create({
-        dbName,
-        sparqlQuery: query,
-        queryId: 'Create OSCAL Responsible Party',
-      });
+      try {
+        await dataSources.Stardog.create({
+          dbName,
+          sparqlQuery: query,
+          queryId: 'Create OSCAL Responsible Party',
+        });  
+      } catch (e) {
+        logApp.error(e);
+        throw e;
+      }
+
+      // attach associated Role
+      if (role !== undefined && role !== null) {
+        let roleIri = `<http://csrc.nist.gov/ns/oscal/common#Role-${role}>`;
+        // attach the Role to the Responsible Party
+        const roleAttachQuery = attachToResponsiblePartyQuery(id, 'role', roleIri);
+        try {
+          await dataSources.Stardog.create({
+            dbName,
+            sparqlQuery: roleAttachQuery,
+            queryId: 'Attach reference to the Role to this Responsible Party',
+          });
+        } catch (e) {
+          logApp.error(e);
+          throw e;
+        }
+      }
+
+      // // attach any Parties
+      if (parties !== undefined && parties !== null) {
+        const partyIris = [];
+        for (const partyIri of parties) partyIris.push(`<http://csrc.nist.gov/ns/oscal/common#Party-${partyIri}>`);
+        // attach the Party to the Responsible Party
+        const partyAttachQuery = attachToResponsiblePartyQuery(id, 'parties', partyIris);
+        try {
+          await dataSources.Stardog.create({
+            dbName,
+            sparqlQuery: partyAttachQuery,
+            queryId: 'Attach references to one or more Parties to this Responsible Party',
+          });
+        } catch(e) {
+          logApp.error(e);
+          throw e;
+        }
+      }
 
       // add the responsible party to the parent object (if supplied)
       // TODO: WORKAROUND attach the responsible party to the default POAM until Metadata object is supported
@@ -258,31 +301,6 @@ const responsiblePartyResolvers = {
         throw e;
       }
       // END WORKAROUND
-
-      // attach associated Role
-      if (role !== undefined && role !== null) {
-        const roleIris = [];
-        roleIris.push(`<http://csrc.nist.gov/ns/oscal/common#Role-${role}>`);
-        // attach the Role to the Responsible Party
-        const roleAttachQuery = attachToResponsiblePartyQuery(id, 'role', roleIris);
-        await dataSources.Stardog.create({
-          dbName,
-          sparqlQuery: roleAttachQuery,
-          queryId: 'Attach reference to the Role to this Responsible Party',
-        });
-      }
-      // // attach any Parties
-      if (parties !== undefined && parties !== null) {
-        const partyIris = [];
-        for (const partyIri of parties) partyIris.push(`<http://csrc.nist.gov/ns/oscal/common#Party-${partyIri}>`);
-        // attach the Party to the Responsible Party
-        const partyAttachQuery = attachToResponsiblePartyQuery(id, 'parties', partyIris);
-        await dataSources.Stardog.create({
-          dbName,
-          sparqlQuery: partyAttachQuery,
-          queryId: 'Attach references to one or more Parties to this Responsible Party',
-        });
-      }
 
       // retrieve information about the newly created Responsible Party to return to the user
       const select = selectResponsiblePartyQuery(id, selectMap.getNode('createOscalResponsibleParty'));
@@ -316,7 +334,7 @@ const responsiblePartyResolvers = {
         console.log(e);
         throw e;
       }
-      if (response.length === 0) throw new CyioError(`Entity does not exist with ID ${id}`);
+      if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`,{identifier: `${id}`});
       const reducer = getReducer('RESPONSIBLE-PARTY');
       const responsibleParty = reducer(response[0]);
 
@@ -354,7 +372,7 @@ const responsiblePartyResolvers = {
     },
     editOscalResponsibleParty: async (_, { id, input }, { dbName, dataSources, selectMap }) => {
       // make sure there is input data containing what is to be edited
-      if (input === undefined || input.length === 0) throw new CyioError(`No input data was supplied`);
+      if (input === undefined || input.length === 0) throw new UserInputError(`No input data was supplied`);
 
       // TODO: WORKAROUND to remove immutable fields
       input = input.filter(
@@ -374,7 +392,7 @@ const responsiblePartyResolvers = {
         queryId: 'Select Responsible Party',
         singularizeSchema,
       });
-      if (response.length === 0) throw new CyioError(`Entity does not exist with ID ${id}`);
+      if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`,{identifier: `${id}`});
 
       // determine operation, if missing
       for (const editItem of input) {
@@ -446,7 +464,7 @@ const responsiblePartyResolvers = {
               singularizeSchema,
             });
             if (result === undefined || result.length === 0)
-              throw new CyioError(`Entity does not exist with ID ${value}`);
+              throw new UserInputError(`Entity does not exist with ID ${value}`,{identifier: `${value}`});
             iris.push(`<${result[0].iri}>`);
           }
         }
@@ -469,7 +487,7 @@ const responsiblePartyResolvers = {
           if (response !== undefined && response.length > 0) {
             for (const respParty of response) {
               if (`<${respParty.role[0]}>` === iris[0] && respParty.id !== id) {
-                throw new CyioError('Only one Responsible Party can be assigned the specified Responsibility');
+                throw new UserInputError('Only one Responsible Party can be assigned the specified Responsibility');
               }
             }
           }
@@ -529,118 +547,47 @@ const responsiblePartyResolvers = {
   },
   OscalResponsibleParty: {
     labels: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.labels_iri === undefined) return [];
-      const iriArray = parent.labels_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('LABEL');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Label')) continue;
-          const sparqlQuery = selectLabelByIriQuery(iri, selectMap.getNode('labels'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Label',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.label_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.label_iris) {
+        let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     links: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.links_iri === undefined) return [];
-      const iriArray = parent.links_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('EXTERNAL-REFERENCE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('ExternalReference')) continue;
-          const sparqlQuery = selectExternalReferenceByIriQuery(iri, selectMap.getNode('links'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select External Reference',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.link_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.link_iris) {
+        // TODO: switch to findLinkByIri
+        // let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        let result = await findExternalReferenceByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     remarks: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.remarks_iri === undefined) return [];
-      const iriArray = parent.remarks_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('NOTE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Note')) continue;
-          const sparqlQuery = selectNoteByIriQuery(iri, selectMap.getNode('remarks'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Note',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.remark_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.remark_iris) {
+        // TODO: switch to findRemarkByIri
+        // let result = await findRemarkByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        let result = await findNoteByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     parties: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.parties_iri === undefined) return [];
@@ -682,7 +629,7 @@ const responsiblePartyResolvers = {
     },
     role: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.role_iri === undefined) return null;
-      const iri = parent.role_iri[0];
+      const iri = parent.role_iri;
       const reducer = getReducer('ROLE');
       const sparqlQuery = selectRoleByIriQuery(iri, selectMap.getNode('role'));
       let response;

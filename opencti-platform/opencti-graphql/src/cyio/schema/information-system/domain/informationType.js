@@ -143,7 +143,7 @@ export const findAllInformationTypes = async (args, dbName, dataSources, select 
       let display_name = (resultItem.identifier ? resultItem.identifier : '') + "  " +
                           (resultItem.title ? resultItem.title : '');
       display_name = display_name.trim();
-      if (display_name.length > 0) response[0].display_name = display_name;
+      if (display_name.length > 0) resultItem.display_name = display_name;
     }
   
     // filter out non-matching entries if a filter is to be applied
@@ -226,7 +226,7 @@ export const createInformationType = async (input, dbName, dataSources, select) 
   let existSelect = ['id','entity_type','title','created','modified']
   let checkId = generateInformationTypeId( input );
   let infoType = await findInformationTypeById(checkId, dbName, dataSources, existSelect);
-  if ( infoType != undefined && infoType != null) throw new UserInputError(`Cannot create information type as entity ${checkId}; already exists`);
+  if ( infoType != undefined && infoType != null) throw new UserInputError(`Cannot create information type as entity ${checkId}; already exists`, {identifier: `${checkId}`});
 
   // Collect all the nested definitions and remove them from input array
   let nestedDefinitions = {
@@ -274,9 +274,9 @@ export const createInformationType = async (input, dbName, dataSources, select) 
 
   // Collect all the referenced objects and remove them from input array
   let objectReferences = {
-    // 'categorizations': { ids: input.categorizations, objectType: 'categorization' },
+    'object_markings': { ids: input.object_markings, objectType: 'marking-definition'},
   };
-  // if (input.categorizations) delete input.categorizations;
+  if (input.object_markings) delete input.object_markings;
   
   // create the Information Type object
   let response;
@@ -332,7 +332,7 @@ export const createInformationType = async (input, dbName, dataSources, select) 
     for (let refId of value.ids) {
       let sparqlQuery = selectObjectIriByIdQuery(refId, value.objectType);
       let result = await dataSources.Stardog.queryById({
-        dbName,
+        dbName: (value.objectType === 'marking-definition' ? conf.get('app:config:db_name') || 'cyio-config' : dbName),
         sparqlQuery,
         queryId: "Obtaining IRI for the object with id",
         singularizeSchema: singularizeInformationTypeSchema

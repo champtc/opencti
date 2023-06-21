@@ -99,7 +99,7 @@ export const selectWorkspaceByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(workspacePredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -138,7 +138,7 @@ export const selectAllWorkspacesQuery = (select, args, parent) => {
       SELECT DISTINCT ?iri
       WHERE {
           <${parent.iri}> a <http://darklight.ai/ns/cyio/system-configuration#SystemConfiguration> ;
-          <<http://darklight.ai/ns/cyio/system-configuration#workspaces> ?iri .
+          <http://darklight.ai/ns/cyio/system-configuration#workspaces> ?iri .
       }
     }`;
   }

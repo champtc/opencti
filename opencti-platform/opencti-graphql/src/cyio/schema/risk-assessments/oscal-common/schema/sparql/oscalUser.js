@@ -88,7 +88,7 @@ export const selectOscalUserByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(oscalUserPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -273,7 +273,7 @@ export const selectAuthorizedPrivilegeByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(authorizedPrivilegePredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

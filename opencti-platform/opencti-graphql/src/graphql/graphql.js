@@ -1,8 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
-import { formatError as apolloFormatError } from 'apollo-errors';
-import { ApolloError} from 'apollo-server-errors';
+import { ApolloError, formatError as apolloFormatError } from 'apollo-errors';
 import { execute, GraphQLError, subscribe } from 'graphql';
-import { dissocPath } from 'ramda';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { createPrometheusExporterPlugin } from '@bmatei/apollo-prometheus-exporter';
 import nconf from 'nconf';
@@ -14,13 +12,13 @@ import {
 import createSchema from './schema';
 import conf, { basePath, DEV_MODE, logApp } from '../config/conf';
 import { authenticateUserFromRequest, userWithOrigin } from '../domain/user';
-import { UnknownError, ValidationError } from '../config/errors';
+import { ValidationError } from '../config/errors';
 import loggerPlugin from './loggerPlugin';
 import httpResponsePlugin from './httpResponsePlugin';
 import { checkSystemDependencies } from '../initialization';
 import { getSettings } from '../domain/settings';
 import { applicationSession } from '../database/session';
-import StardogKB from '../datasources/stardog';
+import StardogKB, { StardogError } from '../datasources/stardog';
 import Artemis from '../datasources/artemis';
 import DynamoDB from '../datasources/dynamoDB';
 import querySelectMap from '../cyio/schema/querySelectMap';
@@ -30,6 +28,7 @@ import {
   permissionDirectiveTransformer,
   roleDirectiveTransformer,
 } from '../service/keycloak';
+import { sendStacktrace } from '../utils/teams';
 
 const onHealthCheck = () => checkSystemDependencies().then(() => getSettings());
 
@@ -109,6 +108,7 @@ const createApolloServer = async (app, httpServer) => {
   const server = new ApolloServer({
     schema,
     introspection: true,
+    cache: "bounded",
     mocks: false,
     preserveResolvers: true,
     persistedQueries: false,
@@ -138,58 +138,35 @@ const createApolloServer = async (app, httpServer) => {
     tracing: DEV_MODE,
     plugins,
     formatError: (error) => {
-      let e = apolloFormatError(error);
-      if (e instanceof GraphQLError) {
-        if (process.env.MS_TEAMS_WEBHOOK) {
-          axios
-            .post(process.env.MS_TEAMS_WEBHOOK, {
-              '@type': 'MessageCard',
-              '@Context': 'http://schema.org/extensions',
-              title: 'Error',
-              text: `${e.message}`,
-              sections: [
-                {
-                  facts: [
-                    {
-                      name: 'Stacktrace',
-                      value: JSON.stringify(e),
-                    },
-                  ],
-                },
-              ],
-            })
-            .then((response) => {
-              logApp.debug('GraphQL error sent to Teams', {
-                status: response.status,
-                statusText: response.statusText,
-              });
-            })
-            .catch((axiosError) => {
-              logApp.error(axiosError);
-            });
+      let e;
+      let stacktrace;
+      if (error instanceof GraphQLError ) {
+        e = error;
+        if (error.hasOwnProperty('extensions')) {
+          let ext = error.extensions;
+          stacktrace = ext;
+
+          // special handling for Stardog thrown exceptions
+          if (ext.hasOwnProperty('exception') && ext.exception.name === 'StardogError') {
+            stacktrace = ext.exception.internalData;
+          }
         }
 
-        let errorCode;
-        if (e.extensions.hasOwnProperty('code')) {
-          errorCode = e.extensions.code;
-        } else if (e.extensions.exception.hasOwnProperty('code')) {
-          errorCode = e.extensions.exception.code;
-        }
-        
-        if (errorCode === 'ERR_GRAPHQL_CONSTRAINT_VALIDATION') {
-          const { fieldName } = e.extensions.exception;
-          const ConstraintError = ValidationError(fieldName);
-          e = apolloFormatError(ConstraintError);
-        } else if (!DEV_MODE && error.hasOwnProperty('originalError')) {
-          // this if condition is to handle the issue where the Apollo Server will
-          // convert GraphQL exceptions thrown by resolvers to an INTERNAL_SERVER_ERROR 
-          // if the NODE_ENV is set to 'production'.  To get around this, retrieve the
-          // original error thrown by the resolver via the originalError property
-          let err = error.originalError;
-          if (err instanceof ApolloError) e = apolloFormatError(err);
-        }
+        // this if condition is to handle the issue where the Apollo Server will
+        // convert GraphQL exceptions thrown by resolvers to an INTERNAL_SERVER_ERROR 
+        // if the NODE_ENV is set to 'production'.  To get around this, retrieve the
+        // original error thrown by the resolver via the originalError property
+        if (!DEV_MODE && error.hasOwnProperty('originalError')) {
+          e = error.originalError;
+        } 
+      } else {
+        e = error;
+        stacktrace = e;
       }
 
+      // send error info to Teams channel
+      console.log( JSON.stringify(stacktrace, null, "  " ));
+      sendStacktrace('Error', e.message, stacktrace);
       return e;
     },
   });

@@ -3,12 +3,9 @@ import { riskSingularizeSchema as singularizeSchema } from '../../risk-mappings.
 import { compareValues, updateQuery, filterValues, generateId, OSCAL_NS, CyioError } from '../../../utils.js';
 import { calculateRiskLevel, getLatestRemediationInfo, convertToProperties } from '../../riskUtils.js';
 import { findParentIriQuery, objectMap } from '../../../global/global-utils.js';
-import {
-  selectLabelByIriQuery,
-  selectExternalReferenceByIriQuery,
-  selectNoteByIriQuery,
-  getReducer as getGlobalReducer,
-} from '../../../global/resolvers/sparql-query.js';
+import { findExternalReferenceByIri } from '../../../global/domain/externalReference.js';
+import { findNoteByIri } from '../../../global/domain/note.js';
+import { findLabelByIri } from '../../../global/domain/label.js';
 import { attachToPOAMQuery, detachFromPOAMQuery } from '../../poam/resolvers/sparql-query.js';
 import {
   getReducer,
@@ -24,17 +21,24 @@ import {
   selectRiskResponseByIriQuery,
   riskResponsePredicateMap,
   selectRiskLogEntryByIriQuery,
-  deleteOriginByIriQuery,
-  selectAllOrigins,
-  selectOriginByIriQuery,
   selectAllRiskLogEntries,
 } from './sparql-query.js';
-import { assertNullableType } from 'graphql';
+import {
+  getReducer as getOriginReducer,
+  deleteOriginByIriQuery,
+  selectAllOrigins,
+} from '../schema/sparql/origin.js'
+import {
+  determineDisplayName,
+} from '../domain/risk.js';
+import { findAllDataMarkings } from '../../../data-markings/domain/dataMarkings.js';
+
 
 const riskResolvers = {
   Query: {
     risks: async (_, args, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectAllRisks(selectMap.getNode('node'), args);
+      let select = selectMap.getNode('node');
+      const sparqlQuery = selectAllRisks(select, args);
       let response;
       try {
         response = await dataSources.Stardog.queryAll({
@@ -64,9 +68,6 @@ const riskResolvers = {
 
         // update the risk level and score before sorting
         for (const risk of response) {
-          // PATCH: 14-Jun-2023
-          if (risk.risk_id !== undefined ) risk.name = risk.risk_id;
-
           risk.risk_level = 'unknown';
           if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
             // calculate the risk level
@@ -92,6 +93,11 @@ const riskResolvers = {
             delete risk.remediation_type_values;
             delete risk.remediation_lifecycle_values;
             delete risk.remediation_timestamp_values;
+          }
+
+          // determine display_name
+          if ( select.includes('display_name')) {
+            risk.display_name = determineDisplayName(risk);
           }
 
           // TODO: WORKAROUND fix up invalidate deviation values
@@ -238,23 +244,15 @@ const riskResolvers = {
             hasPreviousPage,
             globalCount: resultCount,
           },
-          edges,
+          edges: edges,
         };
-      }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      } else {
-        return assertNullableType;
       }
     },
     risk: async (_, { id }, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectRiskQuery(id, selectMap.getNode('risk'));
+      let select = selectMap.getNode('risk');
       let response;
       try {
+        const sparqlQuery = selectRiskQuery(id, select);
         response = await dataSources.Stardog.queryById({
           dbName,
           sparqlQuery,
@@ -270,9 +268,6 @@ const riskResolvers = {
       if (Array.isArray(response) && response.length > 0) {
         const reducer = getReducer('RISK');
         const risk = response[0];
-
-        // PATCH: 14-Jun-2023
-        if (risk.risk_id !== undefined ) risk.name = risk.risk_id;
 
         // handle the case where we get only empty availability fields
         if (risk.id === undefined && risk.entity_type === undefined && risk.object_type === undefined) return null;
@@ -303,6 +298,11 @@ const riskResolvers = {
           delete risk.remediation_type_values;
           delete risk.remediation_lifecycle_values;
           delete risk.remediation_timestamp_values;
+        }
+
+        // determine display_name
+        if ( select.includes('display_name')) {
+          risk.display_name = determineDisplayName(risk);
         }
 
         // TODO: WORKAROUND fix up invalidate deviation values
@@ -368,15 +368,6 @@ const riskResolvers = {
         }
 
         return reducer(risk);
-      }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      } else {
-        return null;
       }
     },
   },
@@ -662,129 +653,52 @@ const riskResolvers = {
   // field-level resolvers
   Risk: {
     labels: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.labels_iri === undefined) return [];
-      const iriArray = parent.labels_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('LABEL');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Label')) {
-            continue;
-          }
-          const sparqlQuery = selectLabelByIriQuery(iri, selectMap.getNode('labels'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Label',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.label_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.label_iris) {
+        let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     links: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.links_iri === undefined) return [];
-      const iriArray = parent.links_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('EXTERNAL-REFERENCE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('ExternalReference')) {
-            continue;
-          }
-          const sparqlQuery = selectExternalReferenceByIriQuery(iri, selectMap.getNode('links'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Link',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.link_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.link_iris) {
+        // TODO: switch to findLinkByIri
+        // let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        let result = await findExternalReferenceByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     remarks: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.remarks_iri === undefined) return [];
-      const iriArray = parent.remarks_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('NOTE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Note')) {
-            continue;
-          }
-          const sparqlQuery = selectNoteByIriQuery(iri, selectMap.getNode('remarks'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Remark',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.remark_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.remark_iris) {
+        // TODO: switch to findRemarkByIri
+        // let result = await findRemarkByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        let result = await findNoteByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     origins: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.origins_iri === undefined) return [];
       const results = [];
-      const reducer = getReducer('ORIGIN');
+      const reducer = getOriginReducer('ORIGIN');
       const sparqlQuery = selectAllOrigins(selectMap.getNode('origins'), undefined, parent);
       let response;
       try {
@@ -1045,127 +959,15 @@ const riskResolvers = {
       };
     },
     related_observations: async (parent, args, { dbName, dataSources, selectMap }) => {
-      if (parent.related_observations_iri === undefined) return null;
-      const edges = [];
-      let filterCount;
-      let resultCount;
-      let limit;
-      let offset;
-      let limitSize;
-      let offsetSize;
-      filterCount = 0;
-
-      // if only returning the id, then use the values already collected in the parent
-      if (selectMap.getNode('node').length === 1 && selectMap.getNode('node').includes('id')) {
-        if (parent.related_observation_ids !== undefined && parent.related_observation_ids.length > 0) {
-          limitSize = limit = args.first === undefined ? parent.related_observations_iri.length : args.first;
-          offsetSize = args.offset === undefined ? 0 : args.offset;
-          resultCount = parent.related_observations_iri.length;
-          for (let i = 0; i < parent.related_observations_iri.length; i++) {
-            const relObservation = {
-              iri: parent.related_observations_iri[i],
-              id: parent.related_observation_ids[i],
-              entity_type: 'observation',
-            };
-
-            if (limit) {
-              const edge = {
-                cursor: parent.related_observations_iri[i],
-                node: relObservation,
-              };
-              edges.push(edge);
-              limit--;
-              if (limit === 0) break;
-            }
-          }
-        }
-      } else {
-        // Perform a query as more info that just the uuid is to be returned
-        const reducer = getReducer('OBSERVATION');
-        const sparqlQuery = selectAllObservations(selectMap.getNode('node'), args, parent);
-        let response;
-        try {
-          response = await dataSources.Stardog.queryById({
-            dbName,
-            sparqlQuery,
-            queryId: 'Select Related Observations',
-            singularizeSchema,
-          });
-        } catch (e) {
-          console.log(e);
-          throw e;
-        }
-        if (response === undefined || response.length === 0) return null;
-
-        // Handle reporting Stardog Error
-        if (typeof response === 'object' && 'body' in response) {
-          throw new UserInputError(response.statusText, {
-            error_details: response.body.message ? response.body.message : response.body,
-            error_code: response.body.code ? response.body.code : 'N/A',
-          });
-        }
-
-        limitSize = limit = args.first === undefined ? response.length : args.first;
-        offsetSize = offset = args.offset === undefined ? 0 : args.offset;
-        let observationList;
-        if (args.orderedBy !== undefined) {
-          observationList = response.sort(compareValues(args.orderedBy, args.orderMode));
-        } else {
-          observationList = response;
-        }
-
-        if (offset > observationList.length) return null;
-        resultCount = observationList.length;
-        for (const observation of observationList) {
-          if (offset) {
-            offset--;
-            continue;
-          }
-
-          // filter out non-matching entries if a filter is to be applied
-          if ('filters' in args && args.filters != null && args.filters.length > 0) {
-            if (!filterValues(observation, args.filters, args.filterMode)) {
-              continue;
-            }
-            filterCount++;
-          }
-          // if haven't reached limit to be returned
-          if (limit) {
-            const edge = {
-              cursor: observation.iri,
-              node: reducer(observation),
-            };
-            edges.push(edge);
-            limit--;
-            if (limit === 0) break;
-          }
-        }
+      if (parent.related_observation_iris === undefined) return null;
+      if (selectMap.getNode('pageInfo') !== null && selectMap.getNode('edges') === null) {
+        // return only a count as pageInfo
+        return { pageInfo: { globalCount: parent.related_observation_iris.length} }
       }
-
-      // check if there is data to be returned
-      if (edges.length === 0) return null;
-      let hasNextPage = false;
-      let hasPreviousPage = false;
-      if (edges.length < resultCount) {
-        if (edges.length === limitSize && filterCount <= limitSize) {
-          hasNextPage = true;
-          if (offsetSize > 0) hasPreviousPage = true;
-        }
-        if (edges.length <= limitSize) {
-          if (filterCount !== edges.length) hasNextPage = true;
-          if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
-        }
-      }
-      return {
-        pageInfo: {
-          startCursor: edges[0].cursor,
-          endCursor: edges[edges.length - 1].cursor,
-          hasNextPage,
-          hasPreviousPage,
-          globalCount: resultCount,
-        },
-        edges,
-      };
+      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      let select = selectMap.getNode('node');
+      let connection = await findObservationsByIriList(parent, parent.related_observation_iris, args, dbName, dataSources, select);
+      return connection;
     },
     occurrences: async (parent, _, { dbName, dataSources }) => {
       if (parent.id === undefined) {
@@ -1212,7 +1014,15 @@ const riskResolvers = {
         return null;
       }
     },
-  },
+    object_markings: async (parent, _, { dbName, dataSources, selectMap}) => {
+      if (parent.marking_iris === undefined) return [];
+      let connection = await findAllDataMarkings(parent, _, dbName, dataSources, selectMap.getNode('node'));
+      let results = [];
+      if (connection !== null) {
+        for (let edge of connection.edges) results.push(edge.node);
+      }
+      return results;
+    },  },
 };
 
 export default riskResolvers;

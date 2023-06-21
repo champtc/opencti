@@ -3,7 +3,7 @@ import { UserInputError } from 'apollo-server-errors';
 import { riskSingularizeSchema } from '../../risk-mappings.js';
 // TODO: create a separate scheme file for oscalLink to replace
 //       the use of ExternalReference
-import { selectExternalReferenceByIriQuery, getReducer } from '../../../global/resolvers/sparql-query.js';
+import { selectExternalReferenceByIriQuery, getReducer } from '../../../global/schema/sparql/externalReference.js';
 // import { 
 //   getReducer,
 //   singularizeOscalLinkSchema,

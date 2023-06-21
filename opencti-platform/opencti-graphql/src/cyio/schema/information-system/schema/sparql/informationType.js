@@ -34,6 +34,8 @@ const informationTypeReducer = (item) => {
       if (item.iri.includes('information-type')) item.object_type = 'information-type';
   }
 
+  if (item.display_name === undefined) item.display_name = item.title;
+  
   return {
     iri: item.iri,
     id: item.id,
@@ -160,7 +162,7 @@ export const selectInformationTypeByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(informationTypePredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -341,7 +343,7 @@ export const selectImpactDefinitionByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(impactDefinitionPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -522,7 +524,7 @@ export const selectCategorizationByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(categorizationPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

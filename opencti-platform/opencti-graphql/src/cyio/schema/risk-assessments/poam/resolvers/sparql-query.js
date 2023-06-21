@@ -640,7 +640,7 @@ export const selectPOAMByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(poamPredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(poamPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -802,7 +802,7 @@ export const selectPOAMItemByIriQuery = (iri, select) => {
   if (select.includes('props') && !select.includes('poam_id')) select.push('poam_id');
   const { selectionClause, predicates } = buildSelectVariables(poamItemPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -963,7 +963,7 @@ export const selectPOAMLocalDefinitionByIriQuery = (iri, select) => {
   if (!select.includes('id')) select.push('id');
   const { selectionClause, predicates } = buildSelectVariables(poamLocalDefinitionPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

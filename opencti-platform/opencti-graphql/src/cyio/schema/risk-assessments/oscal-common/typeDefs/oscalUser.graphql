@@ -80,7 +80,7 @@ type OscalUser implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
-  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
   object_markings: [DataMarking]
   # OSCAL SystemAsset User
   "Identifies type of user, such as internal, external, or general-public."

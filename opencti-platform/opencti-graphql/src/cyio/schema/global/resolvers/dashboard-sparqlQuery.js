@@ -226,7 +226,7 @@ export const entitiesTimeSeriesQuery = (args) => {
 
   return `
   PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-  SELECT ?iri ?created
+  SELECT DISTINCT ?iri ?created
   FROM <tag:stardog:api:context:local>
   WHERE {
     ?iri a ${classIri} .
@@ -389,7 +389,7 @@ export const entitiesDistributionQuery = (args) => {
 
   return `
   PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-  SELECT ?iri ?created ?o ${selectionVariables.trim()} ${occurrenceClause}
+  SELECT DISTINCT ?iri ?created ?o ${selectionVariables.trim()} ${occurrenceClause}
   ${insertSelections.join('\n')}
   FROM <tag:stardog:api:context:local>
   WHERE {

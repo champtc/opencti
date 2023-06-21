@@ -1,6 +1,7 @@
-import { UserInputError } from 'apollo-server-express';
+import { UserInputError } from 'apollo-server-errors';
+import { logApp } from '../../../../config/conf.js';
 import { assetSingularizeSchema as singularizeSchema, objectTypeMapping } from '../asset-mappings.js';
-import { compareValues, filterValues, updateQuery, CyioError } from '../../utils.js';
+import { compareValues, filterValues, updateQuery, checkIfValidUUID } from '../../utils.js';
 import { addToInventoryQuery, deleteQuery, removeFromInventoryQuery } from '../assetUtil.js';
 import {
   getReducer,
@@ -32,42 +33,34 @@ import {
   insertPortRelationships,
   insertPortsQuery,
 } from '../assetQueries.js';
-import {
-  selectLabelByIriQuery,
-  selectExternalReferenceByIriQuery,
-  selectNoteByIriQuery,
-  getReducer as getGlobalReducer,
-} from '../../global/resolvers/sparql-query.js';
-import {
-  selectRiskByIriQuery,
-  getReducer as getAssessmentReducer,
-} from '../../risk-assessments/assessment-common/resolvers/sparql-query.js';
-import { selectObjectIriByIdQuery } from '../../global/global-utils.js';
-import { riskSingularizeSchema } from '../../risk-assessments/risk-mappings.js';
+// import {
+//   getReducer as getRiskReducer,
+//   riskSingularizeSchema,
+//   selectRiskByIriQuery,
+// } from '../../risk-assessments/assessment-common/schema/sparql/risk.js';
+import { sanitizeInputFields, selectObjectIriByIdQuery } from '../../global/global-utils.js';
 import { calculateRiskLevel, getOverallRisk } from '../../risk-assessments/riskUtils.js';
+import { findAllDataMarkings } from '../../data-markings/domain/dataMarkings.js';
 import { findResponsiblePartyByIri } from '../../risk-assessments/oscal-common/domain/oscalResponsibleParty.js';
+import { findExternalReferenceByIri } from '../../global/domain/externalReference.js';
+import { findNoteByIri } from '../../global/domain/note.js';
+import { findLabelByIri } from '../../global/domain/label.js';
+import { determineDisplayName } from './domain/hardware.js';
+import { determineDisplayName as determineNetworkDisplayName } from '../network/domain/network.js';
+import { findHardwareByIriList } from './domain/hardware.js';
+import { findSoftwareByIriList } from '../software/domain/software.js';
+import { findRisksByIriList } from '../../risk-assessments/assessment-common/domain/risk.js';
 
 const hardwareResolvers = {
   Query: {
     hardwareAssetList: async (_, args, { dbName, dataSources, selectMap }) => {
-      // TODO: WORKAROUND to remove argument fields with null or empty values
-      if (args !== undefined) {
-        for (const [key, value] of Object.entries(args)) {
-          if (Array.isArray(args[key]) && args[key].length === 0) {
-            delete args[key];
-            continue;
-          }
-          if (value === null || value.length === 0) {
-            delete args[key];
-          }
-        }
-      }
-      // END WORKAROUND
-
+      sanitizeInputFields(args);
       let select = selectMap.getNode('node');
-      const sparqlQuery = selectAllHardware(select, args);
+
+      // TODO: Consider using VALUES with batch algorithm
       let response;
       try {
+        const sparqlQuery = selectAllHardware(select, args);
         response = await dataSources.Stardog.queryAll({
           dbName,
           sparqlQuery,
@@ -78,123 +71,121 @@ const hardwareResolvers = {
         console.log(e);
         throw e;
       }
-
       if (response === undefined || response.length === 0) return null;
-      if (Array.isArray(response) && response.length > 0) {
-        const edges = [];
-        const reducer = getReducer('HARDWARE-DEVICE');
-        let skipCount = 0;
-        let filterCount;
-        let resultCount;
-        let limit;
-        let offset;
-        let limitSize;
-        let offsetSize;
-        limitSize = limit = args.first === undefined ? response.length : args.first;
-        offsetSize = offset = args.offset === undefined ? 0 : args.offset;
-        filterCount = 0;
 
+      const edges = [];
+      const reducer = getReducer('HARDWARE-DEVICE');
+      let skipCount = 0;
+      let filterCount;
+      let resultCount;
+      let limit;
+      let offset;
+      let limitSize;
+      let offsetSize;
+      limitSize = limit = args.first === undefined ? response.length : args.first;
+      offsetSize = offset = args.offset === undefined ? 0 : args.offset;
+      filterCount = 0;
+
+      for (let hardware of response) {
         if (select.includes('risk_count') || select.includes('top_risk_severity')) {
-          for (let hardware of response) {
-            // add the count of risks associated with this asset
-            hardware.risk_count = (hardware.related_risks ? hardware.related_risks.length : 0);
-            if (hardware.related_risks !== undefined && hardware.risk_count > 0) {
-              let { highestRiskScore, highestRiskSeverity } = await getOverallRisk(hardware.related_risks, dbName, dataSources);
-              hardware.risk_score = highestRiskScore || 0;
-              hardware.risk_level = highestRiskSeverity || null;
-              hardware.top_risk_severity = hardware.risk_level;
-            }
-          }  
-        }
-
-        let hardwareList;
-        let sortBy;
-        if (args.orderedBy !== undefined) {
-          if (args.orderedBy === 'top_risk_severity') {
-            sortBy = 'risk_score';
-          } else {
-            sortBy = args.orderedBy;
+          // add the count of risks associated with this asset
+          hardware.risk_count = (hardware.related_risks ? hardware.related_risks.length : 0);
+          if (hardware.related_risks !== undefined && hardware.risk_count > 0) {
+            let { highestRiskScore, highestRiskSeverity } = await getOverallRisk(hardware.related_risks, dbName, dataSources);
+            hardware.risk_score = highestRiskScore || 0;
+            hardware.risk_level = highestRiskSeverity || null;
+            hardware.top_risk_severity = hardware.risk_level;
           }
-          hardwareList = response.sort(compareValues(sortBy, args.orderMode));
+        }  
+
+        // Determine the display_name
+        if (hardware.display_name === undefined) {
+          hardware.display_name = determineDisplayName(hardware);
+        }
+      }
+
+      let hardwareList;
+      let sortBy;
+      if (args.orderedBy !== undefined) {
+        if (args.orderedBy === 'top_risk_severity') {
+          sortBy = 'risk_score';
         } else {
-          hardwareList = response;
+          sortBy = args.orderedBy;
         }
-
-        if (offset > hardwareList.length) return null;
-
-        // for each Hardware device in the result set
-        for (const hardware of hardwareList) {
-          if (hardware.id === undefined) {
-            console.log(`[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${hardware.iri} missing field 'id'; skipping`);
-            skipCount++;
-            continue;
-          }
-
-          if (offset) {
-            // skip down past the offset
-            offset--;
-            continue;
-          }
-
-          // filter out non-matching entries if a filter is to be applied
-          if ('filters' in args && args.filters != null && args.filters.length > 0) {
-            if (!filterValues(hardware, args.filters, args.filterMode)) {
-              continue;
-            }
-            filterCount++;
-          }
-
-          // if haven't reached limit to be returned
-          if (limit) {
-            const edge = {
-              cursor: hardware.iri,
-              node: reducer(hardware),
-            };
-            edges.push(edge);
-            limit--;
-            if (limit === 0) break;
-          }
-        }
-        // check if there is data to be returned
-        if (edges.length === 0) return null;
-        let hasNextPage = false;
-        let hasPreviousPage = false;
-        resultCount = hardwareList.length - skipCount;
-        if (edges.length < resultCount) {
-          if (edges.length === limitSize && filterCount <= limitSize) {
-            hasNextPage = true;
-            if (offsetSize > 0) hasPreviousPage = true;
-          }
-          if (edges.length <= limitSize) {
-            if (filterCount !== edges.length) hasNextPage = true;
-            if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
-          }
-        }
-        return {
-          pageInfo: {
-            startCursor: edges[0].cursor,
-            endCursor: edges[edges.length - 1].cursor,
-            hasNextPage,
-            hasPreviousPage,
-            globalCount: resultCount,
-          },
-          edges,
-        };
-      }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
+        hardwareList = response.sort(compareValues(sortBy, args.orderMode));
       } else {
-        return null;
+        hardwareList = response;
       }
+
+      if (offset > hardwareList.length) return null;
+
+      // for each Hardware device in the result set
+      for (const hardware of hardwareList) {
+        if (hardware.id === undefined) {
+          console.log(`[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${hardware.iri} missing field 'id'; skipping`);
+          skipCount++;
+          continue;
+        }
+
+        if (offset) {
+          // skip down past the offset
+          offset--;
+          continue;
+        }
+
+        // filter out non-matching entries if a filter is to be applied
+        if ('filters' in args && args.filters != null && args.filters.length > 0) {
+          if (!filterValues(hardware, args.filters, args.filterMode)) {
+            continue;
+          }
+          filterCount++;
+        }
+
+        // if haven't reached limit to be returned
+        if (limit) {
+          const edge = {
+            cursor: hardware.iri,
+            node: reducer(hardware),
+          };
+          edges.push(edge);
+          limit--;
+          if (limit === 0) break;
+        }
+      }
+
+      // check if there is data to be returned
+      if (edges.length === 0) return null;
+      let hasNextPage = false;
+      let hasPreviousPage = false;
+      resultCount = hardwareList.length - skipCount;
+      if (edges.length < resultCount) {
+        if (edges.length === limitSize && filterCount <= limitSize) {
+          hasNextPage = true;
+          if (offsetSize > 0) hasPreviousPage = true;
+        }
+        if (edges.length <= limitSize) {
+          if (filterCount !== edges.length) hasNextPage = true;
+          if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+        }
+      }
+      return {
+        pageInfo: {
+          startCursor: edges[0].cursor,
+          endCursor: edges[edges.length - 1].cursor,
+          hasNextPage,
+          hasPreviousPage,
+          globalCount: resultCount,
+        },
+        edges: edges,
+      };
     },
     hardwareAsset: async (_, { id }, { dbName, dataSources, selectMap }) => {
-      const sparqlQuery = selectHardwareQuery(id, selectMap.getNode('hardwareAsset'));
+      if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`,{identifier: `${id}`});
+      let select = selectMap.getNode('hardwareAsset');
+
       let response;
       try {
+        const sparqlQuery = selectHardwareQuery(id, select);
         response = await dataSources.Stardog.queryById({
           dbName,
           sparqlQuery,
@@ -202,39 +193,25 @@ const hardwareResolvers = {
           singularizeSchema,
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
+      if (response === undefined || response.length === 0) return null;
 
-      if (response === undefined) return null;
-      if (Array.isArray(response) && response.length > 0) {
-        const reducer = getReducer('HARDWARE-DEVICE');
-        return reducer(response[0]);
+      const reducer = getReducer('HARDWARE-DEVICE');
+      let hardware = response[0];
+
+      // Determine the display_name
+      if (hardware.display_name === undefined) {
+        hardware.display_name = determineDisplayName(hardware);
       }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      } else {
-        return null;
-      }
+
+      return reducer(hardware);
     },
   },
   Mutation: {
     createHardwareAsset: async (_, { input }, { dbName, selectMap, dataSources }) => {
-      // TODO: WORKAROUND to remove input fields with null or empty values so creation will work
-      for (const [key, value] of Object.entries(input)) {
-        if (Array.isArray(input[key]) && input[key].length === 0) {
-          delete input[key];
-          continue;
-        }
-        if (value === null || value.length === 0) {
-          delete input[key];
-        }
-      }
-      // END WORKAROUND
+      sanitizeInputFields(input);
 
       let ports;
       let ipv4;
@@ -269,7 +246,7 @@ const hardwareResolvers = {
           singularizeSchema,
         });
         if (result === undefined || result.length === 0)
-          throw new CyioError(`Entity does not exist with ID ${input.connected_to_network}`);
+          throw new UserInputError(`Entity does not exist with ID ${input.connected_to_network}`,{identifier: `${input.connected_to_network}`});
         connectedNetwork = `<${result[0].iri}>`;
         delete input.connected_to_network;
       }
@@ -282,7 +259,8 @@ const hardwareResolvers = {
           singularizeSchema,
         });
         if (result === undefined || result.length === 0)
-          throw new CyioError(`Entity does not exist with ID ${input.installed_operating_system}`);
+          throw new UserInputError(`Entity does not exist with ID ${input.installed_operating_system}`,{identifier: `${input.installed_operating_system}`});
+
         installedOS = `<${result[0].iri}>`;
         delete input.installed_operating_system;
       }
@@ -297,7 +275,7 @@ const hardwareResolvers = {
             singularizeSchema,
           });
           if (result === undefined || result.length === 0)
-            throw new CyioError(`Entity does not exist with ID ${softwareId}`);
+            throw new UserInputError(`Entity does not exist with ID ${softwareId}`,{identifier: `${softwareId}`});
           softwareList.push(`<${result[0].iri}>`);
         }
         installedSoftware = softwareList;
@@ -427,7 +405,7 @@ const hardwareResolvers = {
         queryId: 'Select Hardware Asset',
         singularizeSchema,
       });
-      if (response.length === 0) throw new CyioError(`Entity does not exist with ID ${id}`);
+      if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`,{identifier: `${id}`});
       const reducer = getReducer('HARDWARE-DEVICE');
       const asset = reducer(response[0]);
 
@@ -478,7 +456,7 @@ const hardwareResolvers = {
     },
     editHardwareAsset: async (_, { id, input }, { dbName, dataSources, selectMap }) => {
       // make sure there is input data containing what is to be edited
-      if (input === undefined || input.length === 0) throw new CyioError(`No input data was supplied`);
+      if (input === undefined || input.length === 0) throw new UserInputError(`No input data was supplied`);
 
       // TODO: WORKAROUND to remove immutable fields
       input = input.filter(
@@ -498,7 +476,7 @@ const hardwareResolvers = {
         queryId: 'Select Hardware asset',
         singularizeSchema,
       });
-      if (response.length === 0) throw new CyioError(`Entity does not exist with ID ${id}`);
+      if (response.length === 0) throw new UserInputError(`Entity does not exist with ID ${id}`,{identifier: `${id}`});
 
       // determine operation, if missing
       for (const editItem of input) {
@@ -754,7 +732,7 @@ const hardwareResolvers = {
               singularizeSchema,
             });
             if (result === undefined || result.length === 0)
-              throw new CyioError(`Entity does not exist with ID ${value}`);
+              throw new UserInputError(`Entity does not exist with ID ${value}`,{identifier: `${value}`});
             iris.push(`<${result[0].iri}>`);
           }
         }
@@ -769,19 +747,15 @@ const hardwareResolvers = {
         hardwarePredicateMap
       );
       if (query != null) {
-        response = await dataSources.Stardog.edit({
-          dbName,
-          sparqlQuery: query,
-          queryId: 'Update Hardware Asset',
-        });
-        if (response !== undefined && 'status' in response) {
-          if (response.ok === false || response.status > 299) {
-            // Handle reporting Stardog Error
-            throw new UserInputError(response.statusText, {
-              error_details: response.body.message ? response.body.message : results.body,
-              error_code: response.body.code ? response.body.code : 'N/A',
-            });
-          }
+        try {
+          await dataSources.Stardog.edit({
+            dbName,
+            sparqlQuery: query,
+            queryId: 'Update Hardware Asset',
+          });  
+        } catch (e) {
+          logApp.error(e);
+          throw e;
         }
       }
 
@@ -805,233 +779,66 @@ const hardwareResolvers = {
   },
   // field-level query
   HardwareAsset: {
-    installed_hardware: async (parent, _, {dbName, dataSources, selectMap}) => {
-      if (parent.installed_hw_iri === undefined) return [];
-      let iriArray = parent.installed_hw_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        let reducer = getReducer('HARDWARE-DEVICE');
-        for (let iri of iriArray) {
-          // check if this is an hardware object
-          if (iri === undefined || !iri.includes('Hardware')) {
-            continue;
-          }
-
-          // query for the Software based on its IRI
-          let sparqlQuery = selectHardwareByIriQuery(iri, selectMap.getNode('installed_hardware'));
-          const response = await dataSources.Stardog.queryById({
-            dbName,
-            sparqlQuery,
-            queryId: "Select Installed Hardware for Hardware Asset",
-            singularizeSchema
-          })
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]))
-          }
-          else {
-            // Handle reporting Stardog Error
-            if (typeof (response) === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: (response.body.message ? response.body.message : response.body),
-                error_code: (response.body.code ? response.body.code : 'N/A')
-              });
-            }
-          }
-        }
-
-        return results;
-      } else {
-        return [];
-      }
-    },
-    installed_software: async (parent, _, {dbName, dataSources, selectMap}) => {
-      if (parent.installed_sw_iri === undefined) return [];
-      const results = [];
-
-      // PATCH: 08-Jun-2023
-      let response;
-      try {
-        const sparqlQuery = selectSoftwareByIriQuery(parent.installed_sw_iri, selectMap.getNode('installed_software'));
-        response = await dataSources.Stardog.queryById({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select Software',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-      if (response === undefined || response.length === 0 ) return [];
-
-      const reducer = getSoftwareReducer('SOFTWARE');
-      for (let result of response) {
-        // Convert date field values that are represented as JavaScript Date objects
-        if (result.last_scanned !== undefined) {
-          if (result.last_scanned instanceof Date) result.last_scanned = result.last_scanned.toISOString();
-        }
-
-        results.push(reducer(result));
-      }
-
-      // PATCH: 08-Jun-2023
-      // let iriArray = parent.installed_sw_iri;
-      // if (Array.isArray(iriArray) && iriArray.length > 0) {
-      //   let reducer = getSoftwareReducer('SOFTWARE');
-      //   for (let iri of iriArray) {
-      //     // check if this is an software object
-      //     if (iri === undefined || !iri.includes('Software')) {
-      //       continue;
-      //     }
-
-      //     // query for the Software based on its IRI
-      //     let sparqlQuery = selectSoftwareByIriQuery(iri, selectMap.getNode('installed_software'));
-      //     const response = await dataSources.Stardog.queryById({
-      //       dbName,
-      //       sparqlQuery,
-      //       queryId: "Select Installed Software for Hardware Asset",
-      //       singularizeSchema
-      //     })
-      //     if (response === undefined) return [];
-      //     if (Array.isArray(response) && response.length > 0) {
-      //       results.push(reducer(response[0]))
-      //     }
-      //     else {
-      //       // Handle reporting Stardog Error
-      //       if (typeof (response) === 'object' && 'body' in response) {
-      //         throw new UserInputError(response.statusText, {
-      //           error_details: (response.body.message ? response.body.message : response.body),
-      //           error_code: (response.body.code ? response.body.code : 'N/A')
-      //         });
-      //       }
-      //     }
-      //   }
-
-      //   return results;
-      // } else {
-      //   return [];
-      // }
-
-      return results;
-    },
-    installed_operating_system: async (parent, _, {dbName, dataSources, selectMap}) => {
-      if (parent.installed_os_iri === undefined) return null;
-      let iri = parent.installed_os_iri;
-      if (Array.isArray(iri) && iri.length > 0) {
-        if (iri.length > 1) {
-          console.log(
-            `[CYIO] (${dbName}) CONSTRAINT-VIOLATION: ${parent.iri} 'installed_operating_system' violates maxCount constraint`
-          );
-          iri = parent.installed_os_iri[0];
-        }
-      } else {
-        iri = parent.installed_os_iri;
-      }
-
-      const sparqlQuery = selectSoftwareByIriQuery(iri, selectMap.getNode('installed_operating_system'));
-      const reducer = getSoftwareReducer('OS-IRI');
-      let response;
-      try {
-        response = await dataSources.Stardog.queryById({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select Installed Operating System for Hardware Asset',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-      if (response === undefined) return null;
-      if (Array.isArray(response) && response.length > 0) {
-        return reducer(response[0]);
-      }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
-    },
     ipv4_address: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.ip_addr_iri === undefined) return [];
       const iriArray = parent.ip_addr_iri;
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const results = [];
-        const reducer = getReducer('IPV4-ADDR');
-        const selectList = selectMap.getNode('ipv4_address');
-        for (const iri of iriArray) {
-          // check if this is an IPv4 object
-          if (!iri.includes('IpV4Address')) {
-            continue;
-          }
 
-          // query for the IP address based on its IRI
-          const sparqlQuery = getSelectSparqlQuery('IPV4-ADDR', selectList, iri);
-          const response = await dataSources.Stardog.queryById({
-            dbName,
-            sparqlQuery,
-            queryId: 'Select IPv4 for Hardware Asset',
-            singularizeSchema,
-          });
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      const results = [];
+      const reducer = getReducer('IPV4-ADDR');
+      const selectList = selectMap.getNode('ipv4_address');
+      for (const iri of iriArray) {
+        // check if this is an IPv4 object
+        if (!iri.includes('IpV4Address')) {
+          continue;
         }
 
-        return results;
+        // query for the IP address based on its IRI
+        const sparqlQuery = getSelectSparqlQuery('IPV4-ADDR', selectList, iri);
+        const response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: 'Select IPv4 for Hardware Asset',
+          singularizeSchema,
+        });
+        if (response === undefined) return [];
+        results.push(reducer(response[0]));
       }
-      return [];
+
+      return results;
     },
     ipv6_address: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.ip_addr_iri === undefined) return [];
       const iriArray = parent.ip_addr_iri;
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const results = [];
-        const reducer = getReducer('IPV6-ADDR');
-        const selectList = selectMap.getNode('ipv6_address');
-        for (const iri of iriArray) {
-          // check if this is an IPv6 object
-          if (!iri.includes('IpV6Address')) {
-            continue;
-          }
 
-          // query for the IP address based on its IRI
+      const results = [];
+      const reducer = getReducer('IPV6-ADDR');
+      const selectList = selectMap.getNode('ipv6_address');
+      for (const iri of iriArray) {
+        // check if this is an IPv6 object
+        if (!iri.includes('IpV6Address')) {
+          continue;
+        }
+
+        // query for the IP address based on its IRI
+        let response;
+        try {
           const sparqlQuery = getSelectSparqlQuery('IPV6-ADDR', selectList, iri);
-          const response = await dataSources.Stardog.queryById({
+          response = await dataSources.Stardog.queryById({
             dbName,
             sparqlQuery,
             queryId: 'Select IPv6 for Hardware Asset',
             singularizeSchema,
-          });
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+          });  
+        } catch (e) {
+          logApp.error(e);
+          throw e;
         }
+        if (response === undefined || response.length === 0 ) return [];
+        
+        results.push(reducer(response[0]));
+      } 
 
-        return results;
-      }
-      return [];
+      return results;
     },
     mac_address: async (parent, _, { dbName, dataSources }) => {
       if (parent.mac_addr_iri === undefined) return [];
@@ -1065,15 +872,7 @@ const hardwareResolvers = {
               }
               results.push(macAddr.mac_address_value); // TODO: revert back when data is returned as objects, not strings
             }
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+          } 
         }
 
         return results;
@@ -1103,275 +902,168 @@ const hardwareResolvers = {
           });
           if (Array.isArray(response) && response.length > 0) {
             results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+          } 
         }
 
         return results;
       }
       return [];
     },
-    connected_to_network: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.conn_network_iri === undefined) return null;
-      let iri = parent.conn_network_iri;
+    installed_hardware: async (parent, args, {dbName, dataSources, selectMap}) => {
+      if (parent.installed_hw_iri === undefined) return [];
+      const results = [];
+
+      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      let select = selectMap.getNode('installed_hardware');
+      let connection = await findHardwareByIriList(parent, parent.installed_hw_iri, args, dbName, dataSources, select);
+      if (connection !== null) {
+        for (let edge of connection.edges) results.push(edge.node);
+      }
+      return results;
+    },
+    installed_operating_system: async (parent, _, {dbName, dataSources, selectMap}) => {
+      if (parent.installed_os_iri === undefined) return null;
+      let iri = parent.installed_os_iri;
       if (Array.isArray(iri) && iri.length > 0) {
         if (iri.length > 1) {
           console.log(
-            `[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${parent.iri} 'connected_to_network' violates maxCount constraint`
+            `[CYIO] (${dbName}) CONSTRAINT-VIOLATION: ${parent.iri} 'installed_operating_system' violates maxCount constraint`
           );
-          iri = parent.conn_network_iri[0];
+          iri = parent.installed_os_iri[0];
         }
       } else {
-        iri = parent.conn_network_iri;
+        iri = parent.installed_os_iri;
       }
 
-      const sparqlQuery = selectNetworkByIriQuery(iri, selectMap.getNode('connected_to_network'));
-      const reducer = getNetworkReducer('NETWORK');
-      const response = await dataSources.Stardog.queryById({
-        dbName,
-        sparqlQuery,
-        queryId: 'Select Network for Hardware Asset',
-        singularizeSchema,
-      });
-      if (response === undefined) return null;
-      if (Array.isArray(response) && response.length > 0) {
-        return reducer(response[0]);
-      }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
-    },
-    labels: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.labels_iri === undefined) return [];
-      const iriArray = parent.labels_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('LABEL');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Label')) continue;
-          const sparqlQuery = selectLabelByIriQuery(iri, selectMap.getNode('labels'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Label',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
-        }
-        return results;
-      }
-      return [];
-    },
-    external_references: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.ext_ref_iri === undefined) return [];
-      const iriArray = parent.ext_ref_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('EXTERNAL-REFERENCE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('ExternalReference')) continue;
-          const sparqlQuery = selectExternalReferenceByIriQuery(iri, selectMap.getNode('external_references'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select External Reference',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
-        }
-        return results;
-      }
-      return [];
-    },
-    notes: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.notes_iri === undefined) return [];
-      const iriArray = parent.notes_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('NOTE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Note')) continue;
-          const sparqlQuery = selectNoteByIriQuery(iri, selectMap.getNode('notes'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Note',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined) return [];
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
-        }
-        return results;
-      }
-      return [];
-    },
-    related_risks: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.related_risks_iri === undefined) return [];
-      const results = [];
-
-      // PATCH: 08-Jun-2023
+      const sparqlQuery = selectSoftwareByIriQuery(iri, selectMap.getNode('installed_operating_system'));
+      const reducer = getSoftwareReducer('OS-IRI');
       let response;
       try {
-        const sparqlQuery = selectRiskByIriQuery(parent.related_risks_iri, selectMap.getNode('related_risks'));
         response = await dataSources.Stardog.queryById({
           dbName,
           sparqlQuery,
-          queryId: 'Select Risk',
+          queryId: 'Select Installed Operating System for Hardware Asset',
           singularizeSchema,
         });
       } catch (e) {
-        console.log(e);
+        logApp.error(e);
         throw e;
       }
-      if (response === undefined || response.length === 0 ) return [];
+      if (response === undefined || response.length === 0) return null;
+      return reducer(response[0]);
+    },
+    installed_software: async (parent, args, {dbName, dataSources, selectMap}) => {
+      if (parent.installed_sw_iri === undefined) return [];
+      const results = [];
 
-      const reducer = getAssessmentReducer('RISK');
-      for (let risk of response) {
-        // PATCH: 14-Jun-2023
-        if (risk.risk_id !== undefined ) risk.name = risk.risk_id;
+      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      let select = selectMap.getNode('installed_software');
+      let connection = await findSoftwareByIriList(parent, parent.installed_sw_iri, args, dbName, dataSources, select);
+      if (connection !== null) {
+        for (let edge of connection.edges) results.push(edge.node);
+      }
+      return results;
 
-        // Convert date field values that are represented as JavaScript Date objects
-        if (risk.first_seen !== undefined) {
-          if (risk.first_seen instanceof Date) risk.first_seen = risk.first_seen.toISOString();
-        }
-        if (risk.last_seen !== undefined) {
-          if (risk.last_seen instanceof Date) risk.last_seen = risk.last_seen.toISOString();
-        }
+    },
+    connected_to_network: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.conn_network_iri === undefined || parent.conn_network_iri.length === 0) return null;
+      let select = selectMap.getNode('connected_to_network');
 
-        // calculate the risk level
-        risk.risk_level = 'unknown';
-        if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
-          const { riskLevel, riskScore } = calculateRiskLevel(risk);
-          risk.risk_score = riskScore;
-          risk.risk_level = riskLevel;
-        }
+      let response;
+      try {
+        const sparqlQuery = selectNetworkByIriQuery(parent.conn_network_iri, select);
+        response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: 'Select Network for Hardware Asset',
+          singularizeSchema,
+        });  
+      } catch (e) {
+        logApp.error(e);
+        throw e
+      }
+      if (response === undefined || response.length === 0) return null;
+      let result = response[0];
 
-        results.push(reducer(risk));
+      // Determine display name
+      if (result.display_name === undefined) {
+        result.display_name = determineNetworkDisplayName(result);
       }
 
-      // PATCH: 08-Jun-2023
-      // const iriArray = parent.related_risks_iri;
-      // if (Array.isArray(iriArray) && iriArray.length > 0) {
-      //   const reducer = getAssessmentReducer('RISK');
-      //   for (const iri of iriArray) {
-      //     if (iri === undefined || !iri.includes('Risk')) continue;
-      //     const select = selectMap.getNode('related_risks');
-      //     const sparqlQuery = selectRiskByIriQuery(iri, select);
-      //     let response;
-      //     try {
-      //       response = await dataSources.Stardog.queryById({
-      //         dbName,
-      //         sparqlQuery,
-      //         queryId: 'Select Risk',
-      //         singularizeSchema: riskSingularizeSchema,
-      //       });
-      //     } catch (e) {
-      //       console.log(e);
-      //       throw e;
-      //     }
-      //     if (response === undefined) return [];
-      //     if (Array.isArray(response) && response.length > 0) {
-      //       let risk = response[0];
+      const reducer = getNetworkReducer('NETWORK');
+      return reducer(result);
+    },
+    related_risks: async (parent, args, { dbName, dataSources, selectMap }) => {
+      if (parent.related_risks_iri === undefined) return [];
+      let results = []
 
-      //       // Convert date field values that are represented as JavaScript Date objects
-      //       if (risk.first_seen !== undefined) {
-      //         if (risk.first_seen instanceof Date) risk.first_seen = risk.first_seen.toISOString();
-      //       }
-      //       if (risk.last_seen !== undefined) {
-      //         if (risk.last_seen instanceof Date) risk.last_seen = risk.last_seen.toISOString();
-      //       }
-
-      //       // calculate the risk level
-      //       risk.risk_level = 'unknown';
-      //       if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
-      //         const { riskLevel, riskScore } = calculateRiskLevel(risk);
-      //         risk.risk_score = riskScore;
-      //         risk.risk_level = riskLevel;
-      //       }
-      //       results.push(reducer(response[0]));
-      //     } else {
-      //       // Handle reporting Stardog Error
-      //       if (typeof response === 'object' && 'body' in response) {
-      //         throw new UserInputError(response.statusText, {
-      //           error_details: response.body.message ? response.body.message : response.body,
-      //           error_code: response.body.code ? response.body.code : 'N/A',
-      //         });
-      //       }
-      //     }
-      //   }
-      //   return results;
-      // }
-
+      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      let select = selectMap.getNode('related_risks');
+      let connection = await findRisksByIriList(parent, parent.related_risks_iri, args, dbName, dataSources, select);
+      if (connection !== null) {
+        for (let edge of connection.edges) results.push(edge.node);
+      }
       return results;
     },
     responsible_parties: async (parent, _, { dbName, dataSources, selectMap }) => {
       if (parent.responsible_party_iris === undefined) return [];
       let results = []
+      // TODO: Use VALUES to reduce the number of network round trips
       for (let iri of parent.responsible_party_iris) {
         let result = await findResponsiblePartyByIri(iri, dbName, dataSources, selectMap.getNode('responsible_parties'));
         if (result === undefined || result === null) continue;
         results.push(result);
+      }
+      return results;
+    },
+    labels: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.label_iris === undefined) return [];
+      let results = []
+      // TODO: Use VALUES approach to avoid multiple network round trips
+      for (let iri of parent.label_iris) {
+        let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
+    },
+    external_references: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.external_reference_iris === undefined) return [];
+      let results = []
+      // TODO: Use VALUES approach to avoid multiple network round trips
+      for (let iri of parent.external_reference_iris) {
+        let result = await findExternalReferenceByIri(iri, dbName, dataSources, selectMap.getNode('external_references'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
+    },
+    notes: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.note_iris === undefined) return [];
+      let results = []
+      // TODO: Use VALUES approach to avoid multiple network round trips
+      for (let iri of parent.note_iris) {
+        let result = await findNoteByIri(iri, dbName, dataSources, selectMap.getNode('notes'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
+        }
+        results.push(result);
+      }
+      return results;
+    },
+    object_markings: async (parent, _, { dbName, dataSources, selectMap}) => {
+      if (parent.marking_iris === undefined) return [];
+      let connection = await findAllDataMarkings(parent, _, dbName, dataSources, selectMap.getNode('object_markings'));
+      let results = [];
+      if (connection !== null) {
+        for (let edge of connection.edges) results.push(edge.node);
       }
       return results;
     },

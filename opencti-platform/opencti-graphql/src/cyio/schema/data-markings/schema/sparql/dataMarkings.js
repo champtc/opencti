@@ -141,7 +141,7 @@ export const selectDataMarkingByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(dataMarkingPredicateMap, select);
   return `
-    SELECT ?iri ${selectionClause}
+    SELECT DISTINCT ?iri ${selectionClause}
     FROM <tag:stardog:api:context:local>
     WHERE {
         BIND(${iri} AS ?iri)
@@ -184,7 +184,7 @@ export const selectAllDataMarkingsQuery = (select, args, parent) => {
       SELECT DISTINCT ?iri
       WHERE {
           <${parent.iri}> a <http://darklight.ai/ns/cyio/system-configuration#SystemConfiguration> ;
-          <<http://darklight.ai/ns/cyio/system-configuration#data_sources> ?iri .
+          <http://darklight.ai/ns/cyio/system-configuration#data_sources> ?iri .
       }
     }`;
   }

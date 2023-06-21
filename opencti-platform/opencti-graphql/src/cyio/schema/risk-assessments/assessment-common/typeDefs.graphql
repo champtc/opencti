@@ -22,17 +22,6 @@ extend type Query {
     filterMode: FilterMode
     search: String
   ): ActorConnection  @hasPermission(resources:"Assessment:view")
-  # Assessment Log Entry
-  assessmentLogEntry(id: ID!): AssessmentLogEntry  @hasPermission(resources:"Assessment:view")
-  assessmentLogEntries(
-    first: Int
-    offset: Int
-    orderedBy: AssessmentLogEntriesOrdering
-    orderMode: OrderingMode
-    filters: [AssessmentLogEntriesFiltering]
-    filterMode: FilterMode
-    search: String
-  ): AssessmentLogEntryConnection  @hasPermission(resources:"Assessment:view")
   # AssessmentAsset
   assessmentAsset(id: ID!): AssessmentAsset  @hasPermission(resources:"Assessment:view")
   assessmentAssets(first: Int, offset: Int): AssessmentAssetConnection  @hasPermission(resources:"Assessment:view")
@@ -102,17 +91,6 @@ extend type Query {
     filterMode: FilterMode
     search: String
   ): FacetConnection  @hasPermission(resources:"Risk:view")
-  #Log Entry Author
-  logEntryAuthor(id: ID!): LogEntryAuthor  @hasPermission(resources:"Assessment:view")
-  logEntryAuthors(
-    first: Int
-    offset: Int
-    orderedBy: LogEntryAuthorOrdering
-    orderMode: OrderingMode
-    filters: [LogEntryAuthorFiltering]
-    filterMode: FilterMode
-    search: String
-  ): LogEntryAuthorConnection  @hasPermission(resources:"Assessment:view")
   #Mitigating Factor
   mitigatingFactor(id: ID!): MitigatingFactor  @hasPermission(resources:"Risk:view")
   mitigatingFactors(
@@ -135,17 +113,6 @@ extend type Query {
     filterMode: FilterMode
     search: String
   ): ObservationConnection  @hasPermission(resources:"Observation:view")
-  # Origin
-  origin(id: ID!): Origin  @hasPermission(resources:"Assessment:view")
-  origins(
-    first: Int
-    offset: Int
-    orderedBy: OriginOrdering
-    orderMode: OrderingMode
-    filters: [OriginFiltering]
-    filterMode: FilterMode
-    search: String
-  ): OriginConnection  @hasPermission(resources:"Assessment:view")
   # Oscal Task
   oscalTask(id: ID!): OscalTask  @hasPermission(resources:"Assessment:view")
   oscalTasks(
@@ -224,10 +191,6 @@ extend type Mutation {
   createActor(input: ActorAddInput): Actor  @hasPermission(resources:"Assessment:update")
   deleteActor(id: ID!): String!  @hasPermission(resources:"Assessment:delete")
   editActor(id: ID!, input: [EditInput]!, commitMessage: String): Actor  @hasPermission(resources:"Assessment:update")
-  # Assessment Log Entry
-  createAssessmentLogEntry(input: AssessmentLogEntryAddInput): AssessmentLogEntry  @hasPermission(resources:"Assessment:update")
-  deleteAssessmentLogEntry(resultId: ID, id: ID!): String!  @hasPermission(resources:"Assessment:delete")
-  editAssessmentLogEntry(id: ID!, input: [EditInput]!, commitMessage: String): AssessmentLogEntry  @hasPermission(resources:"Assessment:update")
   # AssessmentPlatform
   createAssessmentPlatform(input: AssessmentPlatformAddInput): AssessmentPlatform  @hasPermission(resources:"Assessment:update")
   deleteAssessmentPlatform(id: ID!): String!  @hasPermission(resources:"Assessment:delete")
@@ -260,10 +223,6 @@ extend type Mutation {
   createObservation(poamId: ID, resultId: ID, input: ObservationAddInput): Observation  @hasPermission(resources:"Observation:update")
   deleteObservation(poamId: ID, resultId: ID, id: ID!): String!  @hasPermission(resources:"Observation:delete")
   editObservation(id: ID!, input: [EditInput]!, commitMessage: String): Observation  @hasPermission(resources:"Observation:update")
-  # Origins
-  createOrigin(input: OriginAddInput): Origin  @hasPermission(resources:"Assessment:update")
-  deleteOrigin(id: ID!): String!  @hasPermission(resources:"Assessment:delete")
-  editOrigin(id: ID!, input: [EditInput]!, commitMessage: String): Origin  @hasPermission(resources:"Assessment:update")
   # Oscal Task
   createOscalTask(input: OscalTaskAddInput): OscalTask  @hasPermission(resources:"Assessment:update")
   deleteOscalTask(id: ID!): String!  @hasPermission(resources:"Assessment:delete")
@@ -795,6 +754,8 @@ type Evidence implements ComplexDatatype{
   id: ID!
   "Identifies the type of the Object."
   entity_type: String!
+  "Identifies a human-readable title for the evidence"
+  title: String
   "Identifies a resolvable URL reference to the relevant evidence."
   href: URL
   "Identifies a human-readable description of the evidence."
@@ -807,10 +768,12 @@ type Evidence implements ComplexDatatype{
 input EvidenceAddInput {
   "Identifies a reference to the Observation to which this evidence is to be attached."
   observation_id: ID
+  "Identifies a human-readable title for the evidence"
+  title: String
   "Identifies a resolvable URL reference to the relevant evidence."
   href: URL
   "Identifies a human-readable description of the evidence."
-  description: String
+  description: String!
 }
 # Ordering Types
 enum EvidenceOrdering {
@@ -963,174 +926,6 @@ interface LogEntry {
   logged_by: [LogEntryAuthor]
 }
 
-## LogEntryAuthor
-type LogEntryAuthor {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifier reference to the party who is making the log entry."
-  party: OscalParty!
-  "Identifies a reference to the role in which the party is making the log entry"
-  role: OscalRole
-}
-input LogEntryAuthorAddInput {
-  "Identifier reference to the party who is making the log entry."
-  party: ID!
-  "Identifies a reference to the role in which the party is making the log entry"
-  role: ID
-}
-# Ordering Type
-enum LogEntryAuthorOrdering {
-  "Party"
-  party_name
-  "Role"
-  role_identifier
-  "Marking"
-  marking
-}
-# Filtering Types
-enum LogEntryAuthorFilter {
-  "Party"
-  party_name
-  "Role"
-  role_identifier
-}
-# Filtering Types
-input LogEntryAuthorFiltering {
-  key: LogEntryAuthorFilter!
-  values: [String]!
-  operator: String
-  filterMode: FilterMode
-}
-# Pagination Types
-type LogEntryAuthorConnection {
-  pageInfo: PageInfo!
-  edges: [LogEntryAuthorEdge]
-}
-type LogEntryAuthorEdge {
-  cursor: String!
-  node: LogEntryAuthor!
-}
-
-## Assessment Log Entry
-#
-"Defines identifying information about a log entry of all assessment-related actions taken."
-type AssessmentLogEntry implements BasicObject & LifecycleObject & OscalObject & LogEntry {
-  # BasicObject
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the identifier defined by the standard."
-  standard_id: String!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies the parent types of this object."
-  parent_types: [String]!
-  # LifecycleObject
-  "Indicates the date and time at which the object was originally created."
-  created: Timestamp
-  "Indicates the date and time that this particular version of the object was last modified."
-  modified: Timestamp
-  # OscalObject
-  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
-  labels: [CyioLabel]
-  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
-  links: [CyioExternalReference]
-  "Identifies one or more references to additional commentary on the Model."
-  remarks: [CyioNote]
-  "Identifies one or more relationships to other entities."
-  relationships(
-    first: Int
-    offset: Int
-    orderedBy: OscalRelationshipsOrdering
-    orderMode: OrderingMode
-    filters: [OscalRelationshipsFiltering]
-    filterMode: FilterMode
-    search: String
-  ): OscalRelationshipConnection
-  # LogEntry
-  "Identifies the type of assessment tracking entry."
-  assessment_activity_type: [AssessmentActivityType]
-  "Identifies the name for the risk log entry."
-  name: String!
-  "Identifies a human-readable description of of what was done regarding the risk."
-  description: String!
-  "Identifies the start date and time of the event."
-  event_start: Timestamp!
-  "Identifies the end date and time of the event. If the event is a point in time, the start and end will be the same date and time."
-  event_end: Timestamp
-  "Used to indicate who created a log entry in what role."
-  logged_by: [LogEntryAuthor]
-  "Identifies one or more task for which the containing object is a consequence of."
-  related_tasks: [OscalTask]
-}
-"Defines identifying information about a log entry of all assessment-related actions taken."
-input AssessmentLogEntryAddInput {
-  "Identifies a reference to the Result for which this is a log entry so that it can be attached."
-  result_id: ID
-  # Entry
-  "Identifies the type of assessment tracking entry."
-  assessment_activity_type: [AssessmentActivityType!]!
-  "Identifies the name for the risk log entry."
-  name: String!
-  "Identifies a human-readable description of of what was done regarding the risk."
-  description: String!
-  "Identifies the start date and time of the event."
-  event_start: Timestamp!
-  "Identifies the end date and time of the event. If the event is a point in time, the start and end will be the same date and time."
-  event_end: Timestamp
-  "Used to indicate the party that created a log entry in what role."
-  logged_by: [LogEntryAuthorAddInput]
-}
-# Ordering Type
-enum AssessmentLogEntriesOrdering {
-  "Created"
-  created
-  "Modified"
-  modified
-  "Label"
-  label_name
-  "Event Start"
-  event_start
-  "Event End"
-  event_end
-  "Name"
-  name
-  "Marking"
-  marking
-}
-# Filtering Types
-input AssessmentLogEntriesFiltering {
-  key: AssessmentLogEntriesFilter!
-  values: [String]!
-  operator: String
-  filterMode: FilterMode
-}
-enum AssessmentLogEntriesFilter {
-  "Created"
-  created
-  "Modified"
-  modified
-  "Label"
-  label_name
-  "Event Start"
-  event_start
-  "Event End"
-  event_end
-  "Name"
-  name
-}
-# Pagination Types
-type AssessmentLogEntryConnection {
-  pageInfo: PageInfo!
-  edges: [AssessmentLogEntryEdge]
-}
-type AssessmentLogEntryEdge {
-  cursor: String!
-  node: AssessmentLogEntry!
-}
-
 ## Risk Log Entry
 #
 "Defines identifying information about a log entry of all risk-related tasks taken."
@@ -1200,7 +995,7 @@ input RiskLogEntryAddInput {
   "Identifies the end date and time of the event. If the event is a point in time, the start and end will be the same date and time."
   event_end: Timestamp
   "Used to indicate the party that created a log entry in what role."
-  logged_by: [LogEntryAuthorAddInput]
+  logged_by: [LogEntryAuthorInput]
   "Identifies a change in risk status made resulting from the task described by this risk log entry. This allows the risk's status history to be captured as a sequence of risk log entries."
   status_change: RiskStatus
   "Identifies a reference individual risk response that this log entry is for."
@@ -1386,6 +1181,10 @@ type Observation implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [DataMarking]
+  "Identifies a human readable name for the result of the assessment that should be shown to the user."
+  display_name: String
   # Observation
   "Identifies the name for the observation."
   name: String!
@@ -1425,9 +1224,13 @@ input ObservationAddInput {
   collected: Timestamp!
   "Identifies Date/time identifying when the finding information is out-of-date and no longer valid. Typically used with continuous assessment scenarios."
   expires: Timestamp
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [ID]
 }
 # Ordering Type
 enum ObservationsOrdering {
+  "Display Name"
+  display_name
   "Created"
   created
   "Modified"
@@ -1482,48 +1285,6 @@ type ObservationConnection {
 type ObservationEdge {
   cursor: String!
   node: Observation!
-}
-
-## Origin
-#
-"Defines identifying information about the source of the finding, such as a tool, interviewed person, or activity."
-type Origin {
-  "Uniquely identifies this object."
-  id: ID!
-  "Identifies the type of the Object."
-  entity_type: String!
-  "Identifies one or more actors that produces an observation, a finding, or a risk. One or more actor type can be used to specify a person that is using a tool."
-  origin_actors: [Actor!]!
-  "Identifies one or more task for which the containing object is a consequence of."
-  related_tasks: [OscalTask]
-}
-input OriginAddInput {
-  origin_actors: [ActorAddInput!]!
-  related_tasks: [ID]
-}
-# Filtering Types
-input OriginFiltering {
-  key: OriginFilter!
-  values: [String]!
-  operator: String
-  filterMode: FilterMode
-}
-enum OriginOrdering {
-  "Name"
-  actor_name
-}
-enum OriginFilter {
-  "Name"
-  actor_name
-}
-# Pagination Types
-type OriginConnection {
-  pageInfo: PageInfo!
-  edges: [OriginEdge]
-}
-type OriginEdge {
-  cursor: String!
-  node: Origin!
 }
 
 ## Task
@@ -1780,6 +1541,10 @@ type Risk implements BasicObject & LifecycleObject & OscalObject {
     search: String
   ): OscalRelationshipConnection
   # Risk
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [DataMarking]
+  "Identifies a human readable name for the result of the assessment that should be shown to the user."
+  display_name: String
   "Identifies one or more attributes, characteristics, or qualities of the containing object expressed as a namespace qualified name/value pair. The value of a property is a simple scalar value, which may be expressed as a list of values."
   props: [Property]
   "Identifies the name for the risk."
@@ -1862,6 +1627,8 @@ input RiskAddInput {
   priority: PositiveInt
   "Identifies a control impacted by this risk."
   impacted_control_id: String
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [ID]
 }
 # Risk Ordering
 enum RisksOrdering {
@@ -2166,18 +1933,6 @@ enum ActorType {
   assessment_platform
   "A reference to an assessment-platform defined with the assessment assets."
   party
-}
-
-"Defines the type of assessment activity entry. Can be multi-valued."
-enum AssessmentActivityType {
-  "Information related to the current state of the assessment."
-  status_update
-  "A significant step in the assessment activities has been achieved."
-  milestone_complete
-  "Assessors attestations completed"
-  attestation_completed
-  "Controls have been reviewed"
-  controls_reviewed
 }
 
 "Defines the type of remediation tracking entry. Can be multi-valued."

@@ -58,6 +58,7 @@ export const componentReducer = (item) => {
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
     ...(item.name && { name: item.name }),
+    ...(item.display_name && { display_name: item.display_name }),
     ...(item.description && { description: item.description }),
     // component
     ...(item.component_type && { component_type: item.component_type }),
@@ -147,11 +148,11 @@ export const selectComponentQuery = (id, select) => {
   // This query building function is unusual because the IRI for Components can be
   // different since there are different types of objects.  Thus we build a query that 
   // looks up components with a specific id instead of with a specific IRI
-  if (select !== null && select.includes('props')) {
+  if (select?.includes('props')) {
     let reservedFields = [
       'id','entity_type','links','remarks','props',
       'component_type','name','description','purpose','operational_status',
-      'responsible_roles','protocols'
+      'responsible_roles','protocols','display_name'
     ]
     for (let fieldName of select) {
       if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
@@ -159,9 +160,17 @@ export const selectComponentQuery = (id, select) => {
     select = Object.keys(componentPredicateMap);
   }
   if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
+  if (!select.includes('component_type')) select.push('component_type');
+  if (!select.includes('asset_type')) select.push('asset_type');
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('version')) select.push('version');
+    if (!select.includes('patch_level')) select.push('patch_level');
+  }
   const { selectionClause, predicates } = buildSelectVariables(componentPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     ?iri a <http://csrc.nist.gov/ns/oscal/common#Component> .
@@ -178,12 +187,11 @@ export const selectComponentQuery = (id, select) => {
   `;
 };
 export const selectComponentByIriQuery = (iri, select) => {
-  if (!iri.startsWith('<')) iri = `<${iri}>`;
-  if (select !== null && select.includes('props')) {
+  if (select?.includes('props')) {
     let reservedFields = [
       'id','entity_type','links','remarks','props',
       'component_type','name','description','purpose','operational_status',
-      'responsible_roles','protocols'
+      'responsible_roles','protocols','display_name'
     ]
     for (let fieldName of select) {
       if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
@@ -193,25 +201,47 @@ export const selectComponentByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
   if (!select.includes('component_type')) select.push('component_type');
   if (!select.includes('asset_type')) select.push('asset_type');
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('version')) select.push('version');
+    if (!select.includes('patch_level')) select.push('patch_level');
+  }
 
   const { selectionClause, predicates } = buildSelectVariables(componentPredicateMap, select);
+
+  // Build the "BIND" clause dependent upon value of iri
+  let bindClause;
+  if (Array.isArray(iri)) {
+    bindClause = '\tVALUES ?iri {\n'
+    for(let itemIri of iri) {
+      if (!itemIri.startsWith('<')) itemIri = `<${itemIri}>`;
+      bindClause = bindClause + `\t\t${itemIri}\n`;
+    }
+    bindClause = bindClause + '\t\t}'
+  } else {
+    if (!iri.startsWith('<')) iri = `<${iri}>`;
+    bindClause = `BIND(${iri} AS ?iri)`;
+  }
+
   return `
   SELECT ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    BIND(${iri} AS ?iri)
+    ${bindClause}
     ?iri a <http://csrc.nist.gov/ns/oscal/common#Component> .
     ${predicates}
   }
   `;
 };
+
 export const selectAllComponents = (select, args, parent) => {
-  let constraintClause = '';
-  if (select !== null && select.includes('props')) {
+  if (select === undefined || select === null) select = Object.keys(componentPredicateMap);
+  if (select.includes('props')) {
     let reservedFields = [
       'id','entity_type','links','remarks','props',
       'component_type','name','description','purpose','operational_status',
-      'responsible_roles','protocols'
+      'responsible_roles','protocols','display_name'
     ]
     for (let fieldName of select) {
       if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
@@ -222,6 +252,12 @@ export const selectAllComponents = (select, args, parent) => {
   if (!select.includes('id')) select.push('id');
   if (!select.includes('component_type')) select.push('component_type');
   if (!select.includes('asset_type')) select.push('asset_type');
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('version')) select.push('version');
+    if (!select.includes('patch_level')) select.push('patch_level');
+  }
 
   if (args !== undefined) {
     // add value of filter's key to cause special predicates to be included
@@ -237,15 +273,23 @@ export const selectAllComponents = (select, args, parent) => {
     }
   }
 
+  // compute the list of selection clause terms and predicates to be used
   const { selectionClause, predicates } = buildSelectVariables(componentPredicateMap, select);
+
   // add constraint clause to limit to those that are referenced by the specified POAM
+  let constraintClause = '';
   if (parent !== undefined && parent.iri !== undefined) {
     let classTypeIri;
     let predicate;
+    if (parent.entity_type === 'result') {
+      classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>';
+      predicate = '<http://darklight.ai/ns/oscal/assessment-results#assets>'
+    }
     if (parent.entity_type === 'assessment-asset') {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#AssessmentAsset>';
       predicate = '<http://csrc.nist.gov/ns/oscal/assessment/common#components>';
     }
+
     // define a constraint to limit retrieval to only those referenced by the parent
     constraintClause = `
     {
@@ -278,6 +322,7 @@ export const selectAllComponents = (select, args, parent) => {
   }
   `;
 };
+
 export const deleteComponentQuery = (id) => {
   const iri = `http://csrc.nist.gov/ns/oscal/common#Component-${id}`;
   return deleteComponentByIriQuery(iri);
@@ -341,120 +386,68 @@ export const detachFromComponentQuery = (id, field, itemIris) => {
 export const componentPredicateMap = {
   id: {
     predicate: '<http://darklight.ai/ns/common#id>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'id');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'id'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value));},
   },
   object_type: {
     predicate: '<http://darklight.ai/ns/common#object_type>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'object_type');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'object_type'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   created: {
     predicate: '<http://darklight.ai/ns/common#created>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'created');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'created'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   modified: {
     predicate: '<http://darklight.ai/ns/common#modified>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'modified');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'modified'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   labels: {
     predicate: '<http://darklight.ai/ns/common#labels>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'labels');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'labels'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   label_name: {
     predicate: '<http://darklight.ai/ns/common#labels>/<http://darklight.ai/ns/common#name>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'label_name');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'label_name'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   links: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#links>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'links');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'links'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   remarks: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#remarks>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'remarks');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'remarks'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   component_type: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#component_type>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'component_type');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'component_type'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   name: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#name>|<http://csrc.nist.gov/ns/oscal/info-system#system_name>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'name');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'name'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   description: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#description>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'description');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'description'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   purpose: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#purpose>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'purpose');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'purpose'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   responsible_roles: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#responsible_roles>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'responsible_roles');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'responsible_roles'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   object_markings: {
     predicate: "<http://docs.oasis-open.org/ns/cti/data-marking#object_markings>",
@@ -463,250 +456,180 @@ export const componentPredicateMap = {
   },
   inherited_uuid: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#inherited_uuid>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'inherited_uuid');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'inherited_uuid'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
-  leveraged_authorization_uuid: {
+  leveraged_authorization_uuid: { 
     predicate: '<http://csrc.nist.gov/ns/oscal/common#leveraged_authorization_uuid>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'leveraged_authorization');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'leveraged_authorization'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   asset_id: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#asset_id>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'asset_id');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'asset_id'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   asset_type: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#asset_type>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'asset_type');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'asset_type'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   asset_tag: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#asset_tag>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'asset_tag');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'asset_tag'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   serial_number: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#serial_number>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'serial_number');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'serial_number'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   vendor_name: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#vendor_name>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'vendor_name');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'vendor_name'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   version: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#version>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'version');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'version'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
+  },
+  patch_level: {
+    predicate: '<http://scap.nist.gov/ns/asset-identification#patch_level>',
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'patch_level'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   release_date: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#release_date>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'release_date');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'release_date'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   implementation_point: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#implementation_point>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'implementation_point');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'implementation_point'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
-  operational_status: {
+  operational_status: { 
     predicate: '<http://scap.nist.gov/ns/asset-identification#operational_status>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'operational_status');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'operational_status'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   function: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#function>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'function');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'function'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   baseline_configuration_name: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#baseline_configuration_name>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'baseline_configuration_name');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'baseline_configuration_name'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   cpe_identifier: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#cpe_identifier>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cpe_identifier');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'cpe_identifier'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   installation_id: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#installation_id>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'installation_id');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'installation_id'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   is_publicly_accessible: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#is_publicly_accessible>',
-    binding(iri, value) {
-      return parameterizePredicate(
-        iri,
-        value !== undefined ? `"${value}"^^xsd:boolean` : null,
-        this.predicate,
-        'is_publicly_accessible'
-      );
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value !== undefined ? `"${value}"^^xsd:boolean` : null, this.predicate, 'is_publicly_accessible'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   is_scanned: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#is_scanned>',
-    binding(iri, value) {
-      return parameterizePredicate(
-        iri,
-        value !== undefined ? `"${value}"^^xsd:boolean` : null,
-        this.predicate,
-        'is_scanned'
-      );
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value !== undefined ? `"${value}"^^xsd:boolean` : null, this.predicate, 'is_scanned'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   is_virtual: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#is_virtual>',
-    binding(iri, value) {
-      return parameterizePredicate(
-        iri,
-        value !== undefined ? `"${value}"^^xsd:boolean` : null,
-        this.predicate,
-        'is_virtual'
-      );
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value !== undefined ? `"${value}"^^xsd:boolean` : null, this.predicate, 'is_virtual'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   last_scanned: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#last_scanned>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'last_scanned');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"^^xsd:dateTime` : null, this.predicate, 'last_scanned'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   model: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#model>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'model');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'model'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   network_id: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#network_id>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'network_id');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'network_id'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   vlan_id: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#vlan_id>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'vlan_id');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'vlan_id'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   allows_authenticated_scan: {
     predicate: '<http://csrc.nist.gov/ns/oscal/common#allows_authenticted_scan>',
-    binding(iri, value) {
-      return parameterizePredicate(
-        iri,
-        value !== undefined ? `"${value}"^^xsd:boolean` : null,
-        this.predicate,
-        'allows_authenticated_scan'
-      );
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value !== undefined ? `"${value}"^^xsd:boolean` : null, this.predicate, 'allows_authenticated_scan'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   validation_type: {
     predicate: '<http://darklight.ai/ns/nist-7693-dlex#validation_type>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'validation_type');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'validation_type'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
   validation_reference: {
     predicate: '<http://darklight.ai/ns/nist-7693-dlex#validation_reference>',
-    binding(iri, value) {
-      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'validation_reference');
-    },
-    optional(iri, value) {
-      return optionalizePredicate(this.binding(iri, value));
-    },
+    binding(iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'validation_reference'); },
+    optional(iri, value) { return optionalizePredicate(this.binding(iri, value)); },
   },
 };
+
+// SingularizeSchema
+export const componentSingularizeSchema = {
+  singularizeVariables: {
+    "": false, // so there is an object as the root instead of an array
+    "id": true,
+    "iri": true,
+    "object_type": true,
+    "entity_type": true,
+    "created": true,
+    "modified": true,
+    "label_name": true,
+    "component_type": true,
+    "name": true,
+    "description": true, 
+    "purpose": true,
+    "inherited_uuid": true,
+    "leveraged_authorization_uuid": true,
+    "asset_id": true,
+    "asset_type": true,
+    "asset_tag": true,
+    "serial_number": true,
+    "vendor_name": true,
+    "version": true,
+    "patch_level": true,
+    "release_date": true,
+    "implementation_point": true,
+    "operational_status": true,
+    "function": true,
+    "baseline_configuration_name": true,
+    "cpe_identifier": true,
+    "installation_id": true,
+    "is_publicly_accessible": true,
+    "is_scanned": true,
+    "is_virtual": true,
+    "last_scanned": true,
+    "model": true,
+    "network_id": true,
+    "vlan_id": true,
+    "allows_authenticated_scan": true, 
+    "validation_type": true,
+    "validation_reference": true,
+  }
+};
+
 
 // Function to convert an Asset to a Component
 export function convertAssetToComponent(asset) {
@@ -725,8 +648,8 @@ export function convertAssetToComponent(asset) {
       case 'labels':
       case 'remarks':
       case 'component_type':
-      case 'display_name':
       case 'name':
+      case 'display_name':
       case 'description':
       case 'purpose':
       case 'operational_status':
@@ -774,6 +697,7 @@ export function convertAssetToComponent(asset) {
     ...(asset.modified && { modified: asset.modified }),
     ...(asset.component_type && { component_type: asset.component_type }),
     ...(asset.name && { name: asset.name }),
+    ...(asset.display_name && { display_name: asset.display_name }),
     ...(asset.description && { description: asset.description }),
     ...(asset.purpose && { purpose: asset.purpose }),
     props: propList,

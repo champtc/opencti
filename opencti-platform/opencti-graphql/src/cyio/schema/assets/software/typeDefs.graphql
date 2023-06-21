@@ -59,6 +59,10 @@
       filterMode: FilterMode
       search: String
     ): CyioRelationshipConnection
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [DataMarking]
+    "Identifies the name used to display to users"
+    display_name: String
     # Asset
     asset_id: String
     name: String!
@@ -123,6 +127,10 @@
       filterMode: FilterMode
       search: String
     ): CyioRelationshipConnection
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [DataMarking]
+    "Identifies the name used to display to users"
+    display_name: String
     # Asset
     asset_id: String
     name: String!
@@ -186,6 +194,10 @@
       filterMode: FilterMode
       search: String
     ): CyioRelationshipConnection
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [DataMarking]
+    "Identifies the name used to display to users"
+    display_name: String
     # Asset
     asset_id: String
     name: String!
@@ -241,6 +253,8 @@
     is_publicly_accessible: Boolean
     is_scanned: Boolean
     last_scanned: Timestamp
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [ID]
   }
 
   input OperatingSystemAssetAddInput {
@@ -269,6 +283,8 @@
     last_scanned: Timestamp
     # Operating SystemAsset
     family: FamilyType
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [ID]
   }
 
   input ApplicationSoftwareAssetAddInput {
@@ -295,6 +311,8 @@
     is_publicly_accessible: Boolean
     is_scanned: Boolean
     last_scanned: Timestamp
+    "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+    object_markings: [ID]
   }
 
   enum FamilyType {
@@ -321,6 +339,8 @@
 
   # Slicing Types
   enum SoftwareAssetOrdering {
+    "Display Name"
+    display_name
     "Name"
     name
     "Asset Type"
@@ -352,7 +372,7 @@
     "Created"
     created       # Created before/Created after (key: created, values: ["2021-11-10"], operator: "gt|lt")
     "Modified"
-    modified      # Modified before/Mreated after (key: created, values: ["2021-11-10"], operator: "gt|lt")
+    modified      # Modified before/Created after (key: created, values: ["2021-11-10"], operator: "gt|lt")
     "Name"
     name          # Name (key:name, values: ["name1","name2"], operator: "matches", filterMode: "or")
     "Asset Type"

@@ -1,7 +1,12 @@
-import { UserInputError } from 'apollo-server-express';
+import { UserInputError } from 'apollo-server-errors';
+import { logApp } from '../../../../../config/conf.js';
 import { riskSingularizeSchema as singularizeSchema } from '../../risk-mappings.js';
-import { compareValues, updateQuery, filterValues, generateId, OSCAL_NS, CyioError } from '../../../utils.js';
-import { calculateRiskLevel, getLatestRemediationInfo, convertToProperties } from '../../riskUtils.js';
+import { compareValues, updateQuery, filterValues, generateId, OSCAL_NS } from '../../../utils.js';
+import { calculateRiskLevel, 
+  getLatestRemediationInfo, 
+  convertToProperties, 
+  determineDisplayName as determineRiskDisplayName 
+} from '../../riskUtils.js';
 import {
   getReducer,
   insertPOAMQuery,
@@ -14,12 +19,6 @@ import {
   selectPOAMLocalDefinitionByIriQuery,
   poamPredicateMap,
 } from './sparql-query.js';
-import {
-  selectLabelByIriQuery,
-  selectExternalReferenceByIriQuery,
-  selectNoteByIriQuery,
-  getReducer as getGlobalReducer,
-} from '../../../global/resolvers/sparql-query.js';
 import {
   getReducer as getAssessmentReducer,
   selectAllObservations,
@@ -39,6 +38,12 @@ import {
 } from '../../oscal-common/resolvers/sparql-query.js';
 import { selectAllComponents, convertAssetToComponent } from '../../component/resolvers/sparql-query.js';
 import { selectAllInventoryItems, convertAssetToInventoryItem } from '../../inventory-item/resolvers/sparql-query.js';
+import { determineDisplayName as determineObservationDisplayName } from '../../assessment-common/domain/observation.js';
+import { findExternalReferenceByIri } from '../../../global/domain/externalReference.js';
+import { findNoteByIri } from '../../../global/domain/note.js';
+import { findLabelByIri } from '../../../global/domain/label.js';
+import { observationSingularizeSchema } from '../../assessment-common/schema/sparql/observation.js';
+import { findRisksByIriList } from '../../assessment-common/domain/risk.js';
 
 const poamResolvers = {
   Query: {
@@ -131,14 +136,6 @@ const poamResolvers = {
           },
           edges,
         };
-      }
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      } else {
       }
     },
     poam: async (_, { id }, { dbName, dataSources, selectMap }) => {
@@ -400,127 +397,47 @@ const poamResolvers = {
   // field-level resolvers
   POAM: {
     labels: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.labels_iri === undefined) return [];
-      const iriArray = parent.labels_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('LABEL');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Label')) continue;
-          const sparqlQuery = selectLabelByIriQuery(iri, selectMap.getNode('labels'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Label',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined || (Array.isArray(response) && response.length === 0)) {
-            console.error(`[CYIO] NON-EXISTENT: (${dbName}) '${iri}'; skipping entity`);
-            continue;
-          }
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.label_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.label_iris) {
+        let result = await findLabelByIri(iri, dbName, dataSources, selectMap.getNode('labels'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     links: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.links_iri === undefined) return [];
-      const iriArray = parent.links_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('EXTERNAL-REFERENCE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('ExternalReference')) continue;
-          const sparqlQuery = selectExternalReferenceByIriQuery(iri, selectMap.getNode('links'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select External Reference',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined || (Array.isArray(response) && response.length === 0)) {
-            console.error(`[CYIO] NON-EXISTENT: (${dbName}) '${iri}'; skipping entity`);
-            continue;
-          }
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.link_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.link_iris) {
+        // TODO: switch to findLinkByIri
+        // let result = await findLinkByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        let result = await findExternalReferenceByIri(iri, dbName, dataSources, selectMap.getNode('links'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     remarks: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.remarks_iri === undefined) return [];
-      const iriArray = parent.remarks_iri;
-      const results = [];
-      if (Array.isArray(iriArray) && iriArray.length > 0) {
-        const reducer = getGlobalReducer('NOTE');
-        for (const iri of iriArray) {
-          if (iri === undefined || !iri.includes('Note')) continue;
-          const sparqlQuery = selectNoteByIriQuery(iri, selectMap.getNode('remarks'));
-          let response;
-          try {
-            response = await dataSources.Stardog.queryById({
-              dbName,
-              sparqlQuery,
-              queryId: 'Select Note',
-              singularizeSchema,
-            });
-          } catch (e) {
-            console.log(e);
-            throw e;
-          }
-          if (response === undefined || (Array.isArray(response) && response.length === 0)) {
-            console.error(`[CYIO] NON-EXISTENT: (${dbName}) '${iri}'; skipping entity`);
-            continue;
-          }
-          if (Array.isArray(response) && response.length > 0) {
-            results.push(reducer(response[0]));
-          } else {
-            // Handle reporting Stardog Error
-            if (typeof response === 'object' && 'body' in response) {
-              throw new UserInputError(response.statusText, {
-                error_details: response.body.message ? response.body.message : response.body,
-                error_code: response.body.code ? response.body.code : 'N/A',
-              });
-            }
-          }
+      if (parent.remark_iris === undefined) return [];
+      let results = []
+      for (let iri of parent.remark_iris) {
+        // TODO: switch to findRemarkByIri
+        // let result = await findRemarkByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        let result = await findNoteByIri(iri, dbName, dataSources, selectMap.getNode('remarks'));
+        if (result === undefined || result === null) {
+          logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
+          return null;
         }
-        return results;
+        results.push(result);
       }
-      return [];
+      return results;
     },
     revisions: async (_parent, _args, { _dbName, _dataSources, _selectMap }) => {
       // TODO: Add implementation retrieval of an array of revisions
@@ -944,304 +861,35 @@ const poamResolvers = {
     },
     observations: async (parent, args, { dbName, dataSources, selectMap }) => {
       if (parent.observations_iri === undefined) return null;
-      const edges = [];
-      const reducer = getAssessmentReducer('OBSERVATION');
-      const sparqlQuery = selectAllObservations(selectMap.getNode('node'), args, parent);
-      let response;
-      try {
-        response = await dataSources.Stardog.queryAll({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select Referenced Observations',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-      if (response === undefined || response.length === 0) return null;
+      let select = selectMap.getNode('node');
 
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
-
-      let filterCount;
-      let resultCount;
-      let limit;
-      let offset;
-      let limitSize;
-      let offsetSize;
-      limitSize = limit = args.first === undefined ? response.length : args.first;
-      offsetSize = offset = args.offset === undefined ? 0 : args.offset;
-      filterCount = 0;
-      let observationList;
-      if (args.orderedBy !== undefined) {
-        observationList = response.sort(compareValues(args.orderedBy, args.orderMode));
-      } else {
-        observationList = response;
-      }
-
-      if (offset > observationList.length) return null;
-      for (const observation of observationList) {
-        if (offset) {
-          offset--;
-          continue;
-        }
-
-        // filter out non-matching entries if a filter is to be applied
-        if ('filters' in args && args.filters != null && args.filters.length > 0) {
-          if (!filterValues(observation, args.filters, args.filterMode)) {
-            continue;
-          }
-          filterCount++;
-        }
-        // if haven't reached limit to be returned
-        if (limit) {
-          const edge = {
-            cursor: observation.iri,
-            node: reducer(observation),
-          };
-          edges.push(edge);
-          limit--;
-          if (limit === 0) break;
+      // set up args to cause ordering of results
+      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      if (args !== undefined) {
+        if (!('orderedBy' in args)) {
+          args.orderBy = 'display_name';
+          args.orderMode = 'asc';
         }
       }
 
-      // check if there is data to be returned
-      if (edges.length === 0) return null;
-      let hasNextPage = false;
-      let hasPreviousPage = false;
-      resultCount = observationList.length;
-      if (edges.length < resultCount) {
-        if (edges.length === limitSize && filterCount <= limitSize) {
-          hasNextPage = true;
-          if (offsetSize > 0) hasPreviousPage = true;
-        }
-        if (edges.length <= limitSize) {
-          if (filterCount !== edges.length) hasNextPage = true;
-          if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
-        }
-      }
-      return {
-        pageInfo: {
-          startCursor: edges[0].cursor,
-          endCursor: edges[edges.length - 1].cursor,
-          hasNextPage,
-          hasPreviousPage,
-          globalCount: resultCount,
-        },
-        edges,
-      };
+      let connection = await findObservationsByIriList(parent, parent.observations_iri, args, dbName, dataSources, select);
+      return connection;
     },
     risks: async (parent, args, { dbName, dataSources, selectMap }) => {
       if (parent.risks_iri === undefined) return null;
-      const edges = [];
-      let filterCount;
-      let resultCount;
-      let limit;
-      let offset;
-      let limitSize;
-      let offsetSize;
-      filterCount = 0;
-      const reducer = getAssessmentReducer('RISK');
-      const sparqlQuery = selectAllRisks(selectMap.getNode('node'), args, parent);
-      let response;
-      try {
-        response = await dataSources.Stardog.queryById({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select Referenced Risks',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-      if (response === undefined || response.length === 0) return null;
-
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
-
-      limitSize = limit = args.first === undefined ? response.length : args.first;
-      offsetSize = offset = args.offset === undefined ? 0 : args.offset;
-      resultCount = response.length;
-
-      // update the risk level and score before sorting
-      for (const risk of response) {
-        // PATCH: 14-Jun-2023
-        if (risk.risk_id !== undefined ) risk.name = risk.risk_id;
-
-          risk.risk_level = 'unknown';
-        if (risk.cvssV2Base_score !== undefined || risk.cvssV3Base_score !== undefined) {
-          // calculate the risk level
-          const { riskLevel, riskScore } = calculateRiskLevel(risk);
-          risk.risk_score = riskScore;
-          risk.risk_level = riskLevel;
-
-          // clean up
-          delete risk.cvssV2Base_score;
-          delete risk.cvssV2Temporal_score;
-          delete risk.cvssV3Base_score;
-          delete risk.cvssV3Temporal_score;
-          delete risk.available_exploit_values;
-          delete risk.exploitability_ease_values;
-        }
-
-        // retrieve most recent remediation state
-        if (risk.remediation_type_values !== undefined) {
-          const { responseType, lifeCycle } = getLatestRemediationInfo(risk);
-          if (responseType !== undefined) risk.response_type = responseType;
-          if (lifeCycle !== undefined) risk.lifecycle = lifeCycle;
-          // clean up
-          delete risk.remediation_type_values;
-          delete risk.remediation_lifecycle_values;
-          delete risk.remediation_timestamp_values;
-        }
-
-        // TODO: WORKAROUND fix up invalidate deviation values
-        if (risk.risk_status == 'deviation_requested' || risk.risk_status == 'deviation_approved') {
-          console.log(`[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${risk.iri} invalid field value 'risk_status'; fixing`);
-          risk.risk_status = risk.risk_status.replace('_', '-');
-        }
-        // END WORKAROUND
-      }
-
-      // sort the values
-      let riskList;
-      let sortBy;
-      if (args.orderedBy !== undefined) {
-        if (args.orderedBy === 'risk_level') {
-          sortBy = 'risk_score';
-        } else {
-          sortBy = args.orderedBy;
-        }
-        riskList = response.sort(compareValues(sortBy, args.orderMode));
-      } else {
-        riskList = response;
-      }
-
-      if (offset > riskList.length) return null;
-      // for each Risk in the result set
-      for (const risk of riskList) {
-        if (risk.id === undefined || risk.id == null) {
-          console.log(`[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${risk.iri} missing field 'id'; skipping`);
-          continue;
-        }
-
-        // skip down past the offset
-        if (offset) {
-          offset--;
-          continue;
-        }
-
-        // Provide default values if missing - MUST be done before converting to props
-        if (!('false_positive' in risk)) risk.false_positive = false;
-        if (!('accepted' in risk)) risk.accepted = false;
-        if (!('risk_adjusted' in risk)) risk.risk_adjusted = false;
-        if (!('vendor_dependency' in risk)) risk.vendor_dependency = false;
-
-        // if props were requested
-        if (selectMap.getNode('node').includes('props')) {
-          let props = convertToProperties(risk, riskPredicateMap);
-          if (risk.hasOwnProperty('risk_level')) {
-            if (props === null) props = [];
-            const id_material = { name: 'risk-level', ns: 'http://darklight.ai/ns/oscal', value: `${risk.risk_level}` };
-            const propId = generateId(id_material, OSCAL_NS);
-            const property = {
-              id: `${propId}`,
-              entity_type: 'property',
-              prop_name: 'risk-level',
-              ns: 'http://darklight.ai/ns/oscal',
-              value: `${risk.risk_level}`,
-            };
-            props.push(property);
-          }
-          if (risk.hasOwnProperty('risk_score')) {
-            if (props === null) props = [];
-            const id_material = { name: 'risk-score', ns: 'http://darklight.ai/ns/oscal', value: `${risk.risk_score}` };
-            const propId = generateId(id_material, OSCAL_NS);
-            const property = {
-              id: `${propId}`,
-              entity_type: 'property',
-              prop_name: 'risk-score',
-              ns: 'http://darklight.ai/ns/oscal',
-              value: `${risk.risk_score}`,
-            };
-            props.push(property);
-          }
-          if (risk.hasOwnProperty('occurrences')) {
-            if (props === null) props = [];
-            const id_material = {
-              name: 'risk-occurrences',
-              ns: 'http://darklight.ai/ns/oscal',
-              value: `${risk.occurrences}`,
-            };
-            const propId = generateId(id_material, OSCAL_NS);
-            const property = {
-              id: `${propId}`,
-              entity_type: 'property',
-              prop_name: 'risk-occurrences',
-              ns: 'http://darklight.ai/ns/oscal',
-              value: `${risk.occurrences}`,
-            };
-            props.push(property);
-          }
-          if (props !== null) risk.props = props;
-        }
-
-        // filter out non-matching entries if a filter is to be applied
-        if ('filters' in args && args.filters != null && args.filters.length > 0 && args.filters[0] !== null) {
-          if (!filterValues(risk, args.filters, args.filterMode)) {
-            continue;
-          }
-          filterCount++;
-        }
-
-        // if haven't reached limit to be returned
-        if (limit) {
-          const edge = {
-            cursor: risk.iri,
-            node: reducer(risk),
-          };
-          edges.push(edge);
-          limit--;
-          if (limit === 0) break;
+      let select = selectMap.getNode('node');
+      
+      // set up args to cause ordering of results
+      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      if (args !== undefined) {
+        if (!('orderedBy' in args)) {
+          args.orderBy = 'display_name';
+          args.orderMode = 'asc';
         }
       }
 
-      // check if there is data to be returned
-      if (edges.length === 0) return null;
-      let hasNextPage = false;
-      let hasPreviousPage = false;
-      if (edges.length < resultCount) {
-        if (edges.length === limitSize && filterCount <= limitSize) {
-          hasNextPage = true;
-          if (offsetSize > 0) hasPreviousPage = true;
-        }
-        if (edges.length <= limitSize) {
-          if (filterCount !== edges.length) hasNextPage = true;
-          if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
-        }
-      }
-      return {
-        pageInfo: {
-          startCursor: edges[0].cursor,
-          endCursor: edges[edges.length - 1].cursor,
-          hasNextPage,
-          hasPreviousPage,
-          globalCount: resultCount,
-        },
-        edges,
-      };
+      let connection = await findRisksByIriList(parent, parent.risks_iri, args, dbName, dataSources, select);
+      return connection;
     },
     poam_items: async (parent, args, { dbName, dataSources, selectMap }) => {
       if (parent.poam_items_iri === undefined) return null;
@@ -1359,7 +1007,8 @@ const poamResolvers = {
   POAMLocalDefinitions: {
     components: async (_parent, args, { dbName, dataSources, selectMap }) => {
       const edges = [];
-      const sparqlQuery = selectAllComponents(selectMap.getNode('node'));
+      const select = selectMap.getNode('node')
+      const sparqlQuery = selectAllComponents(select);
       let response;
       try {
         response = await dataSources.Stardog.queryAll({
@@ -1450,7 +1099,7 @@ const poamResolvers = {
         }
 
         // TODO: WORKAROUND missing component type
-        if (!component.hasOwnProperty('operational_status')) {
+        if (select.includes('operational_status') && !component.hasOwnProperty('operational_status')) {
           console.warn(
             `[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${component.iri} missing field 'operational_status'; fixing`
           );

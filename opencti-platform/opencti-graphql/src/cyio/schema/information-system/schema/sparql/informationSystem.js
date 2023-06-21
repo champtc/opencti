@@ -130,7 +130,7 @@ export const selectInformationSystemByIriQuery = (iri, select) => {
   const { selectionClause, predicates } = buildSelectVariables(informationSystemPredicateMap, select);
 
   return `
-  SELECT ?iri ${selectionClause} ${relatedRiskVariable}
+  SELECT DISTINCT ?iri ${selectionClause} ${relatedRiskVariable}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

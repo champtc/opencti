@@ -54,7 +54,7 @@ type Component implements BasicObject & LifecycleObject & OscalObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
-  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
   object_markings: [DataMarking]
   # Component
   "Indicates the type of the component"
@@ -80,6 +80,8 @@ type Component implements BasicObject & LifecycleObject & OscalObject {
   vendor_name: String
   "Indicates the version of the component."
   version: String
+  "Identifies the patch level"
+  patch_level: String
   "Identifies date the component was released, such as a software release date or policy publication date."
   release_date: Timestamp
   "Indicates relative placement of component ('internal' or 'external') to the system."
@@ -109,6 +111,10 @@ type Component implements BasicObject & LifecycleObject & OscalObject {
   responsible_roles: [OscalResponsibleRole]
   "Identifies information about the protocol used to provide a service."
   protocols: [ServiceProtocol]
+  "Identifies the name used to display to users"
+  display_name: String
+  "Identifies the date and time the inventory item was last scanned"
+  last_scanned: Timestamp
 }
 # Mutation Type
 input ComponentAddInput {
@@ -165,6 +171,8 @@ input ComponentAddInput {
   responsible_roles: [OscalResponsibleRoleAddInput]
   "Identifies information about the protocol used to provide a service."
   protocols: [ServiceProtocolAddInput]
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
+  object_markings: [ID]
 }
 # Ordering types
 enum ComponentsOrdering {
@@ -176,6 +184,8 @@ enum ComponentsOrdering {
   created
   "Modified"
   modified
+  "Display name"
+  display_name
   "Name"
   name
   "Label"

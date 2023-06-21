@@ -1,0 +1,67 @@
+# declares the query entry-points for this type
+extend type Query {
+  origin(id: ID!): Origin  @hasPermission(resources:"Assessment:view")
+  origins(
+    first: Int
+    offset: Int
+    orderedBy: OriginOrdering
+    orderMode: OrderingMode
+    filters: [OriginFiltering]
+    filterMode: FilterMode
+    search: String
+  ): OriginConnection  @hasPermission(resources:"Assessment:view")
+}
+
+# declares the mutation entry-points for this type
+extend type Mutation {
+  createOrigin(input: OriginAddInput): Origin  @hasPermission(resources:"Assessment:update")
+  deleteOrigin(id: ID!): String!  @hasPermission(resources:"Assessment:delete")
+  editOrigin(id: ID!, input: [EditInput]!, commitMessage: String): Origin  @hasPermission(resources:"Assessment:update")
+  attachToOrigin(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Assessment:update")
+  detachFromOrigin(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Assessment:update")
+}
+
+# ================== Types ==============
+"""
+"Defines identifying information about the source of the finding, 
+such as a tool, interviewed person, or activity."
+"""
+type Origin {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies one or more actors that produces an observation, a finding, or a risk. One or more actor type can be used to specify a person that is using a tool."
+  origin_actors: [Actor!]!
+  "Identifies one or more task for which the containing object is a consequence of."
+  related_tasks: [OscalTask]
+}
+input OriginAddInput {
+  origin_actors: [ActorAddInput!]!
+  related_tasks: [ID]
+}
+# Pagination Types
+type OriginConnection {
+  pageInfo: PageInfo!
+  edges: [OriginEdge]
+}
+type OriginEdge {
+  cursor: String!
+  node: Origin!
+}
+# Filtering Types
+input OriginFiltering {
+  key: OriginFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
+}
+enum OriginFilter {
+  "Name"
+  actor_name
+}
+# Ordering Enum
+enum OriginOrdering {
+  "Name"
+  actor_name
+}

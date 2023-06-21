@@ -1,0 +1,247 @@
+# declares the query entry-points for this type
+extend type Query {
+  # Assessment Log Entry
+  assessmentLogEntry(id: ID!): AssessmentLogEntry  @hasPermission(resources:"Assessment:view")
+  assessmentLogEntries(
+    first: Int
+    offset: Int
+    orderedBy: AssessmentLogEntryOrdering
+    orderMode: OrderingMode
+    filters: [AssessmentLogEntryFiltering]
+    filterMode: FilterMode
+    search: String
+  ): AssessmentLogEntryConnection  @hasPermission(resources:"Assessment:view")
+  #Log Entry Author
+  logEntryAuthor(id: ID!): LogEntryAuthor  @hasPermission(resources:"Assessment:view")
+  logEntryAuthors(
+    first: Int
+    offset: Int
+    orderedBy: LogEntryAuthorOrdering
+    orderMode: OrderingMode
+    filters: [LogEntryAuthorFiltering]
+    filterMode: FilterMode
+    search: String
+  ): LogEntryAuthorConnection  @hasPermission(resources:"Assessment:view")
+}
+
+# declares the mutation entry-points for this type
+extend type Mutation {
+  # Assessment Log Entry
+  createAssessmentLogEntry(input: AssessmentLogEntryInput!): AssessmentLogEntry  @hasPermission(resources:"AssessmentResults:update")
+  deleteAssessmentLogEntry(resultId: ID, id: ID!): String!  @hasPermission(resources:"AssessmentResults:delete")
+  editAssessmentLogEntry(id: ID!, input: [EditInput]!, commitMessage: String): AssessmentLogEntry  @hasPermission(resources:"AssessmentResults:update")
+  attachToAssessmentLogEntry(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  detachFromAssessmentLogEntry(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "AssessmentResults:update")
+  # LogEntryAuthor
+  createLogEntryAuthor(input: LogEntryAuthorInput!): LogEntryAuthor @hasPermission(resources:"AssessmentResults:update")
+  deleteLogEntryAuthor(resultId: ID, id: ID!): String!  @hasPermission(resources:"AssessmentResults:delete")
+  editLogEntryAuthor(id: ID!, input: [EditInput]!, commitMessage: String): LogEntryAuthor  @hasPermission(resources:"AssessmentResults:update")
+}
+
+# ================== Types ==============
+"Defines identifying information about a log entry of all assessment-related actions taken."
+type AssessmentLogEntry implements BasicObject & LifecycleObject & OscalObject & LogEntry {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  "Indicates the date and time at which the object was originally created."
+  created: Timestamp
+  "Indicates the date and time that this particular version of the object was last modified."
+  modified: Timestamp
+  # OscalObject
+  "Identifies a set of terms used to describe this object. The terms are user-defined or trust-group defined."
+  labels: [CyioLabel]
+  "Identifies a list of CyioExternalReferences, each of which refers to information external to the data model. This property is used to provide one or more URLs, descriptions, or IDs to records in other systems."
+  links: [CyioExternalReference]
+  "Identifies one or more references to additional commentary on the Model."
+  remarks: [CyioNote]
+  "Identifies one or more relationships to other entities."
+  relationships(
+    first: Int
+    offset: Int
+    orderedBy: OscalRelationshipsOrdering
+    orderMode: OrderingMode
+    filters: [OscalRelationshipsFiltering]
+    filterMode: FilterMode
+    search: String
+  ): OscalRelationshipConnection
+  "Identifies a human readable name for the result of the assessment that should be shown to the user."
+  display_name: String
+  # LogEntry
+  "Identifies the type of assessment tracking entry."
+  entry_type: [AssessmentActivityType]
+  "Identifies the name for the risk log entry."
+  name: String!
+  "Identifies a human-readable description of of what was done regarding the risk."
+  description: String!
+  "Identifies the start date and time of the event."
+  event_start: Timestamp!
+  "Identifies the end date and time of the event. If the event is a point in time, the start and end will be the same date and time."
+  event_end: Timestamp
+  "Used to indicate who created a log entry in what role."
+  logged_by: [LogEntryAuthor]
+  "Identifies one or more task for which the containing object is a consequence of."
+  related_tasks: [OscalTask]
+}
+"Defines identifying information about a log entry of all assessment-related actions taken."
+input AssessmentLogEntryInput {
+  "Identifies a reference to the Result for which this is a log entry so that it can be attached."
+  result_id: ID
+  # Entry
+  "Identifies the type of assessment tracking entry."
+  entry_type: [AssessmentActivityType!]!
+  "Identifies the name for the risk log entry."
+  name: String!
+  "Identifies a human-readable description of of what was done regarding the risk."
+  description: String!
+  "Identifies the start date and time of the event."
+  event_start: Timestamp!
+  "Identifies the end date and time of the event. If the event is a point in time, the start and end will be the same date and time."
+  event_end: Timestamp
+  "Used to indicate the party that created a log entry in what role."
+  logged_by: [LogEntryAuthorInput]
+  "Identifies one or more task for which the containing object is a consequence of."
+  related_tasks: [ID]
+}
+# Ordering Type
+enum AssessmentLogEntryOrdering {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Label"
+  label_name
+  "Event Start"
+  event_start
+  "Event End"
+  event_end
+  "Name"
+  name
+  "Marking"
+  marking
+}
+# Filtering Types
+input AssessmentLogEntryFiltering {
+  key: AssessmentLogEntryFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
+}
+enum AssessmentLogEntryFilter {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Label"
+  label_name
+  "Event Start"
+  event_start
+  "Event End"
+  event_end
+  "Name"
+  name
+}
+# Pagination Types
+type AssessmentLogEntryConnection {
+  pageInfo: PageInfo!
+  edges: [AssessmentLogEntryEdge]
+}
+type AssessmentLogEntryEdge {
+  cursor: String!
+  node: AssessmentLogEntry!
+}
+
+"Defines the type of assessment activity entry. Can be multi-valued."
+enum AssessmentActivityType {
+  "Assessment Received"
+  assessment_received
+  "Information related to the current state of the assessment."
+  status_update
+  "A significant step in the assessment activities has been achieved."
+  milestone_complete
+  "Activity Start"
+  activity_start
+  "Activity End"
+  activity_complete
+  "Assessors attestations complete"
+  attestation
+  "Review of controls started"
+  control_review_start
+  "Review of controls completed"
+  control_review_complete
+  "Task Started"
+  task_start
+  "Task completed"
+  task_complete
+}
+
+## LogEntryAuthor
+type LogEntryAuthor {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  # LifecycleObject
+  "Indicates the date and time at which the object was originally created."
+  created: Timestamp
+  "Indicates the date and time that this particular version of the object was last modified."
+  modified: Timestamp
+  "Identifier reference to the party who is making the log entry."
+  party: OscalParty!
+  "Identifies a reference to the role in which the party is making the log entry"
+  role: OscalRole
+}
+input LogEntryAuthorInput {
+  "Identifier reference to the party who is making the log entry."
+  party: ID!
+  "Identifies a reference to the role in which the party is making the log entry"
+  role: ID
+}
+# Ordering Type
+enum LogEntryAuthorOrdering {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Party"
+  party_name
+  "Role"
+  role_identifier
+  "Marking"
+  marking
+}
+# Filtering Types
+enum LogEntryAuthorFilter {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Party"
+  party_name
+  "Role"
+  role_identifier
+}
+# Filtering Types
+input LogEntryAuthorFiltering {
+  key: LogEntryAuthorFilter!
+  values: [String]!
+  operator: String
+  filterMode: FilterMode
+}
+# Pagination Types
+type LogEntryAuthorConnection {
+  pageInfo: PageInfo!
+  edges: [LogEntryAuthorEdge]
+}
+type LogEntryAuthorEdge {
+  cursor: String!
+  node: LogEntryAuthor!
+}

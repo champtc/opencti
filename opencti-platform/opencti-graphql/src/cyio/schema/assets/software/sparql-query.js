@@ -9,6 +9,7 @@ import {
   generateId,
   OASIS_SCO_NS,
 } from '../../utils.js';
+import { determineDisplayName } from './domain/software.js';
 
 export function getReducer(type) {
   switch (type) {
@@ -35,6 +36,10 @@ const softwareAssetReducer = (item) => {
     if (item.object_type === undefined || item.object_type !== 'software') return null;
   }
 
+  if (item.display_name === undefined ) {
+    item.display_name = determineDisplayName(item);
+  }
+
   return {
     iri: item.iri,
     id: item.id,
@@ -42,6 +47,7 @@ const softwareAssetReducer = (item) => {
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.created && { created: item.created }),
     ...(item.modified && { modified: item.modified }),
+    ...(item.display_name && { display_name: item.display_name }),
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
     ...(item.asset_id && { asset_id: item.asset_id }),
@@ -67,9 +73,6 @@ const softwareAssetReducer = (item) => {
     // Hints
     ...(item.iri && { parent_iri: item.iri }),
     ...(item.locations && { locations_iri: item.locations }),
-    ...(item.external_references && { ext_ref_iri: item.external_references }),
-    ...(item.labels && { labels_iri: item.labels }),
-    ...(item.notes && { notes_iri: item.notes }),
     ...(item.os_installed_on && { os_installed_on: item.os_installed_on }),
     ...(item.sw_installed_on && { sw_installed_on: item.sw_installed_on }),
     ...(item.responsible_parties && { responsible_party_iris: item.responsible_parties }),
@@ -77,6 +80,11 @@ const softwareAssetReducer = (item) => {
     ...(item.risk_count !== undefined && { risk_count: item.risk_count }),
     ...(item.risk_score !== undefined && { risk_score: item.risk_score }),
     ...(item.top_risk_severity && { top_risk_severity: item.top_risk_severity }),
+    // hints for general lists of items
+    ...(item.object_markings && {marking_iris: item.object_markings}),
+    ...(item.labels && { label_iris: item.labels }),
+    ...(item.external_references && { external_reference_iris: item.external_references }),
+    ...(item.notes && { note_iris: item.notes }),
   };
 };
 
@@ -151,8 +159,6 @@ export const selectSoftwareQuery = (id, select) => {
   return selectSoftwareByIriQuery(`http://scap.nist.gov/ns/asset-identification#Software-${id}`, select);
 };
 export const selectSoftwareByIriQuery = (iri, select) => {
-  // PATCH: 08-Jun-2023
-  // if (!iri.startsWith('<')) iri = `<${iri}>`;
 
   // if no select values provides, use all available field names of the object
   if (select === undefined || select === null) select = Object.keys(softwarePredicateMap);
@@ -170,6 +176,14 @@ export const selectSoftwareByIriQuery = (iri, select) => {
     select.push('sw_installed_on');
   }
 
+  // if looking for display_name
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('version')) select.push('version');
+    if (!select.includes('patch_level')) select.push('patch_level');
+  }
+  
   // define related risks clause to restrict to only Risk since it available in other objects
   let relatedRiskClause = '', relatedRiskVariable = '';
   if (select.includes('related_risks')) {
@@ -186,7 +200,6 @@ export const selectSoftwareByIriQuery = (iri, select) => {
   // build list of selection variables and predicates
   const { selectionClause, predicates } = buildSelectVariables(softwarePredicateMap, select);
 
-  // PATCH: 08-Jun-2023
   // Build the "BIND" clause dependent upon value of iri
   let bindClause;
   if (Array.isArray(iri)) {
@@ -199,10 +212,10 @@ export const selectSoftwareByIriQuery = (iri, select) => {
   } else {
     if (!iri.startsWith('<')) iri = `<${iri}>`;
     bindClause = `BIND(${iri} AS ?iri)`;
-  }  
+  }
 
   return `
-  SELECT ?iri ${selectionClause} ${relatedRiskVariable}
+  SELECT DISTINCT ?iri ${selectionClause} ${relatedRiskVariable}
   FROM <tag:stardog:api:context:local>
   WHERE {
     ${bindClause}
@@ -234,6 +247,13 @@ export const selectAllSoftware = (select, args) => {
     // replace with 'os_installed_on' and 'sw_installed_on'
     select.push('os_installed_on');
     select.push('sw_installed_on');
+  }
+
+  if (select.includes('display_name')) {
+    if (!select.includes('vendor_name')) select.push('vendor_name');
+    if (!select.includes('name')) select.push('name');
+    if (!select.includes('version')) select.push('version');
+    if (!select.includes('patch_level')) select.push('patch_level');
   }
 
   if (args !== undefined) {

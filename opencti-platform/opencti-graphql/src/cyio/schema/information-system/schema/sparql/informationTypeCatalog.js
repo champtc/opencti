@@ -104,7 +104,7 @@ export const selectInformationTypeCatalogByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(informationTypeCatalogPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

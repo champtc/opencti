@@ -75,7 +75,7 @@ type DescriptionBlock implements BasicObject & LifecycleObject {
     filterMode: FilterMode
     search: String
   ): OscalRelationshipConnection
-  "Identifies a  label or descriptor that is tied to a sensitivity or classification marking system."
+  "Identifies a label or descriptor that is tied to a sensitivity or classification marking system."
   object_markings: [DataMarking]
   # DescriptionBlock
   "Identifies a summary of the system's authorization boundary, network architecture, or data flow."

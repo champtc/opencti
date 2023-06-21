@@ -1,0 +1,196 @@
+# declares the query entry-points for this type
+extend type Query {
+  cyioExternalReference(id: ID!): CyioExternalReference @hasPermission(resources: "Cyio:view")
+  cyioExternalReferences(
+    first: Int
+    offset: Int
+    orderedBy: CyioExternalReferencesOrdering
+    orderMode: OrderingMode
+    filters: [CyioExternalReferencesFiltering]
+    filterMode: FilterMode
+  ): CyioExternalReferenceConnection  @hasPermission(resources: "Cyio:view")
+}
+
+# declares the mutation entry-points for this type
+extend type Mutation { 
+  createCyioExternalReference(input: CyioExternalReferenceAddInput): CyioExternalReference  @hasPermission(resources: "ExtReference:update")
+  deleteCyioExternalReference(id: ID!): String!  @hasPermission(resources: "ExtReference:delete")
+  deleteCyioExternalReferences(id: [ID!]!): ID @hasPermission(resources: "ExtReference:delete")
+  editCyioExternalReference(id: ID!, input: [EditInput]!, commitMessage: String): CyioExternalReference  @hasPermission(resources: "ExtReference:update")
+  attachToCyioExternalReference(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "ExtReference:update")
+  detachFromCyioExternalReference(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "ExtReference:update")
+}
+
+# TODO: Uncomment when OpenCTI definition removed
+# interface ExternalReference {
+#   # BasicObject
+#   "Uniquely identifies this object."
+#   id: ID!
+#   "Identifies the identifier defined by the standard."
+#   standard_id: String!
+#   "Identifies the type of the Object."
+#   entity_type: String!
+#   "Identifies the parent types of this object."
+#   parent_types: [String]!
+#   # LifecycleObject
+#   "Identities the date and time at which the object was originally created."
+#   created: Timestamp
+#   "Identifies the date and time at which the object was last modified."
+#   modified: Timestamp
+# 	# ExternalReference
+# 	"Identifies the name of the source that the referenced resource is defined within (system, registry, organization, etc.)."
+# 	source_name: String @constraint(minLength:1,maxLength:512)
+# 	"User created name for the reference, often the title of the page."
+# 	name: String @constraint(minLength:1,maxLength:512)
+# 	"Identifies a human-readable description of the referenced resource."
+# 	description: String
+# 	"Identifies a Uniform Resource Locator (URL), in accordance to [RFC 3986](https://tools.ietf.org/html/rfc3986#section-1.1.3), that can be used to retrieve the referenced resource."
+#   url: URL
+# 	"Identifies a dictionary of hashes for the contents of the URL.  This SHOULD be provided when the url property is present."
+# 	hashes: [HashInfo]
+# 	"Identifies an source-specific identifier for the external reference content."
+# 	external_id: String
+# 	"Identifies an RFC2046 compliant IANA Media type for eg., text/markdown, text/html, in which the contents is encoded."
+# 	media_type: String
+# }
+
+############## CyioExternalReferences
+type CyioExternalReference implements BasicObject & LifecycleObject {
+  # BasicObject
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the identifier defined by the standard."
+  standard_id: String!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the parent types of this object."
+  parent_types: [String]!
+  # LifecycleObject
+  "Identities the date and time at which the object was originally created."
+  created: Timestamp
+  "Identifies the date and time at which the object was last modified."
+  modified: Timestamp
+  # ExternalReference
+	"Identifies the name of the source that the referenced resource is defined within (system, registry, organization, etc.)."
+  source_name: String
+	"User created name for the reference, often the title of the page."
+	name: String 
+	"Identifies a human-readable description of the referenced resource."
+  description: String
+	"Identifies a Uniform Resource Locator (URL), in accordance to [RFC 3986](https://tools.ietf.org/html/rfc3986#section-1.1.3), that can be used to retrieve the referenced resource."
+  url: URL
+	"Identifies a dictionary of hashes for the contents of the URL.  This SHOULD be provided when the url property is present."
+  hashes: [HashInfo]
+	"Identifies an source-specific identifier for the external reference content."
+  external_id: String
+	"Identifies an RFC2046 compliant IANA Media type for eg., text/markdown, text/html, in which the contents is encoded."
+	media_type: String 
+  # OSCAL Link
+  reference_purpose: ReferencePurposeType
+}
+input CyioExternalReferenceAddInput {
+	"Identifies the name of the source that the referenced resource is defined within (system, registry, organization, etc.)."
+  source_name: String!
+	"User created name for the reference, often the title of the page."
+  name: String @constraint(minLength:1,maxLength:512)
+	"Identifies a human-readable description of the referenced resource."
+  description: String
+	"Identifies a Uniform Resource Locator (URL), in accordance to [RFC 3986](https://tools.ietf.org/html/rfc3986#section-1.1.3), that can be used to retrieve the referenced resource."
+  url: URL
+	"Identifies a dictionary of hashes for the contents of the URL.  This SHOULD be provided when the url property is present."
+  hashes: [HashInfoAddInput]
+	"Identifies an source-specific identifier for the external reference content."
+  external_id: String
+	"Identifies an RFC2046 compliant IANA Media type for eg., text/markdown, text/html, in which the contents is encoded."
+	media_type: String 
+  # OSCAL Link
+  reference_purpose: ReferencePurposeType
+}
+enum CyioExternalReferencesOrdering {
+  "Created"
+  created
+  "Modified"
+  modified
+  "Source Name"
+  source_name
+  "Name"
+  name
+  "URL"
+  url
+  "Hash"
+  hash
+  "External ID"
+  external_id
+}
+enum CyioExternalReferencesFilter {
+  "Created"
+  created
+  "Modified"
+  modified
+  "URL"
+  url
+  "Source Name"
+  source_name
+  "Name"
+  name
+  "External ID"
+  external_id
+}
+input CyioExternalReferencesFiltering {
+  key: CyioExternalReferencesFilter!
+  values: [String]
+  operator: String
+  filterMode: FilterMode
+}
+# Pagination Types
+type CyioExternalReferenceConnection {
+  pageInfo: PageInfo!
+  edges: [CyioExternalReferenceEdge]
+}
+type CyioExternalReferenceEdge {
+  cursor: String!
+  node: CyioExternalReference!
+}
+
+type HashInfo {
+  "Uniquely identifies this object."
+  id: ID!
+  "Identifies the type of the Object."
+  entity_type: String!
+  "Identifies the cryptographic hashing algorithm used to generate the corresponding value."
+  algorithm: HashAlgorithm!
+  "Identifies the computed hash, using the specified hashing algorithm for the associated content."
+  value: String!
+}
+input HashInfoAddInput {
+  algorithm: HashAlgorithm!
+  value: String!
+}
+
+enum ReferencePurposeType {
+  "Identifies a reference to an external resource."
+  reference
+  "Identifies the authoritative location for this file."
+  canonical
+  "Identifies an alternative location or format for this file."
+  alternative
+}
+
+enum HashAlgorithm {
+  "The SHA-224 algorithm as defined by NIST FIPS 180-4."
+  SHA_224
+  "The SHA-256 algorithm as defined by NIST FIPS 180-4."
+  SHA_256
+  "The SHA-384 algorithm as defined by NIST FIPS 180-4."
+  SHA_384
+  "The SHA-512 algorithm as defined by NIST FIPS 180-4."
+  SHA_512
+  "The SHA3-224 algorithm as defined by NIST FIPS 202."
+  SHA3_224
+  "The SHA3-256 algorithm as defined by NIST FIPS 202."
+  SHA3_256
+  "The SHA3-384 algorithm as defined by NIST FIPS 202."
+  SHA3_384
+  "The SHA3-512 algorithm as defined by NIST FIPS 202."
+  SHA3_512
+}

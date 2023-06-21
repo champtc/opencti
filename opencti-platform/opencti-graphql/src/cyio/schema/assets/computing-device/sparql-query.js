@@ -411,7 +411,7 @@ export const selectComputingDeviceByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(computingDevicePredicateMap);
   const { selectionClause, predicates } = buildSelectVariables(computingDevicePredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

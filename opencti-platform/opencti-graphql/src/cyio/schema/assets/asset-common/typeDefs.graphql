@@ -70,12 +70,12 @@
     database
     "Directory Server"
     directory_server
-    "DNS Server"
-    dns_server
-    "Domain Controller"
-    domain_controller
     "Documentary Asset"
     documentary_asset
+    "Domain Controller"
+    domain_controller
+    "DNS Server"
+    dns_server
     "Email Server"
     email_server
     "Embedded Device"

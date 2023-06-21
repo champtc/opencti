@@ -3,7 +3,7 @@ import { UserInputError } from 'apollo-server-errors';
 import { riskSingularizeSchema } from '../../risk-mappings.js';
 // TODO: create a separate scheme file for oscalRemark to replace
 //       the use of Note
-import { selectNoteByIriQuery, getReducer } from '../../../global/resolvers/sparql-query.js';
+import { selectNoteByIriQuery, getReducer } from '../../../global/schema/sparql/note.js';
 // import { 
 //   getReducer,
 //   singularizeOscalRemarkSchema,

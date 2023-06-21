@@ -130,7 +130,7 @@ export const selectDataSourceByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(dataSourcePredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)
@@ -319,7 +319,7 @@ export const selectFrequencyTimingByIriQuery = (iri, select) => {
 
   const { selectionClause, predicates } = buildSelectVariables(frequencyTimingPredicateMap, select);
   return `
-  SELECT ?iri ${selectionClause}
+  SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
     BIND(${iri} AS ?iri)

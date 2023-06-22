@@ -491,7 +491,8 @@ const responsiblePartyResolvers = {
               if( respParty.hasOwnProperty('role')) {
                 if (`<${respParty.role}>` === iris[0] && respParty.id !== id) {
                   throw new UserInputError('Only one Responsible Party can be assigned the specified Responsibility');
-                }  
+                }
+              }
             }
           }
         }

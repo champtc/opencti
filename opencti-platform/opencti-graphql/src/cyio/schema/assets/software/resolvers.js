@@ -31,6 +31,7 @@ const softwareResolvers = {
 
       // Prune out potentially large lists of referenced objects
       let coreSelect = [];
+      // let pruneList = ['installed_on','related_risks','top_risk_severity','risk_count'];
       let pruneList = ['installed_on','related_risks'];
       for (let selector of select) {
         if (pruneList.includes(selector)) continue;
@@ -58,10 +59,17 @@ const softwareResolvers = {
       // get the IRIs for each of the prune list items
       for (let resultItem of response) {
         let results;
+        let found = false;
         for (let pruneItem of pruneList) {
           // skip if prune item wasn't in original select list
           if ( !select.includes(pruneItem)) continue;
+          // if (pruneItem === 'top_risk_severity' || pruneItem === 'risk_count') {
+          //   if (found === true) continue;
+          //   pruneItem = 'related_risks';
+          //   found = true;
+          // }
           try {
+            console.log(`getting ${pruneItem} for ${resultItem.name}`)
             sparqlQuery = selectSoftwareByIriQuery(resultItem.iri,[pruneItem]);
             results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema: singularizeSchema});
             if (results === undefined || results.length === 0) continue;
@@ -101,6 +109,7 @@ const softwareResolvers = {
           // add the count of risks associated with this asset
           asset.risk_count = (asset.related_risks ? asset.related_risks.length : 0);
           if (asset.related_risks !== undefined && asset.risk_count > 0) {
+            console.log(`computing risk for ${asset.name}`);
             let { highestRiskScore, highestRiskSeverity } = await getOverallRisk(asset.related_risks, dbName, dataSources);
             asset.risk_score = highestRiskScore || 0;
             asset.risk_level = highestRiskSeverity || null;

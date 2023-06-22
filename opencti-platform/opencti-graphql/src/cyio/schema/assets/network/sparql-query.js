@@ -228,7 +228,9 @@ export const selectAllNetworks = (select, args) => {
 
     // add value of orderedBy's key to cause special predicates to be included
     if (args.orderedBy !== undefined) {
-      if (!select.includes(args.orderedBy)) select.push(args.orderedBy);
+      if (args.orderedBy !== 'top_risk_severity' && args.orderedBy !== 'risk_count') {
+        if (!select.includes(args.orderedBy)) select.push(args.orderedBy);
+      }
     }
   }
 

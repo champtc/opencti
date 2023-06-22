@@ -602,12 +602,15 @@ export const removeNestedObjects = async (nestedObjects, dbName, dataSources) =>
 
 // @function selectByBulkIris
 export const selectByBulkIris = async (iriList, queryFunction, schema,  dbName, dataSources, select) => {
-  const divisor = 8;
   let batch = [];
-  const batchSize = iriList.length > divisor ? Math.round(iriList.length / divisor) : divisor;
+  let divisor = 8;
   let resultList = [];
   let batchCount = 0;
   let count = 0;
+  let batchSize = iriList.length > divisor ? Math.round(iriList.length / divisor) : divisor;
+  if (batchSize > 200) {
+    batchSize = 45;
+  }
 
   for (let iri of iriList) {
     batch.push(iri);

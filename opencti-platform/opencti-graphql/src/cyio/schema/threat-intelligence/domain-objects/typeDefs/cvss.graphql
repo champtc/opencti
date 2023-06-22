@@ -19,7 +19,6 @@ extend type Mutation {
   editCVSSMetric(id: ID!, input: [EditInput]!, commitMessage: String): CVSSMetric @hasPermission(resources: "Context:update")
   attachToCVSSMetric(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Context:update")
   detachFromCVSSMetric(id: ID!, field: String!, entityId: ID!): Boolean @hasPermission(resources: "Context:update")
-
 }
 
 interface CVSS {
@@ -27,6 +26,8 @@ interface CVSS {
   version: String
   "Identifies a text representation of a set of CVSS metrics."
   vector_string: String
+  "Identifies the name used to display to users"
+  display_name: String
 }
 
 union CVSSMetric = CVSSv4 | CVSSv3 | CVSSv2

@@ -237,6 +237,7 @@ export const findComponentsByIriList = async (parent, iriList, args, dbName, dat
 
   let response;
   try {
+    console.log('Finding components by bulk')
     response = await selectByBulkIris(componentIriList, 
       selectComponentByIriQuery, 
       componentSingularizeSchema, 

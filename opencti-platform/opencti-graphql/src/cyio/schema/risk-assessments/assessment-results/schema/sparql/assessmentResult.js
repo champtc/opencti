@@ -50,7 +50,7 @@ const assessmentResultsReducer = (item) => {
     ...(item.assessment_plan && { assessment_plan_iri: item.assessment_plan }),
     ...(item.local_objectives_and_methods && { local_objectives_and_methods_iris: item.local_objectives_and_methods }),
     ...(item.local_activities && { local_activities_iris: item.local_activities }),
-    ...(item.results && { results_iris: item.results }),
+    ...(item.results && { result_iris: item.results }),
     ...(item.resources && { resources_iris: item.resources }),
   }
 };

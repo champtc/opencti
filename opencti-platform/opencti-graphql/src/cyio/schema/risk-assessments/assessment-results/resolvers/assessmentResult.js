@@ -7,7 +7,9 @@ import {
   editAssessmentResultsById,
   attachToAssessmentResults,
   detachFromAssessmentResults,
+  findAssessmentResultsByIri,
 } from '../domain/assessmentResult.js';
+import { findResultsByIriList } from '../domain/result.js';
 // import { findActivityByIri } from '../../assessment-common/domain/activity.js';
 // import { findRevisionByIri } from '../../oscal-common/domain/oscalRevision.js';
 // import { findSharedMetadataByIri } from '../../oscal-common/domain/oscalSharedMetadata.js';
@@ -84,8 +86,9 @@ const cyioAssessmentResultsResolvers = {
       return results;
     },
     results: async (parent, args, ctx) => {
-      if (parent.results_iris === undefined) return null;
-      return await findAllResults(parent, args, ctx, ctx.dbName, ctx.dataSources, ctx.selectMap.getNode('node'));
+      if (parent.result_iris === undefined) return null;
+      return await findResultsByIriList(parent, parent.result_iris, args, ctx.dbName, ctx.dataSources, ctx.selectMap.getNode('node'));
+      // return await findAllResults(parent, args, ctx, ctx.dbName, ctx.dataSources, ctx.selectMap.getNode('node'));
     },
     resources: async (parent, _, {dbName, dataSources, selectMap}) => {
       if (parent.resources_iri === undefined) return null;

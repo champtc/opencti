@@ -208,6 +208,7 @@ export const findInventoryItemsByIriList = async (parent, iriList, args, dbName,
 
   let response;
   try {
+    console.log('Finding inventory-items by bulk')
     response = await selectByBulkIris(
       invItemList, 
       selectInventoryItemByIriQuery, 

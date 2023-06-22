@@ -9,6 +9,7 @@ import {
   populateNestedDefinitions,
   processNestedDefinitions,
   // validateEnumValue,
+  selectByBulkIris,
 } from '../../../utils.js';
 import {
   getReducer,
@@ -37,62 +38,6 @@ import { generateAssessmentResultsId, getAssessmentResultsIri } from '../schema/
 
 
 // Result
-export const findResultById = async (id, dbName, dataSources, select) => {
-  // ensure the id is a valid UUID
-  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`, {identifier: `${id}`});
-
-  let iri = getResultIri(id);
-  return findResultByIri(iri, dbName, dataSources, select);
-}
-
-export const findResultByIri = async (iri, dbName, dataSources, select) => {
-  // Prune out potentially large lists of referenced objects
-  let coreSelect = [];
-  let pruneList = ['observations','risks','findings','assessment_log'];
-  for (let selector of select) {
-    if (pruneList.includes(selector)) continue;
-    coreSelect.push(selector);
-  }
-
-  let sparqlQuery
-  let response;
-  try {
-    sparqlQuery = selectResultByIriQuery(iri, coreSelect);
-    response = await dataSources.Stardog.queryById({
-      dbName,
-      sparqlQuery,
-      queryId: "Select Result",
-      singularizeSchema: resultSingularizeSchema
-    });
-  } catch (e) {
-    logApp.error(e)
-    throw e
-  }
-  if (response === undefined || response === null || response.length === 0) return null;
-
-  // get the IRIs for each of the prune list items
-  for (let resultItem of response) {
-    let results;
-    for (let pruneItem of pruneList) {
-      // skip if prune item wasn't in original select list
-      if ( !select.includes(pruneItem)) continue;
-      try {
-        sparqlQuery = selectResultByIriQuery(resultItem.iri,[pruneItem]);
-        results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:resultSingularizeSchema});
-        if (results === undefined || results.length === 0) continue;
-      } catch (e) { 
-        logApp.error(e);
-        throw e;
-      }
-      resultItem[pruneItem] = results[0][pruneItem];
-    }
-  }
-
-  let result = assignDefaultValues(response[0]);
-  const reducer = getReducer("RESULT");
-  return reducer(result);  
-};
-
 export const findAllResults = async (parent, args, ctx, dbName, dataSources, select ) => {
   if (parent === undefined) {
     // unless requested thru wildcard search, build parent for current organization
@@ -232,6 +177,194 @@ export const findAllResults = async (parent, args, ctx, dbName, dataSources, sel
     edges: edges,
   }
 };
+
+export const findResultById = async (id, dbName, dataSources, select) => {
+  // ensure the id is a valid UUID
+  if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`, {identifier: `${id}`});
+
+  let iri = getResultIri(id);
+  return findResultByIri(iri, dbName, dataSources, select);
+}
+
+export const findResultByIri = async (iri, dbName, dataSources, select) => {
+  // Prune out potentially large lists of referenced objects
+  let coreSelect = [];
+  let pruneList = ['observations','risks','findings','assessment_log','components_discovered','inventory_items_discovered'];
+  for (let selector of select) {
+    if (pruneList.includes(selector)) continue;
+    coreSelect.push(selector);
+  }
+
+  let sparqlQuery
+  let response;
+  try {
+    sparqlQuery = selectResultByIriQuery(iri, coreSelect);
+    response = await dataSources.Stardog.queryById({
+      dbName,
+      sparqlQuery,
+      queryId: "Select Result",
+      singularizeSchema: resultSingularizeSchema
+    });
+  } catch (e) {
+    logApp.error(e)
+    throw e
+  }
+  if (response === undefined || response === null || response.length === 0) return null;
+
+  // get the IRIs for each of the prune list items
+  for (let resultItem of response) {
+    let results;
+    for (let pruneItem of pruneList) {
+      // skip if prune item wasn't in original select list
+      if ( !select.includes(pruneItem)) continue;
+      try {
+        sparqlQuery = selectResultByIriQuery(resultItem.iri,[pruneItem]);
+        results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:resultSingularizeSchema});
+        if (results === undefined || results.length === 0) continue;
+      } catch (e) { 
+        logApp.error(e);
+        throw e;
+      }
+      if (pruneItem === 'components_discovered' || pruneItem === 'inventory_items_discovered') {
+        resultItem['assets'] = results[0]['assets'];        
+      } else {
+        resultItem[pruneItem] = results[0][pruneItem];
+      }
+    }
+  }
+
+  let result = assignDefaultValues(response[0]);
+  const reducer = getReducer("RESULT");
+  return reducer(result);  
+};
+
+export const findResultsByIriList = async (parent, iriList, args, dbName, dataSources, select) => {
+  // Prune out potentially large lists of referenced objects
+  let coreSelect = [];
+  let pruneList = ['observations','risks','findings','assessment_log'];
+  for (let selector of select) {
+    if (pruneList.includes(selector)) continue;
+    coreSelect.push(selector);
+  }
+
+  let sparqlQuery;
+  let response;
+  try {
+    console.log('Finding results via bulk')
+    response = await selectByBulkIris(
+      iriList, 
+      selectResultByIriQuery, 
+      resultSingularizeSchema, 
+      dbName, 
+      dataSources, 
+      coreSelect);
+  } catch (e) {
+    logApp.error(e);
+    throw e;
+  }
+  if (response === undefined || response.length === 0) return null;
+
+  // get the IRIs for each of the prune list items
+  for (let resultItem of response) {
+    let results;
+    for (let pruneItem of pruneList) {
+      // skip if prune item wasn't in original select list
+      if ( !select.includes(pruneItem)) continue;
+      try {
+        sparqlQuery = selectResultByIriQuery(resultItem.iri,[pruneItem]);
+        results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:resultSingularizeSchema});
+        if (results === undefined || results.length === 0) continue;
+      } catch (e) { 
+        logApp.error(e);
+        throw e;
+      }
+      resultItem[pruneItem] = results[0][pruneItem];
+    }
+  }
+
+  const edges = [];
+  const reducer = getReducer("RESULT");
+  let skipCount = 0,filterCount = 0, resultCount = 0, limit, offset, limitSize, offsetSize;
+  limitSize = limit = (args.first === undefined ? response.length : args.first) ;
+  offsetSize = offset = (args.offset === undefined ? 0 : args.offset) ;
+
+  let resultList ;
+  let sortBy;
+  if (args.orderedBy !== undefined ) {
+    if (args.orderedBy === 'name') {
+      sortBy = 'name';
+    } else {
+      sortBy = args.orderedBy;
+    }
+    resultList = response.sort(compareValues(sortBy, args.orderMode ));
+  } else {
+    resultList = response;
+  }
+
+  // return null if offset value beyond number of results items
+  if (offset > resultList.length) return null;
+
+  // for each result in the result set
+  for (let resultItem of resultList) {
+    if (resultItem.id === undefined) {
+      console.log(`[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${resultItem.iri} missing field 'id'; skipping`);
+      skipCount++;
+      continue;
+    }
+
+    // skip down past the offset
+    if (offset) {
+      offset--
+      continue
+    }
+
+    // set any default values for fields missing values
+    resultItem = assignDefaultValues(resultItem);
+
+    // filter out non-matching entries if a filter is to be applied
+    if ('filters' in args && args.filters != null && args.filters.length > 0) {
+      if (!filterValues(resultItem, args.filters, args.filterMode) ) {
+        continue
+      }
+      filterCount++;
+    }
+
+    // if haven't reached limit to be returned
+    if (limit) {
+      let edge = {
+        cursor: resultItem.iri,
+        node: reducer(resultItem),
+      }
+      edges.push(edge)
+      limit--;
+      if (limit === 0) break;
+    }
+  }
+  // check if there is data to be returned
+  if (edges.length === 0 ) return null;
+  let hasNextPage = false, hasPreviousPage = false;
+  resultCount = resultList.length - skipCount;
+  if (edges.length < resultCount) {
+    if (edges.length === limitSize && filterCount <= limitSize ) {
+      hasNextPage = true;
+      if (offsetSize > 0) hasPreviousPage = true;
+    }
+    if (edges.length <= limitSize) {
+      if (filterCount !== edges.length) hasNextPage = true;
+      if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
+    }
+  }
+  return {
+    pageInfo: {
+      startCursor: edges[0].cursor,
+      endCursor: edges[edges.length-1].cursor,
+      hasNextPage: (hasNextPage ),
+      hasPreviousPage: (hasPreviousPage),
+      globalCount: resultCount,
+    },
+    edges: edges,
+  }
+}
 
 export const createResult = async (input, dbName, dataSources, select) => {
   // remove any empty fields or arrays

@@ -88,7 +88,7 @@ const cyioResultResolvers = {
   Query: {
     // Result
     results: async (_, args, ctx) => findAllResults(_, args, ctx, ctx.dbName, ctx.dataSources, ctx.selectMap.getNode('node')),
-    result: async (_, {           id }, { dbName, dataSources, selectMap }) => findResultById(id, dbName, dataSources, selectMap.getNode('result')),
+    result: async (_, { id }, { dbName, dataSources, selectMap }) => findResultById(id, dbName, dataSources, selectMap.getNode('result')),
   },
   Mutation: {
     // Result

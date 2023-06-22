@@ -106,7 +106,6 @@ export const selectResultQuery = (id, select) => {
 }
 
 export const selectResultByIriQuery = (iri, select) => {
-  if (!iri.startsWith('<')) iri = `<${iri}>`;
   if (select === undefined || select === null) select = Object.keys(resultPredicateMap);
 
   // this is needed to assist in the determination of the type of the data source
@@ -127,11 +126,26 @@ export const selectResultByIriQuery = (iri, select) => {
   }
 
   const { selectionClause, predicates } = buildSelectVariables(resultPredicateMap, select);
+
+    // Build the "BIND" clause dependent upon value of iri
+    let bindClause;
+    if (Array.isArray(iri)) {
+      bindClause = '\tVALUES ?iri {\n'
+      for(let itemIri of iri) {
+        if (!itemIri.startsWith('<')) itemIri = `<${itemIri}>`;
+        bindClause = bindClause + `\t\t${itemIri}\n`;
+      }
+      bindClause = bindClause + '\t\t}'
+    } else {
+      if (!iri.startsWith('<')) iri = `<${iri}>`;
+      bindClause = `BIND(${iri} AS ?iri)`;
+    }
+  
   return `
   SELECT DISTINCT ?iri ${selectionClause}
   FROM <tag:stardog:api:context:local>
   WHERE {
-    BIND(${iri} AS ?iri)
+    ${bindClause}
     ?iri a <http://csrc.nist.gov/ns/oscal/assessment-results#Result> .
     ${predicates}
   }`

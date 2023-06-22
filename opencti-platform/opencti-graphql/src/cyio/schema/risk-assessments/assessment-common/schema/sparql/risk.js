@@ -950,6 +950,7 @@ export const riskSingularizeSchema = {
     risk_adjusted: true,
     risk_state: true,
     risk_status: true,
+    role: true,
     role_identifier: true,
     role_ref: true,
     scheme: true,

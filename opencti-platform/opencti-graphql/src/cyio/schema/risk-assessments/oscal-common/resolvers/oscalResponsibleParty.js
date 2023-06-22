@@ -437,9 +437,11 @@ const responsiblePartyResolvers = {
             case 'role':
               objType = 'oscal-role';
               // skip if not attempting to be changed
-              if (response[0].role[0] === `http://csrc.nist.gov/ns/oscal/common#Role-${value}`) {
-                editItem.operation = 'skip';
-                break;
+              if (response[0].hasOwnProperty('role')) {
+                if (response[0].role === `http://csrc.nist.gov/ns/oscal/common#Role-${value}`) {
+                  editItem.operation = 'skip';
+                  break;
+                }  
               }
               break;
             case 'parties':
@@ -486,9 +488,10 @@ const responsiblePartyResolvers = {
           // check if there is already a Responsible Party defined with the specified Role
           if (response !== undefined && response.length > 0) {
             for (const respParty of response) {
-              if (`<${respParty.role[0]}>` === iris[0] && respParty.id !== id) {
-                throw new UserInputError('Only one Responsible Party can be assigned the specified Responsibility');
-              }
+              if( respParty.hasOwnProperty('role')) {
+                if (`<${respParty.role}>` === iris[0] && respParty.id !== id) {
+                  throw new UserInputError('Only one Responsible Party can be assigned the specified Responsibility');
+                }  
             }
           }
         }

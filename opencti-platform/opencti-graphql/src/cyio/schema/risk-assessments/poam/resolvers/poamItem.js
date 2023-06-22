@@ -360,10 +360,10 @@ const poamItemResolvers = {
       return results;
     },
     related_observations: async (parent, args, { dbName, dataSources, selectMap }) => {
-      if (parent.related_observations_iri === undefined) return null;
+      if (parent.related_observation_iris === undefined) return null;
       if (selectMap.getNode('pageInfo') !== null && selectMap.getNode('edges') === null) {
         // return only a count as pageInfo
-        return { pageInfo: { globalCount: parent.related_observations_iri.length} }
+        return { pageInfo: { globalCount: parent.related_observation_iris.length} }
       }
 
       // set up args to cause ordering of results
@@ -376,7 +376,7 @@ const poamItemResolvers = {
       }
 
       let select = selectMap.getNode('node');
-      let connection = await findObservationsByIriList(parent, parent.related_observations_iri, args, dbName, dataSources, select);
+      let connection = await findObservationsByIriList(parent, parent.related_observation_iris, args, dbName, dataSources, select);
       return connection;
     },
     related_risks: async (parent, args, { dbName, dataSources, selectMap }) => {

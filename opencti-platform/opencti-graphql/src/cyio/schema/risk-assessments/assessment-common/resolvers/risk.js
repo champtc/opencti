@@ -1,5 +1,5 @@
 import { UserInputError } from 'apollo-server-express';
-import { riskSingularizeSchema as singularizeSchema } from '../../risk-mappings.js';
+import { riskSingularizeSchema } from '../../risk-mappings.js';
 import { compareValues, updateQuery, filterValues, generateId, OSCAL_NS, CyioError } from '../../../utils.js';
 import { calculateRiskLevel, getLatestRemediationInfo, convertToProperties } from '../../riskUtils.js';
 import { findParentIriQuery, objectMap } from '../../../global/global-utils.js';
@@ -11,6 +11,7 @@ import {
   getReducer,
   insertRiskQuery,
   selectRiskQuery,
+  selectRiskByIriQuery,
   selectAllRisks,
   deleteRiskQuery,
   riskPredicateMap,
@@ -27,25 +28,37 @@ import {
   getReducer as getOriginReducer,
   deleteOriginByIriQuery,
   selectAllOrigins,
+  singularizeOriginSchema,
 } from '../schema/sparql/origin.js'
 import {
   determineDisplayName,
 } from '../domain/risk.js';
 import { findAllDataMarkings } from '../../../data-markings/domain/dataMarkings.js';
+import { findObservationsByIriList } from '../domain/observation.js';
 
 
 const riskResolvers = {
   Query: {
     risks: async (_, args, { dbName, dataSources, selectMap }) => {
       let select = selectMap.getNode('node');
-      const sparqlQuery = selectAllRisks(select, args);
+
+      // Prune out potentially large lists of referenced objects
+      let coreSelect = [];
+      let pruneList = ['related_observations','remediations','risk_log'];
+      for (let selector of select) {
+        if (pruneList.includes(selector)) continue;
+        coreSelect.push(selector);
+      }
+
+      let sparqlQuery;
       let response;
       try {
+        sparqlQuery = selectAllRisks(coreSelect, args);
         response = await dataSources.Stardog.queryAll({
           dbName,
           sparqlQuery,
           queryId: 'Select Risk List',
-          singularizeSchema,
+          singularizeSchema: riskSingularizeSchema,
         });
       } catch (e) {
         console.log(e);
@@ -53,6 +66,25 @@ const riskResolvers = {
       }
 
       if (response === undefined || response === null || response.length === 0) return null;
+
+      // get the IRIs for each of the prune list items
+      for (let resultItem of response) {
+        let results;
+        for (let pruneItem of pruneList) {
+          // skip if prune item wasn't in original select list
+          if ( !select.includes(pruneItem)) continue;
+          try {
+            sparqlQuery = selectRiskByIriQuery(resultItem.iri,[pruneItem]);
+            results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:riskSingularizeSchema});
+            if (results === undefined || results.length === 0) continue;
+          } catch (e) { 
+            logApp.error(e);
+            throw e;
+          }
+          resultItem[pruneItem] = results[0][pruneItem];
+        }
+      }
+
       if (Array.isArray(response) && response.length > 0) {
         const edges = [];
         const reducer = getReducer('RISK');
@@ -250,21 +282,49 @@ const riskResolvers = {
     },
     risk: async (_, { id }, { dbName, dataSources, selectMap }) => {
       let select = selectMap.getNode('risk');
+
+      // Prune out potentially large lists of referenced objects
+      let coreSelect = [];
+      let pruneList = ['related_observations','remediations','risk_log'];
+      for (let selector of select) {
+        if (pruneList.includes(selector)) continue;
+        coreSelect.push(selector);
+      }
+
+      let sparqlQuery;
       let response;
       try {
-        const sparqlQuery = selectRiskQuery(id, select);
+        sparqlQuery = selectRiskQuery(id, coreSelect);
         response = await dataSources.Stardog.queryById({
           dbName,
           sparqlQuery,
           queryId: 'Select Risk',
-          singularizeSchema,
+          singularizeSchema: riskSingularizeSchema,
         });
       } catch (e) {
         console.log(e);
         throw e;
       }
-
       if (response === undefined || response === null || response.length === 0) return null;
+
+      // get the IRIs for each of the prune list items
+      for (let resultItem of response) {
+        let results;
+        for (let pruneItem of pruneList) {
+          // skip if prune item wasn't in original select list
+          if ( !select.includes(pruneItem)) continue;
+          try {
+            sparqlQuery = selectRiskByIriQuery(resultItem.iri,[pruneItem]);
+            results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:riskSingularizeSchema});
+            if (results === undefined || results.length === 0) continue;
+          } catch (e) { 
+            logApp.error(e);
+            throw e;
+          }
+          resultItem[pruneItem] = results[0][pruneItem];
+        }
+      }
+
       if (Array.isArray(response) && response.length > 0) {
         const reducer = getReducer('RISK');
         const risk = response[0];
@@ -433,7 +493,7 @@ const riskResolvers = {
         dbName,
         sparqlQuery: select,
         queryId: 'Select Risk',
-        singularizeSchema,
+        singularizeSchema: riskSingularizeSchema,
       });
       const reducer = getReducer('RISK');
       return reducer(result[0]);
@@ -453,7 +513,7 @@ const riskResolvers = {
           dbName,
           sparqlQuery,
           queryId: 'Select Risk',
-          singularizeSchema,
+          singularizeSchema: riskSingularizeSchema,
         });
       } catch (e) {
         console.log(e);
@@ -530,7 +590,7 @@ const riskResolvers = {
         dbName,
         sparqlQuery,
         queryId: 'Select Risk',
-        singularizeSchema,
+        singularizeSchema: riskSingularizeSchema,
       });
       if (response.length === 0) throw new CyioError(`Entity does not exist with ID ${id}`);
 
@@ -571,7 +631,7 @@ const riskResolvers = {
             dbName,
             sparqlQuery: parentQuery,
             queryId: 'Select Find Parent',
-            singularizeSchema,
+            singularizeSchema: riskSingularizeSchema,
           });
           if (results.length === 0) throw new CyioError(`Entity does not exist with ID ${id}`);
 
@@ -644,7 +704,7 @@ const riskResolvers = {
         dbName,
         sparqlQuery: select,
         queryId: 'Select Risk',
-        singularizeSchema,
+        singularizeSchema: riskSingularizeSchema,
       });
       const reducer = getReducer('RISK');
       return reducer(result[0]);
@@ -706,7 +766,7 @@ const riskResolvers = {
           dbName,
           sparqlQuery,
           queryId: 'Select Referenced Origins',
-          singularizeSchema,
+          singularizeSchema: singularizeOriginSchema,
         });
       } catch (e) {
         console.log(e);
@@ -752,7 +812,7 @@ const riskResolvers = {
               dbName,
               sparqlQuery,
               queryId: 'Select Characterization',
-              singularizeSchema,
+              singularizeSchema: riskSingularizeSchema,
             });
           } catch (e) {
             console.log(e);
@@ -792,7 +852,7 @@ const riskResolvers = {
               dbName,
               sparqlQuery,
               queryId: 'Select Mitigating Factor',
-              singularizeSchema,
+              singularizeSchema: riskSingularizeSchema,
             });
           } catch (e) {
             console.log(e);
@@ -832,7 +892,7 @@ const riskResolvers = {
               dbName,
               sparqlQuery,
               queryId: 'Select RiskResponse',
-              singularizeSchema,
+              singularizeSchema: riskSingularizeSchema,
             });
           } catch (e) {
             console.log(e);
@@ -874,7 +934,7 @@ const riskResolvers = {
           dbName,
           sparqlQuery,
           queryId: 'Select Referenced RiskLog Entries',
-          singularizeSchema,
+          singularizeSchema: riskSingularizeSchema,
         });
       } catch (e) {
         console.log(e);
@@ -992,7 +1052,7 @@ const riskResolvers = {
           dbName,
           sparqlQuery,
           queryId: 'Select occurrence count',
-          singularizeSchema,
+          singularizeSchema: riskSingularizeSchema,
         });
       } catch (e) {
         console.log(e);

@@ -1,4 +1,6 @@
 import { UserInputError } from 'apollo-server-errors';
+import { logApp } from '../../../../config/conf.js';
+import { sanitizeInputFields } from '../../global/global-utils.js';
 import { assetSingularizeSchema as singularizeSchema } from '../asset-mappings.js';
 import { compareValues, filterValues, generateId, DARKLIGHT_NS, updateQuery, checkIfValidUUID } from '../../utils.js';
 import { addToInventoryQuery, removeFromInventoryQuery } from '../assetUtil.js';
@@ -7,11 +9,11 @@ import {
   deleteNetworkQuery,
   insertNetworkQuery,
   selectAllNetworks,
+  selectNetworkByIriQuery,
   selectNetworkQuery,
   detachFromNetworkQuery,
   networkPredicateMap,
 } from './sparql-query.js';
-import { selectHardwareByIriQuery, getReducer as getHardwareReducer } from '../hardware/sparql-query.js';
 import {
   deleteIpAddressRange,
   deleteIpQuery,
@@ -20,22 +22,15 @@ import {
   insertIPQuery,
   selectIPAddressRange,
 } from '../assetQueries.js';
-import {
-  getReducer as getRiskReducer,
-  riskSingularizeSchema,
-  selectRiskByIriQuery,
-} from '../../risk-assessments/assessment-common/schema/sparql/risk.js';
-import { calculateRiskLevel, getOverallRisk } from '../../risk-assessments/riskUtils.js';
+import { getOverallRisk } from '../../risk-assessments/riskUtils.js';
 import { determineDisplayName } from './domain/network.js';
-import { findHardwareByIriList, determineDisplayName as determineHardwareDisplayName } from '../hardware/domain/hardware.js';
+import { findHardwareByIriList } from '../hardware/domain/hardware.js';
 import { findRisksByIriList } from '../../risk-assessments/assessment-common/domain/risk.js';
 import { findResponsiblePartyByIri } from '../../risk-assessments/oscal-common/domain/oscalResponsibleParty.js';
 import { findAllDataMarkings } from '../../data-markings/domain/dataMarkings.js';
 import { findExternalReferenceByIri } from '../../global/domain/externalReference.js';
 import { findNoteByIri } from '../../global/domain/note.js';
 import { findLabelByIri } from '../../global/domain/label.js';
-import { sanitizeInputFields } from '../../global/global-utils.js';
-import { logApp } from '../../../../config/conf.js';
 
 
 const networkResolvers = {
@@ -44,10 +39,19 @@ const networkResolvers = {
       sanitizeInputFields(args);
       let select = selectMap.getNode('node');
 
+      // Prune out potentially large lists of referenced objects
+      let coreSelect = [];
+      let pruneList = ['connected_assets','related_risks'];
+      for (let selector of select) {
+        if (pruneList.includes(selector)) continue;
+        coreSelect.push(selector);
+      }
+
       // TODO: Consider using VALUES with batch algorithm
+      let sparqlQuery;
       let response;
       try {
-        const sparqlQuery = selectAllNetworks(select, args);
+        sparqlQuery = selectAllNetworks(coreSelect, args);
         response = await dataSources.Stardog.queryAll({
           dbName,
           sparqlQuery,
@@ -60,6 +64,24 @@ const networkResolvers = {
         throw e;
       }
       if (response === undefined || response.length === 0) return null;
+
+      // get the IRIs for each of the prune list items
+      for (let resultItem of response) {
+        let results;
+        for (let pruneItem of pruneList) {
+          // skip if prune item wasn't in original select list
+          if ( !select.includes(pruneItem)) continue;
+          try {
+            sparqlQuery = selectNetworkByIriQuery(resultItem.iri,[pruneItem]);
+            results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema: singularizeSchema});
+            if (results === undefined || results.length === 0) continue;
+          } catch (e) { 
+            logApp.error(e);
+            throw e;
+          }
+          resultItem[pruneItem] = results[0][pruneItem];
+        }
+      }
 
       // build array of edges
       const reducer = getReducer('NETWORK');
@@ -175,9 +197,18 @@ const networkResolvers = {
       if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`,{identifier: `${id}`});
       let select = selectMap.getNode('networkAsset');
 
+      // Prune out potentially large lists of referenced objects
+      let coreSelect = [];
+      let pruneList = ['connected_assets','related_risks'];
+      for (let selector of select) {
+        if (pruneList.includes(selector)) continue;
+        coreSelect.push(selector);
+      }
+
+      let sparqlQuery;
       let response;
       try {
-        const sparqlQuery = selectNetworkQuery(id, select);
+        sparqlQuery = selectNetworkQuery(id, coreSelect);
         response = await dataSources.Stardog.queryById({
           dbName,
           sparqlQuery,
@@ -190,6 +221,24 @@ const networkResolvers = {
         throw e;
       }
       if (response === undefined || response.length === 0) return;
+
+      // get the IRIs for each of the prune list items
+      for (let resultItem of response) {
+        let results;
+        for (let pruneItem of pruneList) {
+          // skip if prune item wasn't in original select list
+          if ( !select.includes(pruneItem)) continue;
+          try {
+            sparqlQuery = selectNetworkByIriQuery(resultItem.iri,[pruneItem]);
+            results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema: singularizeSchema});
+            if (results === undefined || results.length === 0) continue;
+          } catch (e) { 
+            logApp.error(e);
+            throw e;
+          }
+          resultItem[pruneItem] = results[0][pruneItem];
+        }
+      }
 
       const reducer = getReducer('NETWORK');
       const asset = response[0];

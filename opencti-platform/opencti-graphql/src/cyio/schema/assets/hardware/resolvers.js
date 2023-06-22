@@ -1,8 +1,9 @@
 import { UserInputError } from 'apollo-server-errors';
 import { logApp } from '../../../../config/conf.js';
+import { sanitizeInputFields, selectObjectIriByIdQuery } from '../../global/global-utils.js';
 import { assetSingularizeSchema as singularizeSchema, objectTypeMapping } from '../asset-mappings.js';
-import { compareValues, filterValues, updateQuery, checkIfValidUUID } from '../../utils.js';
 import { addToInventoryQuery, deleteQuery, removeFromInventoryQuery } from '../assetUtil.js';
+import { compareValues, filterValues, updateQuery, checkIfValidUUID } from '../../utils.js';
 import {
   getReducer,
   insertHardwareQuery,
@@ -33,23 +34,17 @@ import {
   insertPortRelationships,
   insertPortsQuery,
 } from '../assetQueries.js';
-// import {
-//   getReducer as getRiskReducer,
-//   riskSingularizeSchema,
-//   selectRiskByIriQuery,
-// } from '../../risk-assessments/assessment-common/schema/sparql/risk.js';
-import { sanitizeInputFields, selectObjectIriByIdQuery } from '../../global/global-utils.js';
-import { calculateRiskLevel, getOverallRisk } from '../../risk-assessments/riskUtils.js';
+import { getOverallRisk } from '../../risk-assessments/riskUtils.js';
 import { findAllDataMarkings } from '../../data-markings/domain/dataMarkings.js';
 import { findResponsiblePartyByIri } from '../../risk-assessments/oscal-common/domain/oscalResponsibleParty.js';
 import { findExternalReferenceByIri } from '../../global/domain/externalReference.js';
 import { findNoteByIri } from '../../global/domain/note.js';
 import { findLabelByIri } from '../../global/domain/label.js';
-import { determineDisplayName } from './domain/hardware.js';
+import { determineDisplayName, findHardwareByIriList  } from './domain/hardware.js';
 import { determineDisplayName as determineNetworkDisplayName } from '../network/domain/network.js';
-import { findHardwareByIriList } from './domain/hardware.js';
 import { findSoftwareByIriList } from '../software/domain/software.js';
 import { findRisksByIriList } from '../../risk-assessments/assessment-common/domain/risk.js';
+
 
 const hardwareResolvers = {
   Query: {
@@ -57,10 +52,19 @@ const hardwareResolvers = {
       sanitizeInputFields(args);
       let select = selectMap.getNode('node');
 
+      // Prune out potentially large lists of referenced objects
+      let coreSelect = [];
+      let pruneList = ['installed_software','related_risks'];
+      for (let selector of select) {
+        if (pruneList.includes(selector)) continue;
+        coreSelect.push(selector);
+      }
+
       // TODO: Consider using VALUES with batch algorithm
+      let sparqlQuery;
       let response;
       try {
-        const sparqlQuery = selectAllHardware(select, args);
+        sparqlQuery = selectAllHardware(coreSelect, args);
         response = await dataSources.Stardog.queryAll({
           dbName,
           sparqlQuery,
@@ -72,6 +76,24 @@ const hardwareResolvers = {
         throw e;
       }
       if (response === undefined || response.length === 0) return null;
+
+      // get the IRIs for each of the prune list items
+      for (let resultItem of response) {
+        let results;
+        for (let pruneItem of pruneList) {
+          // skip if prune item wasn't in original select list
+          if ( !select.includes(pruneItem)) continue;
+          try {
+            sparqlQuery = selectHardwareByIriQuery(resultItem.iri,[pruneItem]);
+            results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema: singularizeSchema});
+            if (results === undefined || results.length === 0) continue;
+          } catch (e) { 
+            logApp.error(e);
+            throw e;
+          }
+          resultItem[pruneItem] = results[0][pruneItem];
+        }
+      }
 
       const edges = [];
       const reducer = getReducer('HARDWARE-DEVICE');
@@ -183,9 +205,18 @@ const hardwareResolvers = {
       if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`,{identifier: `${id}`});
       let select = selectMap.getNode('hardwareAsset');
 
+      // Prune out potentially large lists of referenced objects
+      let coreSelect = [];
+      let pruneList = ['installed_software','related_risks'];
+      for (let selector of select) {
+        if (pruneList.includes(selector)) continue;
+        coreSelect.push(selector);
+      }
+
+      let sparqlQuery;
       let response;
       try {
-        const sparqlQuery = selectHardwareQuery(id, select);
+        sparqlQuery = selectHardwareQuery(id, coreSelect);
         response = await dataSources.Stardog.queryById({
           dbName,
           sparqlQuery,
@@ -197,6 +228,24 @@ const hardwareResolvers = {
         throw e;
       }
       if (response === undefined || response.length === 0) return null;
+
+      // get the IRIs for each of the prune list items
+      for (let resultItem of response) {
+        let results;
+        for (let pruneItem of pruneList) {
+          // skip if prune item wasn't in original select list
+          if ( !select.includes(pruneItem)) continue;
+          try {
+            sparqlQuery = selectHardwareByIriQuery(resultItem.iri,[pruneItem]);
+            results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema: singularizeSchema});
+            if (results === undefined || results.length === 0) continue;
+          } catch (e) { 
+            logApp.error(e);
+            throw e;
+          }
+          resultItem[pruneItem] = results[0][pruneItem];
+        }
+      }
 
       const reducer = getReducer('HARDWARE-DEVICE');
       let hardware = response[0];

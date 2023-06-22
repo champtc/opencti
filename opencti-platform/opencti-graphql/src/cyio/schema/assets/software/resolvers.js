@@ -11,17 +11,11 @@ import {
   selectSoftwareByIriQuery,
   softwarePredicateMap,
 } from './sparql-query.js';
-import { selectHardwareByIriQuery, getReducer as getHardwareReducer } from '../hardware/sparql-query.js';
-import {
-  getReducer as getRiskReducer,
-  selectRiskByIriQuery,
-  riskSingularizeSchema,
-} from '../../risk-assessments/assessment-common/schema/sparql/risk.js';
 import { determineDisplayName } from './domain/software.js';
-import { findHardwareByIriList, determineDisplayName as determineHardwareDisplayName } from '../hardware/domain/hardware.js'
+import { findHardwareByIriList } from '../hardware/domain/hardware.js'
 import { findRisksByIriList } from '../../risk-assessments/assessment-common/domain/risk.js';
 import { sanitizeInputFields } from '../../global/global-utils.js';
-import { calculateRiskLevel, getOverallRisk } from '../../risk-assessments/riskUtils.js';
+import { getOverallRisk } from '../../risk-assessments/riskUtils.js';
 import { findAllDataMarkings } from '../../data-markings/domain/dataMarkings.js';
 import { findResponsiblePartyByIri } from '../../risk-assessments/oscal-common/domain/oscalResponsibleParty.js';
 import { findExternalReferenceByIri } from '../../global/domain/externalReference.js';
@@ -35,10 +29,19 @@ const softwareResolvers = {
       sanitizeInputFields(args);
       let select = selectMap.getNode('node');
 
+      // Prune out potentially large lists of referenced objects
+      let coreSelect = [];
+      let pruneList = ['installed_on','related_risks'];
+      for (let selector of select) {
+        if (pruneList.includes(selector)) continue;
+        coreSelect.push(selector);
+      }
+
       // TODO: Consider using VALUES with batch algorithm
+      let sparqlQuery;
       let response;
       try {
-        const sparqlQuery = selectAllSoftware(select, args);
+        sparqlQuery = selectAllSoftware(coreSelect, args);
         response = await dataSources.Stardog.queryAll({
           dbName,
           sparqlQuery,
@@ -51,6 +54,24 @@ const softwareResolvers = {
         throw e;
       }
       if (response === undefined || response.length === 0) return null;
+
+      // get the IRIs for each of the prune list items
+      for (let resultItem of response) {
+        let results;
+        for (let pruneItem of pruneList) {
+          // skip if prune item wasn't in original select list
+          if ( !select.includes(pruneItem)) continue;
+          try {
+            sparqlQuery = selectSoftwareByIriQuery(resultItem.iri,[pruneItem]);
+            results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema: singularizeSchema});
+            if (results === undefined || results.length === 0) continue;
+          } catch (e) { 
+            logApp.error(e);
+            throw e;
+          }
+          resultItem[pruneItem] = results[0][pruneItem];
+        }
+      }
 
       // build array of edges
       const edges = [];
@@ -167,9 +188,18 @@ const softwareResolvers = {
       if (!checkIfValidUUID(id)) throw new UserInputError(`Invalid identifier: ${id}`,{identifier: `${id}`});
       let select = selectMap.getNode('softwareAsset');
 
+      // Prune out potentially large lists of referenced objects
+      let coreSelect = [];
+      let pruneList = ['installed_on','related_risks'];
+      for (let selector of select) {
+        if (pruneList.includes(selector)) continue;
+        coreSelect.push(selector);
+      }
+
+      let sparqlQuery;
       let response;
       try {
-        const sparqlQuery = selectSoftwareQuery(id, select);
+        sparqlQuery = selectSoftwareQuery(id, coreSelect);
         response = await dataSources.Stardog.queryById({
           dbName,
           sparqlQuery,
@@ -181,6 +211,24 @@ const softwareResolvers = {
         throw e;
       }
       if (response === undefined || response.length === 0) return null;
+
+      // get the IRIs for each of the prune list items
+      for (let resultItem of response) {
+        let results;
+        for (let pruneItem of pruneList) {
+          // skip if prune item wasn't in original select list
+          if ( !select.includes(pruneItem)) continue;
+          try {
+            sparqlQuery = selectSoftwareByIriQuery(resultItem.iri,[pruneItem]);
+            results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema: singularizeSchema});
+            if (results === undefined || results.length === 0) continue;
+          } catch (e) { 
+            logApp.error(e);
+            throw e;
+          }
+          resultItem[pruneItem] = results[0][pruneItem];
+        }
+      }
 
       const reducer = getReducer('SOFTWARE');
       let asset = response[0];
@@ -341,8 +389,6 @@ const softwareResolvers = {
         for (let edge of connection.edges) results.push(edge.node);
       }
       return results;
-
-
     },
     related_risks: async (parent, args, { dbName, dataSources, selectMap }) => {
       if (parent.related_risks_iri === undefined) return [];
@@ -403,6 +449,17 @@ const softwareResolvers = {
           logApp.warn(`[CYIO] RESOURCE_NOT_FOUND_ERROR: Cannot retrieve resource ${iri}`);
           return null;
         }
+        results.push(result);
+      }
+      return results;
+    },
+    responsible_parties: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.responsible_party_iris === undefined) return [];
+      let results = []
+      // TODO: Use VALUES to reduce the number of network round trips
+      for (let iri of parent.responsible_party_iris) {
+        let result = await findResponsiblePartyByIri(iri, dbName, dataSources, selectMap.getNode('responsible_parties'));
+        if (result === undefined || result === null) continue;
         results.push(result);
       }
       return results;

@@ -46,9 +46,18 @@ export const findResultById = async (id, dbName, dataSources, select) => {
 }
 
 export const findResultByIri = async (iri, dbName, dataSources, select) => {
-  const sparqlQuery = selectResultByIriQuery(iri, select);
+  // Prune out potentially large lists of referenced objects
+  let coreSelect = [];
+  let pruneList = ['observations','risks','findings','assessment_log'];
+  for (let selector of select) {
+    if (pruneList.includes(selector)) continue;
+    coreSelect.push(selector);
+  }
+
+  let sparqlQuery
   let response;
   try {
+    sparqlQuery = selectResultByIriQuery(iri, coreSelect);
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
@@ -60,8 +69,26 @@ export const findResultByIri = async (iri, dbName, dataSources, select) => {
     throw e
   }
   if (response === undefined || response === null || response.length === 0) return null;
-  let result = assignDefaultValues(response[0]);
 
+  // get the IRIs for each of the prune list items
+  for (let resultItem of response) {
+    let results;
+    for (let pruneItem of pruneList) {
+      // skip if prune item wasn't in original select list
+      if ( !select.includes(pruneItem)) continue;
+      try {
+        sparqlQuery = selectResultByIriQuery(resultItem.iri,[pruneItem]);
+        results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:resultSingularizeSchema});
+        if (results === undefined || results.length === 0) continue;
+      } catch (e) { 
+        logApp.error(e);
+        throw e;
+      }
+      resultItem[pruneItem] = results[0][pruneItem];
+    }
+  }
+
+  let result = assignDefaultValues(response[0]);
   const reducer = getReducer("RESULT");
   return reducer(result);  
 };
@@ -80,14 +107,18 @@ export const findAllResults = async (parent, args, ctx, dbName, dataSources, sel
     }
   }
 
+  // Prune out potentially large lists of referenced objects
   let coreSelect = [];
   let pruneList = ['observations','risks','findings'];
   for (let selector of select) {
-    if (selector !== 'observations' && selector !== 'risks' && selector !== 'findings') coreSelect.push(selector)
+    if (pruneList.includes(selector)) continue;
+    coreSelect.push(selector);
   }
-  let sparqlQuery = selectAllResultsQuery(coreSelect, args, parent);
+
+  let sparqlQuery;
   let response;
   try {
+    sparqlQuery = selectAllResultsQuery(coreSelect, args, parent);
     response = await dataSources.Stardog.queryAll({
       dbName,
       sparqlQuery,
@@ -104,6 +135,8 @@ export const findAllResults = async (parent, args, ctx, dbName, dataSources, sel
   for (let resultItem of response) {
     let results;
     for (let pruneItem of pruneList) {
+      // skip if prune item wasn't in original select list
+      if ( !select.includes(pruneItem)) continue;
       try {
         sparqlQuery = selectResultByIriQuery(resultItem.iri,[pruneItem]);
         results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:resultSingularizeSchema});

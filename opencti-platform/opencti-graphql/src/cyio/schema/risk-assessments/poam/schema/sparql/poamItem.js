@@ -39,7 +39,7 @@ const poamItemReducer = (item) => {
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
     ...(item.origins && { origins_iri: item.origins }),
-    ...(item.related_observations && { related_observations_iri: item.related_observations }),
+    ...(item.related_observations && { related_observation_iris: item.related_observations }),
     ...(item.related_risks && { related_risks_iri: item.related_risks }),
     ...(item.labels && { labels_iri: item.labels }),
     ...(item.links && { links_iri: item.links }),

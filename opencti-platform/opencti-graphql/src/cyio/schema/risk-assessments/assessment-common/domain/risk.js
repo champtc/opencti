@@ -51,9 +51,18 @@ export const findAllRisks = async (parent, args, dbName, dataSources, select ) =
   //   }
   // }
 
+  // Prune out potentially large lists of referenced objects
+  let coreSelect = [];
+  let pruneList = ['related_observations','remediations','risk_log'];
+  for (let selector of select) {
+    if (pruneList.includes(selector)) continue;
+    coreSelect.push(selector);
+  }
+
+  let sparqlQuery;
   let response;
   try {
-    const sparqlQuery = selectAllRisks(select, args, parent);
+    sparqlQuery = selectAllRisks(select, args, parent);
     response = await dataSources.Stardog.queryAll({
       dbName,
       sparqlQuery,
@@ -66,6 +75,24 @@ export const findAllRisks = async (parent, args, dbName, dataSources, select ) =
   }
   // no results found
   if (response === undefined || response.length === 0) return null;
+
+  // get the IRIs for each of the prune list items
+  for (let resultItem of response) {
+    let results;
+    for (let pruneItem of pruneList) {
+      // skip if prune item wasn't in original select list
+      if ( !select.includes(pruneItem)) continue;
+      try {
+        sparqlQuery = selectRiskByIriQuery(resultItem.iri,[pruneItem]);
+        results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:riskSingularizeSchema});
+        if (results === undefined || results.length === 0) continue;
+      } catch (e) { 
+        logApp.error(e);
+        throw e;
+      }
+      resultItem[pruneItem] = results[0][pruneItem];
+    }
+  }
 
   const reducer = getReducer('RISK');
   const edges = [];
@@ -270,9 +297,19 @@ export const findRiskById = async (parent, id, dbName, dataSources, select) => {
 }
 
 export const findRiskByIri = async (parent, iri, dbName, dataSources, select) => {
+
+  // Prune out potentially large lists of referenced objects
+  let coreSelect = [];
+  let pruneList = ['related_observations','remediations','risk_log'];
+  for (let selector of select) {
+    if (pruneList.includes(selector)) continue;
+    coreSelect.push(selector);
+  }
+
+  let sparqlQuery;
   let response;
   try {
-    const sparqlQuery = selectRiskByIriQuery(iri, select);
+    const sparqlQuery = selectRiskByIriQuery(iri, coreSelect);
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
@@ -284,6 +321,24 @@ export const findRiskByIri = async (parent, iri, dbName, dataSources, select) =>
     throw e;
   }
   if (response === undefined || response === null || response.length === 0) return null;
+
+  // get the IRIs for each of the prune list items
+  for (let resultItem of response) {
+    let results;
+    for (let pruneItem of pruneList) {
+      // skip if prune item wasn't in original select list
+      if ( !select.includes(pruneItem)) continue;
+      try {
+        sparqlQuery = selectRiskByIriQuery(resultItem.iri,[pruneItem]);
+        results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:riskSingularizeSchema});
+        if (results === undefined || results.length === 0) continue;
+      } catch (e) { 
+        logApp.error(e);
+        throw e;
+      }
+      resultItem[pruneItem] = results[0][pruneItem];
+    }
+  }  
 
   const reducer = getReducer("RISK");
   const risk = response[0];

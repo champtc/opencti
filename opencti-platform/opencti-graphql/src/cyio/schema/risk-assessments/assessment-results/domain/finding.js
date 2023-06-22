@@ -36,6 +36,7 @@ import {
   detachFromFindingTargetQuery,
 } from '../schema/sparql/finding.js';
 
+
 // Finding
 export const findFindingById = async (id, dbName, dataSources, select) => {
   // ensure the id is a valid UUID
@@ -46,9 +47,19 @@ export const findFindingById = async (id, dbName, dataSources, select) => {
 }
 
 export const findFindingByIri = async (iri, dbName, dataSources, select) => {
-  const sparqlQuery = selectFindingByIriQuery(iri, select);
+
+  // Prune out potentially large lists of referenced objects
+  let coreSelect = [];
+  let pruneList = ['related_observations','related_risks'];
+  for (let selector of select) {
+    if (pruneList.includes(selector)) continue;
+    coreSelect.push(selector);
+  }
+
+  let sparqlQuery; 
   let response;
   try {
+    sparqlQuery = selectFindingByIriQuery(iri, coreSelect);
     response = await dataSources.Stardog.queryById({
       dbName,
       sparqlQuery,
@@ -61,14 +72,41 @@ export const findFindingByIri = async (iri, dbName, dataSources, select) => {
   }
   if (response === undefined || response === null || response.length === 0) return null;
 
+  // get the IRIs for each of the prune list items
+  for (let resultItem of response) {
+    let results;
+    for (let pruneItem of pruneList) {
+      // skip if prune item wasn't in original select list
+      if ( !select.includes(pruneItem)) continue;
+      try {
+        sparqlQuery = selectFindingByIriQuery(resultItem.iri,[pruneItem]);
+        results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:resultSingularizeSchema});
+        if (results === undefined || results.length === 0) continue;
+      } catch (e) { 
+        logApp.error(e);
+        throw e;
+      }
+      resultItem[pruneItem] = results[0][pruneItem];
+    }
+  }
+
   const reducer = getReducer("FINDING");
   return reducer(response[0]);  
 };
 
 export const findAllFindings = async (parent, args, dbName, dataSources, select ) => {
-  const sparqlQuery = selectAllFindingsQuery(select, args, parent);
+  // Prune out potentially large lists of referenced objects
+  let coreSelect = [];
+  let pruneList = ['related_observations','related_risks'];
+  for (let selector of select) {
+    if (pruneList.includes(selector)) continue;
+    coreSelect.push(selector);
+  }
+
+  let sparqlQuery; 
   let response;
   try {
+    sparqlQuery = selectAllFindingsQuery(coreSelect, args, parent);
     response = await dataSources.Stardog.queryAll({
       dbName,
       sparqlQuery,
@@ -83,8 +121,23 @@ export const findAllFindings = async (parent, args, dbName, dataSources, select 
   // no results found
   if (response === undefined || response.length === 0) return null;
 
-  // if no matching results, then return null
-  if (Array.isArray(response) && response.length < 1) return null;
+  // get the IRIs for each of the prune list items
+  for (let resultItem of response) {
+    let results;
+    for (let pruneItem of pruneList) {
+      // skip if prune item wasn't in original select list
+      if ( !select.includes(pruneItem)) continue;
+      try {
+        sparqlQuery = selectFindingByIriQuery(resultItem.iri,[pruneItem]);
+        results = await dataSources.Stardog.queryById( {dbName, sparqlQuery, queryId:`Select ${pruneItem}`, singularizeSchema:resultSingularizeSchema});
+        if (results === undefined || results.length === 0) continue;
+      } catch (e) { 
+        logApp.error(e);
+        throw e;
+      }
+      resultItem[pruneItem] = results[0][pruneItem];
+    }
+  }
 
   const edges = [];
   const reducer = getReducer("FINDING");

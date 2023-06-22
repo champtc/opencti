@@ -415,7 +415,7 @@ const riskReducer = (item) => {
     ...(item.deadline && { deadline: item.deadline }),
     ...(item.remediations && { remediations_iri: item.remediations }),
     ...(item.risk_log && { risk_log_iri: item.risk_log }),
-    ...(item.related_observations && { related_observations_iri: item.related_observations }),
+    ...(item.related_observations && { related_observation_iris: item.related_observations }),
     ...(item.related_observation_ids && { related_observation_ids: item.related_observation_ids }),
     ...(item.accepted !== undefined && { accepted: item.accepted }),
     ...(item.false_positive !== undefined && { false_positive: item.false_positive }),

@@ -69,7 +69,16 @@ const softwareResolvers = {
             logApp.error(e);
             throw e;
           }
-          resultItem[pruneItem] = results[0][pruneItem];
+          if (pruneItem !== 'installed_on') {
+            resultItem[pruneItem] = results[0][pruneItem];
+            continue;
+          }
+          if (results[0].hasOwnProperty('sw_installed_on')) {
+            resultItem['sw_installed_on'] = results[0]['sw_installed_on'];
+          }
+          if (results[0].hasOwnProperty('os_installed_on')) {
+            resultItem['os_installed_on'] = results[0]['os_installed_on'];              
+          }
         }
       }
 
@@ -226,7 +235,16 @@ const softwareResolvers = {
             logApp.error(e);
             throw e;
           }
-          resultItem[pruneItem] = results[0][pruneItem];
+          if (pruneItem !== 'installed_on') {
+            resultItem[pruneItem] = results[0][pruneItem];
+            continue;
+          }
+          if (results[0].hasOwnProperty('sw_installed_on')) {
+            resultItem['sw_installed_on'] = results[0]['sw_installed_on'];
+          }
+          if (results[0].hasOwnProperty('os_installed_on')) {
+            resultItem['os_installed_on'] = results[0]['os_installed_on'];              
+          }
         }
       }
 

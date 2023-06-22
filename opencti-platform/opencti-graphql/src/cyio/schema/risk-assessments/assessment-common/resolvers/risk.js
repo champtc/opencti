@@ -128,8 +128,13 @@ const riskResolvers = {
           }
 
           // determine display_name
-          if ( select.includes('display_name')) {
+          if ( select?.includes('display_name')) {
             risk.display_name = determineDisplayName(risk);
+          } else {
+            // TODO: remove once display name is supported
+            if (risk?.risk_id !== undefined && risk?.name !== undefined) {
+              risk.name = risk.risk_id
+            }
           }
 
           // TODO: WORKAROUND fix up invalidate deviation values
@@ -361,8 +366,13 @@ const riskResolvers = {
         }
 
         // determine display_name
-        if ( select.includes('display_name')) {
+        if ( select?.includes('display_name')) {
           risk.display_name = determineDisplayName(risk);
+        } else {
+          // TODO: remove once display name is supported
+          if (risk?.risk_id !== undefined && risk?.name !== undefined) {
+            risk.name = risk.risk_id
+          }
         }
 
         // TODO: WORKAROUND fix up invalidate deviation values
@@ -1024,7 +1034,7 @@ const riskResolvers = {
         // return only a count as pageInfo
         return { pageInfo: { globalCount: parent.related_observation_iris.length} }
       }
-      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      if (args === undefined) args = {'orderBy': 'name', 'orderMode':'asc'}
       let select = selectMap.getNode('node');
       let connection = await findObservationsByIriList(parent, parent.related_observation_iris, args, dbName, dataSources, select);
       return connection;

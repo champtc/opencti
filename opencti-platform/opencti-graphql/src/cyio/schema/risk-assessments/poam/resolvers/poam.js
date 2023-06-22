@@ -5,7 +5,6 @@ import { compareValues, updateQuery, filterValues, generateId, OSCAL_NS } from '
 import { calculateRiskLevel, 
   getLatestRemediationInfo, 
   convertToProperties, 
-  determineDisplayName as determineRiskDisplayName 
 } from '../../riskUtils.js';
 import {
   getReducer,
@@ -864,7 +863,7 @@ const poamResolvers = {
       let select = selectMap.getNode('node');
 
       // set up args to cause ordering of results
-      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      if (args === undefined) args = {'orderBy': 'name', 'orderMode':'asc'}
       if (args !== undefined) {
         if (!('orderedBy' in args)) {
           args.orderBy = 'display_name';
@@ -880,10 +879,10 @@ const poamResolvers = {
       let select = selectMap.getNode('node');
       
       // set up args to cause ordering of results
-      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+      if (args === undefined) args = {'orderBy': 'name', 'orderMode':'asc'}
       if (args !== undefined) {
         if (!('orderedBy' in args)) {
-          args.orderBy = 'display_name';
+          args.orderBy = 'name';
           args.orderMode = 'asc';
         }
       }

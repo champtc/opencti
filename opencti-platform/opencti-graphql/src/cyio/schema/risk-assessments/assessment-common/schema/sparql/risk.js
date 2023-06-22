@@ -112,10 +112,10 @@ export const selectRiskByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(riskPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('entity_type')) select.push('entity_type');
+  if (!select.includes('risk_id')) select.push('risk_id')
 
   if (select.includes('display_name')) {
     if (!select.includes('name')) select.push('name');
-    if (!select.includes('risk_id')) select.push('risk_id');
   }
 
   // extension properties
@@ -245,10 +245,10 @@ export const selectAllRisks = (select, args, parent) => {
   if (select === undefined || select === null) select = Object.keys(riskPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('entity_type')) select.push('entity_type');
+  if (!select.includes('risk_id')) select.push('risk_id');
 
   // Ensure properties used in display_name are gathered, if requested
   if (select.includes('display_name')) {
-    if (!select.includes('risk_id')) select.push('risk_id');
     if (!select.includes('name')) select.push('name');
   }
 

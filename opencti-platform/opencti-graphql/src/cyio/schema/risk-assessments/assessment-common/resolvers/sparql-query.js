@@ -400,6 +400,7 @@ const riskReducer = (item) => {
     ...(item.props && { props: item.props }),
     ...(item.relationships && { relationships_iri: item.relationships }),
     ...(item.display_name && { display_name: item.display_name }),
+    ...(item.risk_id && { risk_id: item.risk_id }),
     ...(item.name && { name: item.name }),
     ...(item.description && { description: item.description }),
     ...(item.statement && { statement: item.statement }),
@@ -2709,6 +2710,7 @@ export const selectRiskByIriQuery = (iri, select) => {
   if (select === undefined || select === null) select = Object.keys(riskPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('entity_type')) select.push('entity_type');
+  if (!select.includes('risk_id')) select.push('risk_id')
 
   if (select.includes('display_name')) {
     if (!select.includes('name')) select.push('name');
@@ -2841,6 +2843,7 @@ export const selectAllRisks = (select, args, parent) => {
   if (select === undefined || select === null) select = Object.keys(riskPredicateMap);
   if (!select.includes('id')) select.push('id');
   if (!select.includes('entity_type')) select.push('entity_type');
+  if (!select.includes('risk_id')) select.push('risk_id')
 
   if (select.includes('display_name')) {
     if (!select.includes('name')) select.push('name');
@@ -4650,6 +4653,11 @@ export const riskPredicateMap = {
   //   binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "relationships");},
   //   optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
   // },
+  risk_id: {
+    predicate: "<http://csrc.nist.gov/ns/oscal/common#risk_id>",
+    binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "risk_id");},
+    optional: function (iri, value) { return optionalizePredicate(this.binding(iri, value));},
+  },
   name: {
     predicate: "<http://csrc.nist.gov/ns/oscal/common#name>",
     binding: function (iri, value) { return parameterizePredicate(iri, value ? `"${value}"` : null,  this.predicate, "name");},

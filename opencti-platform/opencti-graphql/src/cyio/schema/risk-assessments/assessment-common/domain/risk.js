@@ -136,6 +136,11 @@ export const findAllRisks = async (parent, args, dbName, dataSources, select ) =
     // determine display_name
     if ( select.includes('display_name')) {
       risk.display_name = determineDisplayName(risk);
+    } else {
+      // TODO: remove once display name is supported
+      if (risk?.risk_id !== undefined && risk?.name !== undefined) {
+        risk.name = risk.risk_id
+      }
     }
 
     // TODO: WORKAROUND fix up invalidate deviation values
@@ -444,8 +449,15 @@ export const findRiskByIri = async (parent, iri, dbName, dataSources, select) =>
     if (props !== null) risk.props = props;
   }
 
-  // compute display name
-  risk['display_name'] = determineDisplayName(risk);
+  // determine display_name
+  if ( select?.includes('display_name')) {
+    risk.display_name = determineDisplayName(risk);
+  } else {
+    // TODO: remove once display name is supported
+    if (risk?.risk_id !== undefined && risk?.name !== undefined) {
+      risk.name = risk.risk_id
+    }
+  }
 
   return reducer(risk);
 }
@@ -502,6 +514,11 @@ export const findRisksByIriList = async (parent, iriList, args, dbName, dataSour
     // determine display_name
     if ( select.includes('display_name')) {
       risk.display_name = determineDisplayName(risk);
+    } else {
+      // TODO: remove once display name is supported
+      if (risk?.risk_id !== undefined && risk?.name !== undefined) {
+        risk.name = risk.risk_id
+      }
     }
 
     // TODO: WORKAROUND fix up invalidate deviation values

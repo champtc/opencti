@@ -12,6 +12,12 @@ import {
   addItemToPOAM,
   removeItemFromPOAM,
 } from './sparql-query.js';
+import {
+  getReducer as getOriginReducer,
+  selectAllOrigins,
+  singularizeOriginSchema,
+} from '../../assessment-common/schema/sparql/origin.js';
+'../schema/sparql/origin.js'
 import { findExternalReferenceByIri } from '../../../global/domain/externalReference.js';
 import { findNoteByIri } from '../../../global/domain/note.js';
 import { findLabelByIri } from '../../../global/domain/label.js';
@@ -359,25 +365,60 @@ const poamItemResolvers = {
       }
       return results;
     },
+    origins: async (parent, _, { dbName, dataSources, selectMap }) => {
+      if (parent.origins_iri === undefined) return [];
+      const results = [];
+      const reducer = getOriginReducer('ORIGIN');
+      const sparqlQuery = selectAllOrigins(selectMap.getNode('origins'), undefined, parent);
+      let response;
+      try {
+        response = await dataSources.Stardog.queryById({
+          dbName,
+          sparqlQuery,
+          queryId: 'Select Referenced Origins',
+          singularizeSchema: singularizeOriginSchema,
+        });
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+      if (response === undefined || response.length === 0) return null;
+
+      // Handle reporting Stardog Error
+      if (typeof response === 'object' && 'body' in response) {
+        throw new UserInputError(response.statusText, {
+          error_details: response.body.message ? response.body.message : response.body,
+          error_code: response.body.code ? response.body.code : 'N/A',
+        });
+      }
+
+      for (const origin of response) {
+        results.push(reducer(origin));
+      }
+
+      // check if there is data to be returned
+      if (results.length === 0) return [];
+      return results;
+    },
     related_observations: async (parent, args, { dbName, dataSources, selectMap }) => {
-      if (parent.related_observation_iris === undefined) return null;
-      if (selectMap.getNode('pageInfo') !== null && selectMap.getNode('edges') === null) {
-        // return only a count as pageInfo
-        return { pageInfo: { globalCount: parent.related_observation_iris.length} }
-      }
-
-      // set up args to cause ordering of results
-      if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
-      if (args !== undefined) {
-        if (!('orderedBy' in args)) {
-          args.orderBy = 'display_name';
-          args.orderMode = 'asc';
+        if (parent.related_observation_iris === undefined) return null;
+        if (selectMap.getNode('pageInfo') !== null && selectMap.getNode('edges') === null) {
+          // return only a count as pageInfo
+          return { pageInfo: { globalCount: parent.related_observation_iris.length} }
         }
-      }
 
-      let select = selectMap.getNode('node');
-      let connection = await findObservationsByIriList(parent, parent.related_observation_iris, args, dbName, dataSources, select);
-      return connection;
+        // set up args to cause ordering of results
+        if (args === undefined) args = {'orderBy': 'display_name', 'orderMode':'asc'}
+        if (args !== undefined) {
+          if (!('orderedBy' in args)) {
+            args.orderBy = 'display_name';
+            args.orderMode = 'asc';
+          }
+        }
+
+        let select = selectMap.getNode('node');
+        let connection = await findObservationsByIriList(parent, parent.related_observation_iris, args, dbName, dataSources, select);
+        return connection;
     },
     related_risks: async (parent, args, { dbName, dataSources, selectMap }) => {
       if (parent.related_risks_iri === undefined) return null;

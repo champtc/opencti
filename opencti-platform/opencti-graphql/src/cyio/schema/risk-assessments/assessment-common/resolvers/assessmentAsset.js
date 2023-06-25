@@ -138,7 +138,7 @@ const assessmentAssetResolvers = {
   Mutation: {},
   AssessmentAsset: {
     components: async (parent, args, { dbName, dataSources, selectMap }) => {
-      if (parent.components_iri === undefined) return null;
+      if (parent.component_iris === undefined) return null;
       const edges = [];
       const reducer = getComponentReducer('COMPONENT');
       const sparqlQuery = selectAllComponents(selectMap.getNode('node'), args, parent);
@@ -246,7 +246,7 @@ const assessmentAssetResolvers = {
       };
     },
     assessment_platforms: async (parent, args, { dbName, dataSources, selectMap }) => {
-      if (parent.assessment_platforms_iri === undefined) return null;
+      if (parent.assessment_platform_iris === undefined) return null;
       const edges = [];
       const reducer = getAssessmentPlatformReducer('ASSESSMENT-PLATFORM');
       const sparqlQuery = selectAllAssessmentPlatforms(selectMap.getNode('node'), args, parent);

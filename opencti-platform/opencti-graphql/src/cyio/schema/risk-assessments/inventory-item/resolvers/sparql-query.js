@@ -186,13 +186,24 @@ export const selectInventoryItemByIriQuery = (iri, select) => {
     for (let fieldName of select) {
       if (!reservedFields.includes(fieldName)) throw new UserInputError('Can not specify the "props" field while specifying a list of other fields');
     }
-    select = Object.keys(inventoryItemPredicateMap);
-    if (select.includes('label_name')) select = select.filter((i) => i !== 'label_name');
-    if (select.includes('locations')) select = select.filter((i) => i !== 'locations');
-    if (select.includes('installed_operating_system')) select = select.filter((i) => i !== 'installed_operating_system');
-    if (select.includes('installed_software')) select = select.filter((i) => i !== 'installed_software');
-    if (select.includes('ip_address')) select = select.filter((i) => i !== 'ip_address');
-    if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
+    // defined prop items
+    let propSelect = [
+      'ip_address_value','fqdn','uri','serial_number','netbios_name','mac_address_value',
+      'is_scanned','model','vendor_name',
+      'installed_os_name','installed_os_version',
+      // 'installed_software_name','installed_software_version','installed_software'
+      'asset_id','asset_type','asset_tag','is_publicly_accessible','is_virtual',
+      'vlan_id','network_id','baseline_configuration_name','allows_authenticated_scan',
+      'function','last_scanned','operational_status'
+    ];
+    select.push(...propSelect);
+    // select = Object.keys(inventoryItemPredicateMap);
+    // if (select.includes('label_name')) select = select.filter((i) => i !== 'label_name');
+    // if (select.includes('locations')) select = select.filter((i) => i !== 'locations');
+    // if (select.includes('installed_operating_system')) select = select.filter((i) => i !== 'installed_operating_system');
+    // if (select.includes('installed_software')) select = select.filter((i) => i !== 'installed_software');
+    // if (select.includes('ip_address')) select = select.filter((i) => i !== 'ip_address');
+    // if (select.includes('mac_address')) select = select.filter((i) => i !== 'mac_address');
     // if (select.includes('implemented_components')) delete select.implemented_components;
   }
 
@@ -279,14 +290,14 @@ export const selectAllInventoryItems = (select, args, parent) => {
 
   // add constraint clause to limit to those that are referenced by the specified POAM
   let constraintClause = '';
-  if (parent?.iri !== undefined) {
+  if (parent !== undefined && parent?.iri !== undefined) {
     let classTypeIri;
     let predicate;
     if (parent.entity_type === 'result') {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment-results#Result>';
       predicate = '<http://darklight.ai/ns/oscal/assessment-results#assets>'
     }
-
+    
     // define a constraint to limit retrieval to only those referenced by the parent
     constraintClause = `
     {
@@ -661,6 +672,16 @@ export const inventoryItemPredicateMap = {
       return optionalizePredicate(this.binding(iri, value));
     },
   },
+  installed_os_version: {
+    predicate:
+      '<http://scap.nist.gov/ns/asset-identification#installed_operating_system>/<http://scap.nist.gov/ns/asset-identification#version>',
+    binding(iri, value) {
+      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'installed_os_version');
+    },
+    optional(iri, value) {
+      return optionalizePredicate(this.binding(iri, value));
+    },
+  },
   is_publicly_accessible: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#is_publicly_accessible>',
     binding(iri, value) {
@@ -800,6 +821,26 @@ export const inventoryItemPredicateMap = {
       return optionalizePredicate(this.binding(iri, value));
     },
   },
+  installed_software_version: {
+    predicate:
+      '<http://scap.nist.gov/ns/asset-identification#installed_software>/<http://scap.nist.gov/ns/asset-identification#version>',
+    binding(iri, value) {
+      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'installed_software_version');
+    },
+    optional(iri, value) {
+      return optionalizePredicate(this.binding(iri, value));
+    },
+  },
+  installed_software_patch_level: {
+    predicate:
+      '<http://scap.nist.gov/ns/asset-identification#installed_software>/<http://scap.nist.gov/ns/asset-identification#patch_level>',
+    binding(iri, value) {
+      return parameterizePredicate(iri, value ? `"${value}"` : null, this.predicate, 'installed_software_patch_level');
+    },
+    optional(iri, value) {
+      return optionalizePredicate(this.binding(iri, value));
+    },
+  },
   ip_address: {
     predicate: '<http://scap.nist.gov/ns/asset-identification#ip_address>', // this should really be ipv4_address in ontology
     binding(iri, value) {
@@ -895,12 +936,14 @@ export const inventoryItemSingularizeSchema = {
     "model": true,
     "installed_os_id": true,
     "installed_os_name": true,
+    "installed_os_version": true,
     "is_publicly_accessible": true,
     "is_scanned": true,
     "is_virtual": true,
     "last_scanned": true,
     "fqdn": true,
     "netbios_name": true,
+    "network_id": true,
     "vlan_id": true,
     "uri": true,
     "installed_software_id": true,
@@ -964,14 +1007,18 @@ export function convertAssetToInventoryItem(asset) {
         key = 'os-name';
         value = asset.installed_os_name;
         break;
-      case 'installed_os_id':
-        const implementedComponent = {
-          id: generateId(),
-          entity_type: 'implemented-component',
-          component_uuid: asset.installed_os_id[0],
-        };
-        implementedComponents.push(implementedComponent);
-        continue;
+        case 'installed_os_value':
+          key = 'os-version';
+          value = asset.installed_os_version;
+          break;
+        case 'installed_os_id':
+          const implementedComponent = {
+            id: generateId(),
+            entity_type: 'implemented-component',
+            component_uuid: asset.installed_os_id[0],
+          };
+          implementedComponents.push(implementedComponent);
+          continue;
       case 'mac_address_value':
         key = 'mac-address';
         if (!asset.mac_address_value.includes(':')) {
@@ -984,6 +1031,18 @@ export function convertAssetToInventoryItem(asset) {
         if ('installed_software_name' in asset) {
           key = 'software-name';
           value = asset.installed_software_name;
+        }
+        break;
+      case 'installed_software_version':
+        if ('installed_software_version' in asset) {
+          key = 'software-version';
+          value = asset.installed_software_version;
+        }
+        break;
+      case 'installed_software_patch_level':
+        if ('installed_software_patch_level' in asset) {
+          key = 'software-patch-level';
+          value = asset.installed_software_patch_level;
         }
         break;
       case 'installed_software_id':

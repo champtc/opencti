@@ -108,6 +108,9 @@ export const selectAllOrigins = (select, args, parent) => {
   // add constraint clause to limit to those that are referenced by the specified object
   if (parent !== undefined && parent.iri !== undefined) {
     let classTypeIri;
+    if (parent.entity_type === 'poam-item'|| parent.iri.includes('poam#Item')) {
+      classTypeIri = '<http://csrc.nist.gov/ns/oscal/poam#Item>';
+    }
     if (parent.entity_type === 'characterization' || parent.iri.includes('Characterization')) {
       classTypeIri = '<http://csrc.nist.gov/ns/oscal/assessment/common#Characterization>';
     }

@@ -161,7 +161,7 @@ const assessmentAssetReducer = (item) => {
     standard_id: item.id,
     ...(item.object_type && { entity_type: item.object_type }),
     ...(item.components && { components_iri: item.components }),
-    ...(item.assessment_platforms && { assessment_platforms_iri: item.assessment_platforms }),
+    ...(item.assessment_platforms && { assessment_platform_iris: item.assessment_platforms }),
   };
 };
 const assessmentPlatformReducer = (item) => {

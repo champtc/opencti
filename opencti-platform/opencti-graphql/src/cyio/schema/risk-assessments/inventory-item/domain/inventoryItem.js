@@ -78,7 +78,7 @@ export const findAllInventoryItems = async (parent, args, ctx, dbName, dataSourc
       if (iri.includes('Hardware')) iriList.push(iri);
     }
     sparqlQuery = selectInventoryItemByIriQuery(iriList, select);
-  } else { sparqlQuery = selectAllInventoryItems(select, args, parent) }
+  } else { sparqlQuery = selectAllInventoryItems(select, args) }
 
   try {
     response = await dataSources.Stardog.queryAll({
@@ -292,7 +292,7 @@ export const findInventoryItemsByIriList = async (parent, iriList, args, dbName,
     if (limit) {
       const edge = {
         cursor: resultItem.iri,
-        node: reducer(resultItem),
+        node: resultItem,
       };
       edges.push(edge);
       limit--;

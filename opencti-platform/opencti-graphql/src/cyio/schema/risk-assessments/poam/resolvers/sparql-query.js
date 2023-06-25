@@ -59,7 +59,7 @@ const poamReducer = (item) => {
     ...(item.local_definitions && { local_definitions_iri: item.local_definitions }),
     ...(item.observations && { observations_iri: item.observations }),
     ...(item.risks && { risks_iri: item.risks }),
-    ...(item.poam_items && { poam_items_iri: item.poam_items }),
+    ...(item.poam_items && { poam_item_iris: item.poam_items }),
     // Backmatter
     ...(item.resources && { resources_iri: item.resources }),
   };
@@ -107,9 +107,9 @@ const poamLocalDefReducer = (item) => {
     standard_id: item.id,
     ...(item.object_type && { entity_type: item.object_type }),
     // Local Definition
-    ...(item.components && { components_iri: item.components }),
-    ...(item.inventory_items && { inventory_items_iri: item.inventory_items }),
-    ...(item.assessment_assets && { assessment_assets_iri: item.assessment_assets }),
+    ...(item.components && { component_iris: item.components }),
+    ...(item.inventory_items && { inventory_item_iris: item.inventory_items }),
+    ...(item.assessment_assets && { assessment_asset_iris: item.assessment_assets }),
     ...(item.remarks && { remarks_iri: item.remarks }),
   };
 };

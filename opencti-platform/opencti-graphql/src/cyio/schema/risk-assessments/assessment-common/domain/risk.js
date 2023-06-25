@@ -5,6 +5,7 @@ import { calculateRiskLevel, getLatestRemediationInfo, convertToProperties } fro
 import { 
   compareValues, 
   filterValues, 
+  generateId,
   updateQuery, 
   checkIfValidUUID, 
   validateEnumValue,
@@ -13,6 +14,7 @@ import {
   processReferencedObjects,
   removeNestedObjects,
   selectByBulkIris,
+  OSCAL_NS,
 } from '../../../utils.js';
 import { 
   getReducer, 

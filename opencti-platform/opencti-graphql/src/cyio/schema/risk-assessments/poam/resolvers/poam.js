@@ -1,8 +1,9 @@
 import { UserInputError } from 'apollo-server-errors';
 import { logApp } from '../../../../../config/conf.js';
 import { riskSingularizeSchema as singularizeSchema } from '../../risk-mappings.js';
-import { compareValues, updateQuery, filterValues, generateId, OSCAL_NS } from '../../../utils.js';
-import { calculateRiskLevel, 
+import { selectByBulkIris, compareValues, updateQuery, filterValues, generateId, OSCAL_NS } from '../../../utils.js';
+import { 
+  calculateRiskLevel, 
   getLatestRemediationInfo, 
   convertToProperties, 
 } from '../../riskUtils.js';
@@ -35,14 +36,16 @@ import {
   partyPredicateMap,
   responsiblePartyPredicateMap,
 } from '../../oscal-common/resolvers/sparql-query.js';
-import { selectAllComponents, convertAssetToComponent } from '../../component/resolvers/sparql-query.js';
-import { selectAllInventoryItems, convertAssetToInventoryItem } from '../../inventory-item/resolvers/sparql-query.js';
+import { selectAllComponents, selectComponentByIriQuery, componentSingularizeSchema, convertAssetToComponent } from '../../component/resolvers/sparql-query.js';
+import { selectAllInventoryItems, selectInventoryItemByIriQuery, inventoryItemSingularizeSchema, convertAssetToInventoryItem } from '../../inventory-item/resolvers/sparql-query.js';
 import { determineDisplayName as determineObservationDisplayName } from '../../assessment-common/domain/observation.js';
 import { findExternalReferenceByIri } from '../../../global/domain/externalReference.js';
 import { findNoteByIri } from '../../../global/domain/note.js';
 import { findLabelByIri } from '../../../global/domain/label.js';
 import { observationSingularizeSchema } from '../../assessment-common/schema/sparql/observation.js';
 import { findRisksByIriList } from '../../assessment-common/domain/risk.js';
+import { findComponentsByIriList } from '../../component/domain/component.js';
+import { findAllInventoryItems, findInventoryItemsByIriList} from '../../inventory-item/domain/inventoryItem.js';
 
 const poamResolvers = {
   Query: {
@@ -833,13 +836,13 @@ const poamResolvers = {
         edges,
       };
     },
-    local_definitions: async (parent, _, { dbName, dataSources, selectMap }) => {
+    local_definitions: async (parent, args, { dbName, dataSources, selectMap }) => {
       if (parent.local_definitions_iri === undefined) return null;
       const iri = Array.isArray(parent.local_definitions_iri)
         ? parent.local_definitions_iri[0]
         : parent.local_definitions_iri;
       const reducer = getReducer('POAM-LOCAL-DEFINITION');
-      const sparqlQuery = selectPOAMLocalDefinitionByIriQuery(iri, selectMap.getNode('local_definitions'));
+      let sparqlQuery = selectPOAMLocalDefinitionByIriQuery(iri, selectMap.getNode('local_definitions'));
       let response;
       try {
         response = await dataSources.Stardog.queryById({
@@ -856,7 +859,49 @@ const poamResolvers = {
         console.error(`[CYIO] NON-EXISTENT: (${dbName}) '${iri}'; skipping entity`);
         return null;
       }
-      return reducer(response[0]);
+      let results = reducer(response[0]);
+
+      // if no components were defined on the local definition
+      if (!results.hasOwnProperty('components')) {
+        let idSelect = ['iri','id'];
+        try {
+          sparqlQuery = selectAllComponents(idSelect, args, undefined);
+          response = await dataSources.Stardog.queryAll({
+            dbName, sparqlQuery, queryId:'Select components', singularizeSchema});
+        } catch (e) {
+          logApp.error(e);
+          throw e;
+        }
+        if (response !== undefined || response.length > 0) {
+          results.component_iris=[];
+          for (let result of response) {
+            if (result.iri.includes('#Hardware-')) continue;
+            results.component_iris.push(result.iri);
+          }
+        }
+      }
+
+      // if no inventory-items were defined on the local definition
+      if (!results.hasOwnProperty('inventory_items')) {
+        let idSelect = ['iri','id'];
+        try {
+          sparqlQuery = selectAllInventoryItems(idSelect, args, undefined);
+          response = await dataSources.Stardog.queryAll({
+            dbName, sparqlQuery, queryId:'Select inventory-items', singularizeSchema});
+        } catch (e) {
+          logApp.error(e);
+          throw e;
+        }
+        if (response !== undefined || response.length > 0) {
+          results.inventory_item_iris = []
+          for (let result of response) {
+            if (!result.iri.includes('#Hardware-')) continue;
+            results.inventory_item_iris.push(result.iri);
+          }
+        }
+      }
+
+      return results;
     },
     observations: async (parent, args, { dbName, dataSources, selectMap }) => {
       if (parent.observations_iri === undefined) return null;
@@ -891,10 +936,11 @@ const poamResolvers = {
       return connection;
     },
     poam_items: async (parent, args, { dbName, dataSources, selectMap }) => {
-      if (parent.poam_items_iri === undefined) return null;
+      if (parent.poam_item_iris === undefined) return null;
       const edges = [];
       const reducer = getReducer('POAM-ITEM');
-      const sparqlQuery = selectAllPOAMItems(selectMap.getNode('node'), args, parent);
+      let select = selectMap.getNode('node');
+      const sparqlQuery = selectAllPOAMItems(select, args, parent);
       let response;
       try {
         response = await dataSources.Stardog.queryById({
@@ -908,14 +954,6 @@ const poamResolvers = {
         throw e;
       }
       if (response === undefined || response.length === 0) return null;
-
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
 
       let filterCount;
       let resultCount;
@@ -941,7 +979,7 @@ const poamResolvers = {
         }
 
         // if props were requested
-        if (selectMap.getNode('node').includes('props') && poamItem.hasOwnProperty('poam_id')) {
+        if (select.includes('props') && poamItem.hasOwnProperty('poam_id')) {
           const id_material = { name: 'POAM-ID', ns: 'http://fedramp.gov/ns/oscal', value: `${poamItem.poam_id}` };
           const id = generateId(id_material, OSCAL_NS);
           const prop = {
@@ -1004,258 +1042,58 @@ const poamResolvers = {
     },
   },
   POAMLocalDefinitions: {
-    components: async (_parent, args, { dbName, dataSources, selectMap }) => {
-      const edges = [];
-      const select = selectMap.getNode('node')
-      const sparqlQuery = selectAllComponents(select);
-      let response;
-      try {
-        response = await dataSources.Stardog.queryAll({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select Component List',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
+    components: async (parent, args, { dbName, dataSources, selectMap }) => {
+      if (parent.component_iris === undefined) return null;
+      console.log(`Components: ${parent.component_iris.length}`);
+      let select = selectMap.getNode('node');
 
-      // no components found
-      if (response === undefined || response.length === 0) return null;
-
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
-
-      let filterCount;
-      let resultCount;
-      let limit;
-      let offset;
-      let limitSize;
-      let offsetSize;
-      limitSize = limit = args.first === undefined ? response.length : args.first;
-      offsetSize = offset = args.offset === undefined ? 0 : args.offset;
-      filterCount = 0;
-
-      // compose name to include version and patch level
-      for (const component of response) {
-        // filter out network assets
-        if (component.asset_type === 'network') continue;
-        let { name } = component;
-        if (component.hasOwnProperty('vendor_name')) {
-          if (!component.name.startsWith(component.vendor_name)) name = `${component.vendor_name} ${component.name}`;
-        }
-        if (component.hasOwnProperty('version')) name = `${name} ${component.version}`;
-        if (component.hasOwnProperty('patch_level')) name = `$${name} ${component.patch_level}`;
-        component.name = name;
-      }
-
-      let componentList;
-      if (args.orderedBy !== undefined) {
-        componentList = response.sort(compareValues(args.orderedBy, args.orderMode));
-      } else {
-        componentList = response;
-      }
-
-      if (offset > componentList.length) return null;
-      resultCount = componentList.length;
-      for (let component of componentList) {
-        if (offset) {
-          offset--;
-          continue;
-        }
-
-        // Determine the proper component type for the asset
-        if (component.component_type === undefined) {
-          switch (component.asset_type) {
-            case 'software':
-            case 'operating-system':
-            case 'application-software':
-              component.component_type = 'software';
-              break;
-            case 'firewall':
-              component.component_type = 'software';
-              break;
-            case 'network':
-              component.component_type = 'network';
-              break;
-            default:
-              console.error(
-                `[CYIO] UNKNOWN-COMPONENT Unknown component type '${component.component_type}' for object ${component.iri}`
-              );
-              console.error(
-                `[CYIO] UNKNOWN-TYPE Unknown asset type '${component.asset_type}' for object ${component.iri}`
-              );
-              if (component.iri.includes('Software')) item.component_type = 'software';
-              if (component.iri.includes('Network')) item.component_type = 'network';
-              if (component.component_type === undefined) continue;
-          }
-        }
-
-        // TODO: WORKAROUND missing component type
-        if (select.includes('operational_status') && !component.hasOwnProperty('operational_status')) {
-          console.warn(
-            `[CYIO] CONSTRAINT-VIOLATION: (${dbName}) ${component.iri} missing field 'operational_status'; fixing`
-          );
-          component.operational_status = 'operational';
-        }
-        // END WORKAROUND
-
-        // filter out non-matching entries if a filter is to be applied
-        if ('filters' in args && args.filters != null && args.filters.length > 0) {
-          if (!filterValues(component, args.filters, args.filterMode)) {
-            continue;
-          }
-          filterCount++;
-        }
-
-        // convert the asset into a component
-        component = convertAssetToComponent(component);
-
-        // if haven't reached limit to be returned
-        if (limit) {
-          const edge = {
-            cursor: component.iri,
-            node: component,
-          };
-          edges.push(edge);
-          limit--;
-          if (limit === 0) break;
+      // set up args to cause ordering of results
+      if (args === undefined) args = {'orderBy': 'name', 'orderMode':'asc'}
+      if (args !== undefined) {
+        if (!('orderedBy' in args)) {
+          args.orderBy = 'name';
+          args.orderMode = 'asc';
         }
       }
 
-      // check if there is data to be returned
-      if (edges.length === 0) return null;
-      let hasNextPage = false;
-      let hasPreviousPage = false;
-      if (edges.length < resultCount) {
-        if (edges.length === limitSize && filterCount <= limitSize) {
-          hasNextPage = true;
-          if (offsetSize > 0) hasPreviousPage = true;
-        }
-        if (edges.length <= limitSize) {
-          if (filterCount !== edges.length) hasNextPage = true;
-          if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
-        }
+      // if (parent.component_iris.length <= 100) {
+      //   let connection = findAllComponents(parent, args, null, dbName, dataSources, select);
+      //   return connection
+      // }
+
+      if ( parent.component_iris.length <= 200 ) {
+        let connection = await findComponentsByIriList(parent, parent.component_iris, args, dbName, dataSources, select);
+        return connection;  
       }
-      return {
-        pageInfo: {
-          startCursor: edges[0].cursor,
-          endCursor: edges[edges.length - 1].cursor,
-          hasNextPage,
-          hasPreviousPage,
-          globalCount: resultCount,
-        },
-        edges,
-      };
+    
     },
-    inventory_items: async (_parent, args, { dbName, dataSources, selectMap }) => {
-      const edges = [];
-      const sparqlQuery = selectAllInventoryItems(selectMap.getNode('node'), args);
-      let response;
-      try {
-        response = await dataSources.Stardog.queryAll({
-          dbName,
-          sparqlQuery,
-          queryId: 'Select Inventory Item List',
-          singularizeSchema,
-        });
-      } catch (e) {
-        console.log(e);
-        throw e;
-      }
-
-      // no Inventory Items found
-      if (response === undefined || response.length === 0) return null;
-
-      // Handle reporting Stardog Error
-      if (typeof response === 'object' && 'body' in response) {
-        throw new UserInputError(response.statusText, {
-          error_details: response.body.message ? response.body.message : response.body,
-          error_code: response.body.code ? response.body.code : 'N/A',
-        });
-      }
-
-      let filterCount;
-      let resultCount;
-      let limit;
-      let offset;
-      let limitSize;
-      let offsetSize;
-      limitSize = limit = args.first === undefined ? response.length : args.first;
-      offsetSize = offset = args.offset === undefined ? 0 : args.offset;
-      filterCount = 0;
-      let inventoryItemList;
-      if (args.orderedBy !== undefined) {
-        inventoryItemList = response.sort(compareValues(args.orderedBy, args.orderMode));
-      } else {
-        inventoryItemList = response;
-      }
-
-      if (offset > inventoryItemList.length) return null;
-      resultCount = inventoryItemList.length;
-      for (let inventoryItem of inventoryItemList) {
-        if (offset) {
-          offset--;
-          continue;
-        }
-
-        // filter out non-matching entries if a filter is to be applied
-        if ('filters' in args && args.filters != null && args.filters.length > 0) {
-          if (!filterValues(inventoryItem, args.filters, args.filterMode)) {
-            continue;
-          }
-          filterCount++;
-        }
-
-        // convert the asset into a component
-        inventoryItem = convertAssetToInventoryItem(inventoryItem);
-
-        // if haven't reached limit to be returned
-        if (limit) {
-          const edge = {
-            cursor: inventoryItem.iri,
-            node: inventoryItem,
-          };
-          edges.push(edge);
-          limit--;
-          if (limit === 0) break;
+    inventory_items: async (parent, args, { dbName, dataSources, selectMap }) => {
+      if (parent.inventory_item_iris === undefined) return null;
+      console.log(`Inventory items: ${parent.inventory_item_iris.length}`);
+      let select = selectMap.getNode('node');
+      
+      // set up args to cause ordering of results
+      if (args === undefined) args = {'orderBy': 'name', 'orderMode':'asc'}
+      if (args !== undefined) {
+        if (!('orderedBy' in args)) {
+          args.orderBy = 'name';
+          args.orderMode = 'asc';
         }
       }
 
-      // check if there is data to be returned
-      if (edges.length === 0) return null;
-      let hasNextPage = false;
-      let hasPreviousPage = false;
-      if (edges.length < resultCount) {
-        if (edges.length === limitSize && filterCount <= limitSize) {
-          hasNextPage = true;
-          if (offsetSize > 0) hasPreviousPage = true;
-        }
-        if (edges.length <= limitSize) {
-          if (filterCount !== edges.length) hasNextPage = true;
-          if (filterCount > 0 && offsetSize > 0) hasPreviousPage = true;
-        }
+      // if (parent.inventory_item_iris.length <= 100) {
+      //   let connection = await findAllInventoryItems(parent, args, null, dbName, dataSources, select);
+      //   return connection;
+      // }
+
+      if ( parent.inventory_item_iris.length <= 200 ) {
+        let connection = await findInventoryItemsByIriList(parent, parent.inventory_item_iris, args, dbName, dataSources, select);
+        return connection;
       }
-      return {
-        pageInfo: {
-          startCursor: edges[0].cursor,
-          endCursor: edges[edges.length - 1].cursor,
-          hasNextPage,
-          hasPreviousPage,
-          globalCount: resultCount,
-        },
-        edges,
-      };
     },
     assessment_assets: async (parent, _, { dbName, dataSources, selectMap }) => {
-      if (parent.assessment_assets_iri === undefined) return null;
-      const iri = parent.assessment_assets_iri[0];
+      if (parent.assessment_asset_iris === undefined) return null;
+      const iri = parent.assessment_asset_iris[0];
       const reducer = getAssessmentReducer('ASSESSMENT-ASSET');
       const sparqlQuery = selectAssessmentAssetByIriQuery(iri, selectMap.getNode('assessment_assets'));
       let response;

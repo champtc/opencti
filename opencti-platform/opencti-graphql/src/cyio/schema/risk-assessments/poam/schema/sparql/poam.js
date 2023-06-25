@@ -59,7 +59,7 @@ const poamReducer = (item) => {
     ...(item.local_definitions && { local_definitions_iri: item.local_definitions }),
     ...(item.observations && { observations_iri: item.observations }),
     ...(item.risks && { risks_iri: item.risks }),
-    ...(item.poam_items && { poam_items_iri: item.poam_items }),
+    ...(item.poam_items && { poam_item_iris: item.poam_items }),
     // Backmatter
     ...(item.resources && { resources_iri: item.resources }),
   };

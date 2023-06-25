@@ -71,7 +71,7 @@ export const findAllComponents = async (parent, args, ctx, dbName, dataSources, 
       if (!iri.includes('Hardware')) iriList.push(iri);
     }
     sparqlQuery = selectComponentByIriQuery(iriList, select);
-  } else { sparqlQuery = selectAllComponents(select, args, parent) }
+  } else { sparqlQuery = selectAllComponents(select, args) }
 
   try {
     response = await dataSources.Stardog.queryAll({
@@ -235,6 +235,29 @@ export const findComponentsByIriList = async (parent, iriList, args, dbName, dat
     if (!item.includes('#Hardware-')) componentIriList.push(item);
   }
 
+  if (select?.includes('props')) {
+    let reservedFields = [
+      'id','entity_type','links','remarks','props',
+      'component_type','name','description','purpose','operational_status',
+      'responsible_roles','protocols','display_name'
+    ]
+    for (let fieldName of select) {
+      if (!reservedFields.includes(fieldName)) throw new UserInputError(`Can not specify ${fieldName} while specifying "props"`);
+    }
+
+    // defined prop items
+    let propSelect = [
+      'implementation_point','leveraged_authorization_uuid','inherited_uuid',
+      'asset_id','asset_type','asset_tag','is_publicly_accessible','is_virtual',
+      'vlan_id','network_id','baseline_configuration_name','allows_authenticated_scan',
+      'function','version','patch_level','model','release_date','validation_type','validation_reference',
+      'vendor_name','cpe_identifier',
+      'validation_type','validation_reference',
+      'last_scanned','operational_status','serial_number'
+    ];
+    select.push(...propSelect);
+  }
+
   let response;
   try {
     console.log('Finding components by bulk')
@@ -358,7 +381,7 @@ export const findComponentsByIriList = async (parent, iriList, args, dbName, dat
     if (limit) {
       const edge = {
         cursor: resultItem.iri,
-        node: reducer(resultItem),
+        node: resultItem,
       };
       edges.push(edge);
       limit--;

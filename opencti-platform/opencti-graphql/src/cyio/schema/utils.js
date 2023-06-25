@@ -606,11 +606,21 @@ export const selectByBulkIris = async (iriList, queryFunction, schema,  dbName, 
   let divisor = 8;
   let resultList = [];
   let batchCount = 0;
+  let batchSize = 0;
   let count = 0;
-  let batchSize = iriList.length > divisor ? Math.round(iriList.length / divisor) : divisor;
+  let type;
+
+  // Calculate batch size
+  batchSize = iriList.length > divisor ? Math.round(iriList.length / divisor) : divisor;
+  if (iriList.length <= 50) batchSize = iriList.length;
   if (batchSize > 200) {
     batchSize = 45;
+    if (select.includes('props')) batchSize = 25;
   }
+  let totalBatches = Math.round(iriList.length / batchSize);
+
+  if (select?.includes('asset_type')) type = 'inventory-item';
+  if (select?.includes('component_type')) type = 'component';
 
   for (let iri of iriList) {
     batch.push(iri);
@@ -621,7 +631,7 @@ export const selectByBulkIris = async (iriList, queryFunction, schema,  dbName, 
       }
     }
     batchCount++;
-    console.log(`querying batch ${batchCount}: ${batch.length}`);
+    console.log(`${new Date().toISOString()}: querying ${type} batch ${batchCount} of ${totalBatches}: ${batch.length}`);
 
     let results;
     let sparqlQuery;
@@ -643,6 +653,6 @@ export const selectByBulkIris = async (iriList, queryFunction, schema,  dbName, 
     batch = [];
   }
 
-  console.log(`Gathered results for ${count} components [${resultList.length}]`);
+  console.log(`${new Date().toISOString()}: Gathered results for ${count} components [${resultList.length}]`);
   return resultList;
 };

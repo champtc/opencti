@@ -17,7 +17,6 @@ import {
   selectAllOrigins,
   singularizeOriginSchema,
 } from '../../assessment-common/schema/sparql/origin.js';
-'../schema/sparql/origin.js'
 import { findExternalReferenceByIri } from '../../../global/domain/externalReference.js';
 import { findNoteByIri } from '../../../global/domain/note.js';
 import { findLabelByIri } from '../../../global/domain/label.js';

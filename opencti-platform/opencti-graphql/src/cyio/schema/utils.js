@@ -619,8 +619,10 @@ export const selectByBulkIris = async (iriList, queryFunction, schema,  dbName, 
   }
   let totalBatches = Math.round(iriList.length / batchSize);
 
-  if (select?.includes('asset_type')) type = 'inventory-item';
-  if (select?.includes('component_type')) type = 'component';
+  if (select?.includes('asset_type')) type = 'inventory-items';
+  if (select?.includes('component_type')) type = 'components';
+  if (select?.includes('observation_types')) type = 'observations';
+  if (select?.includes('risk_status')) type = 'risks';
 
   for (let iri of iriList) {
     batch.push(iri);
@@ -653,6 +655,6 @@ export const selectByBulkIris = async (iriList, queryFunction, schema,  dbName, 
     batch = [];
   }
 
-  console.log(`${new Date().toISOString()}: Gathered results for ${count} components [${resultList.length}]`);
+  console.log(`${new Date().toISOString()}: Gathered results for ${count} ${type} [${resultList.length}]`);
   return resultList;
 };

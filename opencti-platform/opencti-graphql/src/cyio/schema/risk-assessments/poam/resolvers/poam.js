@@ -43,6 +43,7 @@ import { findExternalReferenceByIri } from '../../../global/domain/externalRefer
 import { findNoteByIri } from '../../../global/domain/note.js';
 import { findLabelByIri } from '../../../global/domain/label.js';
 import { observationSingularizeSchema } from '../../assessment-common/schema/sparql/observation.js';
+import { findObservationsByIriList } from '../../assessment-common/domain/observation.js';
 import { findRisksByIriList } from '../../assessment-common/domain/risk.js';
 import { findComponentsByIriList } from '../../component/domain/component.js';
 import { findAllInventoryItems, findInventoryItemsByIriList} from '../../inventory-item/domain/inventoryItem.js';
